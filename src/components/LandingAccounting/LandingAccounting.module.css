@@ -1,0 +1,104 @@
+.la_span {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 6rem;
+}
+
+.btn_con {
+  display: flex;
+  align-items: center;
+  border: 1px solid;
+  border-radius: 40px;
+  overflow: hidden;
+  width: auto;
+  padding: 10px;
+  transition: border-color 0.3s;
+}
+
+/* Theme styles */
+.btn_con_light {
+  border-color: #000;
+}
+
+.btn_con_dark {
+  border-color: #fff;
+}
+
+/* Left button */
+.signup {
+  background: #000;
+  color: #fff;
+  padding: 0.8rem 1.5rem;
+  border: none;
+  font-weight: 600;
+  border-radius: 20px;
+  cursor: pointer;
+}
+
+.signup_light {
+  background: #000;
+  color: #fff;
+}
+
+.signup_dark {
+  background: #fff;
+  color: #000;
+}
+
+/* Right button area */
+.login {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0 1rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.login_light {
+  color: #1C6B1E;
+}
+.login_dark {
+  color: #fff;
+}
+
+/* Tab section  */
+@media screen and (min-width: 500px) and (max-width: 800px) {
+.la_span {
+
+  margin-top: 5rem;
+}
+.btn_con {
+  padding: 8px;
+}
+.signup {
+  padding: 0.6rem 1.2rem;
+    font-size: 14px;
+
+}
+.login {
+
+      font-size: 16px;
+}
+}
+
+/* Mobile section  */
+@media screen and (max-width: 500px) {
+.la_span {
+  margin-top: 2rem;
+}
+.btn_con {
+
+  padding: 4px;
+}
+.signup {
+  font-weight: 500;
+  padding: 0.4rem 0.8rem;
+  font-size: 12px;
+}
+.login {
+
+      font-size: 14px;
+}
+}

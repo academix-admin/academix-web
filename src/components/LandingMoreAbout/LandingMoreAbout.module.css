@@ -1,0 +1,151 @@
+@import url('https://fonts.googleapis.com/css2?family=Aclonica&display=swap');
+
+
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem 1rem;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.title {
+  margin: 0 0 2rem 0;
+  text-align: center;
+  font-weight: 700;
+  font-size: 2.5rem;
+}
+
+.title_light{
+  color: #000;
+}
+
+.title_dark{
+  color: #fff;
+}
+
+.academix_text{
+ font-family: Aclonica;
+}
+.academix_text_light{
+ color: #1C6B1E;
+}
+.academix-text_dark{
+ color: #fff;
+}
+
+.stepsContainer {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  width: 100%;
+  max-width: 1200px;
+}
+
+.step {
+  border-radius: 16px;
+  padding: 1.75rem;
+  transition: transform 0.3s ease, opacity 0.5s ease;
+  opacity: 0;
+  animation: fadeIn 1s forwards;
+}
+
+.step:hover {
+  transform: translateY(-5px);
+}
+
+.stepHeader {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.stepNumber {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  font-size: 1.25rem;
+  font-weight: bold;
+  border-radius: 50%;
+  margin-right: 1rem;
+  color: #fff;
+}
+
+.stepTitle {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 600;
+}
+
+.stepItems {
+  padding-left: 1.25rem;
+  margin: 0;
+}
+
+.stepItem {
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #333;
+}
+
+.stepItem strong {
+  font-weight: 600;
+}
+
+/* Tablet */
+@media screen and (min-width: 500px) and (max-width: 800px) {
+  .container {
+    padding: 1.5rem;
+  }
+
+  .title {
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .stepsContainer {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Mobile */
+@media screen and (max-width: 500px) {
+  .container {
+    padding: 1rem;
+  }
+
+  .title {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .stepsContainer {
+    grid-template-columns: 1fr;
+  }
+
+  .step {
+    padding: 1.25rem;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.step:nth-child(1) { animation-delay: 0.1s; }
+.step:nth-child(2) { animation-delay: 0.2s; }
+.step:nth-child(3) { animation-delay: 0.3s; }
+.step:nth-child(4) { animation-delay: 0.4s; }
+.step:nth-child(5) { animation-delay: 0.5s; }
+.step:nth-child(6) { animation-delay: 0.6s; }
