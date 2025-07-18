@@ -86,7 +86,7 @@ export default function LandingMoreAbout() {
 
   return (
     <div className={styles.container}>
-      <h1 className={`${styles.title} ${styles[`title_${theme}`]}` } dangerouslySetInnerHTML={{ __html: t('what_academix_abt').replace('Academix', `<span class="${styles.academix_text} ${styles.academix_text}_${theme}">Academix</span>`) }} />      <div className={styles.stepsContainer}>
+      <h1 className={`${styles.title} ${styles[`title_${theme}`]}` } dangerouslySetInnerHTML={{ __html: t('what_academix_abt').replace('Academix', `<span class="${styles.academixText} ${styles.academixText}_${theme}">Academix</span>`) }} />      <div className={styles.stepsContainer}>
         {steps.map((step, index) => (
           <div
             key={index}
