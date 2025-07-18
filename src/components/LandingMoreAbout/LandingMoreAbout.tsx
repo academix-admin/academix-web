@@ -5,8 +5,8 @@ import styles from './LandingMoreAbout.module.css';
 
 interface Step {
   title: string;
-  items: React.ReactNode[];
-  types: React.ReactNode[];
+  items: string[];
+  types?: string[];
   color: string;
   numberColor: string;
   titleColor: string;

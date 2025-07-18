@@ -1,5 +1,15 @@
 {
   "welcome": "Bienvenue sur Academix",
-  "description": "Apprenez. Concurrencez. Gagnez.",
-  "get_started": "Commencer"
+  "description": "Apprends. Conçois. Gagne.",
+  "get_started": "Commencer",
+  "developer_text": "Développeur",
+  "start_text": "Démarrer",
+  "features_text": "Fonctionnalités",
+  "how_2_play": "Comment jouer ?",
+  "sign_up": "S'inscrire",
+  "login": "Connexion",
+  "com.len.win": "Compétition. Apprentissage. Victoire",
+  "reward_knowledge": "Récompense la connaissance",
+  "landing_short_about_desc": "Academix te permet de jouer, d’apprendre et de gagner.\nParticipe à des quiz en direct, gagne des récompenses numériques, fais évoluer tes statistiques, et explore du contenu créé par de vrais enseignants.",
+  "what_academix_abt": "De quoi s'agit-il sur Academix ?"
 }
