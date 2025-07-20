@@ -11,7 +11,7 @@
 }
 
 .title {
-  margin: 0 0 2rem 0;
+  margin: 0 0 0rem 0;
   text-align: center;
   font-weight: 700;
   font-size: 2.5rem;
@@ -37,7 +37,24 @@
  color: #fff;
 }
 
+.description {
+  margin: 1rem 0 0 0;
+  font-size: 1.3rem;
+  margin-top: 32px;
+  font-weight: normal;
+  text-align: center;
+  max-width: 60%;
+}
+
+.description_light {
+  color: #000;
+}
+.description_dark {
+  color: #fff;
+}
+
 .stepsContainer {
+  margin-top: 48px;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 1.5rem;
@@ -106,10 +123,16 @@
 
   .title {
     font-size: 2rem;
-    margin-bottom: 1.5rem;
   }
 
+  .description {
+      font-size: 1rem;
+      margin-top: 18px;
+      max-width: 70%;
+    }
+
   .stepsContainer {
+      margin-top: 24px;
     grid-template-columns: repeat(2, 1fr);
   }
 }
@@ -122,10 +145,16 @@
 
   .title {
     font-size: 1.5rem;
-    margin-bottom: 1rem;
   }
 
+  .description {
+      font-size: 0.9rem;
+      margin-top: 8px;
+      max-width: 80%;
+    }
+
   .stepsContainer {
+    margin-top: 24px;
     grid-template-columns: 1fr;
   }
 

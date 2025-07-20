@@ -3,48 +3,64 @@ import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import styles from './LandingMoreAbout.module.css';
 
-interface Step {
+interface StepColors {
+  light: string;
+  dark: string;
+}
+
+interface StepConfig {
   title: string;
+  colors: {
+    background: StepColors;
+    number: StepColors;
+    title: StepColors;
+    text: StepColors;
+  };
   items: string[];
+  typeBackground?: StepColors;
   types?: string[];
-  color: string;
-  numberColor: string;
-  titleColor: string;
 }
 
 export default function LandingMoreAbout() {
   const { t } = useLanguage();
   const { theme } = useTheme();
 
-  const steps: Step[] = [
+
+
+  const stepsConfig: StepConfig[] = [
     {
       title: 'Sign up',
-      color: '#E8F0FF',
-      numberColor: '#1A73E8',
-      titleColor: '#1A73E8',
+      colors: {
+        background: { light: '#E8F0FF', dark: '#0D1B2A' },
+        number: { light: '#1A73E8', dark: '#1A73E8' },
+        title: { light: '#1A73E8', dark: '#A5CCFF' },
+        text: { light: '#1A73E8', dark: '#A5CCFF' }
+      },
       items: [
         'Create your account',
         'Choose account *type*'
       ],
-      types: [
-           'Student',
-           'Reviewer',
-           'Creator',
-           'Organization'
-          ]
+      typeBackground: { light: '#1A73E8', dark: '#1A73E8' },
+      types: ['Student', 'Reviewer', 'Creator', 'Organization']
     },
     {
       title: 'Complete Account',
-      color: '#EDFDF2',
-      numberColor: '#2F855A',
-      titleColor: '#2F855A',
+      colors: {
+        background: { light: '#EDFDF2', dark: '#0F1F17' },
+        number: { light: '#2F855A', dark: '#2F855A' },
+        title: { light: '#2F855A', dark: '#88E3B5' },
+        text: { light: '#2F855A', dark: '#88E3B5' }
+      },
       items: ['*Verify* your details', 'Obtain *KYC* verification']
     },
     {
       title: 'Setup Profile',
-      color: '#E6FAF8',
-      numberColor: '#319795',
-      titleColor: '#319795',
+      colors: {
+        background: { light: '#E6FAF8', dark: '#0D1F1E' },
+        number: { light: '#319795', dark: '#319795' },
+        title: { light: '#319795', dark: '#98D7D6' },
+        text: { light: '#319795', dark: '#98D7D6' }
+      },
       items: [
         'Set up your profile and manage your quiz topic *preferences*',
         '*Top up* wallet balance add add *withdrawal* profiles'
@@ -52,9 +68,12 @@ export default function LandingMoreAbout() {
     },
     {
       title: 'Play a Quiz',
-      color: '#F5EAFE',
-      numberColor: '#9F7AEA',
-      titleColor: '#9F7AEA',
+      colors: {
+        background: { light: '#F5EAFE', dark: '#1A0D2A' },
+        number: { light: '#9F7AEA', dark: '#9F7AEA' },
+        title: { light: '#9F7AEA', dark: '#C1A5FA' },
+        text: { light: '#9F7AEA', dark: '#C1A5FA' }
+      },
       items: [
         'Join a quiz challenge in your topic *interest*',
         'Answer the *best* ways you can'
@@ -62,9 +81,12 @@ export default function LandingMoreAbout() {
     },
     {
       title: 'Get Rewarded',
-      color: '#FFF9E6',
-      numberColor: '#D69E2E',
-      titleColor: '#D69E2E',
+      colors: {
+        background: { light: '#FFF9E6', dark: '#2A210D' },
+        number: { light: '#D69E2E', dark: '#D69E2E' },
+        title: { light: '#D69E2E', dark: '#FFDA8F' },
+        text: { light: '#D69E2E', dark: '#FFDA8F' }
+      },
       items: [
         'Get *paid* even when you *lose*',
         'Refer *friends* for *discounts*',
@@ -74,9 +96,12 @@ export default function LandingMoreAbout() {
     },
     {
       title: 'Earn your value',
-      color: '#F7F7F7',
-      numberColor: '#000000',
-      titleColor: '#000000',
+      colors: {
+        background: { light: '#F7F7F7', dark: '#1A1A1A' },
+        number: { light: '#000000', dark: '#000000' },
+        title: { light: '#000000', dark: '#DCD5D5' },
+        text: { light: '#000000', dark: '#DCD5D5' }
+      },
       items: [
         'Exchange your tokens to *real value* into verified payment account',
         'View statistics, player ratio and earnings'
@@ -84,71 +109,91 @@ export default function LandingMoreAbout() {
     }
   ];
 
+  // Helper function to get color based on theme with fallback
+  const getThemeColor = (colors: StepColors, property: keyof StepConfig['colors']) => {
+    return colors[theme] || colors.light;
+  };
+
   return (
     <div className={styles.container}>
-    <h1 className={`${styles.title} ${styles[`title_${theme}`]}`}>
-          {t('what_academix_abt_part1')}{' '}
-          <span className={`${styles.academixText} ${styles[`academixText_${theme}`]}`}>
-            {t('what_academix_abt_part2')}
-          </span>{' '}
-          {t('what_academix_abt_part3')}
-        </h1>
+      <h1 className={`${styles.title} ${styles[`title_${theme}`]}`}>
+        {t('what_academix_abt_part1')}{' '}
+        <span className={`${styles.academixText} ${styles[`academixText_${theme}`]}`}>
+          {t('what_academix_abt_part2')}
+        </span>{' '}
+        {t('what_academix_abt_part3')}
+      </h1>
+      <h4 className={`${styles.description} ${styles[`description_${theme}`]}`}>
+              {t('what_academix_is_desc')}
+            </h4>
       <div className={styles.stepsContainer}>
-
-
-        {steps.map((step, index) => (
-          <div
-            key={index}
-            className={styles.step}
-            style={{ backgroundColor: step.color }}
-          >
-            <div className={styles.stepHeader}>
-              <span
-                className={styles.stepNumber}
-                style={{
-                  backgroundColor: step.numberColor,
-                  color: '#fff'
-                }}
-              >
-                {index + 1}
-              </span>
-              <h3 className={styles.stepTitle} style={{ color: step.titleColor }}>
-                {step.title}
-              </h3>
-            </div>
-            <ul className={styles.stepItems}>
-              {step.items.map((item, itemIndex) => (
-                <li
-                  key={itemIndex}
-                  className={styles.stepItem}
-                  style={{ color: step.titleColor }}
-                ><span dangerouslySetInnerHTML={{
-                                       __html: item.replace(/\*(.*?)\*/g, '<strong style="color: ' + step.titleColor + '">$1</strong>')
-                                     }} /></li>
-              ))}
-            </ul>
-            {step.types && step.types.length > 0 ? (
-              <select
-                key="account-type"
-                className={styles.stepItem}
-                style={{
-                  width: '100%',
-                  minHeight: '38px',
-                  color: 'white',
-                  backgroundColor: step.titleColor,
-                  border: 'none',
-                  borderRadius: '4px'
-                }}
-              >
-                {step.types.map((type, typeIndex) => (
-                  <option key={typeIndex} value={type}>
-                    {type}
-                  </option>
+        {stepsConfig.map((step, index) => {
+          return (
+            <div
+              key={index}
+              className={styles.step}
+              style={{
+                backgroundColor: getThemeColor(step.colors.background, 'background')
+              }}
+            >
+              <div className={styles.stepHeader}>
+                <span
+                  className={styles.stepNumber}
+                  style={{
+                    backgroundColor: getThemeColor(step.colors.number, 'number'),
+                    color: '#fff'
+                  }}
+                >
+                  {index + 1}
+                </span>
+                <h3
+                  className={styles.stepTitle}
+                  style={{
+                    color: getThemeColor(step.colors.title, 'title')
+                  }}
+                >
+                  {step.title}
+                </h3>
+              </div>
+              <ul className={styles.stepItems}>
+                {step.items.map((item, itemIndex) => (
+                  <li
+                    key={itemIndex}
+                    className={styles.stepItem}
+                    style={{ color: getThemeColor(step.colors.text, 'text') }}
+                  >
+                    <span dangerouslySetInnerHTML={{
+                      __html: item.replace(
+                        /\*(.*?)\*/g,
+                        `<strong style="color: ${getThemeColor(step.colors.title, 'title')}">$1</strong>`
+                      )
+                    }} />
+                  </li>
                 ))}
-              </select>
-            ) : null}
-          </div>
-        ))}
+              </ul>
+              {step.types && step.types.length > 0 && (
+                <select
+                  key="account-type"
+                  className={styles.stepItem}
+                  style={{
+                    width: '100%',
+                    minHeight: '38px',
+                    color: 'white',
+                    backgroundColor: step.typeBackground[theme] || getThemeColor(step.colors.title, 'title'),
+                    border: 'none',
+                    borderRadius: '4px'
+                  }}
+                >
+                  {step.types.map((type, typeIndex) => (
+                    <option key={typeIndex} value={type}>
+                      {type}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
