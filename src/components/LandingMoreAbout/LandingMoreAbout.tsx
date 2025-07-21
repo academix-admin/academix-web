@@ -179,7 +179,7 @@ export default function LandingMoreAbout() {
                     width: '100%',
                     minHeight: '38px',
                     color: 'white',
-                    backgroundColor: step.typeBackground[theme] || getThemeColor(step.colors.title, 'title'),
+                    backgroundColor: step.typeBackground?.[theme] || getThemeColor(step.colors.title, 'title'),
                     border: 'none',
                     borderRadius: '4px'
                   }}
