@@ -111,7 +111,7 @@ export default function LandingMoreAbout() {
 
   // Helper function to get color based on theme with fallback
   const getThemeColor = (colors: StepColors, property: keyof StepConfig['colors']) => {
-    return colors[theme as 'light' | 'dark'] || colors.light;
+    return colors[theme] || colors.light;
   };
 
   return (

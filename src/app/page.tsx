@@ -7,6 +7,7 @@ import LandingAccounting from '@/components/LandingAccounting/LandingAccounting'
 import LandingShortAbout from '@/components/LandingShortAbout/LandingShortAbout';
 import LandingRoles from '@/components/LandingRoles/LandingRoles';
 import LandingMoreAbout from '@/components/LandingMoreAbout/LandingMoreAbout';
+import LandingFeatures from '@/components/LandingFeatures/LandingFeatures';
 
 export default function LandingPage() {
   const { theme, toggleTheme } = useTheme();
@@ -19,6 +20,7 @@ export default function LandingPage() {
     <LandingShortAbout />
     <LandingRoles />
     <LandingMoreAbout />
+    <LandingFeatures />
     </>
   );
 }

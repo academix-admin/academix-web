@@ -1,0 +1,198 @@
+.lsf_span {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 8rem;
+  width: 100%;
+}
+
+.badge {
+  background-color: #e6f4ea;
+  color: #2e7d32;
+  font-weight: 600;
+  font-size: 0.9rem;
+  padding: 0.4rem 1rem;
+  border-radius: 999px;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  text-align: center;
+  margin: 0;
+}
+
+.title_light {
+  color: #000;
+}
+
+.title_dark {
+  color: #fff;
+}
+
+.description {
+  margin-top: 1.5rem;
+  font-size: 1.2rem;
+  max-width: 60%;
+  text-align: center;
+  line-height: 1.6;
+}
+
+.description_light {
+  color: #000;
+}
+
+.description_dark {
+  color: #ccc;
+}
+
+.featuresContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+  margin-top: 3rem;
+  width: 100%;
+  max-width: 60%;
+  box-sizing: border-box;
+}
+
+.featureCard {
+  width: 100%;
+  min-height: 350px;
+  height: 100;
+  display: flex;
+  justify-content: center;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+.featureContent {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  max-width: 80%;
+}
+
+.reverseRow {
+  flex-direction: row-reverse;
+}
+
+.featureText {
+  flex: 1;
+  min-width: 240px;
+}
+
+.featureTitle {
+  margin: 0;
+    margin-left: 1rem;
+    margin-right: 1rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.featureDescription {
+  font-size: 1rem;
+  line-height: 1.6;
+  margin-top: 1rem;
+    margin-left: 1rem;
+    margin-right: 1rem;
+}
+
+.featureImage {
+  margin-left: 1rem;
+  margin-right: 1rem;
+  max-width: 200px;
+  width: 100%;
+  object-fit: contain;
+}
+
+/* Image alignment positions */
+.imageTop {
+  align-self: flex-start;
+}
+.imageMid {
+  align-self: center;
+}
+.imageBot {
+  align-self: flex-end;
+}
+
+/* Tablet */
+@media screen and (max-width: 900px) {
+.featuresContainer {
+    margin-top: 2rem;
+    width: 100%;
+    max-width: 90%;
+  }
+
+  .featureCard {
+      min-height: auto;
+      height: auto;
+    }
+
+  .featureContent {
+    flex-direction: column-reverse !important;
+    text-align: center;
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+  }
+
+  .featureText {
+    text-align: center;
+  }
+
+  .featureImage {
+    max-width: 160px;
+    margin-top: 1rem;
+    align-self: center !important;
+  }
+}
+
+/* Mobile */
+@media screen and (max-width: 500px) {
+  .title {
+    font-size: 1.8rem;
+  }
+
+  .description {
+    font-size: 1rem;
+    max-width: 85%;
+  }
+
+  .featuresContainer {
+    margin-top: 2rem;
+    width: 100%;
+    max-width: 80%;
+  }
+
+  .featureCard {
+    min-height: auto;
+    height: auto;
+  }
+
+  .featureContent {
+    display: flex;
+    max-width: 100%;
+  }
+
+  .featureTitle {
+    font-size: 1.2rem;
+  }
+
+  .featureDescription {
+    font-size: 0.95rem;
+    max-width: 90%;
+  }
+
+  .featureImage {
+    margin-top: 0.5rem;
+    max-width: 140px;
+  }
+}
