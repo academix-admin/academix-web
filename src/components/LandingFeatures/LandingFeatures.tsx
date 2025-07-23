@@ -38,7 +38,7 @@ interface FeaturesColors {
         text: { light: '#000000', dark: '#F48FB1' },
       },
       description:
-        'Earn life-time earnings from academix using the *specific roles* you fit in and a *one-time buy in*',
+        'Earn life-time earnings from academix using the *specific roles* you fit in and a *one-time buy in.*',
       imageUrl: '/assets/image/l/2.png',
       imageDirection: 'left',
       imagePosition: 'mid',
@@ -59,9 +59,9 @@ interface FeaturesColors {
     {
       title: 'Academix Streaks',
       colors: {
-        background: { light: '#FFE1BF', dark: '#3C2F1F' },
-        title: { light: '#000000', dark: '#FFD180' },
-        text: { light: '#000000', dark: '#FFD180' },
+        background: { light: 'rgb(233 229 229)', dark: 'rgb(53 53 53)' },
+        title: { light: '#000000', dark: 'rgb(201 201 201)' },
+        text: { light: '#000000', dark: 'rgb(201 201 201)' },
       },
       description:
         'Stay *consistent* — stay active in a defined row of days and redeem your code. Break the streak? Start again *stronger*.',
@@ -69,6 +69,71 @@ interface FeaturesColors {
       imageDirection: 'left',
       imagePosition: 'mid',
     },
+    {
+      title: 'Academix Ratio',
+      colors: {
+        background: { light: '#FFE1BF', dark: '#3C2F1F' },
+        title: { light: '#000000', dark: '#FFD180' },
+        text: { light: '#000000', dark: '#FFD180' },
+      },
+      description:
+        'We *measure* how well you *engage*, *perform* and *grow*. A fair system to know how you *compare* to others.',
+      imageUrl: '/assets/image/l/9.jpg',
+      imageDirection: 'right',
+      imagePosition: 'mid',
+    },
+{
+  title: 'Contribution & Review',
+  colors: {
+    background: { light: '#D4E8FD', dark: '#1A2C3C' },
+    title: { light: '#000000', dark: '#90CAF9' },
+    text: { light: '#000000', dark: '#90CAF9' },
+  },
+  description:
+    'Create quality quizzes and help approve others. Earn as a *creator* or *reviewer* and shape the learning space.',
+  imageUrl: '/assets/image/l/9.jpg',
+  imageDirection: 'left',
+  imagePosition: 'mid',
+},
+{
+  title: 'Referral',
+  colors: {
+    background: { light: '#DCFDE6', dark: '#1A3C2A' },
+    title: { light: '#000000', dark: '#A5D6A7' },
+    text: { light: '#000000', dark: '#A5D6A7' },
+  },
+  description:
+    'Refer a friend. *They top-up*, you earn a *redeem code* for a game play. They must *play* before *withdrawing.*',
+  imageUrl: '/assets/image/l/6.png',
+  imageDirection: 'right',
+  imagePosition: 'mid',
+},
+{
+  title: 'Withdraw & Top Up',
+  colors: {
+    background: { light: '#FFF3C2', dark: '#3C321F' },
+    title: { light: '#000000', dark: '#FFEB3B' },
+    text: { light: '#000000', dark: '#FFEB3B' },
+  },
+  description:
+    'Easily *add ADC* tokens to join games or *withdraw* your earnings with supported payment methods. Simple and instant.',
+  imageUrl: '/assets/image/l/7.jpg',
+  imageDirection: 'left',
+  imagePosition: 'mid',
+},
+{
+  title: 'What’s Next?',
+  colors: {
+    background: { light: '#E1D4FD', dark: '#2A1C3C' },
+    title: { light: '#000000', dark: '#B39DDB' },
+    text: { light: '#000000', dark: '#B39DDB' },
+  },
+  description:
+    'Expect more with *live events*, *daily spins*, *custom challenges*, and *Academix Facts* — all coming soon.',
+  imageUrl: '/assets/image/l/8.png',
+  imageDirection: 'right',
+  imagePosition: 'mid',
+}
   ];
 
   return (
