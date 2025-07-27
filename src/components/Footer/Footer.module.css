@@ -1,0 +1,13 @@
+.footerLayout {
+  height: 300px;
+}
+
+/* Tablet */
+@media screen and (min-width: 500px) and (max-width: 800px) {
+
+}
+
+/* Mobile */
+@media screen and (max-width: 500px) {
+
+}

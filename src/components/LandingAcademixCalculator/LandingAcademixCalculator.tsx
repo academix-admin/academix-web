@@ -79,7 +79,7 @@ const calculatorData: CalculatorMode = {
   },
 };
 
-const allRoles = ['Creator', 'Reviewer', 'Organization', 'Admin', 'Moderator', 'Supervisor', 'Coordinator', 'TestLong1', 'TestLong2', 'TestLong3', 'TestLong4'];
+const allRoles = ['Creator', 'Reviewer', 'Organization', 'Teacher', 'Celebrity', 'Parent', 'Institution'];
 
 // Utility Functions
 const calculateSimpleRewards = (
