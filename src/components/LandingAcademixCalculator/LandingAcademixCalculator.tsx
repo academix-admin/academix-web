@@ -52,6 +52,7 @@ interface CalculatorMode {
 interface MoreReward {
   rewards: SimpleReward[];
   devCharge: number;
+  winnersSize: number;
 }
 
 interface SimpleReward {
@@ -114,25 +115,42 @@ const calculateMoreRewards = (
   }
 
   const remainingAfterDev = totalPool - devCharge;
-  let winnersSize = Math.ceil((3 * size) / Math.max(min, 10));
-  winnersSize = Math.max(winnersSize, 3);
-  winnersSize = Math.min(winnersSize, size);
 
+  // Your original winner calculation logic
+  let winnersSize = Math.ceil((3 * size) / Math.max(min, 10));
+  winnersSize = Math.max(winnersSize, 3);  // Ensure at least 3 winners
+  winnersSize = Math.min(winnersSize, size);  // Cannot exceed total participants
+
+  // Distribute winners into categories
   const eachCategory = Math.ceil(winnersSize / 3);
+  let top = eachCategory;
+  let mid = eachCategory;
+  let bot = eachCategory;
+
+  // Adjust for remainder
+  const remainder = winnersSize % 3;
+  if (remainder === 1) {
+    top -= 1;
+    mid -= 1;
+    bot += 1;
+  } else if (remainder === 2) {
+    top -= 1;
+    mid += 1;
+  }
+
+  // Assign prizes
   const rewards: SimpleReward[] = [];
   let totalDistributed = 0;
 
   for (let rank = 1; rank <= winnersSize; rank++) {
     let amount = 0;
-
-    if (rank <= eachCategory) {
+    if (rank <= top) {
       amount = topPrize;
-    } else if (rank <= 2 * eachCategory) {
+    } else if (rank <= top + mid) {
       amount = midPrize;
     } else {
       amount = botPrize;
     }
-
     rewards.push({ rank: `Student ${rank}`, amount });
     totalDistributed += amount;
   }
@@ -150,7 +168,7 @@ const calculateMoreRewards = (
     }
   }
 
-  return {rewards: rewards, devCharge: devCharge};
+  return { rewards: rewards, devCharge: devCharge, winnersSize: winnersSize };
 };
 
 // Components
@@ -408,7 +426,7 @@ const MultiplayerView = ({ data, roles }: { data: CalculatorMode['multiplayer'];
           <div
             key={index}
             className={`${styles.table_row} ${styles[`table_row_${theme}`]} ${
-              (currentPage - 1) * itemsPerPage + index < Math.max(3,((3 * minPlayers) / Math.max(selectedChallenge.min, 10))) ? styles.top_winner : ''
+              (currentPage - 1) * itemsPerPage + index  < moreRewards.winnersSize ? styles.top_winner : ''
             }`}
           >
             <span>{(currentPage - 1) * itemsPerPage + index + 1}</span>
