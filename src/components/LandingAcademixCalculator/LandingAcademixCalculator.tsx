@@ -49,6 +49,11 @@ interface CalculatorMode {
   };
 }
 
+interface MoreReward {
+  rewards: SimpleReward[];
+  devCharge: number;
+}
+
 interface SimpleReward {
   rank: string;
   amount: number;
@@ -82,7 +87,7 @@ const calculatorData: CalculatorMode = {
 const allRoles = ['Creator', 'Reviewer', 'Organization', 'Teacher', 'Celebrity', 'Parent', 'Institution'];
 
 // Utility Functions
-const calculateSimpleRewards = (
+const calculateMoreRewards = (
   size: number,
   min: number,
   entryFee: number,
@@ -90,7 +95,7 @@ const calculateSimpleRewards = (
   midPrize: number,
   botPrize: number,
   devChargePct: number
-): SimpleReward[] => {
+): MoreReward => {
   const devChargeList: Record<number, number> = {
     6: 2.38,
     7: 4.76,
@@ -145,7 +150,7 @@ const calculateSimpleRewards = (
     }
   }
 
-  return rewards;
+  return {rewards: rewards, devCharge: devCharge};
 };
 
 // Components
@@ -301,7 +306,7 @@ const MultiplayerView = ({ data, roles }: { data: CalculatorMode['multiplayer'];
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  const rewards = useMemo(() => calculateSimpleRewards(
+  const moreRewards = useMemo(() => calculateMoreRewards(
     minPlayers,
     selectedChallenge.min,
     selectedChallenge.entryFee,
@@ -311,12 +316,12 @@ const MultiplayerView = ({ data, roles }: { data: CalculatorMode['multiplayer'];
     selectedChallenge.developmentCharge
   ), [minPlayers, selectedChallenge]);
 
-  const paginatedRewards = rewards.slice(
+  const paginatedRewards = moreRewards.rewards.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
 
-  const totalPages = Math.ceil(rewards.length / itemsPerPage);
+  const totalPages = Math.ceil(moreRewards.rewards.length / itemsPerPage);
 
   const handleChallengeChange = (challenge: ChallengeOption) => {
     setSelectedChallenge(challenge);
@@ -460,12 +465,12 @@ const MultiplayerView = ({ data, roles }: { data: CalculatorMode['multiplayer'];
 
       <div className={`${styles.creator_info} ${styles[`creator_info_${theme}`]}`}>
         <div className={styles.payout_row}>
-          <span>{selectedRole}:</span>
+          <span>{selectedRole}({selectedChallenge.questions}):</span>
           <span>{selectedChallenge.roleRevenue[selectedRole.toLowerCase()] || 0}</span>
         </div>
         <div className={styles.payout_row}>
           <span>Development Charge:</span>
-          <span>{selectedChallenge.developmentCharge}</span>
+          <span>{moreRewards.devCharge}</span>
         </div>
       </div>
     </div>

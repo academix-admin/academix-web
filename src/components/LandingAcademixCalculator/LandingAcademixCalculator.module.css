@@ -195,7 +195,7 @@
 }
 
 .scroll_button_light {
-  background: rgba(255, 255, 255, 0.9);
+  background: #000;
 }
 
 .scroll_button_dark {
@@ -207,7 +207,7 @@
 }
 
 .scroll_button svg {
-  color: #333333;
+  color: #fff;
 }
 
 .role_selector {
