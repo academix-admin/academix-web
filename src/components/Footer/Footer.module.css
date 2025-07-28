@@ -1,13 +1,293 @@
-.footerLayout {
-  height: 300px;
+.footer {
+  width: 100%;
+  padding: 3rem 0 0;
+  margin-top: 8rem;
+}
+
+.footer_light {
+  background: #f8f8f8;
+  color: #333;
+}
+
+.footer_dark {
+  background: #1a1a1a;
+  color: #f0f0f0;
+}
+
+.footerContainer {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+.footerTop {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 2rem;
+  padding-bottom: 3rem;
+}
+
+.brandSection {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.logo {
+  width: 50px;
+  height: 50px;
+  object-fit: contain;
+}
+
+.tagline {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  opacity: 0.8;
+}
+
+.socialLinks {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.socialLink {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.socialLink_light {
+  background: #f0f0f0;
+}
+
+.socialLink_dark {
+  background: #333;
+}
+
+.socialLink:hover {
+  transform: translateY(-3px);
+}
+
+.socialLink_light:hover {
+  background: #e0e0e0;
+}
+
+.socialLink_dark:hover {
+  background: #444;
+}
+
+.socialLink svg {
+  width: 24px;
+  height: 24px;
+}
+
+.socialLink_light svg {
+  color: #555;
+}
+
+.socialLink_dark svg {
+  color: #ccc;
+}
+
+.socialLink:hover svg {
+  transform: scale(1.1);
+  transition: transform 0.2s ease;
+}
+
+.linksSection {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.linksHeading {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.linksList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.footerLink {
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: opacity 0.2s ease;
+}
+
+.footerLink_light {
+  color: #555;
+}
+
+.footerLink_dark {
+  color: #ccc;
+}
+
+.footerLink:hover {
+  opacity: 0.8;
+}
+
+.newsletterSection {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.newsletterText {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  opacity: 0.8;
+}
+
+.newsletterForm {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.emailInput {
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  border: none;
+  font-size: 0.9rem;
+  width: 100%;
+}
+
+.emailInput_light {
+  background: #f0f0f0;
+  color: #333;
+}
+
+.emailInput_dark {
+  background: #333;
+  color: #f0f0f0;
+}
+
+.subscribeButton {
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  border: none;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+  width: fit-content;
+}
+
+.subscribeButton:hover {
+  opacity: 0.9;
+}
+
+.subscribeButton_light {
+  background: #121212;
+  color: #fff;
+}
+
+.subscribeButton_dark {
+  background: #fff;
+  color: #121212;
+}
+
+.footerBottom {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem 0;
+  border-top: 1px solid;
+}
+
+.footer_light .footerBottom {
+  border-color: #eaeaea;
+}
+
+.footer_dark .footerBottom {
+  border-color: #333;
+}
+
+.copyright {
+  font-size: 0.8rem;
+  opacity: 0.7;
+  margin-bottom: 1rem;
+}
+
+.legalLinks {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.legalLink {
+  font-size: 0.8rem;
+  text-decoration: none;
+  transition: opacity 0.2s ease;
+}
+
+.legalLink_light {
+  color: #555;
+}
+
+.legalLink_dark {
+  color: #ccc;
+}
+
+.legalLink:hover {
+  opacity: 0.8;
 }
 
 /* Tablet */
 @media screen and (min-width: 500px) and (max-width: 800px) {
 
+  .footer {
+    margin-top: 4rem;
+  }
+
+  .footerTop {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .footerBottom {
+    flex-direction: row;
+  }
+
+  .copyright {
+    margin-bottom: 0;
+  }
 }
 
 /* Mobile */
 @media screen and (max-width: 500px) {
 
+  .footer {
+    margin-top: 4rem;
+  }
+
+  .footerContainer {
+    padding: 0 1rem;
+  }
+
+  .footerTop {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+
+  .newsletterForm {
+    flex-direction: row;
+  }
+
+  .subscribeButton {
+    width: auto;
+  }
 }
