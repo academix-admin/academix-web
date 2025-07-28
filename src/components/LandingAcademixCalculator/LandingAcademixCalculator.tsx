@@ -487,7 +487,7 @@ export default function LandingAcademixCalculator() {
     <div className={`${styles.lac_container} ${styles[`lac_container_${theme}`]}`}>
       <h1 className={`${styles.title} ${styles[`title_${theme}`]}`}>Academix Calculator</h1>
       <h4 className={`${styles.description} ${styles[`description_${theme}`]}`}>
-        Academic uses a smart, scalable reward system that adjusts prize distribution based on the number of players in a quiz.
+        Academix uses a smart, scalable reward system that adjusts prize distribution based on the number of players in a quiz.
       </h4>
 
       <div className={`${styles.lac_inner_container} ${styles[`lac_inner_container_${theme}`]}`}>
