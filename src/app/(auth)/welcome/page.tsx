@@ -7,6 +7,22 @@ import Image from 'next/image';
 import styles from './page.module.css';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link'
+import Lottie from 'lottie-react';
+
+const WelcomeLottie = () => {
+  const [animationData, setAnimationData] = useState(null);
+
+  useEffect(() => {
+    fetch('/assets/lottie/welcome_lottie_1.json')
+      .then(res => res.json())
+      .then(setAnimationData)
+      .catch(err => console.error('Failed to load Lottie JSON:', err));
+  }, []);
+
+  if (!animationData) return <p>Loading...</p>;
+
+  return <Lottie className={styles.welcome_wrapper} animationData={animationData} loop autoplay />;
+};
 
 export default function Welcome() {
   const { theme } = useTheme();
@@ -20,44 +36,65 @@ export default function Welcome() {
 
   return (
     <main className={`${styles.container} ${styles[`container_${theme}`]}`}>
-      {canGoBack && (
-        <button className={styles.backBtn} onClick={() => router.back()} aria-label="Go back">
-          ← {t('back')}
-        </button>
-      )}
 
-      <h1 className={styles.title}>{t('welcome')}</h1>
+     <header className={`${styles.header} ${styles[`header_${theme}`]}`}>
+             <div className={styles.headerContent}>
+               {canGoBack && (
+                 <button
+                   className={styles.backButton}
+                   onClick={() => router.back()}
+                   aria-label="Go back"
+                 >
+                   <svg className={styles.backIcon} viewBox="0 0 16 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+                     <path
+                       d="M10.0424 0.908364L1.01887 8.84376C0.695893 9.12721 0.439655 9.46389 0.264823 9.83454C0.089992 10.2052 0 10.6025 0 11.0038C0 11.405 0.089992 11.8024 0.264823 12.173C0.439655 12.5437 0.695893 12.8803 1.01887 13.1638L10.0424 21.0992C12.2373 23.0294 16 21.6507 16 18.9239V3.05306C16 0.326231 12.2373 -1.02187 10.0424 0.908364Z"
+                       fill="currentColor"
+                     />
+                   </svg>
+                 </button>
+               )}
 
-      <div className={styles.imageWrapper}>
-        <Image
-          src="/assets/image/welcome-illustration.png"
-          alt="Welcome"
-          width={200}
-          height={200}
-          className={styles.image}
-          priority
-        />
-      </div>
+               <h1 className={styles.title}>{t('welcome_text')}</h1>
 
-      <h2 className={styles.greeting}>👋 {t('let_get_started')}</h2>
+               <div className={styles.logoContainer}>
+                 <Image
+                   className={styles.logo}
+                   src="/assets/image/academix-logo.png"
+                   alt="Academix Logo"
+                   width={40}
+                   height={40}
+                   priority
+                 />
+               </div>
+             </div>
+           </header>
 
-      <p className={styles.terms}>
-        {t('by_creating_account')} <strong>{t('privacy_policy')}</strong> {t('and')}
-        <strong> {t('terms_of_service')}</strong>.
-      </p>
 
-      <p className={styles.altPrompt}>
-        {t('already_have_account')} <br />
-        {t('please_log_in_or_sign_up')}
-      </p>
+      <div className= {styles.innerBody}>
 
-      <div className={styles.buttonGroup}>
-        <Link className={styles.loginBtn} href="#">
-          {t('login')}
-        </Link>
-        <Link className={styles.signupBtn} href="#">
-          {t('sign_up')}
-        </Link>
+      <WelcomeLottie />
+
+            <h2 className={styles.greeting}>👋 {t('let_get_started')}</h2>
+
+            <p className={styles.terms}>
+              {t('by_creating_account')} <strong>{t('privacy_policy')}</strong> {t('and')}
+              <strong> {t('terms_of_service')}</strong>.
+            </p>
+
+            <p className={styles.altPrompt}>
+              {t('already_have_account')} <br />
+              {t('please_log_in_or_sign_up')}
+            </p>
+
+            <div className={styles.buttonGroup}>
+              <Link className={styles.loginBtn} href="#">
+                {t('login')}
+              </Link>
+              <Link className={styles.signupBtn} href="#">
+                {t('sign_up')}
+              </Link>
+            </div>
+
       </div>
     </main>
   );
