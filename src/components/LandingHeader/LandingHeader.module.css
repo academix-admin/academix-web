@@ -203,6 +203,7 @@
   cursor: pointer;
   font-weight: 500;
   transition: opacity 0.2s;
+  text-decoration: none;
 }
 
 .startButton:hover {

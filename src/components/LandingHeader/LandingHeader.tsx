@@ -2,8 +2,9 @@
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { useEffect, useRef, useState } from 'react';
-import styles from './Header.module.css';
+import styles from './LandingHeader.module.css';
 import Image from 'next/image';
+import Link from 'next/link'
 
 // Language options configuration
 const LANGUAGE_OPTIONS = [
@@ -18,7 +19,7 @@ const NAV_LINKS = [
   { key: 'developer_text', href: '#developer' },
 ];
 
-export default function Header() {
+export default function LandingHeader() {
   const { theme, toggleTheme } = useTheme();
   const { lang, setLang, t } = useLanguage();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -116,9 +117,9 @@ export default function Header() {
             >
               {theme === 'light' ? '🌞' : '🌙'}
             </button>
-            <button className={`${styles.startButton} ${styles[`startButton_${theme}`]}`}>
+            <Link className={`${styles.startButton} ${styles[`startButton_${theme}`]}`} href='/welcome'>
               {t('start_text')}
-            </button>
+            </Link>
             {renderLanguageSelector}
           </div>
 
@@ -171,12 +172,12 @@ export default function Header() {
           </div>
 
           <div className={styles.mobileFooter}>
-            <button
+            <Link
               className={`${styles.startButton} ${styles[`startButton_${theme}`]}`}
-              onClick={closeMobileMenu}
+              href="/welcome"
             >
               {t('start_text')}
-            </button>
+            </Link>
           </div>
         </div>
       </div>

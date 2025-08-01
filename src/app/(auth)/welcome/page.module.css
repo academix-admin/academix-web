@@ -1,0 +1,128 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+  min-height: 100vh;
+  font-family: var(--font-poppins);
+  text-align: center;
+  transition: background 0.3s, color 0.3s;
+}
+
+.container_light {
+  background-color: #ffffff;
+  color: #111111;
+}
+
+.container_dark {
+  background-color: #111111;
+  color: #ffffff;
+}
+
+.backBtn {
+  align-self: flex-start;
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: 1rem;
+  margin-bottom: 1rem;
+  cursor: pointer;
+  padding: 0;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.backBtn:hover {
+  opacity: 0.7;
+}
+
+.title {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+
+.imageWrapper {
+  margin: 1.5rem 0;
+  min-height: 300px;
+}
+
+.greeting {
+  font-size: 1.25rem;
+  font-weight: 500;
+  margin-bottom: 1rem;
+}
+
+.terms {
+  font-size: 0.9rem;
+  max-width: 400px;
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+.altPrompt {
+  font-size: 0.9rem;
+  margin-bottom: 2rem;
+}
+
+.buttonGroup {
+  display: flex;
+  gap: 1rem;
+}
+
+.loginBtn,
+.signupBtn {
+  font-size: 1rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  border: none;
+  font-weight: 500;
+  transition: background 0.2s ease;
+  text-decoration: none;
+  box-sizing: border-box;
+}
+
+.loginBtn {
+  background-color: #ccc;
+  color: #000;
+}
+
+.signupBtn {
+  background-color: #00cc66;
+  color: #fff;
+}
+
+.loginBtn:hover,
+.signupBtn:hover {
+  opacity: 0.9;
+}
+
+/* Mobile responsiveness */
+@media screen and (max-width: 500px) {
+  .container {
+    padding: 1rem;
+    padding-bottom: 3rem;
+  }
+
+  .buttonGroup {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .loginBtn,
+  .signupBtn {
+    width: 100%;
+  }
+
+  .title {
+    font-size: 1.5rem;
+  }
+
+  .greeting {
+    font-size: 1.1rem;
+  }
+
+  .terms,
+  .altPrompt {
+    font-size: 0.85rem;
+  }
+}

@@ -28,5 +28,12 @@
   "newsletter_text": "Abonnez-vous à notre newsletter pour les dernières mises à jour et fonctionnalités",
   "email_placeholder": "Votre adresse email",
   "subscribe": "S'abonner",
-  "copyright": "© 2025 Academix. Tous droits réservés."
+  "copyright": "© 2025 Academix. Tous droits réservés.",
+  "back": "Retour",
+  "welcome_text": "Bienvenue",
+  "let_get_started": "Commençons",
+  "by_creating_account": "En créant un compte avec Academix, vous reconnaissez avoir lu la",
+  "and": "et accepté les",
+  "already_have_account": "Si vous avez déjà un compte, veuillez vous connecter.",
+  "please_log_in_or_sign_up": "Sinon, prenez un moment pour vous inscrire et rejoindre Academix !"
 }

@@ -1,7 +1,7 @@
 'use client';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
-import styles from './Footer.module.css';
+import styles from './LandingFooter.module.css';
 import Image from 'next/image';
 
 const SOCIAL_LINKS = [
@@ -46,8 +46,7 @@ const SOCIAL_LINKS = [
 const FOOTER_NAV_LINKS = [
   { key: 'how_2_play', href: '#how-to-play' },
   { key: 'features_text', href: '#features' },
-  { key: 'developer_text', href: '#developer' },
-  { key: 'pricing', href: '#pricing' }
+  { key: 'developer_text', href: '#developer' }
 ];
 
 const LEGAL_LINKS = [
@@ -57,7 +56,7 @@ const LEGAL_LINKS = [
   { key: 'faq', href: '#' },
 ];
 
-export default function Footer() {
+export default function LandingFooter() {
   const { theme } = useTheme();
   const { t } = useLanguage();
 
