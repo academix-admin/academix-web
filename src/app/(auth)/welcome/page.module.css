@@ -66,6 +66,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-left: -8px;
 }
 
 .backButton:hover {
@@ -84,9 +85,9 @@
   flex-grow: 1;
   text-align: start;
   white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-      box-sizing: box-border;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-sizing: box-border;
 
 }
 
@@ -168,6 +169,13 @@
        width: 35px;
        height: 35px;
      }
+  .innerBody {
+    padding: 1.5rem;
+    padding-top: 4rem;
+  }
+     .welcome_wrapper{
+       width: 75%;
+     }
 }
 
 /* Mobile */
@@ -179,10 +187,12 @@
  }
   .innerBody {
     padding: 1rem;
-    padding-bottom: 3rem;
-      padding-top: 8rem;
-
+    padding-top: 5rem;
   }
+
+       .welcome_wrapper{
+         width: 80%;
+       }
 
   .backIcon {
     width: 16px;
