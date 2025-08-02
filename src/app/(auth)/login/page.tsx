@@ -7,11 +7,24 @@ import Image from 'next/image';
 import styles from './page.module.css';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link'
-import CachedLottie from '@/components/CachedLottie';
+import Lottie from 'lottie-react';
 
+const LoginLottie = () => {
+  const [animationData, setAnimationData] = useState(null);
 
+  useEffect(() => {
+    fetch('/assets/lottie/login_lottie_1.json')
+      .then(res => res.json())
+      .then(setAnimationData)
+      .catch(err => console.error('Failed to load Lottie JSON:', err));
+  }, []);
 
-export default function Welcome() {
+  if (!animationData) return <p>Loading...</p>;
+
+  return <Lottie className={styles.welcome_wrapper} animationData={animationData} loop autoplay />;
+};
+
+export default function Login() {
   const { theme } = useTheme();
   const { t } = useLanguage();
   const router = useRouter();
@@ -41,7 +54,7 @@ export default function Welcome() {
                  </button>
                )}
 
-               <h1 className={styles.title}>{t('welcome_text')}</h1>
+               <h1 className={styles.title}>{t('login')}</h1>
 
                <div className={styles.logoContainer}>
                  <Image
@@ -59,33 +72,8 @@ export default function Welcome() {
 
       <div className= {styles.innerBody}>
 
-      <CachedLottie
-                              id="welcome"
-                              src="/assets/lottie/welcome_lottie_1.json"
-                              className={styles.welcome_wrapper}
-                              restoreProgress
-                            />
+      <LoginLottie />
 
-            <h2 className={styles.greeting}>👋 {t('let_get_started')}</h2>
-
-            <p className={styles.terms}>
-              {t('by_creating_account')} <strong>{t('privacy_policy')}</strong> {t('and')}
-              <strong> {t('terms_of_service')}</strong>.
-            </p>
-
-            <p className={styles.altPrompt}>
-              {t('already_have_account')} <br />
-              {t('please_log_in_or_sign_up')}
-            </p>
-
-            <div className={styles.buttonGroup}>
-              <Link className={styles.loginBtn} href="/login">
-                {t('login')}
-              </Link>
-              <Link className={styles.signupBtn} href="/signup/step1">
-                {t('sign_up')}
-              </Link>
-            </div>
 
       </div>
     </main>

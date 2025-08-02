@@ -3,7 +3,6 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
-  min-height: 100vh;
 }
 
 .container_light {
@@ -28,13 +27,13 @@
 }
 
 .header_light {
-  background-color: rgba(255, 255, 255, 0.8);
-  border-bottom: 1px solid #C4C4C4;
+   background-color: #ffffff;
+   border-bottom: 1px solid #C4C4C4;
 }
 
 .header_dark {
-  background-color: rgba(18, 18, 18, 0.8);
-  border-bottom: 1px solid #333;
+    background-color: #121212;
+    border-bottom: 1px solid #C4C4C4;
 }
 
 .headerContent {
@@ -45,7 +44,7 @@
   gap: 1rem;
   padding: 1rem 0;
   margin: 0 20%;
-  box-sizing: border-box;
+  box-sizing: box-border;
   min-width: 0;
 }
 
@@ -54,10 +53,7 @@
   flex-direction: column;
   align-items: center;
   padding: 2rem;
-  max-width: 400px;
   padding-top: 6rem;
-      width: 100%;
-    box-sizing: border-box;
 }
 
 
@@ -69,7 +65,6 @@
   border-radius: 50%;
   display: flex;
   align-items: center;
-  padding: 4px;
   justify-content: center;
   margin-left: -8px;
 }
@@ -109,59 +104,11 @@
 }
 
 .welcome_wrapper{
-  width: 65%;
+  width: 50%;
+  aspect-ratio: 2/1;
 }
 
-.greeting {
-  font-size: 1.25rem;
-  font-weight: 500;
-  margin-bottom: 1rem;
-}
 
-.terms {
-  font-size: 0.9rem;
-  max-width: 400px;
-  margin-bottom: 1rem;
-  line-height: 1.5;
-}
-
-.altPrompt {
-  font-size: 0.9rem;
-  margin-bottom: 2rem;
-}
-
-.buttonGroup {
-  display: flex;
-  gap: 1rem;
-}
-
-.loginBtn,
-.signupBtn {
-  font-size: 1rem;
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
-  cursor: pointer;
-  border: none;
-  font-weight: 500;
-  transition: background 0.2s ease;
-  text-decoration: none;
-  box-sizing: border-box;
-}
-
-.loginBtn {
-  background-color: #798279;
-  color: #ffffff;
-}
-
-.signupBtn {
-  background-color: #1C6B1E;
-  color: #fff;
-}
-
-.loginBtn:hover,
-.signupBtn:hover {
-  opacity: 0.9;
-}
 
 /* Tablet */
 @media screen and (min-width: 500px) and (max-width: 800px) {
@@ -212,22 +159,4 @@
       height: 28px;
     }
 
-  .buttonGroup {
-    flex-direction: column;
-    width: 100%;
-  }
-
-  .loginBtn,
-  .signupBtn {
-    width: 100%;
-  }
-
-  .greeting {
-    font-size: 1.1rem;
-  }
-
-  .terms,
-  .altPrompt {
-    font-size: 0.85rem;
-  }
 }
