@@ -1,11 +1,10 @@
 // eslint.config.mjs
-
 import js from '@eslint/js';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 import pluginReact from 'eslint-plugin-react';
 import pluginReactHooks from 'eslint-plugin-react-hooks';
-import { fileURLToPath } from 'url';
+import nextPlugin from '@next/eslint-plugin-next';
 import { defineConfig } from 'eslint/config';
 
 export default defineConfig([
@@ -22,7 +21,12 @@ export default defineConfig([
       },
       globals: {
         ...globals.browser,
-        React: 'readonly', // Fix for "React must be in scope"
+        React: 'readonly',
+      },
+    },
+    settings: {
+      react: {
+        version: 'detect', // ✅ fixes React version warning
       },
     },
     plugins: {
@@ -30,6 +34,7 @@ export default defineConfig([
       '@typescript-eslint': tseslint.plugin,
       react: pluginReact,
       'react-hooks': pluginReactHooks,
+      next: nextPlugin,
     },
     rules: {
       // Base JS
@@ -44,12 +49,13 @@ export default defineConfig([
       // Hooks
       ...pluginReactHooks.configs.recommended.rules,
 
+      // Next.js rules
+      ...nextPlugin.configs.recommended.rules,
+
       // Custom fixes
-      'react/react-in-jsx-scope': 'off', // ✅ for React 17+
+      'react/react-in-jsx-scope': 'off', // React 17+
       '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
-      '@typescript-eslint/no-unused-vars': 'off',
-        'no-unused-vars': 'off',
-      'react/prop-types': 'off', // ✅ disable if using TypeScript
+      'react/prop-types': 'off', // TypeScript handles props
     },
   },
 ]);

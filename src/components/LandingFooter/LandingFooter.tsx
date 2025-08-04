@@ -125,7 +125,7 @@ export default function LandingFooter() {
             <form className={styles.newsletterForm}>
               <input
                 type="email"
-                placeholder={t('email_placeholder')}
+                placeholder={t('sub_email_placeholder')}
                 className={`${styles.emailInput} ${styles[`emailInput_${theme}`]}`}
                 required
               />

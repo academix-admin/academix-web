@@ -34,6 +34,7 @@
   font-weight: 600;
   border-radius: 20px;
   cursor: pointer;
+  text-decoration: none;
 }
 
 .signup_light {
@@ -54,6 +55,7 @@
   padding: 0 1rem;
   font-weight: 500;
   cursor: pointer;
+  text-decoration: none;
 }
 
 .login_light {

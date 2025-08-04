@@ -100,7 +100,7 @@
 .logoContainer {
   display: flex;
   align-items: center;
-  justify-content: end;
+  justify-content: flex-end;
   box-sizing: box-border;
 }
 
@@ -185,6 +185,22 @@
   border-color: #333;
 }
 
+.errorText {
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+  text-align: left;
+  font-weight: 500;
+  line-height: 1.25;
+}
+
+.container_light .errorText {
+  color: #DC2626;
+}
+
+.container_dark .errorText {
+  color: #F87171;
+}
+
 .continueButton {
   padding: 0.75rem 1rem;
   border-radius: 8px;
@@ -200,6 +216,32 @@
 
 .continueButton:hover {
   background-color: #1D3D1E;
+}
+
+.continueButton:disabled {
+  background-color: #9CA3AF;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.spinner {
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top: 3px solid white;
+  border-radius: 50%;
+  width: 10px;
+  height: 10px;
+  animation: spin 1s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loadingOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
 }
 
 /* Tablet */

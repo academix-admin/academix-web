@@ -6,48 +6,94 @@ import { useLanguage } from '@/context/LanguageContext';
 import Image from 'next/image';
 import styles from './page.module.css';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link'
 import CachedLottie from '@/components/CachedLottie';
-
 import useSignupStore from '@/lib/stores/signupStore';
-
+import { supabaseBrowser } from '@/lib/supabase/client';
 
 export default function SignUpStep1() {
   const { theme } = useTheme();
   const { t } = useLanguage();
   const router = useRouter();
-  const [canGoBack, setCanGoBack] = useState(false);
   const { data, setData, reset } = useSignupStore();
 
+  const [canGoBack, setCanGoBack] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [isFormValid, setIsFormValid] = useState(false);
+  const [emailExists, setEmailExists] = useState(false);
 
   useEffect(() => {
     setCanGoBack(window.history.length > 1);
   }, []);
 
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const { name, value } = e.target;
-      setData({ [name]: value });
-    };
-
-    const handleSubmit = (e: React.FormEvent) => {
-      e.preventDefault();
-      if (!data.fullName || !data.email) {
-        alert('Please fill in all fields');
-        return;
-      }
-      router.push('/signup/step2');
-    };
-
-    const cancelSignUp = () => {
-      router.back();
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
       reset();
     };
 
+    window.addEventListener('popstate', handlePopState);
 
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [reset]);
+
+
+
+  const validateForm = (fullName: string, email: string) => {
+    const isFullNameValid = fullName.trim().length > 3;
+    const isEmailValid = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email);
+    setIsFormValid(isFullNameValid && isEmailValid);
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setData({ [name]: value });
+
+    const newFullName = name === 'fullName' ? value : data.fullName;
+    const newEmail = name === 'email' ? value : data.email;
+
+    validateForm(newFullName, newEmail);
+
+    if (name === 'email') {
+      setEmailExists(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!isFormValid) return;
+
+    setLoading(true);
+    try {
+      const { data: rpcResult, error } = await supabaseBrowser.rpc('check_email_exist', {
+        p_email: data.email
+      });
+
+      if (error) {
+        console.error('RPC Error:', error);
+        alert('Something went wrong. Please try again.');
+      } else if (rpcResult === true) {
+        setEmailExists(true);
+        setIsFormValid(false);
+      } else {
+        router.push('/signup/step2');
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const cancelSignUp = () => {
+    router.back();
+    reset();
+  };
 
   return (
     <main className={`${styles.container} ${styles[`container_${theme}`]}`}>
+        {loading && <div className={styles.loadingOverlay} aria-hidden="true" />}
+
       <header className={`${styles.header} ${styles[`header_${theme}`]}`}>
         <div className={styles.headerContent}>
           {canGoBack && (
@@ -64,9 +110,7 @@ export default function SignUpStep1() {
               </svg>
             </button>
           )}
-
           <h1 className={styles.title}>{t('sign_up')}</h1>
-
           <div className={styles.logoContainer}>
             <Image
               className={styles.logo}
@@ -81,50 +125,55 @@ export default function SignUpStep1() {
       </header>
 
       <div className={styles.innerBody}>
-      <CachedLottie
-                id="signup-step1"
-                src="/assets/lottie/sign_up_step_1_lottie_1.json"
-                className={styles.welcome_wrapper}
-                restoreProgress
-              />
+        <CachedLottie
+          id="signup-step1"
+          src="/assets/lottie/sign_up_step_1_lottie_1.json"
+          className={styles.welcome_wrapper}
+          restoreProgress
+        />
 
-        <p className={styles.titleSmall}>Cheers 😍</p>
-        <h2 className={styles.titleBig}>Join Us at Academix!</h2>
+        <p className={styles.titleSmall}>{t('cheers_sign_up')}</p>
+        <h2 className={styles.titleBig}>{t('join_us_academix')}</h2>
         <form onSubmit={handleSubmit} className={styles.form}>
           <div className={styles.formGroup}>
-            <label htmlFor="fullName" className={styles.label}>
-              FULLNAME
-            </label>
+            <label htmlFor="fullName" className={styles.label}>{t('fullname_label')}</label>
             <input
               type="text"
               id="fullName"
               name="fullName"
               value={data.fullName}
               onChange={handleChange}
-              placeholder="LastName FirstName maybe OtherNames"
+              placeholder={t('fullname_placeholder')}
               className={styles.input}
+              disabled={loading}
               required
             />
           </div>
 
           <div className={styles.formGroup}>
-            <label htmlFor="email" className={styles.label}>
-              EMAIL ADDRESS
-            </label>
+            <label htmlFor="email" className={styles.label}>{t('email_label')}</label>
             <input
               type="email"
               id="email"
               name="email"
               value={data.email}
               onChange={handleChange}
-              placeholder="Email address"
+              placeholder={t('email_placeholder')}
               className={styles.input}
+              disabled={loading}
               required
             />
+            {emailExists && (
+              <p className={styles.errorText}>{t('email_exists_error')}</p>
+            )}
           </div>
 
-          <button type="submit" className={styles.continueButton}>
-            Continue
+          <button
+            type="submit"
+            className={styles.continueButton}
+            disabled={!isFormValid || loading}
+          >
+                {loading ? <span className={styles.spinner}></span> : t('continue')}
           </button>
         </form>
       </div>

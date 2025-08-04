@@ -26,7 +26,7 @@
   "faq": "FAQ",
   "newsletter": "Restez Informé",
   "newsletter_text": "Abonnez-vous à notre newsletter pour les dernières mises à jour et fonctionnalités",
-  "email_placeholder": "Votre adresse email",
+  "sub_email_placeholder": "Votre adresse email",
   "subscribe": "S'abonner",
   "copyright": "© 2025 Academix. Tous droits réservés.",
   "back": "Retour",
@@ -35,5 +35,13 @@
   "by_creating_account": "En créant un compte avec Academix, vous reconnaissez avoir lu la",
   "and": "et accepté les",
   "already_have_account": "Si vous avez déjà un compte, veuillez vous connecter.",
-  "please_log_in_or_sign_up": "Sinon, prenez un moment pour vous inscrire et rejoindre Academix !"
+  "please_log_in_or_sign_up": "Sinon, prenez un moment pour vous inscrire et rejoindre Academix !",
+  "cheers_sign_up": "Santé 😍",
+  "join_us_academix": "Rejoignez-nous sur Academix !",
+  "fullname_label": "NOM COMPLET",
+  "fullname_placeholder": "Nom Prénom peut-être autres noms",
+  "email_label": "ADRESSE E-MAIL",
+  "email_placeholder": "Adresse e-mail",
+  "email_exists_error": "L'e-mail existe déjà. Essayez-en un autre.",
+  "continue": "Continuer"
 }
