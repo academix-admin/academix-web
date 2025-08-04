@@ -6,6 +6,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import Image from 'next/image';
 import styles from './page.module.css';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link'
 import useSignupStore from '@/lib/stores/signupStore';
 import CachedLottie from '@/components/CachedLottie';
 import { getLastNameOrSingle, capitalize } from '@/utils/textUtils';
@@ -55,7 +56,7 @@ export default function SignUpStep2() {
 
           <h1 className={styles.title}>{t('sign_up')}</h1>
 
-          <div className={styles.logoContainer}>
+          <Link className={styles.logoContainer} href="/">
             <Image
               className={styles.logo}
               src="/assets/image/academix-logo.png"
@@ -64,7 +65,7 @@ export default function SignUpStep2() {
               height={40}
               priority
             />
-          </div>
+          </Link>
         </div>
       </header>
 

@@ -56,7 +56,7 @@ export default function Login() {
 
                <h1 className={styles.title}>{t('login')}</h1>
 
-               <div className={styles.logoContainer}>
+               <Link className={styles.logoContainer} href="/">
                  <Image
                    className={styles.logo}
                    src="/assets/image/academix-logo.png"
@@ -65,7 +65,7 @@ export default function Login() {
                    height={40}
                    priority
                  />
-               </div>
+               </Link>
              </div>
            </header>
 
