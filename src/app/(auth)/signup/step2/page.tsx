@@ -25,13 +25,15 @@ export default function SignUpStep2() {
   const [countries, demandCountries, setCountries] = useDemandState<Country[]>([], {
     key: 'countries',
     persist: true,
-    ttl: 3600,
+    ttl: 300,
+    deps: [lang],
   });
 
   const [languages, demandLanguages, setLanguages] = useDemandState<Language[]>([], {
     key: 'languages',
     persist: true,
-    ttl: 3600,
+    ttl: 300,
+    deps: [lang],
   });
 
   const [firstname, setFirstname] = useState('');
@@ -74,15 +76,15 @@ export default function SignUpStep2() {
       }
 
     });
-  }, [lang, router, demandCountries, demandLanguages]);
+  }, [lang]);
 
   useEffect(() => {
     // Set default values for country and language if not already set
     if (countries.length > 0 && !signup.country) {
-      signup$.setField({ field: 'country', value: countries[0].country_identity });
+  signup$.setField({ field: 'country', value: countries[0].country_identity });
     }
     if (languages.length > 0 && !signup.language) {
-      signup$.setField({ field: 'language', value: languages[0].language_identity });
+  signup$.setField({ field: 'language', value: languages[0].language_identity });
     }
   }, [countries, languages, signup.country, signup.language, signup$]);
 
@@ -93,7 +95,7 @@ export default function SignUpStep2() {
 
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const { name, value } = e.target;
-    signup$.setField({ field: name as keyof typeof signup, value });
+  signup$.setField({ field: name as keyof SignupState, value });
   };
 
   const handleSubmit = (e: React.FormEvent) => {

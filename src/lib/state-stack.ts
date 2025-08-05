@@ -1,10 +1,11 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+// lib/state-stack.ts
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useSyncExternalStore } from "react";
 
-/* =========================
-Storage Adapter (SSR-safe)
-========================= */
+const DEBUG = process.env.NODE_ENV === 'development';
+
+type Subscriber = () => void;
 
 export interface StorageAdapter {
 getItem(key: string): Promise<string | null>;
@@ -12,17 +13,13 @@ getItem(key: string): Promise<string | null>;
   removeItem(key: string): Promise<void>;
 }
 
-const noopAsync = async () => {};
-
 const browserStorageAdapter: StorageAdapter = {
   getItem: async (k) => (typeof window !== "undefined" ? localStorage.getItem(k) : null),
   setItem: async (k, v) => {
     if (typeof window !== "undefined") localStorage.setItem(k, v);
-    return noopAsync();
   },
   removeItem: async (k) => {
     if (typeof window !== "undefined") localStorage.removeItem(k);
-    return noopAsync();
   },
 };
 
@@ -32,52 +29,107 @@ export const fallbackStorageAdapter: StorageAdapter = {
   removeItem: async () => {},
 };
 
+export const defaultStorageAdapter = browserStorageAdapter;
+
+export interface StateStackInitOptions {
+  storagePrefix?: string;
+  defaultStorageAdapter?: StorageAdapter;
+  debug?: boolean;
+}
+
+let _globalConfig: StateStackInitOptions = {
+  storagePrefix: "",
+  defaultStorageAdapter: typeof window !== "undefined" ? defaultStorageAdapter : fallbackStorageAdapter,
+  debug: DEBUG
+};
+
+export function initStateStack(opts: StateStackInitOptions) {
+  _globalConfig = { ..._globalConfig, ...opts };
+}
+
 export const getDefaultStorage = (): StorageAdapter =>
-  typeof window !== "undefined" ? browserStorageAdapter : fallbackStorageAdapter;
-
-/* =========================
-   Core: StateStackCore
-   ========================= */
-
-type Subscriber = () => void;
+  _globalConfig.defaultStorageAdapter ?? fallbackStorageAdapter;
 
 class StateStackCore {
   private static _instance: StateStackCore | null = null;
   static get instance() {
-    if (!this._instance) this._instance = new StateStackCore();
+    if (!this._instance) {
+      this._instance = new StateStackCore();
+      this._instance.attachStorageListener();
+    }
     return this._instance;
   }
 
-  private stacks = new Map<string, Map<string, any>>();
+  private stacks = new Map<string, Map<string, unknown>>();
   private timers = new Map<string, ReturnType<typeof setTimeout>>();
   private subscribers = new Map<string, Set<Subscriber>>();
   private history = new Map<string, { past: any[]; future: any[]; maxDepth: number }>();
   private pendingUpdates = new Map<string, Promise<any>>();
-
-  // whether to listen to storage events for cross-tab sync
-  private storageSyncEnabled = typeof window !== "undefined";
+  private scopeSubscriberCounts = new Map<string, number>();
+  private autoClearScopes = new Set<string>();
   private storageEventListenerAttached = false;
+  private hydratedKeys = new Set<string>();
 
-  private constructor() {
-    if (this.storageSyncEnabled) this.attachStorageListener();
+  private debugLog(...args: any[]) {
+    if (_globalConfig.debug) {
+      console.debug('[StateStack]', ...args);
+    }
+  }
+
+  private storageKey(scope: string, key: string) {
+    const prefix = _globalConfig.storagePrefix ? `${_globalConfig.storagePrefix}:` : "";
+    return `${prefix}${scope}:${key}`;
   }
 
   private subKey(scope: string, key: string) {
     return `${scope}:${key}`;
   }
 
-  // Synchronous read of in-memory snapshot (must be sync for useSyncExternalStore)
-  getStateSync<S = any>(scope: string, key: string, initial: S): S {
+  async ensureHydrated(scope: string, key: string, initial: any, persist: boolean, storage: StorageAdapter): Promise<boolean> {
+    const internalKey = this.subKey(scope, key);
+
+    if (!persist || this.hydratedKeys.has(internalKey)) return false;
+
+    try {
+      const storageKey = this.storageKey(scope, key);
+      const stored = await storage.getItem(storageKey);
+      if (stored != null) {
+        const parsed = JSON.parse(stored);
+        if (!this.stacks.has(scope)) this.stacks.set(scope, new Map());
+        this.stacks.get(scope)!.set(key, parsed);
+        this.hydratedKeys.add(internalKey);
+        return true;
+      }
+    } catch (err) {
+      console.error("[StateStack] hydrate error:", err);
+    }
+    return false;
+  }
+
+  getStateSync<S>(scope: string, key: string, initial: S): S {
     if (!this.stacks.has(scope)) this.stacks.set(scope, new Map());
     const scopeStack = this.stacks.get(scope)!;
     if (!scopeStack.has(key)) {
       scopeStack.set(key, initial);
     }
-    return scopeStack.get(key);
+    return scopeStack.get(key) as S;
+  }
+
+  async getState<S>(
+    scope: string,
+    key: string,
+    initial: S,
+    persist: boolean,
+    storage: StorageAdapter
+  ): Promise<S> {
+    const internalKey = this.subKey(scope, key);
+    return this.queueUpdate(internalKey, async () => {
+      await this.ensureHydrated(scope, key, initial, persist, storage);
+      return this.getStateSync(scope, key, initial);
+    });
   }
 
   private async queueUpdate<S>(key: string, fn: () => Promise<S>): Promise<S> {
-    // dedupe simultaneous updates to same key
     if (this.pendingUpdates.has(key)) {
       return this.pendingUpdates.get(key)!;
     }
@@ -90,40 +142,7 @@ class StateStackCore {
     }
   }
 
-  // Async read (will hydrate from storage if necessary)
-  async getState<S = any>(
-    scope: string,
-    key: string,
-    initial: S,
-    persist: boolean,
-    storage: StorageAdapter
-  ): Promise<S> {
-    return this.queueUpdate(this.subKey(scope, key), async () => {
-      if (!this.stacks.has(scope)) this.stacks.set(scope, new Map());
-      const scopeStack = this.stacks.get(scope)!;
-
-      if (!scopeStack.has(key)) {
-        if (persist) {
-          try {
-            const stored = await storage.getItem(this.subKey(scope, key));
-            if (stored != null) {
-              const parsed = JSON.parse(stored);
-              scopeStack.set(key, parsed);
-            }
-          } catch (err) {
-            console.error("[StateStack] load error:", err);
-          }
-        }
-        if (!scopeStack.has(key)) {
-          scopeStack.set(key, initial);
-        }
-      }
-
-      return scopeStack.get(key);
-    });
-  }
-
-  async setState<S = any>(
+  async setState<S>(
     scope: string,
     key: string,
     value: S,
@@ -131,7 +150,8 @@ class StateStackCore {
     storage: StorageAdapter,
     pushHistory = true
   ): Promise<S> {
-    return this.queueUpdate(this.subKey(scope, key), async () => {
+    const internalKey = this.subKey(scope, key);
+    return this.queueUpdate(internalKey, async () => {
       if (!this.stacks.has(scope)) this.stacks.set(scope, new Map());
       const scopeStack = this.stacks.get(scope)!;
 
@@ -151,7 +171,8 @@ class StateStackCore {
 
       if (persist) {
         try {
-          await storage.setItem(this.subKey(scope, key), JSON.stringify(value));
+          const storageKey = this.storageKey(scope, key);
+          await storage.setItem(storageKey, JSON.stringify(value));
         } catch (err) {
           console.error("[StateStack] persist error:", err);
         }
@@ -166,12 +187,43 @@ class StateStackCore {
     const k = this.subKey(scope, key);
     if (!this.subscribers.has(k)) this.subscribers.set(k, new Set());
     this.subscribers.get(k)!.add(fn);
+    this.incrementScopeCount(scope);
+
+    let unsubbed = false;
     return () => {
+      if (unsubbed) return;
+      unsubbed = true;
       if (this.subscribers.has(k)) {
         this.subscribers.get(k)!.delete(fn);
-        if (this.subscribers.get(k)!.size === 0) this.subscribers.delete(k);
+        if (this.subscribers.get(k)!.size === 0) {
+          this.subscribers.delete(k);
+        }
       }
+      this.decrementScopeCount(scope);
     };
+  }
+
+  private incrementScopeCount(scope: string) {
+    const prev = this.scopeSubscriberCounts.get(scope) ?? 0;
+    this.scopeSubscriberCounts.set(scope, prev + 1);
+  }
+
+  private decrementScopeCount(scope: string) {
+    const prev = this.scopeSubscriberCounts.get(scope) ?? 0;
+    const next = Math.max(0, prev - 1);
+    this.scopeSubscriberCounts.set(scope, next);
+    if (next === 0 && this.autoClearScopes.has(scope)) {
+      this.clearScope(scope);
+      this.autoClearScopes.delete(scope);
+    }
+  }
+
+  enableAutoClearOnZero(scope: string) {
+    this.autoClearScopes.add(scope);
+  }
+
+  disableAutoClearOnZero(scope: string) {
+    this.autoClearScopes.delete(scope);
   }
 
   notify(scope: string, key: string) {
@@ -179,7 +231,6 @@ class StateStackCore {
     const s = this.subscribers.get(k);
     if (!s) return;
 
-    // Batch notifications to avoid interleaved updates
     queueMicrotask(() => {
       for (const fn of s) {
         try {
@@ -200,6 +251,7 @@ class StateStackCore {
     if (ttlSeconds && ttlSeconds > 0) {
       const t = setTimeout(() => {
         this.stacks.get(scope)?.delete(key);
+        if (this.history.has(timerKey)) this.history.delete(timerKey);
         this.timers.delete(timerKey);
         this.notify(scope, key);
       }, ttlSeconds * 1000);
@@ -213,8 +265,22 @@ class StateStackCore {
     for (const key of Array.from(scopeMap.keys())) {
       scopeMap.delete(key);
       this.notify(scope, key);
+      const timerKey = this.subKey(scope, key);
+      if (this.timers.has(timerKey)) {
+        clearTimeout(this.timers.get(timerKey)!);
+        this.timers.delete(timerKey);
+      }
+      if (this.history.has(timerKey)) {
+        this.history.delete(timerKey);
+      }
     }
     this.stacks.delete(scope);
+    this.scopeSubscriberCounts.delete(scope);
+  }
+
+  clearByPathname(pathname: string) {
+    const scope = `route:${pathname}`;
+    this.clearScope(scope);
   }
 
   clearKey(scope: string, key: string) {
@@ -225,6 +291,9 @@ class StateStackCore {
     if (this.timers.has(timerKey)) {
       clearTimeout(this.timers.get(timerKey)!);
       this.timers.delete(timerKey);
+    }
+    if (this.history.has(timerKey)) {
+      this.history.delete(timerKey);
     }
   }
 
@@ -239,8 +308,9 @@ class StateStackCore {
   }
 
   async undo(scope: string, key: string, persist: boolean, storage: StorageAdapter) {
-    return this.queueUpdate(this.subKey(scope, key), async () => {
-      const hk = this.subKey(scope, key);
+    const internalKey = this.subKey(scope, key);
+    return this.queueUpdate(internalKey, async () => {
+      const hk = internalKey;
       const h = this.history.get(hk);
       if (!h || h.past.length === 0) return;
       const current = this.stacks.get(scope)?.get(key);
@@ -248,20 +318,21 @@ class StateStackCore {
       h.future.push(this._clone(current));
       if (!this.stacks.has(scope)) this.stacks.set(scope, new Map());
       this.stacks.get(scope)!.set(key, prev);
-      if (persist) await storage.setItem(hk, JSON.stringify(prev));
+      if (persist) await (storage || getDefaultStorage()).setItem(this.storageKey(scope, key), JSON.stringify(prev));
       this.notify(scope, key);
     });
   }
 
   async redo(scope: string, key: string, persist: boolean, storage: StorageAdapter) {
-    return this.queueUpdate(this.subKey(scope, key), async () => {
-      const hk = this.subKey(scope, key);
+    const internalKey = this.subKey(scope, key);
+    return this.queueUpdate(internalKey, async () => {
+      const hk = internalKey;
       const h = this.history.get(hk);
       if (!h || h.future.length === 0) return;
       const next = h.future.pop()!;
       h.past.push(this._clone(this.stacks.get(scope)?.get(key)));
       this.stacks.get(scope)!.set(key, next);
-      if (persist) await storage.setItem(hk, JSON.stringify(next));
+      if (persist) await (storage || getDefaultStorage()).setItem(this.storageKey(scope, key), JSON.stringify(next));
       this.notify(scope, key);
     });
   }
@@ -275,6 +346,46 @@ class StateStackCore {
     this.history.get(hk)!.maxDepth = Math.max(1, depth);
   }
 
+  private _clone<T>(v: T): T {
+    try {
+      return JSON.parse(JSON.stringify(v));
+    } catch {
+      return v;
+    }
+  }
+
+  private attachStorageListener() {
+    if (this.storageEventListenerAttached || typeof window === "undefined") return;
+    this.storageEventListenerAttached = true;
+    window.addEventListener("storage", (ev) => {
+      try {
+        if (!ev.key) return;
+        let key = ev.key;
+        const prefix = _globalConfig.storagePrefix ? `${_globalConfig.storagePrefix}:` : "";
+        if (prefix && key.startsWith(prefix)) {
+          key = key.slice(prefix.length);
+        }
+        const idx = key.lastIndexOf(":");
+        if (idx === -1) return;
+        const scope = key.slice(0, idx);
+        const subKey = key.slice(idx + 1);
+        if (ev.newValue == null) {
+          this.stacks.get(scope)?.delete(subKey);
+          this.notify(scope, subKey);
+        } else {
+          try {
+            const parsed = JSON.parse(ev.newValue);
+            if (!this.stacks.has(scope)) this.stacks.set(scope, new Map());
+            this.stacks.get(scope)!.set(subKey, parsed);
+            this.notify(scope, subKey);
+          } catch {}
+        }
+      } catch (err) {
+        console.error("[StateStack] storage event handler error:", err);
+      }
+    });
+  }
+
   debug() {
     const stacks: Record<string, Record<string, any>> = {};
     for (const [scope, map] of this.stacks) {
@@ -284,65 +395,19 @@ class StateStackCore {
     return {
       stacks,
       timers: Array.from(this.timers.keys()),
+      historyKeys: Array.from(this.history.keys()),
       subscribers: Array.from(this.subscribers.keys()),
-      history: Array.from(this.history.keys()).map((k) => ({
-        key: k,
-        past: this.history.get(k)?.past.length,
-        future: this.history.get(k)?.future.length,
-        maxDepth: this.history.get(k)?.maxDepth,
-      })),
+      scopeSubscriberCounts: Array.from(this.scopeSubscriberCounts.entries()),
+      autoClearScopes: Array.from(this.autoClearScopes),
       pendingUpdates: Array.from(this.pendingUpdates.keys()),
+      hydratedKeys: Array.from(this.hydratedKeys),
     };
-  }
-
-  private _clone<T>(v: T): T {
-    try {
-      return JSON.parse(JSON.stringify(v));
-    } catch {
-      return v;
-    }
-  }
-
-  /* =========================
-     Cross-tab sync via storage events
-     ========================= */
-  private attachStorageListener() {
-    if (this.storageEventListenerAttached || typeof window === "undefined") return;
-    this.storageEventListenerAttached = true;
-    window.addEventListener("storage", (ev) => {
-      try {
-        if (!ev.key) return;
-        // expect keys in format "scope:key"
-        const parts = ev.key.split(":");
-        if (parts.length < 2) return;
-        const scope = parts[0];
-        const key = parts.slice(1).join(":");
-        if (ev.newValue == null) {
-          // removed or cleared
-          this.stacks.get(scope)?.delete(key);
-          this.notify(scope, key);
-        } else {
-          try {
-            const parsed = JSON.parse(ev.newValue);
-            if (!this.stacks.has(scope)) this.stacks.set(scope, new Map());
-            this.stacks.get(scope)!.set(key, parsed);
-            this.notify(scope, key);
-          } catch {
-            // ignore parse errors
-          }
-        }
-      } catch (err) {
-        console.error("[StateStack] storage event handler error:", err);
-      }
-    });
   }
 }
 
-/* =========================
-   createStateStack (main)
-   ========================= */
+type MethodFn<S = any> = (state: S, ...args: any[]) => S;
+type MethodDict<S = any> = Record<string, MethodFn<S>>;
 
-type MethodDict<S = any> = Record<string, (state: S, ...args: any[]) => S>;
 export interface StackConfig<S> {
   initial: S;
   ttl?: number;
@@ -350,69 +415,83 @@ export interface StackConfig<S> {
   storage?: StorageAdapter;
   historyDepth?: number;
   middleware?: Array<(prev: S, next: S, action: string) => S | void>;
-  clearOnUnmount?: boolean; // default false (safer)
+  clearOnZeroSubscribers?: boolean;
 }
 
-export function createStateStack<T extends Record<string, MethodDict>>(methodBlueprints: T) {
+type InferStateFromMethods<T> = T extends MethodDict<infer S> ? S : never;
+type MethodsFor<T> = T extends MethodDict<infer S> ? T : never;
+
+export function createStateStack<
+  Blueprints extends Record<string, MethodDict>
+>(methodBlueprints: Blueprints) {
   const core = StateStackCore.instance;
 
-  function useStack<K extends keyof T>(
-    key: K,
-    config: StackConfig<T[K] extends MethodDict<infer S> ? S : any>,
+  function useStack<Key extends keyof Blueprints & string>(
+    key: Key,
+    config: StackConfig<InferStateFromMethods<Blueprints[Key]>>,
     scope = "global"
   ) {
-    type StateType = T[K] extends MethodDict<infer S> ? S : any;
+    type StateType = InferStateFromMethods<Blueprints[Key]>;
     const storage = config.storage || getDefaultStorage();
     const keyStr = String(key);
     const persist = !!config.persist;
     const ttl = config.ttl;
     const historyDepth = config.historyDepth ?? 50;
 
-    // Synchronous snapshot for useSyncExternalStore - uses in-memory state
     const state = useSyncExternalStore(
       useCallback((callback) => core.subscribe(scope, keyStr, callback), [scope, keyStr]),
-      useCallback(() => core.getStateSync(scope, keyStr, config.initial as StateType), [scope, keyStr, config.initial]),
+      useCallback(() => core.getStateSync(scope, keyStr, config.initial as StateType), [
+        scope,
+        keyStr,
+        config.initial,
+      ]),
       useCallback(() => config.initial as StateType, [config.initial])
     );
 
-    // Hydrate persisted value into memory (async) when mounted / key changes
     useEffect(() => {
+      if (!persist) return;
+
       let mounted = true;
-      (async () => {
+      const hydrate = async () => {
         try {
-          await core.getState(scope, keyStr, config.initial as StateType, persist, storage);
-          // core.getState writes to in-memory and calls notify; useSyncExternalStore will catch it
-        } catch (err) {
-          if (mounted) {
-            console.error("[StateStack] hydrate error:", err);
+          const didHydrate = await core.ensureHydrated(scope, keyStr, config.initial, persist, storage);
+          if (mounted && didHydrate) {
+            core.notify(scope, keyStr);
           }
+        } catch (err) {
+          console.error("[StateStack] hydrate error:", err);
         }
-      })();
+      };
+
+      hydrate();
       return () => {
         mounted = false;
       };
     }, [scope, keyStr, config.initial, persist, storage]);
 
-    // apply history depth
     useEffect(() => {
       core.setHistoryDepth(scope, keyStr, historyDepth);
     }, [scope, keyStr, historyDepth]);
 
-    // cleanup on unmount if requested
     useEffect(() => {
+      if (config.clearOnZeroSubscribers) {
+        core.enableAutoClearOnZero(scope);
+      }
       return () => {
-        if (config.clearOnUnmount) {
-          core.clearScope(scope);
+        if (config.clearOnZeroSubscribers) {
+          core.disableAutoClearOnZero(scope);
         }
       };
-    }, [scope, config.clearOnUnmount]);
+    }, [scope, config.clearOnZeroSubscribers]);
 
-    // create methods
     const methods = useMemo(() => {
       const m = methodBlueprints[key];
-      const out: Record<string, (...args: any[]) => Promise<void>> = {};
+      const out: {
+        [M in keyof typeof m]: (...args: any[]) => Promise<void>;
+      } = {} as any;
+
       for (const methodName of Object.keys(m)) {
-        out[methodName] = async (...args: any[]) => {
+        out[methodName as keyof typeof m] = async (...args: any[]) => {
           const current = await core.getState(scope, keyStr, config.initial as StateType, persist, storage);
           let next = (m as any)[methodName](current, ...args);
           if (config.middleware?.length) {
@@ -425,9 +504,9 @@ export function createStateStack<T extends Record<string, MethodDict>>(methodBlu
           core.setTTL(scope, keyStr, ttl);
         };
       }
-      return out as unknown as { [M in keyof typeof m]: (...args: any[]) => Promise<void> };
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [scope, keyStr, ttl, persist, config.middleware]);
+
+      return out;
+    }, [scope, keyStr, ttl, persist, config.middleware, config.initial, storage]);
 
     const undo = useCallback(async () => {
       if (!persist) return;
@@ -449,15 +528,17 @@ export function createStateStack<T extends Record<string, MethodDict>>(methodBlu
         canRedo: () => core.canRedo(scope, keyStr),
         clear: () => core.clearKey(scope, keyStr),
       },
-    } as unknown as Record<typeof keyStr | `${typeof keyStr}$` | "__meta", any>;
+    } as unknown as {
+      [K in Key]: StateType;
+    } & {
+      [K2 in `${Key}$`]: {
+        [M in keyof MethodsFor<Blueprints[Key]>]: (...args: Parameters<MethodsFor<Blueprints[Key]>[M]>) => Promise<void>;
+      };
+    } & { __meta: any };
   }
 
   return { useStack };
 }
-
-/* =========================
-   useDemandState (pathname-scoped cache)
-   ========================= */
 
 export function useDemandState<T>(
   initial: T,
@@ -468,8 +549,16 @@ export function useDemandState<T>(
     storage?: StorageAdapter;
     historyDepth?: number;
     clearOnUnmount?: boolean;
+    clearOnBack?: boolean;
+    deps?: React.DependencyList;
+    clearOnZeroSubscribers?: boolean;
   }
-): [T, (loader: (helpers: { get: () => T; set: (v: T) => void }) => void | Promise<void>) => void, (v: T | ((prev: T) => T)) => void] {
+): [
+  T,
+  (loader: (helpers: { get: () => T; set: (v: T) => void }) => void | Promise<void>) => void,
+  (v: T | ((prev: T) => T)) => void,
+  { clear: () => void; clearByScope: (scope: string) => void; clearByPathname: () => void }
+] {
   const pathname = usePathname() || "route:unknown";
   const scope = `route:${pathname}`;
   const key = opts?.key ?? "demand";
@@ -478,6 +567,9 @@ export function useDemandState<T>(
   const storage = opts?.storage || getDefaultStorage();
   const historyDepth = opts?.historyDepth ?? 10;
   const clearOnUnmount = opts?.clearOnUnmount ?? false;
+  const clearOnBack = opts?.clearOnBack ?? false;
+  const deps = opts?.deps ?? [];
+  const clearOnZeroSubscribers = opts?.clearOnZeroSubscribers ?? false;
 
   const core = StateStackCore.instance;
   const keyStr = key;
@@ -488,18 +580,22 @@ export function useDemandState<T>(
     useCallback(() => initial, [initial])
   );
 
-  const initializedRef = useRef(false);
-
-  // hydrate persisted data into memory
   useEffect(() => {
+    if (!persist) return;
+
     let mounted = true;
-    (async () => {
+    const hydrate = async () => {
       try {
-        await core.getState(scope, keyStr, initial, persist, storage);
+        const didHydrate = await core.ensureHydrated(scope, keyStr, initial, persist, storage);
+        if (mounted && didHydrate) {
+          core.notify(scope, keyStr);
+        }
       } catch (err) {
-        if (mounted) console.error("[demandState] hydrate error:", err);
+        console.error("[useDemandState] hydrate error:", err);
       }
-    })();
+    };
+
+    hydrate();
     return () => {
       mounted = false;
     };
@@ -510,15 +606,31 @@ export function useDemandState<T>(
   }, [scope, keyStr, historyDepth]);
 
   useEffect(() => {
-    return () => {
-      if (clearOnUnmount) core.clearScope(scope);
-    };
+    if (clearOnUnmount) {
+      return () => {
+        core.clearScope(scope);
+      };
+    }
   }, [scope, clearOnUnmount]);
+
+  useEffect(() => {
+    if (!clearOnBack || typeof window === "undefined") return;
+    const handlePopState = () => core.clearScope(scope);
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [scope, clearOnBack]);
+
+  useEffect(() => {
+    if (clearOnZeroSubscribers) {
+      core.enableAutoClearOnZero(scope);
+    }
+    return () => {
+      if (clearOnZeroSubscribers) core.disableAutoClearOnZero(scope);
+    };
+  }, [scope, clearOnZeroSubscribers]);
 
   const demand = useCallback(
     (loader: (helpers: { get: () => T; set: (v: T) => void }) => void | Promise<void>) => {
-      if (initializedRef.current) return;
-      initializedRef.current = true;
       const ctx = {
         get: () => state,
         set: (v: T) => {
@@ -527,10 +639,9 @@ export function useDemandState<T>(
         },
       };
       Promise.resolve(loader(ctx)).catch((err) => {
-        console.error("[demandState] loader error:", err);
+        console.error("[useDemandState] loader error:", err);
       });
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [state, scope, keyStr, ttl, persist, storage]
   );
 
@@ -540,16 +651,23 @@ export function useDemandState<T>(
       core.setState(scope, keyStr, next, persist, storage);
       core.setTTL(scope, keyStr, ttl);
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [state, scope, keyStr, ttl, persist, storage]
   );
 
-  return [state, demand, set];
-}
+  const clear = useCallback(() => {
+    core.clearKey(scope, keyStr);
+  }, [scope, keyStr]);
 
-/* =========================
-   Global Atom Store + Hooks
-   ========================= */
+  const clearByScope = useCallback((scope: string) => {
+    core.clearScope(scope);
+  }, []);
+
+  const clearByPathname = useCallback(() => {
+    core.clearByPathname(pathname);
+  }, [pathname]);
+
+  return [state, demand, set, { clear, clearByScope, clearByPathname }];
+}
 
 class AtomStore {
   private atoms = new Map<string, any>();
@@ -575,7 +693,6 @@ class AtomStore {
   }
 
   set<T>(key: string, value: T) {
-    // use microtask to batch notifications
     this.queueUpdate(key, async () => {
       this.atoms.set(key, value);
       queueMicrotask(() => {
@@ -604,10 +721,10 @@ class AtomStore {
   }
 
   debug() {
-    const obj: Record<string, any> = {};
-    for (const [k, v] of this.atoms) obj[k] = v;
+    const atoms: Record<string, any> = {};
+    for (const [k, v] of this.atoms) atoms[k] = v;
     return {
-      atoms: obj,
+      atoms,
       subscribers: Array.from(this.subs.keys()),
       pendingUpdates: Array.from(this.pendingUpdates.keys()),
     };
@@ -633,10 +750,6 @@ export function useAtom<T>(key: string, initial: T): [T, (v: T | ((prev: T) => T
 
   return [state, setter];
 }
-
-/* =========================
-   Computed hook (lightweight)
-   ========================= */
 
 export function useComputed<T>(compute: () => T, defaultValue: T, deps: React.DependencyList = []): T {
   const [val, setVal] = useState<T>(() => {
@@ -665,10 +778,6 @@ export function useComputed<T>(compute: () => T, defaultValue: T, deps: React.De
   return val;
 }
 
-/* =========================
-   Useful small helpers
-   ========================= */
-
 export function useToggle(initial = false) {
   const [v, setV] = useState(initial);
   const toggle = useCallback(() => setV((p) => !p), []);
@@ -677,7 +786,6 @@ export function useToggle(initial = false) {
 
 export function useList<T>(initial: T[] = []) {
   const [list, setList] = useState<T[]>(initial);
-
   const push = useCallback((item: T) => setList((l) => [...l, item]), []);
   const removeAt = useCallback((idx: number) => setList((l) => l.filter((_, i) => i !== idx)), []);
   const clear = useCallback(() => setList([]), []);
@@ -685,27 +793,22 @@ export function useList<T>(initial: T[] = []) {
   return { list, push, removeAt, clear, updateAt, setList } as const;
 }
 
-/* =========================
-   DevTools Integration
-   ========================= */
-
 if (typeof window !== "undefined" && process.env.NODE_ENV === "development") {
   (window as any).__STATE_STACK__ = {
     core: StateStackCore.instance,
     atomStore,
+    initStateStack,
     debug: () => ({
       stateStack: StateStackCore.instance.debug(),
       atoms: atomStore.debug(),
+      globalConfig: _globalConfig,
     }),
   };
 }
 
-/* =========================
-   Exports
-   ========================= */
-
 export const StateStack = {
   core: StateStackCore.instance,
+  init: initStateStack,
   createStateStack,
   useDemandState,
   useAtom,

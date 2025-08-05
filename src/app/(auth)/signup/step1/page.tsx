@@ -23,6 +23,8 @@ export default function SignUpStep1() {
   const [emailExists, setEmailExists] = useState(false);
 
   useEffect(() => {
+              console.log(signup);
+
     setCanGoBack(window.history.length > 1);
   }, []);
 
