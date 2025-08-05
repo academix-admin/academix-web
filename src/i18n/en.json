@@ -43,5 +43,12 @@
   "email_label": "EMAIL ADDRESS",
   "email_placeholder": "Email address",
   "email_exists_error": "Email already exists. Try another.",
-  "continue": "Continue"
+  "continue": "Continue",
+  "hi_name": "Hi {name},",
+  "step_x_of_y": "Take Step {current} of {total}",
+  "language": "LANGUAGE",
+  "country": "COUNTRY",
+  "no_languages_available": "No languages available",
+  "no_countries_available": "No countries available",
+  "loading": "Loading..."
 }

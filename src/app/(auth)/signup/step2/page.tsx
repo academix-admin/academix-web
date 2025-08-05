@@ -1,42 +1,113 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import Image from 'next/image';
 import styles from './page.module.css';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link'
-import useSignupStore from '@/lib/stores/signupStore';
+import Link from 'next/link';
 import CachedLottie from '@/components/CachedLottie';
 import { getLastNameOrSingle, capitalize } from '@/utils/textUtils';
+import { supabaseBrowser } from '@/lib/supabase/client';
+import { useStack, signupConfig } from '@/lib/stacks/signup-stack';
+import { useDemandState } from '@/lib/state-stack';
+
+type Country = { country_id: string; country_identity: string };
+type Language = { language_id: string; language_identity: string };
 
 export default function SignUpStep2() {
   const { theme } = useTheme();
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const router = useRouter();
+  const { signup, signup$ } = useStack('signup', signupConfig, 'signup_flow');
+
+  const [countries, demandCountries, setCountries] = useDemandState<Country[]>([], {
+    key: 'countries',
+    persist: true,
+    ttl: 3600,
+  });
+
+  const [languages, demandLanguages, setLanguages] = useDemandState<Language[]>([], {
+    key: 'languages',
+    persist: true,
+    ttl: 3600,
+  });
+
   const [firstname, setFirstname] = useState('');
   const [canGoBack, setCanGoBack] = useState(false);
-  const { data, setData } = useSignupStore();
+  const [languageLoading, setLanguageLoading] = useState(false);
+  const [countryLoading, setCountryLoading] = useState(false);
+  const [continueLoading, setContinueLoading] = useState(false);
+  const [isFormValid, setIsFormValid] = useState(false);
 
   useEffect(() => {
     setCanGoBack(window.history.length > 1);
-    setFirstname(capitalize(getLastNameOrSingle(data.fullName)));
-  }, [router]);
+    setFirstname(capitalize(getLastNameOrSingle(signup.fullName)));
 
+    // Demand countries and languages
+    demandCountries(async ({ set }) => {
+      try {
+        setCountryLoading(true);
+        const { data, error } = await supabaseBrowser.rpc('fetch_country', { p_locale: lang });
+        if (error) throw error;
+        setCountryLoading(false);
+        set(data || []);
+      } catch (error) {
+        console.error('Failed to fetch countries:', error);
+      }finally{
+        setCountryLoading(false);
+      }
+    });
+
+    demandLanguages(async ({ set }) => {
+      try {
+        setLanguageLoading(true);
+        const { data, error } = await supabaseBrowser.rpc('fetch_languages', { p_locale: lang });
+        if (error) throw error;
+        setLanguageLoading(false);
+        set(data || []);
+      } catch (error) {
+        console.error('Failed to fetch languages:', error);
+      } finally{
+        setLanguageLoading(false);
+      }
+
+    });
+  }, [lang, router, demandCountries, demandLanguages]);
+
+  useEffect(() => {
+    // Set default values for country and language if not already set
+    if (countries.length > 0 && !signup.country) {
+      signup$.setField({ field: 'country', value: countries[0].country_identity });
+    }
+    if (languages.length > 0 && !signup.language) {
+      signup$.setField({ field: 'language', value: languages[0].language_identity });
+    }
+  }, [countries, languages, signup.country, signup.language, signup$]);
+
+  useEffect(() => {
+    // Validate form
+    setIsFormValid(!!signup.country && !!signup.language);
+  }, [signup.country, signup.language]);
 
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-      const { name, value } = e.target;
-      setData({ [name]: value });
-    };
+    const { name, value } = e.target;
+    signup$.setField({ field: name as keyof typeof signup, value });
+  };
 
-    const handleSubmit = (e: React.FormEvent) => {
-      e.preventDefault();
-      router.push('/signup/step3');
-    };
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!isFormValid) return;
+    setContinueLoading(true);
+    router.push('/signup/step3');
+    setContinueLoading(false);
+  };
 
   return (
     <main className={`${styles.container} ${styles[`container_${theme}`]}`}>
+      {continueLoading && <div className={styles.continueLoadingOverlay} aria-hidden="true" />}
+
       <header className={`${styles.header} ${styles[`header_${theme}`]}`}>
         <div className={styles.headerContent}>
           {canGoBack && (
@@ -44,6 +115,7 @@ export default function SignUpStep2() {
               className={styles.backButton}
               onClick={() => router.back()}
               aria-label="Go back"
+              disabled={continueLoading}
             >
               <svg className={styles.backIcon} viewBox="0 0 16 22" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path
@@ -70,60 +142,72 @@ export default function SignUpStep2() {
       </header>
 
       <div className={styles.innerBody}>
-
         <CachedLottie
-                        id="signup-step2"
-                        src="/assets/lottie/sign_up_step_2_lottie_1.json"
-                        className={styles.welcome_wrapper}
-                        restoreProgress
-                      />
+          id="signup-step2"
+          src="/assets/lottie/sign_up_step_2_lottie_1.json"
+          className={styles.welcome_wrapper}
+          restoreProgress
+        />
 
-        <h2 className={styles.stepTitle}>Hi {firstname},</h2>
-        <p className={styles.stepSubtitle}>Take Step 2 of 7</p>
+        <h2 className={styles.stepTitle}>{t('hi_name', { name: firstname })}</h2>
+        <p className={styles.stepSubtitle}>{t('step_x_of_y', { current: signup.currentStep, total: signupConfig.totalSteps })}</p>
 
         <form onSubmit={handleSubmit} className={styles.form}>
           <div className={styles.formGroup}>
             <label htmlFor="language" className={styles.label}>
-              LANGUAGE
+              {t('language')}
             </label>
             <select
               id="language"
               name="language"
-              value={data.language}
+              value={signup.language}
               onChange={handleChange}
               className={styles.select}
+              disabled={languageLoading || languages.length === 0}
               required
             >
-              <option value="English">English</option>
-              <option value="French">French</option>
-              <option value="Spanish">Spanish</option>
-              <option value="German">German</option>
-              <option value="Chinese">Chinese</option>
+              {languages.length === 0 && (
+                <option value="">{languageLoading ? t('loading') : t('no_languages_available')}</option>
+              )}
+              {languages.map((lang) => (
+                <option key={lang.language_id} value={lang.language_identity}>
+                  {lang.language_identity}
+                </option>
+              ))}
             </select>
           </div>
 
           <div className={styles.formGroup}>
             <label htmlFor="country" className={styles.label}>
-              COUNTRY
+              {t('country')}
             </label>
             <select
               id="country"
               name="country"
-              value={data.country}
+              value={signup.country}
               onChange={handleChange}
               className={styles.select}
+              disabled={countryLoading || countries.length === 0}
               required
             >
-              <option value="Nigeria">Nigeria</option>
-              <option value="Ghana">Ghana</option>
-              <option value="South Africa">South Africa</option>
-              <option value="Kenya">Kenya</option>
-              <option value="Egypt">Egypt</option>
+              {countries.length === 0 && (
+                <option value="">{countryLoading ? t('loading') : t('no_countries_available')}</option>
+              )}
+              {countries.map((country) => (
+                <option key={country.country_id} value={country.country_identity}>
+                  {country.country_identity}
+                </option>
+              ))}
             </select>
           </div>
 
-          <button type="submit" className={styles.continueButton}>
-            Continue
+          <button
+            type="submit"
+            className={styles.continueButton}
+            disabled={!isFormValid || continueLoading}
+            aria-disabled={!isFormValid || continueLoading}
+          >
+                {continueLoading ? <span className={styles.spinner}></span> : t('continue')}
           </button>
         </form>
       </div>

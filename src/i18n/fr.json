@@ -43,5 +43,12 @@
   "email_label": "ADRESSE E-MAIL",
   "email_placeholder": "Adresse e-mail",
   "email_exists_error": "L'e-mail existe déjà. Essayez-en un autre.",
-  "continue": "Continuer"
+  "continue": "Continuer",
+  "hi_name": "Bonjour {name},",
+  "step_x_of_y": "Étape {current} sur {total}",
+  "language": "LANGUE",
+  "country": "PAYS",
+  "no_languages_available": "Aucune langue disponible",
+  "no_countries_available": "Aucun pays disponible",
+  "loading": "Chargement..."
 }

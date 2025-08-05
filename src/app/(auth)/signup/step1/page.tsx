@@ -8,36 +8,23 @@ import styles from './page.module.css';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link'
 import CachedLottie from '@/components/CachedLottie';
-import useSignupStore from '@/lib/stores/signupStore';
 import { supabaseBrowser } from '@/lib/supabase/client';
+import { useStack, signupConfig } from '@/lib/stacks/signup-stack';
 
 export default function SignUpStep1() {
   const { theme } = useTheme();
   const { t } = useLanguage();
   const router = useRouter();
-  const { data, setData, reset } = useSignupStore();
+  const { signup, signup$ } = useStack('signup', signupConfig, 'signup_flow');
 
   const [canGoBack, setCanGoBack] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [continueLoading, setContinueLoading] = useState(false);
   const [isFormValid, setIsFormValid] = useState(false);
   const [emailExists, setEmailExists] = useState(false);
 
   useEffect(() => {
     setCanGoBack(window.history.length > 1);
   }, []);
-
-  useEffect(() => {
-    const handlePopState = (event: PopStateEvent) => {
-      reset();
-    };
-
-    window.addEventListener('popstate', handlePopState);
-
-    return () => {
-      window.removeEventListener('popstate', handlePopState);
-    };
-  }, [reset]);
-
 
 
   const validateForm = (fullName: string, email: string) => {
@@ -48,10 +35,10 @@ export default function SignUpStep1() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setData({ [name]: value });
+    signup$.setField({ field: name as keyof typeof signup, value });
 
-    const newFullName = name === 'fullName' ? value : data.fullName;
-    const newEmail = name === 'email' ? value : data.email;
+    const newFullName = name === 'fullName' ? value : signup.fullName;
+    const newEmail = name === 'email' ? value : signup.email;
 
     validateForm(newFullName, newEmail);
 
@@ -64,10 +51,10 @@ export default function SignUpStep1() {
     e.preventDefault();
     if (!isFormValid) return;
 
-    setLoading(true);
+    setContinueLoading(true);
     try {
       const { data: rpcResult, error } = await supabaseBrowser.rpc('check_email_exist', {
-        p_email: data.email
+        p_email: signup.email
       });
 
       if (error) {
@@ -77,23 +64,25 @@ export default function SignUpStep1() {
         setEmailExists(true);
         setIsFormValid(false);
       } else {
+        signup$.setStep(2);
+        console.log(signup);
         router.push('/signup/step2');
       }
     } catch (err) {
       console.error(err);
     } finally {
-      setLoading(false);
+      setContinueLoading(false);
     }
   };
 
   const cancelSignUp = () => {
     router.back();
-    reset();
+    signup$.reset();
   };
 
   return (
     <main className={`${styles.container} ${styles[`container_${theme}`]}`}>
-        {loading && <div className={styles.loadingOverlay} aria-hidden="true" />}
+        {continueLoading && <div className={styles.continueLoadingOverlay} aria-hidden="true" />}
 
       <header className={`${styles.header} ${styles[`header_${theme}`]}`}>
         <div className={styles.headerContent}>
@@ -142,11 +131,11 @@ export default function SignUpStep1() {
               type="text"
               id="fullName"
               name="fullName"
-              value={data.fullName}
+              value={signup.fullName}
               onChange={handleChange}
               placeholder={t('fullname_placeholder')}
               className={styles.input}
-              disabled={loading}
+              disabled={continueLoading}
               required
             />
           </div>
@@ -157,11 +146,11 @@ export default function SignUpStep1() {
               type="email"
               id="email"
               name="email"
-              value={data.email}
+              value={signup.email}
               onChange={handleChange}
               placeholder={t('email_placeholder')}
               className={styles.input}
-              disabled={loading}
+              disabled={continueLoading}
               required
             />
             {emailExists && (
@@ -172,9 +161,9 @@ export default function SignUpStep1() {
           <button
             type="submit"
             className={styles.continueButton}
-            disabled={!isFormValid || loading}
+            disabled={!isFormValid || continueLoading}
           >
-                {loading ? <span className={styles.spinner}></span> : t('continue')}
+                {continueLoading ? <span className={styles.spinner}></span> : t('continue')}
           </button>
         </form>
       </div>
