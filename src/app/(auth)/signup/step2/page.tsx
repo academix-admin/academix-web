@@ -26,7 +26,7 @@ export default function SignUpStep2() {
     key: 'countries',
     scope: 'signup_flow',
     persist: true,
-    ttl: 100,
+    ttl: 3600,
     deps: [lang],
   });
 
@@ -34,7 +34,7 @@ export default function SignUpStep2() {
     key: 'languages',
     scope: 'signup_flow',
     persist: true,
-    ttl: 100,
+    ttl: 3600,
     deps: [lang],
   });
 

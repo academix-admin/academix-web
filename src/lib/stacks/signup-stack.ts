@@ -60,7 +60,7 @@ export const signupConfig = {
     password: '',
   },
   persist: true,
-  ttl: 60,
+  ttl: 300,
   historyDepth: 10,
   totalSteps: 7,
   clearOnZeroSubscribers: false,
