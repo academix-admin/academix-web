@@ -44,8 +44,11 @@ export default function SignUpStep2() {
   const [isFormValid, setIsFormValid] = useState(false);
 
   useEffect(() => {
-    setCanGoBack(window.history.length > 1);
     setFirstname(capitalize(getLastNameOrSingle(signup.fullName)));
+  }, [signup.fullName]);
+
+  useEffect(() => {
+    setCanGoBack(window.history.length > 1);
 
     // Demand countries and languages
     demandCountries(async ({ set }) => {
@@ -81,10 +84,10 @@ export default function SignUpStep2() {
   useEffect(() => {
     // Set default values for country and language if not already set
     if (countries.length > 0 && !signup.country) {
-  signup$.setField({ field: 'country', value: countries[0].country_identity });
+  signup$.setField({ field: 'country' as keyof typeof signup, value: countries[0].country_identity });
     }
     if (languages.length > 0 && !signup.language) {
-  signup$.setField({ field: 'language', value: languages[0].language_identity });
+  signup$.setField({ field: 'language' as keyof typeof signup, value: languages[0].language_identity });
     }
   }, [countries, languages, signup.country, signup.language, signup$]);
 
@@ -95,7 +98,7 @@ export default function SignUpStep2() {
 
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const { name, value } = e.target;
-  signup$.setField({ field: name as keyof SignupState, value });
+  signup$.setField({ field: name as keyof typeof signup, value });
   };
 
   const handleSubmit = (e: React.FormEvent) => {

@@ -33,14 +33,21 @@ export const defaultStorageAdapter = browserStorageAdapter;
 
 export interface StateStackInitOptions {
   storagePrefix?: string;
-  defaultStorageAdapter?: StorageAdapter;
+  /** optional adapter to use as the default; if not provided we pick a runtime-appropriate adapter */
+  defaultStorageAdapter?: StorageAdapter | undefined;
   debug?: boolean;
+  /**
+   * If true (default) we'll attach the window `storage` listener for cross-tab synchronization.
+   * Set to false to explicitly disable cross-tab syncing.
+   */
+  crossTabSync?: boolean;
 }
 
 let _globalConfig: StateStackInitOptions = {
   storagePrefix: "",
-  defaultStorageAdapter: typeof window !== "undefined" ? defaultStorageAdapter : fallbackStorageAdapter,
-  debug: DEBUG
+  defaultStorageAdapter: undefined, // resolved at runtime in getDefaultStorage()
+  debug: DEBUG,
+  crossTabSync: true,
 };
 
 export function initStateStack(opts: StateStackInitOptions) {
@@ -48,7 +55,8 @@ export function initStateStack(opts: StateStackInitOptions) {
 }
 
 export const getDefaultStorage = (): StorageAdapter =>
-  _globalConfig.defaultStorageAdapter ?? fallbackStorageAdapter;
+  _globalConfig.defaultStorageAdapter ??
+  (typeof window !== "undefined" ? defaultStorageAdapter : fallbackStorageAdapter);
 
 class StateStackCore {
   private static _instance: StateStackCore | null = null;
@@ -213,7 +221,7 @@ class StateStackCore {
     const next = Math.max(0, prev - 1);
     this.scopeSubscriberCounts.set(scope, next);
     if (next === 0 && this.autoClearScopes.has(scope)) {
-      this.clearScope(scope);
+      this.clearScope(scope /* defaults to removing persisted data */);
       this.autoClearScopes.delete(scope);
     }
   }
@@ -232,7 +240,9 @@ class StateStackCore {
     if (!s) return;
 
     queueMicrotask(() => {
-      for (const fn of s) {
+      // iterate over a snapshot to avoid modification during iteration
+      const subs = Array.from(s);
+      for (const fn of subs) {
         try {
           fn();
         } catch (err) {
@@ -242,6 +252,10 @@ class StateStackCore {
     });
   }
 
+  /**
+   * Set a TTL for a key. When the TTL expires the in-memory state and history are cleared,
+   * and persisted storage item is removed by default.
+   */
   setTTL(scope: string, key: string, ttlSeconds?: number) {
     const timerKey = this.subKey(scope, key);
     if (this.timers.has(timerKey)) {
@@ -249,19 +263,44 @@ class StateStackCore {
       this.timers.delete(timerKey);
     }
     if (ttlSeconds && ttlSeconds > 0) {
-      const t = setTimeout(() => {
-        this.stacks.get(scope)?.delete(key);
-        if (this.history.has(timerKey)) this.history.delete(timerKey);
-        this.timers.delete(timerKey);
-        this.notify(scope, key);
+      const t = setTimeout(async () => {
+        try {
+          this.stacks.get(scope)?.delete(key);
+          if (this.history.has(timerKey)) this.history.delete(timerKey);
+
+          // remove persisted storage by default
+          try {
+            const storage = getDefaultStorage();
+            const storageKey = this.storageKey(scope, key);
+            await storage.removeItem(storageKey);
+            // also mark as not hydrated
+            this.hydratedKeys.delete(timerKey);
+          } catch (err) {
+            console.error("[StateStack] TTL persist remove error:", err);
+          }
+        } finally {
+          this.timers.delete(timerKey);
+          this.notify(scope, key);
+        }
       }, ttlSeconds * 1000);
       this.timers.set(timerKey, t);
     }
   }
 
-  clearScope(scope: string) {
+  /**
+   * Clear all keys for a scope.
+   * By default, persisted entries are removed too. Pass removePersist = false to keep persisted items.
+   */
+  clearScope(scope: string, removePersist = true) {
     const scopeMap = this.stacks.get(scope);
-    if (!scopeMap) return;
+    const storage = getDefaultStorage();
+    if (!scopeMap) {
+      // still attempt to remove persisted items if requested and we have prefix metadata
+      if (removePersist) {
+        // No keys known in memory; nothing deterministic to remove.
+      }
+      return;
+    }
     for (const key of Array.from(scopeMap.keys())) {
       scopeMap.delete(key);
       this.notify(scope, key);
@@ -273,18 +312,49 @@ class StateStackCore {
       if (this.history.has(timerKey)) {
         this.history.delete(timerKey);
       }
+      if (removePersist) {
+        try {
+          const storageKey = this.storageKey(scope, key);
+          // remove but don't block loop
+          storage.removeItem(storageKey).catch((err) => {
+            console.error("[StateStack] remove persist error:", err);
+          });
+          this.hydratedKeys.delete(this.subKey(scope, key));
+        } catch (err) {
+          console.error("[StateStack] clearScope persist remove error:", err);
+        }
+      }
     }
     this.stacks.delete(scope);
     this.scopeSubscriberCounts.delete(scope);
   }
 
-  clearByPathname(pathname: string) {
+  clearByPathname(pathname: string, removePersist = true) {
     const scope = `route:${pathname}`;
-    this.clearScope(scope);
+    this.clearScope(scope, removePersist);
   }
 
-  clearKey(scope: string, key: string) {
-    if (!this.stacks.has(scope)) return;
+  /**
+   * Clear a single key within a scope.
+   * By default, persisted entry is removed too. Pass removePersist = false to keep persisted item.
+   */
+  clearKey(scope: string, key: string, removePersist = true) {
+    if (!this.stacks.has(scope)) {
+      if (removePersist) {
+        // still attempt to remove the persisted item
+        try {
+          const storage = getDefaultStorage();
+          const storageKey = this.storageKey(scope, key);
+          storage.removeItem(storageKey).catch((err) => {
+            console.error("[StateStack] clearKey remove persist error:", err);
+          });
+          this.hydratedKeys.delete(this.subKey(scope, key));
+        } catch (err) {
+          console.error("[StateStack] clearKey remove persist error:", err);
+        }
+      }
+      return;
+    }
     this.stacks.get(scope)?.delete(key);
     this.notify(scope, key);
     const timerKey = this.subKey(scope, key);
@@ -294,6 +364,18 @@ class StateStackCore {
     }
     if (this.history.has(timerKey)) {
       this.history.delete(timerKey);
+    }
+    if (removePersist) {
+      try {
+        const storage = getDefaultStorage();
+        const storageKey = this.storageKey(scope, key);
+        storage.removeItem(storageKey).catch((err) => {
+          console.error("[StateStack] clearKey remove persist error:", err);
+        });
+        this.hydratedKeys.delete(timerKey);
+      } catch (err) {
+        console.error("[StateStack] clearKey remove persist error:", err);
+      }
     }
   }
 
@@ -356,6 +438,12 @@ class StateStackCore {
 
   private attachStorageListener() {
     if (this.storageEventListenerAttached || typeof window === "undefined") return;
+    // honor global config for cross-tab sync (default true)
+    if (_globalConfig.crossTabSync === false) {
+      this.storageEventListenerAttached = false;
+      return;
+    }
+
     this.storageEventListenerAttached = true;
     window.addEventListener("storage", (ev) => {
       try {
@@ -407,6 +495,12 @@ class StateStackCore {
 
 type MethodFn<S = any> = (state: S, ...args: any[]) => S;
 type MethodDict<S = any> = Record<string, MethodFn<S>>;
+
+/**
+ * Helper to extract argument list of method excluding the first 'state' parameter.
+ * If the blueprint method is (state, a, b) => S, ParamsForMethod will be [a, b]
+ */
+type ParamsForMethod<F> = F extends (state: any, ...args: infer A) => any ? A : never;
 
 export interface StackConfig<S> {
   initial: S;
@@ -487,12 +581,13 @@ export function createStateStack<
     const methods = useMemo(() => {
       const m = methodBlueprints[key];
       const out: {
-        [M in keyof typeof m]: (...args: any[]) => Promise<void>;
+        [M in keyof typeof m]: (...args: ParamsForMethod<typeof m[M]>) => Promise<void>;
       } = {} as any;
 
       for (const methodName of Object.keys(m)) {
         out[methodName as keyof typeof m] = async (...args: any[]) => {
           const current = await core.getState(scope, keyStr, config.initial as StateType, persist, storage);
+          // call the blueprint with the current state as the first argument
           let next = (m as any)[methodName](current, ...args);
           if (config.middleware?.length) {
             for (const middleware of config.middleware) {
@@ -526,13 +621,13 @@ export function createStateStack<
         redo,
         canUndo: () => core.canUndo(scope, keyStr),
         canRedo: () => core.canRedo(scope, keyStr),
-        clear: () => core.clearKey(scope, keyStr),
+        clear: (removePersist = true) => core.clearKey(scope, keyStr, removePersist),
       },
     } as unknown as {
       [K in Key]: StateType;
     } & {
       [K2 in `${Key}$`]: {
-        [M in keyof MethodsFor<Blueprints[Key]>]: (...args: Parameters<MethodsFor<Blueprints[Key]>[M]>) => Promise<void>;
+        [M in keyof MethodsFor<Blueprints[Key]>]: (...args: ParamsForMethod<MethodsFor<Blueprints[Key]>[M]>) => Promise<void>;
       };
     } & { __meta: any };
   }
@@ -557,7 +652,7 @@ export function useDemandState<T>(
   T,
   (loader: (helpers: { get: () => T; set: (v: T) => void }) => void | Promise<void>) => void,
   (v: T | ((prev: T) => T)) => void,
-  { clear: () => void; clearByScope: (scope: string) => void; clearByPathname: () => void }
+  { clear: (removePersist?: boolean) => void; clearByScope: (scope: string, removePersist?: boolean) => void; clearByPathname: (removePersist?: boolean) => void }
 ] {
   const pathname = usePathname() || "route:unknown";
   const scope = `route:${pathname}`;
@@ -654,16 +749,16 @@ export function useDemandState<T>(
     [state, scope, keyStr, ttl, persist, storage]
   );
 
-  const clear = useCallback(() => {
-    core.clearKey(scope, keyStr);
+  const clear = useCallback((removePersist = true) => {
+    core.clearKey(scope, keyStr, removePersist);
   }, [scope, keyStr]);
 
-  const clearByScope = useCallback((scope: string) => {
-    core.clearScope(scope);
+  const clearByScope = useCallback((scope: string, removePersist = true) => {
+    core.clearScope(scope, removePersist);
   }, []);
 
-  const clearByPathname = useCallback(() => {
-    core.clearByPathname(pathname);
+  const clearByPathname = useCallback((removePersist = true) => {
+    core.clearByPathname(pathname, removePersist);
   }, [pathname]);
 
   return [state, demand, set, { clear, clearByScope, clearByPathname }];
@@ -806,6 +901,10 @@ if (typeof window !== "undefined" && process.env.NODE_ENV === "development") {
   };
 }
 
+/**
+ * Exported API: core + convenience helpers.
+ * Note: core is still available as StateStack.core for advanced usage.
+ */
 export const StateStack = {
   core: StateStackCore.instance,
   init: initStateStack,
@@ -816,4 +915,17 @@ export const StateStack = {
   useToggle,
   useList,
   getDefaultStorage,
+  /**
+   * Convenience wrappers exposing optional removePersist on clear operations.
+   * removePersist defaults to true (persisted storage removed).
+   */
+  clearKey: (scope: string, key: string, removePersist = true) => {
+    StateStackCore.instance.clearKey(scope, key, removePersist);
+  },
+  clearScope: (scope: string, removePersist = true) => {
+    StateStackCore.instance.clearScope(scope, removePersist);
+  },
+  clearByPathname: (pathname: string, removePersist = true) => {
+    StateStackCore.instance.clearByPathname(pathname, removePersist);
+  },
 };
