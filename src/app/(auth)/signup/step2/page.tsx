@@ -24,15 +24,17 @@ export default function SignUpStep2() {
 
   const [countries, demandCountries, setCountries] = useDemandState<Country[]>([], {
     key: 'countries',
+    scope: 'signup_flow',
     persist: true,
-    ttl: 300,
+    ttl: 100,
     deps: [lang],
   });
 
   const [languages, demandLanguages, setLanguages] = useDemandState<Language[]>([], {
     key: 'languages',
+    scope: 'signup_flow',
     persist: true,
-    ttl: 300,
+    ttl: 100,
     deps: [lang],
   });
 
@@ -49,56 +51,54 @@ export default function SignUpStep2() {
 
   useEffect(() => {
     setCanGoBack(window.history.length > 1);
+  }, []);
 
-    // Demand countries and languages
+  useEffect(() => {
+    if (countries.length > 0 && !signup.country) {
+        signup$.setField({ field: 'country' as keyof typeof signup, value: countries[0].country_identity });
+    }
+    if (languages.length > 0 && !signup.language) {
+       signup$.setField({ field: 'language' as keyof typeof signup, value: languages[0].language_identity });
+    }
+  }, [countries, languages, signup.country, signup.language, signup$]);
+
+  const loadCountries = useCallback(() => {
     demandCountries(async ({ set }) => {
+      setCountryLoading(true);
       try {
-        setCountryLoading(true);
         const { data, error } = await supabaseBrowser.rpc('fetch_country', { p_locale: lang });
         if (error) throw error;
-        setCountryLoading(false);
         set(data || []);
-      } catch (error) {
-        console.error('Failed to fetch countries:', error);
-      }finally{
+      } catch (err) {
+        console.error('Failed to fetch countries:', err);
+      } finally {
         setCountryLoading(false);
       }
     });
+  }, [lang]);
 
+  const loadLanguages = useCallback(() => {
     demandLanguages(async ({ set }) => {
+      setLanguageLoading(true);
       try {
-        setLanguageLoading(true);
         const { data, error } = await supabaseBrowser.rpc('fetch_languages', { p_locale: lang });
         if (error) throw error;
-        setLanguageLoading(false);
         set(data || []);
-      } catch (error) {
-        console.error('Failed to fetch languages:', error);
-      } finally{
+      } catch (err) {
+        console.error('Failed to fetch languages:', err);
+      } finally {
         setLanguageLoading(false);
       }
-
     });
   }, [lang]);
 
   useEffect(() => {
-    // Set default values for country and language if not already set
-    if (countries.length > 0 && !signup.country) {
-  signup$.setField({ field: 'country' as keyof typeof signup, value: countries[0].country_identity });
-    }
-    if (languages.length > 0 && !signup.language) {
-  signup$.setField({ field: 'language' as keyof typeof signup, value: languages[0].language_identity });
-    }
-  }, [countries, languages, signup.country, signup.language, signup$]);
-
-  useEffect(() => {
-    // Validate form
     setIsFormValid(!!signup.country && !!signup.language);
   }, [signup.country, signup.language]);
 
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const { name, value } = e.target;
-  signup$.setField({ field: name as keyof typeof signup, value });
+    signup$.setField({ field: name as keyof typeof signup, value });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -155,7 +155,7 @@ export default function SignUpStep2() {
         />
 
         <h2 className={styles.stepTitle}>{t('hi_name', { name: firstname })}</h2>
-        <p className={styles.stepSubtitle}>{t('step_x_of_y', { current: signup.currentStep, total: signupConfig.totalSteps })}</p>
+        <p className={styles.stepSubtitle}>{t('step_x_of_y', { current: 2, total: signupConfig.totalSteps })}</p>
 
         <form onSubmit={handleSubmit} className={styles.form}>
           <div className={styles.formGroup}>
@@ -167,8 +167,10 @@ export default function SignUpStep2() {
               name="language"
               value={signup.language}
               onChange={handleChange}
+              onFocus={loadLanguages}
+              onClick={loadLanguages}
               className={styles.select}
-              disabled={languageLoading || languages.length === 0}
+              disabled={languageLoading}
               required
             >
               {languages.length === 0 && (
@@ -191,8 +193,10 @@ export default function SignUpStep2() {
               name="country"
               value={signup.country}
               onChange={handleChange}
+              onFocus={loadCountries}
+              onClick={loadCountries}
               className={styles.select}
-              disabled={countryLoading || countries.length === 0}
+              disabled={countryLoading}
               required
             >
               {countries.length === 0 && (

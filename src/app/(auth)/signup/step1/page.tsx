@@ -10,6 +10,7 @@ import Link from 'next/link'
 import CachedLottie from '@/components/CachedLottie';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useStack, signupConfig } from '@/lib/stacks/signup-stack';
+import { StateStack } from '@/lib/state-stack';
 
 export default function SignUpStep1() {
   const { theme } = useTheme();
@@ -77,9 +78,9 @@ export default function SignUpStep1() {
     }
   };
 
-  const cancelSignUp = () => {
+  const cancelSignUp = async () => {
     router.back();
-    signup$.reset();
+    await StateStack.core.clearScope('signup_flow');
   };
 
   return (

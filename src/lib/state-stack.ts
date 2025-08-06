@@ -1,9 +1,8 @@
-// lib/state-stack.ts
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useSyncExternalStore } from "react";
 
-const DEBUG = process.env.NODE_ENV === 'development';
+const DEBUG = process.env.NODE_ENV === "development";
 
 type Subscriber = () => void;
 
@@ -11,10 +10,13 @@ export interface StorageAdapter {
 getItem(key: string): Promise<string | null>;
   setItem(key: string, value: string): Promise<void>;
   removeItem(key: string): Promise<void>;
+  // NOTE: we intentionally do not require a keys() method. If you want
+  // storage-wide prefix removal, consider adding an optional keys() to adapters.
 }
 
 const browserStorageAdapter: StorageAdapter = {
-  getItem: async (k) => (typeof window !== "undefined" ? localStorage.getItem(k) : null),
+  getItem: async (k) =>
+    typeof window !== "undefined" ? localStorage.getItem(k) : null,
   setItem: async (k, v) => {
     if (typeof window !== "undefined") localStorage.setItem(k, v);
   },
@@ -33,19 +35,14 @@ export const defaultStorageAdapter = browserStorageAdapter;
 
 export interface StateStackInitOptions {
   storagePrefix?: string;
-  /** optional adapter to use as the default; if not provided we pick a runtime-appropriate adapter */
   defaultStorageAdapter?: StorageAdapter | undefined;
   debug?: boolean;
-  /**
-   * If true (default) we'll attach the window `storage` listener for cross-tab synchronization.
-   * Set to false to explicitly disable cross-tab syncing.
-   */
   crossTabSync?: boolean;
 }
 
 let _globalConfig: StateStackInitOptions = {
   storagePrefix: "",
-  defaultStorageAdapter: undefined, // resolved at runtime in getDefaultStorage()
+  defaultStorageAdapter: undefined,
   debug: DEBUG,
   crossTabSync: true,
 };
@@ -57,6 +54,12 @@ export function initStateStack(opts: StateStackInitOptions) {
 export const getDefaultStorage = (): StorageAdapter =>
   _globalConfig.defaultStorageAdapter ??
   (typeof window !== "undefined" ? defaultStorageAdapter : fallbackStorageAdapter);
+
+/**
+ * Internal note: use an unambiguous separator for composing `scope` and `key`
+ * so that scopes or keys that include ':' or other characters do not break parsing.
+ */
+const INTERNAL_SEPARATOR = "::";
 
 class StateStackCore {
   private static _instance: StateStackCore | null = null;
@@ -76,28 +79,33 @@ class StateStackCore {
   private scopeSubscriberCounts = new Map<string, number>();
   private autoClearScopes = new Set<string>();
   private storageEventListenerAttached = false;
-  private hydratedKeys = new Set<string>();
+  private hydratedKeys = new Set<string>(); // internalKey = `${scope}${SEP}${key}`
+  private loadedKeys = new Set<string>();
 
   private debugLog(...args: any[]) {
     if (_globalConfig.debug) {
-      console.debug('[StateStack]', ...args);
+      console.debug("[StateStack]", ...args);
     }
   }
 
   private storageKey(scope: string, key: string) {
     const prefix = _globalConfig.storagePrefix ? `${_globalConfig.storagePrefix}:` : "";
-    return `${prefix}${scope}:${key}`;
+    return `${prefix}${scope}${INTERNAL_SEPARATOR}${key}`;
   }
 
   private subKey(scope: string, key: string) {
-    return `${scope}:${key}`;
+    return `${scope}${INTERNAL_SEPARATOR}${key}`;
+  }
+
+  private parseSubKey(subKey: string): [string, string] {
+    const idx = subKey.indexOf(INTERNAL_SEPARATOR);
+    if (idx === -1) return ["", subKey];
+    return [subKey.slice(0, idx), subKey.slice(idx + INTERNAL_SEPARATOR.length)];
   }
 
   async ensureHydrated(scope: string, key: string, initial: any, persist: boolean, storage: StorageAdapter): Promise<boolean> {
     const internalKey = this.subKey(scope, key);
-
     if (!persist || this.hydratedKeys.has(internalKey)) return false;
-
     try {
       const storageKey = this.storageKey(scope, key);
       const stored = await storage.getItem(storageKey);
@@ -106,7 +114,25 @@ class StateStackCore {
         if (!this.stacks.has(scope)) this.stacks.set(scope, new Map());
         this.stacks.get(scope)!.set(key, parsed);
         this.hydratedKeys.add(internalKey);
+        this.loadedKeys.add(internalKey);
         return true;
+      } else {
+        // Backwards-compat attempt: try old ':' format (if someone persisted with older version)
+        if (_globalConfig.storagePrefix !== undefined) {
+          const prefix = _globalConfig.storagePrefix ? `${_globalConfig.storagePrefix}:` : "";
+          const altKey = `${prefix}${scope}:${key}`;
+          const altStored = await storage.getItem(altKey);
+          if (altStored != null) {
+            try {
+              const parsed = JSON.parse(altStored);
+              if (!this.stacks.has(scope)) this.stacks.set(scope, new Map());
+              this.stacks.get(scope)!.set(key, parsed);
+              this.hydratedKeys.add(internalKey);
+              this.loadedKeys.add(internalKey);
+              return true;
+            } catch {}
+          }
+        }
       }
     } catch (err) {
       console.error("[StateStack] hydrate error:", err);
@@ -123,13 +149,7 @@ class StateStackCore {
     return scopeStack.get(key) as S;
   }
 
-  async getState<S>(
-    scope: string,
-    key: string,
-    initial: S,
-    persist: boolean,
-    storage: StorageAdapter
-  ): Promise<S> {
+  async getState<S>(scope: string, key: string, initial: S, persist: boolean, storage: StorageAdapter): Promise<S> {
     const internalKey = this.subKey(scope, key);
     return this.queueUpdate(internalKey, async () => {
       await this.ensureHydrated(scope, key, initial, persist, storage);
@@ -150,19 +170,11 @@ class StateStackCore {
     }
   }
 
-  async setState<S>(
-    scope: string,
-    key: string,
-    value: S,
-    persist: boolean,
-    storage: StorageAdapter,
-    pushHistory = true
-  ): Promise<S> {
+  async setState<S>(scope: string, key: string, value: S, persist: boolean, storage: StorageAdapter, pushHistory = true): Promise<S> {
     const internalKey = this.subKey(scope, key);
     return this.queueUpdate(internalKey, async () => {
       if (!this.stacks.has(scope)) this.stacks.set(scope, new Map());
       const scopeStack = this.stacks.get(scope)!;
-
       const prev = scopeStack.get(key);
       if (pushHistory) {
         const historyKey = this.subKey(scope, key);
@@ -174,18 +186,17 @@ class StateStackCore {
         if (h.past.length > h.maxDepth) h.past.shift();
         h.future = [];
       }
-
       scopeStack.set(key, value);
-
+      this.loadedKeys.add(internalKey);
       if (persist) {
         try {
           const storageKey = this.storageKey(scope, key);
           await storage.setItem(storageKey, JSON.stringify(value));
+          this.hydratedKeys.add(internalKey);
         } catch (err) {
           console.error("[StateStack] persist error:", err);
         }
       }
-
       this.notify(scope, key);
       return value;
     });
@@ -196,7 +207,6 @@ class StateStackCore {
     if (!this.subscribers.has(k)) this.subscribers.set(k, new Set());
     this.subscribers.get(k)!.add(fn);
     this.incrementScopeCount(scope);
-
     let unsubbed = false;
     return () => {
       if (unsubbed) return;
@@ -221,7 +231,7 @@ class StateStackCore {
     const next = Math.max(0, prev - 1);
     this.scopeSubscriberCounts.set(scope, next);
     if (next === 0 && this.autoClearScopes.has(scope)) {
-      this.clearScope(scope /* defaults to removing persisted data */);
+      this.clearScope(scope);
       this.autoClearScopes.delete(scope);
     }
   }
@@ -238,9 +248,7 @@ class StateStackCore {
     const k = this.subKey(scope, key);
     const s = this.subscribers.get(k);
     if (!s) return;
-
     queueMicrotask(() => {
-      // iterate over a snapshot to avoid modification during iteration
       const subs = Array.from(s);
       for (const fn of subs) {
         try {
@@ -252,10 +260,6 @@ class StateStackCore {
     });
   }
 
-  /**
-   * Set a TTL for a key. When the TTL expires the in-memory state and history are cleared,
-   * and persisted storage item is removed by default.
-   */
   setTTL(scope: string, key: string, ttlSeconds?: number) {
     const timerKey = this.subKey(scope, key);
     if (this.timers.has(timerKey)) {
@@ -267,14 +271,12 @@ class StateStackCore {
         try {
           this.stacks.get(scope)?.delete(key);
           if (this.history.has(timerKey)) this.history.delete(timerKey);
-
-          // remove persisted storage by default
           try {
             const storage = getDefaultStorage();
             const storageKey = this.storageKey(scope, key);
             await storage.removeItem(storageKey);
-            // also mark as not hydrated
             this.hydratedKeys.delete(timerKey);
+            this.loadedKeys.delete(timerKey);
           } catch (err) {
             console.error("[StateStack] TTL persist remove error:", err);
           }
@@ -287,72 +289,80 @@ class StateStackCore {
     }
   }
 
-  /**
-   * Clear all keys for a scope.
-   * By default, persisted entries are removed too. Pass removePersist = false to keep persisted items.
-   */
-  clearScope(scope: string, removePersist = true) {
+  async clearScope(scope: string, removePersist = true) {
     const scopeMap = this.stacks.get(scope);
     const storage = getDefaultStorage();
-    if (!scopeMap) {
-      // still attempt to remove persisted items if requested and we have prefix metadata
-      if (removePersist) {
-        // No keys known in memory; nothing deterministic to remove.
+    if (scopeMap) {
+      for (const key of Array.from(scopeMap.keys())) {
+        scopeMap.delete(key);
+        this.notify(scope, key);
+        const timerKey = this.subKey(scope, key);
+        if (this.timers.has(timerKey)) {
+          clearTimeout(this.timers.get(timerKey)!);
+          this.timers.delete(timerKey);
+        }
+        if (this.history.has(timerKey)) {
+          this.history.delete(timerKey);
+        }
+        this.hydratedKeys.delete(timerKey);
+        this.loadedKeys.delete(timerKey);
+        if (removePersist) {
+          try {
+            const storageKey = this.storageKey(scope, key);
+            await storage.removeItem(storageKey);
+          } catch (err) {
+            console.error("[StateStack] clearScope persist remove error:", err);
+          }
+        }
       }
-      return;
+      this.stacks.delete(scope);
     }
-    for (const key of Array.from(scopeMap.keys())) {
-      scopeMap.delete(key);
-      this.notify(scope, key);
-      const timerKey = this.subKey(scope, key);
-      if (this.timers.has(timerKey)) {
-        clearTimeout(this.timers.get(timerKey)!);
-        this.timers.delete(timerKey);
-      }
-      if (this.history.has(timerKey)) {
-        this.history.delete(timerKey);
-      }
-      if (removePersist) {
-        try {
-          const storageKey = this.storageKey(scope, key);
-          // remove but don't block loop
-          storage.removeItem(storageKey).catch((err) => {
-            console.error("[StateStack] remove persist error:", err);
-          });
-          this.hydratedKeys.delete(this.subKey(scope, key));
-        } catch (err) {
-          console.error("[StateStack] clearScope persist remove error:", err);
+
+    // Also remove any tracked loaded/hydrated keys matching this scope
+    for (const internalKey of Array.from(this.loadedKeys)) {
+      const [keyScope, key] = this.parseSubKey(internalKey);
+      if (keyScope === scope) {
+        this.loadedKeys.delete(internalKey);
+        this.hydratedKeys.delete(internalKey);
+        if (removePersist) {
+          try {
+            const storageKey = this.storageKey(scope, key);
+            await storage.removeItem(storageKey);
+          } catch (err) {
+            console.error("[StateStack] clearScope demand persist remove error:", err);
+          }
         }
       }
     }
-    this.stacks.delete(scope);
     this.scopeSubscriberCounts.delete(scope);
   }
 
-  clearByPathname(pathname: string, removePersist = true) {
+  async clearByPathname(pathname: string, removePersist = true) {
     const scope = `route:${pathname}`;
-    this.clearScope(scope, removePersist);
+    await this.clearScope(scope, removePersist);
   }
 
-  /**
-   * Clear a single key within a scope.
-   * By default, persisted entry is removed too. Pass removePersist = false to keep persisted item.
-   */
+  async clearCurrentPath(removePersist = true) {
+    if (typeof window === "undefined") return;
+    const pathname = window.location.pathname;
+    await this.clearByPathname(pathname, removePersist);
+  }
+
   clearKey(scope: string, key: string, removePersist = true) {
     if (!this.stacks.has(scope)) {
       if (removePersist) {
-        // still attempt to remove the persisted item
         try {
           const storage = getDefaultStorage();
           const storageKey = this.storageKey(scope, key);
-          storage.removeItem(storageKey).catch((err) => {
-            console.error("[StateStack] clearKey remove persist error:", err);
-          });
-          this.hydratedKeys.delete(this.subKey(scope, key));
+          storage
+            .removeItem(storageKey)
+            .catch((err) => console.error("[StateStack] clearKey remove persist error:", err));
         } catch (err) {
           console.error("[StateStack] clearKey remove persist error:", err);
         }
       }
+      this.hydratedKeys.delete(this.subKey(scope, key));
+      this.loadedKeys.delete(this.subKey(scope, key));
       return;
     }
     this.stacks.get(scope)?.delete(key);
@@ -365,18 +375,118 @@ class StateStackCore {
     if (this.history.has(timerKey)) {
       this.history.delete(timerKey);
     }
+    this.hydratedKeys.delete(timerKey);
+    this.loadedKeys.delete(timerKey);
     if (removePersist) {
       try {
         const storage = getDefaultStorage();
         const storageKey = this.storageKey(scope, key);
-        storage.removeItem(storageKey).catch((err) => {
-          console.error("[StateStack] clearKey remove persist error:", err);
-        });
-        this.hydratedKeys.delete(timerKey);
+        storage
+          .removeItem(storageKey)
+          .catch((err) => console.error("[StateStack] clearKey remove persist error:", err));
       } catch (err) {
         console.error("[StateStack] clearKey remove persist error:", err);
       }
     }
+  }
+
+  /**
+   * Clear keys in-memory whose key startsWith prefix.
+   * prefix is matched against the stored "key" (not scope).
+   */
+  clearByPrefix(prefix: string, removePersist = true) {
+    for (const [scope, scopeMap] of this.stacks) {
+      for (const key of Array.from(scopeMap.keys())) {
+        if (key.startsWith(prefix)) {
+          this.clearKey(scope, key, removePersist);
+        }
+      }
+    }
+    // Also attempt to clear tracked loaded/hydrated keys outside in-memory stacks
+    for (const internalKey of Array.from(this.loadedKeys)) {
+      const [keyScope, key] = this.parseSubKey(internalKey);
+      if (key.startsWith(prefix)) {
+        this.hydratedKeys.delete(internalKey);
+        this.loadedKeys.delete(internalKey);
+        if (removePersist) {
+          try {
+            const storage = getDefaultStorage();
+            const storageKey = this.storageKey(keyScope, key);
+            storage.removeItem(storageKey).catch((err) => {
+              console.error("[StateStack] clearByPrefix persist remove error:", err);
+            });
+          } catch (err) {
+            console.error("[StateStack] clearByPrefix persist remove error:", err);
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * Clear by arbitrary condition (scope, key) => boolean
+   */
+  clearByCondition(condition: (scope: string, key: string) => boolean, removePersist = true) {
+    for (const [scope, scopeMap] of this.stacks) {
+      for (const key of Array.from(scopeMap.keys())) {
+        try {
+          if (condition(scope, key)) {
+            this.clearKey(scope, key, removePersist);
+          }
+        } catch (err) {
+          console.error("[StateStack] clearByCondition condition error:", err);
+        }
+      }
+    }
+    // Also attempt to clear tracked loaded/hydrated keys not in the stacks
+    for (const internalKey of Array.from(this.loadedKeys)) {
+      const [keyScope, key] = this.parseSubKey(internalKey);
+      try {
+        if (condition(keyScope, key)) {
+          this.hydratedKeys.delete(internalKey);
+          this.loadedKeys.delete(internalKey);
+          if (removePersist) {
+            try {
+              const storage = getDefaultStorage();
+              const storageKey = this.storageKey(keyScope, key);
+              storage.removeItem(storageKey).catch((err) => {
+                console.error("[StateStack] clearByCondition persist remove error:", err);
+              });
+            } catch (err) {
+              console.error("[StateStack] clearByCondition persist remove error:", err);
+            }
+          }
+        }
+      } catch (err) {
+        console.error("[StateStack] clearByCondition error on loadedKey:", err);
+      }
+    }
+  }
+
+  /**
+   * New helper: flexible matching options for clearing.
+   * Provide one or more of: prefix, contains, regex, scope (to limit to a scope), or a custom condition.
+   */
+  clearMatching(opts: {
+    prefix?: string;
+    contains?: string;
+    regex?: RegExp;
+    scope?: string;
+    removePersist?: boolean;
+    condition?: (scope: string, key: string) => boolean;
+  }) {
+    const { prefix, contains, regex, scope: onlyScope, removePersist = true, condition } = opts;
+    if (condition) {
+      return this.clearByCondition(condition, removePersist);
+    }
+    const matcher = (scope: string, key: string) => {
+      if (onlyScope && scope !== onlyScope) return false;
+      if (prefix && key.startsWith(prefix)) return true;
+      if (contains && key.includes(contains)) return true;
+      if (regex && regex.test(key)) return true;
+      return false;
+    };
+    this.clearByCondition(matcher, removePersist);
   }
 
   canUndo(scope: string, key: string) {
@@ -400,6 +510,7 @@ class StateStackCore {
       h.future.push(this._clone(current));
       if (!this.stacks.has(scope)) this.stacks.set(scope, new Map());
       this.stacks.get(scope)!.set(key, prev);
+      this.loadedKeys.add(hk);
       if (persist) await (storage || getDefaultStorage()).setItem(this.storageKey(scope, key), JSON.stringify(prev));
       this.notify(scope, key);
     });
@@ -414,6 +525,7 @@ class StateStackCore {
       const next = h.future.pop()!;
       h.past.push(this._clone(this.stacks.get(scope)?.get(key)));
       this.stacks.get(scope)!.set(key, next);
+      this.loadedKeys.add(hk);
       if (persist) await (storage || getDefaultStorage()).setItem(this.storageKey(scope, key), JSON.stringify(next));
       this.notify(scope, key);
     });
@@ -436,35 +548,61 @@ class StateStackCore {
     }
   }
 
+  isLoaded(scope: string, key: string) {
+    return this.loadedKeys.has(this.subKey(scope, key));
+  }
+
+  markLoaded(scope: string, key: string) {
+    this.loadedKeys.add(this.subKey(scope, key));
+  }
+
+  clearLoaded(scope: string, key: string) {
+    this.loadedKeys.delete(this.subKey(scope, key));
+  }
+
   private attachStorageListener() {
     if (this.storageEventListenerAttached || typeof window === "undefined") return;
-    // honor global config for cross-tab sync (default true)
     if (_globalConfig.crossTabSync === false) {
       this.storageEventListenerAttached = false;
       return;
     }
-
     this.storageEventListenerAttached = true;
     window.addEventListener("storage", (ev) => {
       try {
         if (!ev.key) return;
         let key = ev.key;
+        // Remove configured prefix if present
         const prefix = _globalConfig.storagePrefix ? `${_globalConfig.storagePrefix}:` : "";
         if (prefix && key.startsWith(prefix)) {
           key = key.slice(prefix.length);
         }
-        const idx = key.lastIndexOf(":");
-        if (idx === -1) return;
-        const scope = key.slice(0, idx);
-        const subKey = key.slice(idx + 1);
+        // normalize older colon format as well as new INTERNAL_SEPARATOR
+        let scope = "";
+        let subKey = "";
+        if (key.includes(INTERNAL_SEPARATOR)) {
+          const idx = key.indexOf(INTERNAL_SEPARATOR);
+          scope = key.slice(0, idx);
+          subKey = key.slice(idx + INTERNAL_SEPARATOR.length);
+        } else {
+          // fallback to legacy ":" format
+          const idx = key.lastIndexOf(":");
+          if (idx === -1) return;
+          scope = key.slice(0, idx);
+          subKey = key.slice(idx + 1);
+        }
+
         if (ev.newValue == null) {
           this.stacks.get(scope)?.delete(subKey);
+          this.hydratedKeys.delete(this.subKey(scope, subKey));
+          this.loadedKeys.delete(this.subKey(scope, subKey));
           this.notify(scope, subKey);
         } else {
           try {
             const parsed = JSON.parse(ev.newValue);
             if (!this.stacks.has(scope)) this.stacks.set(scope, new Map());
             this.stacks.get(scope)!.set(subKey, parsed);
+            this.hydratedKeys.add(this.subKey(scope, subKey));
+            this.loadedKeys.add(this.subKey(scope, subKey));
             this.notify(scope, subKey);
           } catch {}
         }
@@ -489,6 +627,7 @@ class StateStackCore {
       autoClearScopes: Array.from(this.autoClearScopes),
       pendingUpdates: Array.from(this.pendingUpdates.keys()),
       hydratedKeys: Array.from(this.hydratedKeys),
+      loadedKeys: Array.from(this.loadedKeys),
     };
   }
 }
@@ -496,10 +635,6 @@ class StateStackCore {
 type MethodFn<S = any> = (state: S, ...args: any[]) => S;
 type MethodDict<S = any> = Record<string, MethodFn<S>>;
 
-/**
- * Helper to extract argument list of method excluding the first 'state' parameter.
- * If the blueprint method is (state, a, b) => S, ParamsForMethod will be [a, b]
- */
 type ParamsForMethod<F> = F extends (state: any, ...args: infer A) => any ? A : never;
 
 export interface StackConfig<S> {
@@ -544,7 +679,6 @@ export function createStateStack<
 
     useEffect(() => {
       if (!persist) return;
-
       let mounted = true;
       const hydrate = async () => {
         try {
@@ -556,7 +690,6 @@ export function createStateStack<
           console.error("[StateStack] hydrate error:", err);
         }
       };
-
       hydrate();
       return () => {
         mounted = false;
@@ -587,7 +720,6 @@ export function createStateStack<
       for (const methodName of Object.keys(m)) {
         out[methodName as keyof typeof m] = async (...args: any[]) => {
           const current = await core.getState(scope, keyStr, config.initial as StateType, persist, storage);
-          // call the blueprint with the current state as the first argument
           let next = (m as any)[methodName](current, ...args);
           if (config.middleware?.length) {
             for (const middleware of config.middleware) {
@@ -599,7 +731,6 @@ export function createStateStack<
           core.setTTL(scope, keyStr, ttl);
         };
       }
-
       return out;
     }, [scope, keyStr, ttl, persist, config.middleware, config.initial, storage]);
 
@@ -622,6 +753,7 @@ export function createStateStack<
         canUndo: () => core.canUndo(scope, keyStr),
         canRedo: () => core.canRedo(scope, keyStr),
         clear: (removePersist = true) => core.clearKey(scope, keyStr, removePersist),
+        clearByScope: (removePersist = true) => core.clearScope(scope, removePersist),
       },
     } as unknown as {
       [K in Key]: StateType;
@@ -647,15 +779,22 @@ export function useDemandState<T>(
     clearOnBack?: boolean;
     deps?: React.DependencyList;
     clearOnZeroSubscribers?: boolean;
+    scope?: string;
   }
 ): [
   T,
   (loader: (helpers: { get: () => T; set: (v: T) => void }) => void | Promise<void>) => void,
   (v: T | ((prev: T) => T)) => void,
-  { clear: (removePersist?: boolean) => void; clearByScope: (scope: string, removePersist?: boolean) => void; clearByPathname: (removePersist?: boolean) => void }
+  {
+    clear: (removePersist?: boolean) => void;
+    clearByScope: (scope: string, removePersist?: boolean) => void;
+    clearByPathname: (removePersist?: boolean) => void;
+    clearByPrefix: (prefix: string, removePersist?: boolean) => void;
+    clearByCondition: (condition: (scope: string, key: string) => boolean, removePersist?: boolean) => void;
+  }
 ] {
   const pathname = usePathname() || "route:unknown";
-  const scope = `route:${pathname}`;
+  const scope = opts?.scope || `route:${pathname}`;
   const key = opts?.key ?? "demand";
   const ttl = opts?.ttl ?? 3600;
   const persist = opts?.persist ?? true;
@@ -677,7 +816,6 @@ export function useDemandState<T>(
 
   useEffect(() => {
     if (!persist) return;
-
     let mounted = true;
     const hydrate = async () => {
       try {
@@ -689,7 +827,6 @@ export function useDemandState<T>(
         console.error("[useDemandState] hydrate error:", err);
       }
     };
-
     hydrate();
     return () => {
       mounted = false;
@@ -724,44 +861,65 @@ export function useDemandState<T>(
     };
   }, [scope, clearOnZeroSubscribers]);
 
+  useEffect(() => {
+    core.clearLoaded(scope, keyStr);
+  }, deps);
+
   const demand = useCallback(
     (loader: (helpers: { get: () => T; set: (v: T) => void }) => void | Promise<void>) => {
+      if (core.isLoaded(scope, keyStr)) return;
       const ctx = {
-        get: () => state,
+        get: () => core.getStateSync(scope, keyStr, initial) as T,
         set: (v: T) => {
           core.setState(scope, keyStr, v, persist, storage);
           core.setTTL(scope, keyStr, ttl);
+          core.markLoaded(scope, keyStr);
         },
       };
-      Promise.resolve(loader(ctx)).catch((err) => {
-        console.error("[useDemandState] loader error:", err);
-      });
+      Promise.resolve(loader(ctx))
+        .then(() => {
+          core.markLoaded(scope, keyStr);
+          core.setTTL(scope, keyStr, ttl);
+        })
+        .catch((err) => {
+          console.error("[useDemandState] loader error:", err);
+        });
     },
-    [state, scope, keyStr, ttl, persist, storage]
+    [scope, keyStr, ttl, persist, storage, core, initial]
   );
 
   const set = useCallback(
     (v: T | ((prev: T) => T)) => {
-      const next = typeof v === "function" ? (v as any)(state) : v;
+      const prev = core.getStateSync(scope, keyStr, initial) as T;
+      const next = typeof v === "function" ? (v as any)(prev) : v;
       core.setState(scope, keyStr, next, persist, storage);
       core.setTTL(scope, keyStr, ttl);
+      core.markLoaded(scope, keyStr);
     },
-    [state, scope, keyStr, ttl, persist, storage]
+    [scope, keyStr, ttl, persist, storage, core, initial]
   );
 
   const clear = useCallback((removePersist = true) => {
     core.clearKey(scope, keyStr, removePersist);
-  }, [scope, keyStr]);
+  }, [scope, keyStr, core]);
 
-  const clearByScope = useCallback((scope: string, removePersist = true) => {
-    core.clearScope(scope, removePersist);
+  const clearByScope = useCallback((scopeArg: string, removePersist = true) => {
+    core.clearScope(scopeArg, removePersist);
   }, []);
 
   const clearByPathname = useCallback((removePersist = true) => {
     core.clearByPathname(pathname, removePersist);
   }, [pathname]);
 
-  return [state, demand, set, { clear, clearByScope, clearByPathname }];
+  const clearByPrefix = useCallback((prefix: string, removePersist = true) => {
+    core.clearByPrefix(prefix, removePersist);
+  }, []);
+
+  const clearByCondition = useCallback((condition: (scope: string, key: string) => boolean, removePersist = true) => {
+    core.clearByCondition(condition, removePersist);
+  }, []);
+
+  return [state, demand, set, { clear, clearByScope, clearByPathname, clearByPrefix, clearByCondition }];
 }
 
 class AtomStore {
@@ -901,10 +1059,6 @@ if (typeof window !== "undefined" && process.env.NODE_ENV === "development") {
   };
 }
 
-/**
- * Exported API: core + convenience helpers.
- * Note: core is still available as StateStack.core for advanced usage.
- */
 export const StateStack = {
   core: StateStackCore.instance,
   init: initStateStack,
@@ -915,10 +1069,6 @@ export const StateStack = {
   useToggle,
   useList,
   getDefaultStorage,
-  /**
-   * Convenience wrappers exposing optional removePersist on clear operations.
-   * removePersist defaults to true (persisted storage removed).
-   */
   clearKey: (scope: string, key: string, removePersist = true) => {
     StateStackCore.instance.clearKey(scope, key, removePersist);
   },
@@ -927,5 +1077,27 @@ export const StateStack = {
   },
   clearByPathname: (pathname: string, removePersist = true) => {
     StateStackCore.instance.clearByPathname(pathname, removePersist);
+  },
+  clearCurrentPath: (removePersist = true) => {
+    if (typeof window !== "undefined") {
+      StateStackCore.instance.clearByPathname(window.location.pathname, removePersist);
+    }
+  },
+  clearByPrefix: (prefix: string, removePersist = true) => {
+    StateStackCore.instance.clearByPrefix(prefix, removePersist);
+  },
+  clearByCondition: (condition: (scope: string, key: string) => boolean, removePersist = true) => {
+    StateStackCore.instance.clearByCondition(condition, removePersist);
+  },
+  // New helper exposed at top level
+  clearMatching: (opts: {
+    prefix?: string;
+    contains?: string;
+    regex?: RegExp;
+    scope?: string;
+    removePersist?: boolean;
+    condition?: (scope: string, key: string) => boolean;
+  }) => {
+    StateStackCore.instance.clearMatching(opts);
   },
 };
