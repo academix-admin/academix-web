@@ -22,7 +22,7 @@ const CachedLottie: React.FC<CachedLottieProps> = ({
   restoreProgress = false,
 }) => {
   const [animationData, setAnimationData] = useState<any>(getCachedLottie(id));
-  const [animationInstance, setAnimationInstance] = useState<any>(null); // ✅ store raw lottie instance
+  const [animationInstance, setAnimationInstance] = useState<any>(null);
   const lottieRef = useRef<LottieRefCurrentProps>(null);
 
   useEffect(() => {

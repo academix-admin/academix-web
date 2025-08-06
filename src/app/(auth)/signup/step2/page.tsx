@@ -12,6 +12,7 @@ import { getLastNameOrSingle, capitalize } from '@/utils/textUtils';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useStack, signupConfig } from '@/lib/stacks/signup-stack';
 import { useDemandState } from '@/lib/state-stack';
+import { useNavStack } from "@/lib/NavigationStack";
 
 type Country = { country_id: string; country_identity: string };
 type Language = { language_id: string; language_identity: string };
@@ -21,6 +22,7 @@ export default function SignUpStep2() {
   const { t, lang } = useLanguage();
   const router = useRouter();
   const { signup, signup$ } = useStack('signup', signupConfig, 'signup_flow');
+  const nav = useNavStack('signup');
 
   const [countries, demandCountries, setCountries] = useDemandState<Country[]>([], {
     key: 'countries',
@@ -118,7 +120,7 @@ export default function SignUpStep2() {
           {canGoBack && (
             <button
               className={styles.backButton}
-              onClick={() => router.back()}
+              onClick={() => /* router.back() */     nav.pop()}
               aria-label="Go back"
               disabled={continueLoading}
             >
