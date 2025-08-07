@@ -4,8 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import Image from 'next/image';
-import styles from './page.module.css';
-import { useRouter } from 'next/navigation';
+import styles from './step2.module.css';
 import Link from 'next/link';
 import CachedLottie from '@/components/CachedLottie';
 import { getLastNameOrSingle, capitalize } from '@/utils/textUtils';
@@ -13,6 +12,7 @@ import { supabaseBrowser } from '@/lib/supabase/client';
 import { useStack, signupConfig } from '@/lib/stacks/signup-stack';
 import { useDemandState } from '@/lib/state-stack';
 import { useNavStack } from "@/lib/NavigationStack";
+import { useNav } from "@/lib/NavigationStack";
 
 type Country = { country_id: string; country_identity: string };
 type Language = { language_id: string; language_identity: string };
@@ -20,9 +20,9 @@ type Language = { language_id: string; language_identity: string };
 export default function SignUpStep2() {
   const { theme } = useTheme();
   const { t, lang } = useLanguage();
-  const router = useRouter();
   const { signup, signup$ } = useStack('signup', signupConfig, 'signup_flow');
-  const nav = useNavStack('signup');
+  const nav = useNav();
+  const isTop = nav.isTop();
 
   const [countries, demandCountries, setCountries] = useDemandState<Country[]>([], {
     key: 'countries',
@@ -31,6 +31,7 @@ export default function SignUpStep2() {
     ttl: 3600,
     deps: [lang],
   });
+
 
   const [languages, demandLanguages, setLanguages] = useDemandState<Language[]>([], {
     key: 'languages',
@@ -48,8 +49,9 @@ export default function SignUpStep2() {
   const [isFormValid, setIsFormValid] = useState(false);
 
   useEffect(() => {
+    if(!signup.fullName && isTop){nav.go('step1');}
     setFirstname(capitalize(getLastNameOrSingle(signup.fullName)));
-  }, [signup.fullName]);
+  }, [signup.fullName, isTop]);
 
   useEffect(() => {
     setCanGoBack(window.history.length > 1);
@@ -107,7 +109,8 @@ export default function SignUpStep2() {
     e.preventDefault();
     if (!isFormValid) return;
     setContinueLoading(true);
-    router.push('/signup/step3');
+    nav.push('step3');
+
     setContinueLoading(false);
   };
 
@@ -120,7 +123,7 @@ export default function SignUpStep2() {
           {canGoBack && (
             <button
               className={styles.backButton}
-              onClick={() => /* router.back() */     nav.pop()}
+              onClick={() => nav.pop()}
               aria-label="Go back"
               disabled={continueLoading}
             >
@@ -157,7 +160,7 @@ export default function SignUpStep2() {
         />
 
         <h2 className={styles.stepTitle}>{t('hi_name', { name: firstname })}</h2>
-        <p className={styles.stepSubtitle}>{t('step_x_of_y', { current: 2, total: signupConfig.totalSteps })}</p>
+        <p className={styles.stepSubtitle}>{t('step_x_of_y', { current: signup.currentStep, total: signupConfig.totalSteps })}</p>
 
         <form onSubmit={handleSubmit} className={styles.form}>
           <div className={styles.formGroup}>

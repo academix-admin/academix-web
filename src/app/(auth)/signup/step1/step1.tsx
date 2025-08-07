@@ -4,21 +4,19 @@ import { useEffect, useState } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import Image from 'next/image';
-import styles from './page.module.css';
-import { useRouter } from 'next/navigation';
+import styles from './step1.module.css';
 import Link from 'next/link'
 import CachedLottie from '@/components/CachedLottie';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useStack, signupConfig } from '@/lib/stacks/signup-stack';
 import { StateStack } from '@/lib/state-stack';
-import { useNavStack } from "@/lib/NavigationStack";
+import { useNav } from "@/lib/NavigationStack";
 
 export default function SignUpStep1() {
   const { theme } = useTheme();
   const { t } = useLanguage();
-  const router = useRouter();
   const { signup, signup$ } = useStack('signup', signupConfig, 'signup_flow');
-  const nav = useNavStack('signup');
+  const nav = useNav();
 
   const [canGoBack, setCanGoBack] = useState(false);
   const [continueLoading, setContinueLoading] = useState(false);
@@ -26,8 +24,6 @@ export default function SignUpStep1() {
   const [emailExists, setEmailExists] = useState(false);
 
   useEffect(() => {
-              console.log(signup);
-
     setCanGoBack(window.history.length > 1);
   }, []);
 
@@ -70,8 +66,6 @@ export default function SignUpStep1() {
         setIsFormValid(false);
       } else {
         signup$.setStep(2);
-        console.log(signup);
-//         router.push('/signup/step2');
         nav.push('step2');
       }
     } catch (err) {
@@ -82,7 +76,6 @@ export default function SignUpStep1() {
   };
 
   const cancelSignUp = async () => {
-//     router.back();
     nav.pop();
     await StateStack.core.clearScope('signup_flow');
   };

@@ -82,7 +82,7 @@ export default function Welcome() {
               <Link className={styles.loginBtn} href="/login">
                 {t('login')}
               </Link>
-              <Link className={styles.signupBtn} href="/signup/step1">
+              <Link className={styles.signupBtn} href="/signup">
                 {t('sign_up')}
               </Link>
             </div>

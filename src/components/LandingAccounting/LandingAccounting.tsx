@@ -11,7 +11,7 @@ export default function LandingAccounting() {
   return (
     <div className={styles.la_span}>
       <div className={`${styles.btn_con} ${styles[`btn_con_${theme}`]}`}>
-        <Link className={`${styles.signup} ${styles[`signup_${theme}`]}`} href="/signup/step1">{t('sign_up')}</Link>
+        <Link className={`${styles.signup} ${styles[`signup_${theme}`]}`} href="/signup">{t('sign_up')}</Link>
         <Link className={`${styles.login} ${styles[`login_${theme}`]}`}  href="/login">
           <span>{t('login')}</span>
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
