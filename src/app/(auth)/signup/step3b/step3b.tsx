@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import Image from 'next/image';
-import styles from './step2.module.css';
+import styles from './step3b.module.css';
 import Link from 'next/link';
 import CachedLottie from '@/components/CachedLottie';
 import { getLastNameOrSingle, capitalize } from '@/utils/textUtils';
@@ -16,7 +16,7 @@ import { useNav } from "@/lib/NavigationStack";
 type Country = { country_id: string; country_identity: string };
 type Language = { language_id: string; language_identity: string };
 
-export default function SignUpStep2() {
+export default function Step3b() {
   const { theme } = useTheme();
   const { t, lang } = useLanguage();
   const { signup, signup$ } = useStack('signup', signupConfig, 'signup_flow');
@@ -48,7 +48,7 @@ export default function SignUpStep2() {
   const [isFormValid, setIsFormValid] = useState(false);
 
   useEffect(() => {
-    if(!signup.fullName && isTop){nav.go('step1');}
+//     if(!signup.fullName && isTop){nav.go('step1');}
     setFirstname(capitalize(getLastNameOrSingle(signup.fullName)));
   }, [signup.fullName, isTop]);
 
@@ -108,7 +108,7 @@ export default function SignUpStep2() {
     e.preventDefault();
     if (!isFormValid) return;
     setContinueLoading(true);
-    nav.push('step3');
+    nav.push('step4');
 
     setContinueLoading(false);
   };
