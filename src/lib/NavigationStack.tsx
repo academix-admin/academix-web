@@ -478,7 +478,7 @@ function updateNavQueryParamForStack(stackId: string, path: string | null) {
 
     const newHref = url.toString();
     if (window.location.href !== newHref) {
-      window.history.pushState({ navStack: newParam }, "", newHref);
+      window.history.replaceState({ navStack: newParam }, "", newHref);
     }
   } catch (e) {
     // ignore
@@ -498,7 +498,7 @@ function setNavQueryParamIfDifferent(fullPath: string) {
 
     const newHref = newUrl.toString();
     if (window.location.href !== newHref) {
-      window.history.pushState({ navStack: fullPath }, "", newHref);
+      window.history.replaceState({ navStack: fullPath }, "", newHref);
     }
   } catch (e) {
     // ignore
@@ -1176,7 +1176,7 @@ export default function NavigationStack(props: {
     // Fall back to persisted storage
     if (persist) {
       const persisted = readPersistedStack(id);
-      if (persisted?.length > 0) {
+      if (persisted && persisted.length > 0) {
         regEntry.stack = persisted;
         setStackSnapshot([...persisted]);
         if (syncHistory) api.syncWithBrowserHistory(true);
@@ -1489,7 +1489,7 @@ export default function NavigationStack(props: {
 if (typeof module !== 'undefined' && (module as any).hot) {
   (module as any).hot.dispose(() => {
     globalRegistry.forEach((_, id) => {
-      const api = createApiFor(id, {}, false);
+      const api = createApiFor(id, {}, false, null);
       api.dispose();
     });
   });

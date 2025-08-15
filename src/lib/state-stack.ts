@@ -754,6 +754,7 @@ export function createStateStack<
         canRedo: () => core.canRedo(scope, keyStr),
         clear: (removePersist = true) => core.clearKey(scope, keyStr, removePersist),
         clearByScope: (removePersist = true) => core.clearScope(scope, removePersist),
+        isHydrated: core.isLoaded(scope, keyStr),
       },
     } as unknown as {
       [K in Key]: StateType;

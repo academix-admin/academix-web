@@ -19,7 +19,7 @@ type Language = { language_id: string; language_identity: string };
 export default function SignUpStep2() {
   const { theme } = useTheme();
   const { t, lang } = useLanguage();
-  const { signup, signup$ } = useStack('signup', signupConfig, 'signup_flow');
+  const { signup, signup$, __meta  } = useStack('signup', signupConfig, 'signup_flow');
   const nav = useNav();
   const isTop = nav.isTop();
 
@@ -48,9 +48,9 @@ export default function SignUpStep2() {
   const [isFormValid, setIsFormValid] = useState(false);
 
   useEffect(() => {
-    if(!signup.fullName && isTop){nav.go('step1');}
+    if(!signup.fullName && __meta.isHydrated && isTop){nav.go('step1');}
     setFirstname(capitalize(getLastNameOrSingle(signup.fullName)));
-  }, [signup.fullName, isTop]);
+  }, [signup.fullName,__meta.isHydrated, isTop]);
 
   useEffect(() => {
     setCanGoBack(window.history.length > 1);
