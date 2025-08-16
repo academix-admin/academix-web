@@ -19,7 +19,7 @@ const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useEffect : ()
 // ==================== Types ====================
 type NavParams = Record<string, any> | undefined;
 type LazyComponent = Promise<{ default: ComponentType<any> }>;
-type TransitionState = "enter" | "idle" | "exit";
+type TransitionState = "enter" | "idle" | "exit" | "done";
 type ParsedStack = { code: string; params?: NavParams }[];
 
 export type StackEntry = {
@@ -1000,11 +1000,16 @@ function SlideTransitionRenderer({
   uid: string;
   baseClass: string;
 }) {
-  const [stage, setStage] = useState<"init" | "active">(state === "enter" ? "init" : "active");
+  const [stage, setStage] = useState<"init" | "active" | "done">(state === "enter" ? "init" : "done");
 
   useEffect(() => {
     if (state === "enter") {
-      const frame = requestAnimationFrame(() => setStage("active"));
+      setStage("init");
+      const frame = requestAnimationFrame(() => {
+        setStage("active");
+        // Remove active class after transition duration
+        setTimeout(() => setStage("done"), DEFAULT_TRANSITION_DURATION);
+      });
       return () => cancelAnimationFrame(frame);
     }
   }, [state]);
@@ -1013,7 +1018,9 @@ function SlideTransitionRenderer({
     state === "enter"
       ? stage === "init"
         ? "nav-slide-enter"
-        : "nav-slide-enter-active"
+        : stage === "active"
+        ? "nav-slide-enter-active"
+        : ""
       : state === "exit"
       ? "nav-slide-exit nav-slide-exit-active"
       : "";
@@ -1038,9 +1045,21 @@ function FadeTransitionRenderer({
   uid: string;
   baseClass: string;
 }) {
+  const [stage, setStage] = useState<"active" | "done">(state === "enter" ? "active" : "done");
+
+  useEffect(() => {
+    if (state === "enter") {
+      setStage("active");
+      // Remove active class after transition duration
+      setTimeout(() => setStage("done"), DEFAULT_TRANSITION_DURATION);
+    }
+  }, [state]);
+
   const fadeCls =
     state === "enter"
-      ? "nav-fade-enter nav-fade-enter-active"
+      ? stage === "active"
+        ? "nav-fade-enter nav-fade-enter-active"
+        : ""
       : state === "exit"
       ? "nav-fade-exit nav-fade-exit-active"
       : "";
@@ -1321,9 +1340,9 @@ export default function NavigationStack(props: {
     const styleEl = document.createElement("style");
     styleEl.id = "navstack-builtins";
     styleEl.innerHTML = `
-      .navstack-root { position: relative; display: block; width: 100%; height: 100%; overflow: hidden;}
-      .navstack-page { position: relative; display: block; width: 100%; height: auto; overflow: visible; }
-      .navstack-page[inert] { position: absolute; pointer-events: none; display: none !important;}
+      .navstack-root {  display: block; width: 100%; height: auto; overflow: hidden;}
+      .navstack-page {  display: block; width: 100%; height: auto; overflow: visible; }
+      .navstack-page[inert] {  pointer-events: none; display: none !important;}
       .nav-fade-enter { opacity: 0; transform: translateY(6px); }
       .nav-fade-enter-active { opacity: 1; transform: translateY(0); transition: opacity ${transitionDuration}ms ease, transform ${transitionDuration}ms ease; }
       .nav-fade-exit { opacity: 1; transform: translateY(0); }
