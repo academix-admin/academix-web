@@ -165,8 +165,12 @@ import styles from './step3.module.css';
 import { useState, useCallback, useMemo } from 'react';
 import { SelectionViewer, useSelectionController } from "@/lib/SelectionViewer";
 import { useNav } from "@/lib/NavigationStack";
+import { useTheme } from '@/context/ThemeContext';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function SignUpStep3() {
+      const { theme } = useTheme();
+      const { t, lang } = useLanguage();
   const [selectionId, controller, isOpen, loading, empty] = useSelectionController();
   const [items, setItems] = useState<string[]>([
     'Item 1','Item 2','Item 3','Item 4','Item 5','Item 6','Item 7','Item 8','Item 9','Item 10','Item 11','Item 12',
@@ -205,9 +209,11 @@ export default function SignUpStep3() {
   // 🔹 Memoize filtered items
   const filteredItems = useMemo(() => {
     if (!searchQuery) return items;
-    return items.filter(item =>
+    const filters = items.filter(item =>
       item.toLowerCase().includes(searchQuery.toLowerCase())
     );
+    controller.setEmpty(filters.length <= 0);
+    return filters;
   }, [items, searchQuery]);
 
   return (
@@ -245,7 +251,6 @@ export default function SignUpStep3() {
           onClose={controller.close}
           titleProp={{
             text: "Selector",
-            className: "custom-title-class",
           }}
           cancelButton={{
             text: "Cancel",
@@ -269,7 +274,7 @@ export default function SignUpStep3() {
             text: "Search items...",
             onChange: handleSearch,
             background: "#f5f5f5",
-            padding: { l: "8px", r: "8px", t: "4px", b: "4px" },
+            padding: { l: "4px", r: "4px", t: "0px", b: "0px" },
             autoFocus: false,
           }}
           loadingProp={{
@@ -281,17 +286,17 @@ export default function SignUpStep3() {
             view: <div className="custom-empty-state">No results</div>,
           }}
           layoutProp={{
-            gapBetweenHandleAndTitle: "6px",
-            gapBetweenTitleAndSearch: "4px",
-            gapBetweenSearchAndContent: "12px",
-            backgroundColor: "#fff",
+            gapBetweenHandleAndTitle: "16px",
+            gapBetweenTitleAndSearch: "8px",
+            gapBetweenSearchAndContent: "16px",
+            backgroundColor:  theme === 'light' ?  "#fff" : "#121212",
             handleColor: "#888",
             handleWidth: "48px",
           }}
           childrenDirection="vertical"
           onPaginate={loadMore}
           snapPoints={[1]}
-          initialSnap={0.9}
+          initialSnap={1}
           minHeight="65vh"
           maxHeight="90vh"
           closeThreshold={0.2}

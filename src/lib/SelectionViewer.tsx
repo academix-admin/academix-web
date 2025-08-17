@@ -14,6 +14,8 @@ type SnapPoint = number;
 type TitleProps = {
   text: string;
   className?: string;
+  containerClass?: string;
+  style?: React.CSSProperties;
 };
 
 type SearchProps = {
@@ -22,28 +24,37 @@ type SearchProps = {
   background?: string;
   prefixIcon?: React.ReactNode;
   suffixIcon?: React.ReactNode;
+  clearIcon?: React.ReactNode;
+  backIcon?: React.ReactNode;
   prefixGap?: string;
   suffixGap?: string;
   padding?: Padding;
   autoFocus?: boolean;
+  inputStyle?: React.CSSProperties;
+  containerStyle?: React.CSSProperties;
   onChange?: (value: string) => void;
+  onFocus?: () => void;
+  onBlur?: () => void;
 };
 
 type LoadingProps = {
   view: React.ReactNode;
   padding?: Padding;
+  style?: React.CSSProperties;
 };
 
 type NoResultProps = {
   view: React.ReactNode;
   text?: string;
   padding?: Padding;
+  style?: React.CSSProperties;
 };
 
 type CancelButtonProps = {
   text?: string;
   view: React.ReactNode;
   position?: "left" | "right";
+  style?: React.CSSProperties;
   onClick?: () => void;
 };
 
@@ -54,6 +65,8 @@ type LayoutProps = {
   backgroundColor?: string;
   handleColor?: string;
   handleWidth?: string;
+  fullScreenSearchBackground?: string;
+  fullScreenSearchHeaderStyle?: React.CSSProperties;
 };
 
 type SelectionViewerProps = {
@@ -83,29 +96,39 @@ type SelectionViewerProps = {
 // ==================== Styles ====================
 const styles = `
 .selection-viewer-header {
-  padding: 16px;
+  padding: 0px;
   display: flex;
   flex-direction: column;
   align-items: center;
   position: relative;
+  width: 100%;
 }
 
 .selection-viewer-drag-handle {
   height: 5px;
   border-radius: 3px;
+  margin-top: 16px;
+}
+
+.selection-viewer-container {
+  display: flex;
+  align-items: flex-start;
+  width: 100%;
 }
 
 .selection-viewer-title {
-  margin: 0;
+  margin: 0px;
   font-size: 18px;
   font-weight: 600;
+  padding: 0px 16px 0px 16px;
 }
 
 .selection-viewer-search {
   display: flex;
   align-items: center;
-  margin: 0 16px 16px;
+  margin: 0 16px 0px 16px;
   border-radius: 8px;
+  box-sizing: border-box;
 }
 
 .selection-viewer-search-input {
@@ -115,6 +138,7 @@ const styles = `
   padding: 8px;
   outline: none;
   font-size: 16px;
+  width: 100%;
 }
 
 .selection-viewer-content {
@@ -149,6 +173,37 @@ const styles = `
 .selection-viewer-default-no-results {
   color: #666;
   font-size: 14px;
+}
+
+/* Full screen search mode */
+.selection-viewer-fullscreen-search {
+//   position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+//   padding-top: env(safe-area-inset-top);
+  width: 100%;
+}
+
+.selection-viewer-search-back-button {
+  background: none;
+  border: none;
+  padding: 8px;
+  margin-right: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.selection-viewer-search-clear-button {
+  background: none;
+  border: none;
+  padding: 8px;
+  margin-left: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* React Modal Sheet overrides */
@@ -222,8 +277,10 @@ const SelectionViewer: React.FC<SelectionViewerProps> = ({
 }) => {
   const [searchValue, setSearchValue] = useState("");
   const [activeSnap, setActiveSnap] = useState(initialSnap);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
   const isPaginating = useRef(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const sheetRef = useRef<any>(null);
 
   useInjectStyles();
 
@@ -238,6 +295,36 @@ const SelectionViewer: React.FC<SelectionViewerProps> = ({
     const value = e.target.value;
     setSearchValue(value);
     searchProp?.onChange?.(value);
+  };
+
+  const handleSearchFocus = () => {
+    setIsSearchFocused(true);
+    if (sheetRef.current) {
+      sheetRef.current.snapTo(snapPoints.length - 1); // Snap to max height
+    }
+    searchProp?.onFocus?.();
+  };
+
+  const handleSearchBlur = () => {
+    searchProp?.onBlur?.();
+  };
+
+  const handleBackFromSearch = () => {
+    setIsSearchFocused(false);
+    if (searchInputRef.current) {
+      searchInputRef.current.blur();
+    }
+    if (sheetRef.current) {
+      sheetRef.current.snapTo(initialSnap );
+    }
+  };
+
+  const clearSearch = () => {
+    setSearchValue("");
+    searchProp?.onChange?.("");
+    if (searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
   };
 
   const handleScroll = useCallback(
@@ -266,114 +353,211 @@ const SelectionViewer: React.FC<SelectionViewerProps> = ({
 
   return (
     <Sheet
+      ref={sheetRef}
       isOpen={isOpen}
       onClose={onClose}
       snapPoints={snapPoints}
       initialSnap={initialSnap}
       onSnap={setActiveSnap}
-      rootId="root"
+      modalEffectRootId="root"
       style={{ zIndex }}
     >
       <Sheet.Container
         style={{
           maxHeight,
-          minHeight,
+          minHeight: isSearchFocused ? "100%" : minHeight,
           maxWidth: "500px",
           margin: "0 auto",
           width: "100%",
           left: 0,
           right: 0,
-          paddingBottom: "calc(8px + env(safe-area-inset-bottom))", // ✅ Safe area fix
-          background: layoutProp?.backgroundColor,
+          paddingBottom: "calc(0px + env(safe-area-inset-bottom))",
+          background: isSearchFocused
+            ? layoutProp?.fullScreenSearchBackground || layoutProp?.backgroundColor
+            : layoutProp?.backgroundColor,
         }}
       >
-        <Sheet.Header>
-          <div className="selection-viewer-header">
-            {/* Cancel button left */}
-            {cancelButton?.position === "left" && (
+        {isSearchFocused ? (
+          <Sheet.Header>
+          <div
+            className="selection-viewer-fullscreen-search"
+            style={layoutProp?.fullScreenSearchHeaderStyle}
+          >
+            <div className="selection-viewer-search" style={{
+              ...searchProp?.containerStyle,
+              background: searchProp?.background,
+              padding: searchProp?.padding
+                ? `${searchProp.padding.t} ${searchProp.padding.r} ${searchProp.padding.b} ${searchProp.padding.l}`
+                : "16px",
+              margin: 0,
+            }}>
               <button
-                style={{ position: "absolute", left: "16px", top: "8px" , border: "none", backgroundColor: "transparent" }}
-                onClick={cancelButton.onClick || onClose}
+                className="selection-viewer-search-back-button"
+                onClick={handleBackFromSearch}
+                aria-label="Exit search mode"
               >
-                {cancelButton.view || cancelButton.text || "Cancel"}
+                {searchProp?.backIcon || (
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M15 18L9 12L15 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                )}
               </button>
-            )}
 
-            {/* Drag handle */}
-            <div
-              className="selection-viewer-drag-handle"
-              style={{
-                background: layoutProp?.handleColor || "#ccc",
-                width: layoutProp?.handleWidth || "40px",
-                marginBottom: layoutProp?.gapBetweenHandleAndTitle || "12px",
-              }}
-            />
-
-            {/* Cancel button right */}
-            {cancelButton?.position === "right" && (
-              <button
-                style={{ position: "absolute", right: "16px", top: "8px", border: "none", backgroundColor: "transparent" }}
-                onClick={cancelButton.onClick || onClose}
-              >
-                {cancelButton.view || cancelButton.text || "Cancel"}
-              </button>
-            )}
-
-            {/* Title */}
-            <h2
-              id={`${id}-title`}
-              className={titleProp.className || "selection-viewer-title"}
-              style={{
-                marginBottom: layoutProp?.gapBetweenTitleAndSearch || "8px",
-              }}
-            >
-              {titleProp.text}
-            </h2>
-          </div>
-
-          {/* Search */}
-          {searchProp && (
-            <div
-              className="selection-viewer-search"
-              style={{
-                background: searchProp.background,
-                padding: searchProp.padding
-                  ? `${searchProp.padding.t} ${searchProp.padding.r} ${searchProp.padding.b} ${searchProp.padding.l}`
-                  : "8px 16px",
-                marginBottom: layoutProp?.gapBetweenSearchAndContent,
-              }}
-            >
-              {searchProp.prefixIcon && (
-                <span style={{ marginRight: searchProp.prefixGap || "8px" }}>
-                  {searchProp.prefixIcon}
-                </span>
-              )}
               <input
                 ref={searchInputRef}
                 type="text"
-                placeholder={searchProp.text}
+                placeholder={searchProp?.text}
                 value={searchValue}
                 onChange={handleSearchChange}
-                className={
-                  searchProp.className || "selection-viewer-search-input"
-                }
-                autoFocus={searchProp.autoFocus}
+                className={searchProp?.className || "selection-viewer-search-input"}
+                style={searchProp?.inputStyle}
+                autoFocus
+                onFocus={handleSearchFocus}
+                onBlur={handleSearchBlur}
               />
-              {searchProp.suffixIcon && (
-                <span style={{ marginLeft: searchProp.suffixGap || "8px" }}>
-                  {searchProp.suffixIcon}
-                </span>
+
+              {searchValue && (
+                <button
+                  className="selection-viewer-search-clear-button"
+                  onClick={clearSearch}
+                  aria-label="Clear search"
+                >
+                  {searchProp?.clearIcon || (
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  )}
+                </button>
               )}
             </div>
-          )}
-        </Sheet.Header>
+          </div>
+          </Sheet.Header>
+        ) : (
+          <Sheet.Header>
+            <div className="selection-viewer-header">
+              {/* Cancel button left */}
+              {cancelButton?.position === "left" && (
+                <button
+                  style={{
+                    position: "absolute",
+                    left: "12px",
+                    top: "8px",
+                    border: "none",
+                    backgroundColor: "transparent",
+                    ...cancelButton.style
+                  }}
+                  onClick={cancelButton.onClick || onClose}
+                >
+                  {cancelButton.view || cancelButton.text || "Cancel"}
+                </button>
+              )}
 
-        <Sheet.Content>
+              {/* Drag handle */}
+              {!isSearchFocused && (
+                <div
+                  className="selection-viewer-drag-handle"
+                  style={{
+                    background: layoutProp?.handleColor || "#ccc",
+                    width: layoutProp?.handleWidth || "40px",
+                    marginBottom: layoutProp?.gapBetweenHandleAndTitle || "12px",
+                  }}
+                />
+              )}
+
+              {/* Cancel button right */}
+              {cancelButton?.position === "right" && (
+                <button
+                  style={{
+                    position: "absolute",
+                    right: "0px",
+                    top: "8px",
+                    border: "none",
+                    backgroundColor: "transparent",
+                    ...cancelButton.style
+                  }}
+                  onClick={cancelButton.onClick || onClose}
+                >
+                  {cancelButton.view || cancelButton.text || "Cancel"}
+                </button>
+              )}
+
+              {/* Title */}
+              <div className={titleProp.containerClass || "selection-viewer-container"}>
+                <h2
+                  id={`${id}-title`}
+                  className={titleProp.className || "selection-viewer-title"}
+                  style={{
+                    marginBottom: layoutProp?.gapBetweenTitleAndSearch || "8px",
+                    ...titleProp.style
+                  }}
+                >
+                  {titleProp.text}
+                </h2>
+              </div>
+            </div>
+
+            {/* Search */}
+            {searchProp && (
+              <div
+                className="selection-viewer-search"
+                style={{
+                  background: searchProp.background,
+                  padding: searchProp.padding
+                    ? `${searchProp.padding.t} ${searchProp.padding.r} ${searchProp.padding.b} ${searchProp.padding.l}`
+                    : "8px 16px",
+                  marginBottom: layoutProp?.gapBetweenSearchAndContent,
+                  ...searchProp.containerStyle
+                }}
+              >
+                {searchProp.prefixIcon && (
+                  <span style={{ marginRight: searchProp.prefixGap || "8px" }}>
+                    {searchProp.prefixIcon}
+                  </span>
+                )}
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  placeholder={searchProp.text}
+                  value={searchValue}
+                  onChange={handleSearchChange}
+                  className={searchProp.className || "selection-viewer-search-input"}
+                  style={searchProp.inputStyle}
+                  autoFocus={searchProp.autoFocus}
+                  onFocus={handleSearchFocus}
+                  onBlur={handleSearchBlur}
+                />
+                {searchValue && (
+                  <button
+                    className="selection-viewer-search-clear-button"
+                    onClick={clearSearch}
+                    aria-label="Clear search"
+                    style={{ marginLeft: searchProp.suffixGap || "8px" }}
+                  >
+                    {searchProp.clearIcon || searchProp.suffixIcon || (
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    )}
+                  </button>
+                )}
+                {!searchValue && searchProp.suffixIcon && (
+                  <span style={{ marginLeft: searchProp.suffixGap || "8px" }}>
+                    {searchProp.suffixIcon}
+                  </span>
+                )}
+              </div>
+            )}
+          </Sheet.Header>
+        )}
+
+        <Sheet.Content >
           <div
             className={`selection-viewer-content ${childrenDirection}`}
             onScroll={onPaginate ? handleScroll : undefined}
+            style={{
+                paddingTop: isSearchFocused ? layoutProp?.gapBetweenSearchAndContent : '0'}}
           >
-            {/* ✅ Show children first, then loading at bottom */}
+            {/* Show children first, then loading at bottom */}
             {React.Children.count(children) > 0 ? (
               <>
                 {children}
@@ -384,6 +568,7 @@ const SelectionViewer: React.FC<SelectionViewerProps> = ({
                       padding: loadingProp?.padding
                         ? `${loadingProp.padding.t} ${loadingProp.padding.r} ${loadingProp.padding.b} ${loadingProp.padding.l}`
                         : "16px",
+                      ...loadingProp?.style
                     }}
                   >
                     {loadingProp?.view}
@@ -397,6 +582,7 @@ const SelectionViewer: React.FC<SelectionViewerProps> = ({
                   padding: noResultProp?.padding
                     ? `${noResultProp.padding.t} ${noResultProp.padding.r} ${noResultProp.padding.b} ${noResultProp.padding.l}`
                     : "16px",
+                  ...noResultProp?.style
                 }}
               >
                 {noResultProp?.view || (
