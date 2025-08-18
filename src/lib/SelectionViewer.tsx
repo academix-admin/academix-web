@@ -656,8 +656,7 @@ const useSelectionController = (): [
   string,
   Operation,
   boolean,
-  boolean,
-  boolean
+  SelectionState
 ] => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectionState, setSelectionState] = useState('initial');
