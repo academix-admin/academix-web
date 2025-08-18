@@ -99,8 +99,7 @@ type SelectionViewerProps = {
   zIndex?: number;
   maxHeight?: string;
   minHeight?: string;
-  showLoading?: boolean;
-  showEmpty?: boolean;
+  selectionState?: SelectionState;
   closeThreshold?: number;
 };
 
