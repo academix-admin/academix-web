@@ -156,6 +156,7 @@
   border: 1px solid #C4C4C4;
   font-size: 1rem;
   width: 100%;
+  display: flex;
   box-sizing: border-box;
   appearance: none;
   background-position: right 1rem center;
@@ -277,3 +278,7 @@
            width: 80%;
          }
 }
+
+.item{
+   padding: 0 16px 16px 16px;
+ }

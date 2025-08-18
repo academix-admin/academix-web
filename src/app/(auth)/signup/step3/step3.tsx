@@ -162,7 +162,7 @@
 'use client';
 
 import styles from './step3.module.css';
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { SelectionViewer, useSelectionController } from "@/lib/SelectionViewer";
 import { useNav } from "@/lib/NavigationStack";
 import { useTheme } from '@/context/ThemeContext';
@@ -172,11 +172,23 @@ export default function SignUpStep3() {
       const { theme } = useTheme();
       const { t, lang } = useLanguage();
   const [selectionId, controller, isOpen, loading, empty] = useSelectionController();
-  const [items, setItems] = useState<string[]>([
-    'Item 1','Item 2','Item 3','Item 4','Item 5','Item 6','Item 7','Item 8','Item 9','Item 10','Item 11','Item 12',
-  ]);
+  const [items, setItems] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const nav = useNav();
+
+  useEffect(() => {
+      controller.setLoading(true);
+      setTimeout(() => {
+        setItems(prev => {
+          const next = [
+            ...prev,
+            ...Array.from({ length: 25 }, (_, i) => `Item ${prev.length + i + 1}`),
+          ];
+          controller.setLoading(false);
+          return next;
+        });
+      }, 3000);
+  }, []);
 
   // 🔹 Load more with functional state to avoid stale closures
   const loadMore = useCallback(() => {

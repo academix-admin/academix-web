@@ -11,6 +11,9 @@ type Padding = {
 
 type SnapPoint = number;
 
+type SelectionState = "loading" | "empty" | "error" | "data" | "initial";
+
+
 type TitleProps = {
   text: string;
   className?: string;
@@ -50,6 +53,13 @@ type NoResultProps = {
   style?: React.CSSProperties;
 };
 
+type ErrorProps = {
+  view: React.ReactNode;
+  text?: string;
+  padding?: Padding;
+  style?: React.CSSProperties;
+};
+
 type CancelButtonProps = {
   text?: string;
   view: React.ReactNode;
@@ -77,6 +87,7 @@ type SelectionViewerProps = {
   searchProp?: SearchProps;
   loadingProp?: LoadingProps;
   noResultProp?: NoResultProps;
+  errorProp?: ErrorProps;
   cancelButton?: CancelButtonProps;
   layoutProp?: LayoutProps;
   childrenDirection?: "vertical" | "horizontal";
@@ -163,6 +174,7 @@ const styles = `
 }
 
 .selection-viewer-no-results,
+.selection-viewer-error,
 .selection-viewer-loading {
   display: flex;
   justify-content: center;
@@ -172,6 +184,11 @@ const styles = `
 
 .selection-viewer-default-no-results {
   color: #666;
+  font-size: 14px;
+}
+
+.selection-viewer-default-error {
+  color: red;
   font-size: 14px;
 }
 
@@ -260,6 +277,7 @@ const SelectionViewer: React.FC<SelectionViewerProps> = ({
   searchProp,
   loadingProp,
   noResultProp,
+  errorProp,
   cancelButton,
   layoutProp,
   childrenDirection = "vertical",
@@ -271,8 +289,7 @@ const SelectionViewer: React.FC<SelectionViewerProps> = ({
   zIndex = 1000,
   maxHeight = "90vh",
   minHeight = "65vh",
-  showLoading = false,
-  showEmpty = false,
+  selectionState = "initial",
   closeThreshold = 0.2,
 }) => {
   const [searchValue, setSearchValue] = useState("");
@@ -561,7 +578,7 @@ const SelectionViewer: React.FC<SelectionViewerProps> = ({
             {React.Children.count(children) > 0 ? (
               <>
                 {children}
-                {showLoading && (
+                {selectionState === "loading" && (
                   <div
                     className="selection-viewer-loading"
                     style={{
@@ -575,7 +592,7 @@ const SelectionViewer: React.FC<SelectionViewerProps> = ({
                   </div>
                 )}
               </>
-            ) : showEmpty ? (
+            ) : (selectionState === "empty") ? (
               <div
                 className="selection-viewer-no-results"
                 style={{
@@ -591,7 +608,35 @@ const SelectionViewer: React.FC<SelectionViewerProps> = ({
                   </div>
                 )}
               </div>
-            ) : null}
+            ) : selectionState === "loading" ? (
+                                  <div
+                                    className="selection-viewer-loading"
+                                    style={{
+                                      padding: loadingProp?.padding
+                                        ? `${loadingProp.padding.t} ${loadingProp.padding.r} ${loadingProp.padding.b} ${loadingProp.padding.l}`
+                                        : "16px",
+                                      ...loadingProp?.style
+                                    }}
+                                  >
+                                    {loadingProp?.view}
+                                  </div>
+                                ) : (selectionState === "error") ? (
+                                                  <div
+                                                    className="selection-viewer-error"
+                                                    style={{
+                                                      padding: errorProp?.padding
+                                                        ? `${errorProp.padding.t} ${errorProp.padding.r} ${errorProp.padding.b} ${errorProp.padding.l}`
+                                                        : "16px",
+                                                      ...errorProp?.style
+                                                    }}
+                                                  >
+                                                    {errorProp?.view || (
+                                                      <div className="selection-viewer-default-error">
+                                                        {errorProp?.text || "No results found"}
+                                                      </div>
+                                                    )}
+                                                  </div>
+                                                ) :  null}
           </div>
         </Sheet.Content>
       </Sheet.Container>
@@ -605,8 +650,7 @@ type Operation = {
   open: () => void;
   close: () => void;
   toggle: () => void;
-  setLoading: (val: boolean) => void;
-  setEmpty: (val: boolean) => void;
+  setSelectionState: (val: SelectionState) => void;
 };
 
 const useSelectionController = (): [
@@ -617,7 +661,7 @@ const useSelectionController = (): [
   boolean
 ] => {
   const [isOpen, setIsOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [selectionState, setSelectionState] = useState('initial');
   const [empty, setEmpty] = useState(false);
   const selectionId = `selection-${Math.random().toString(36).substr(2, 9)}`;
 
@@ -625,11 +669,10 @@ const useSelectionController = (): [
     open: () => setIsOpen(true),
     close: () => setIsOpen(false),
     toggle: () => setIsOpen((prev) => !prev),
-    setLoading,
-    setEmpty,
+    setSelectionState
   };
 
-  return [selectionId, operations, isOpen, loading, empty];
+  return [selectionId, operations, isOpen, selectionState];
 };
 
 export { SelectionViewer, useSelectionController };
