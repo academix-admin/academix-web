@@ -1,0 +1,66 @@
+/* LoadingView.module.css */
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  width: 100%;
+}
+
+.l_span {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.loading_lottie {
+  width: 20%;
+}
+
+.loading_text {
+  margin-top: 1.5rem;
+  font-size: 1.1rem;
+  text-align: center;
+  max-width: 80%;
+  line-height: 1.5;
+}
+
+.loading_text_light {
+  color: #333;
+}
+
+.loading_text_dark {
+  color: #f0f0f0;
+}
+
+/* Tablet */
+@media screen and (min-width: 500px) and (max-width: 800px) {
+  .l_span {
+  }
+
+  .loading_lottie {
+    width: 15%;
+  }
+
+  .loading_text {
+    font-size: 1rem;
+    margin-top: 1.25rem;
+  }
+}
+
+/* Mobile */
+@media screen and (max-width: 500px) {
+  .l_span {
+  }
+
+  .loading_lottie {
+    width: 20%;
+  }
+
+  .loading_text {
+    font-size: 0.9rem;
+    margin-top: 1rem;
+    max-width: 90%;
+  }
+}

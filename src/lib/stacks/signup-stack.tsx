@@ -1,18 +1,21 @@
 import { createStateStack } from '../state-stack';
 
+export type Country = { country_id: string; country_identity: string };
+export type Language = { language_id: string; language_identity: string };
+
 type SignupState = {
 currentStep: number;
 fullName: string;
 email: string;
-language: string;
-country: string;
+language: Language | null;
+country: Country | null;
 phoneNumber: string;
 username: string;
 birthday: string;
 gender: string;
 role: string;
 referral: string;
-sixdigitpin: number | null;
+sixDigitPin: number | null;
 password: string;
 };
 
@@ -27,15 +30,15 @@ setStep: (state: SignupState, step: number) => ({ ...state, currentStep: step })
       currentStep: 1,
       fullName: '',
       email: '',
-      language: '',
-      country: '',
+      language: null,
+      country: null,
       phoneNumber: '',
       username: '',
       birthday: '',
       gender: '',
       role: '',
       referral: '',
-      sixdigitpin: null,
+      sixDigitPin: null,
       password: '',
     }),
   },
@@ -48,15 +51,15 @@ export const signupConfig = {
     currentStep: 1,
     fullName: '',
     email: '',
-    language: '',
-    country: '',
+    language: null,
+    country: null,
     phoneNumber: '',
     username: '',
     birthday: '',
     gender: '',
     role: '',
     referral: '',
-    sixdigitpin: null,
+    sixDigitPin: null,
     password: '',
   },
   persist: true,

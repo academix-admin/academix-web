@@ -1,130 +1,26 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
-import Image from 'next/image';
 import styles from './step3b.module.css';
-import Link from 'next/link';
-import CachedLottie from '@/components/CachedLottie';
-import { getLastNameOrSingle, capitalize } from '@/utils/textUtils';
-import { supabaseBrowser } from '@/lib/supabase/client';
-import { useStack, signupConfig } from '@/lib/stacks/signup-stack';
-import { useDemandState } from '@/lib/state-stack';
 import { useNav } from "@/lib/NavigationStack";
-
-type Country = { country_id: string; country_identity: string };
-type Language = { language_id: string; language_identity: string };
 
 export default function Step3b() {
   const { theme } = useTheme();
-  const { t, lang } = useLanguage();
-  const { signup, signup$ } = useStack('signup', signupConfig, 'signup_flow');
+  const { t } = useLanguage();
   const nav = useNav();
-  const isTop = nav.isTop();
-
-  const [countries, demandCountries, setCountries] = useDemandState<Country[]>([], {
-    key: 'countries',
-    scope: 'signup_flow',
-    persist: true,
-    ttl: 3600,
-    deps: [lang],
-  });
-
-
-  const [languages, demandLanguages, setLanguages] = useDemandState<Language[]>([], {
-    key: 'languages',
-    scope: 'signup_flow',
-    persist: true,
-    ttl: 3600,
-    deps: [lang],
-  });
-
-  const [firstname, setFirstname] = useState('');
-  const [canGoBack, setCanGoBack] = useState(false);
-  const [languageLoading, setLanguageLoading] = useState(false);
-  const [countryLoading, setCountryLoading] = useState(false);
-  const [continueLoading, setContinueLoading] = useState(false);
-  const [isFormValid, setIsFormValid] = useState(false);
-
-  useEffect(() => {
-//     if(!signup.fullName && isTop){nav.go('step1');}
-    setFirstname(capitalize(getLastNameOrSingle(signup.fullName)));
-  }, [signup.fullName, isTop]);
-
-  useEffect(() => {
-    setCanGoBack(window.history.length > 1);
-  }, []);
-
-  useEffect(() => {
-    if (countries.length > 0 && !signup.country) {
-        signup$.setField({ field: 'country' as keyof typeof signup, value: countries[0].country_identity });
-    }
-    if (languages.length > 0 && !signup.language) {
-       signup$.setField({ field: 'language' as keyof typeof signup, value: languages[0].language_identity });
-    }
-  }, [countries, languages, signup.country, signup.language, signup$]);
-
-  const loadCountries = useCallback(() => {
-    demandCountries(async ({ set }) => {
-      setCountryLoading(true);
-      try {
-        const { data, error } = await supabaseBrowser.rpc('fetch_country', { p_locale: lang });
-        if (error) throw error;
-        set(data || []);
-      } catch (err) {
-        console.error('Failed to fetch countries:', err);
-      } finally {
-        setCountryLoading(false);
-      }
-    });
-  }, [lang]);
-
-  const loadLanguages = useCallback(() => {
-    demandLanguages(async ({ set }) => {
-      setLanguageLoading(true);
-      try {
-        const { data, error } = await supabaseBrowser.rpc('fetch_languages', { p_locale: lang });
-        if (error) throw error;
-        set(data || []);
-      } catch (err) {
-        console.error('Failed to fetch languages:', err);
-      } finally {
-        setLanguageLoading(false);
-      }
-    });
-  }, [lang]);
-
-  useEffect(() => {
-    setIsFormValid(!!signup.country && !!signup.language);
-  }, [signup.country, signup.language]);
-
-  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    signup$.setField({ field: name as keyof typeof signup, value });
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!isFormValid) return;
-    setContinueLoading(true);
-    nav.push('step4');
-
-    setContinueLoading(false);
-  };
 
   return (
     <main className={`${styles.container} ${styles[`container_${theme}`]}`}>
-      {continueLoading && <div className={styles.continueLoadingOverlay} aria-hidden="true" />}
 
       <header className={`${styles.header} ${styles[`header_${theme}`]}`}>
         <div className={styles.headerContent}>
-          {canGoBack && (
+
             <button
               className={styles.backButton}
               onClick={() => nav.pop()}
               aria-label="Go back"
-              disabled={continueLoading}
             >
               <svg className={styles.backIcon} viewBox="0 0 16 22" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path
@@ -133,97 +29,14 @@ export default function Step3b() {
                 />
               </svg>
             </button>
-          )}
 
-          <h1 className={styles.title}>{t('sign_up')}</h1>
+          <h1 className={styles.title}>Step A</h1>
 
-          <Link className={styles.logoContainer} href="/">
-            <Image
-              className={styles.logo}
-              src="/assets/image/academix-logo.png"
-              alt="Academix Logo"
-              width={40}
-              height={40}
-              priority
-            />
-          </Link>
         </div>
       </header>
 
-      <div className={styles.innerBody}>
-        <CachedLottie
-          id="signup-step2"
-          src="/assets/lottie/sign_up_step_2_lottie_1.json"
-          className={styles.welcome_wrapper}
-          restoreProgress
-        />
+      <div className={styles.innerBody} />
 
-        <h2 className={styles.stepTitle}>{t('hi_name', { name: firstname })}</h2>
-        <p className={styles.stepSubtitle}>{t('step_x_of_y', { current: signup.currentStep, total: signupConfig.totalSteps })}</p>
-
-        <form onSubmit={handleSubmit} className={styles.form}>
-          <div className={styles.formGroup}>
-            <label htmlFor="language" className={styles.label}>
-              {t('language')}
-            </label>
-            <select
-              id="language"
-              name="language"
-              value={signup.language}
-              onChange={handleChange}
-              onFocus={loadLanguages}
-              onClick={loadLanguages}
-              className={styles.select}
-              disabled={languageLoading}
-              required
-            >
-              {languages.length === 0 && (
-                <option value="">{languageLoading ? t('loading') : t('no_languages_available')}</option>
-              )}
-              {languages.map((lang) => (
-                <option key={lang.language_id} value={lang.language_identity}>
-                  {lang.language_identity}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className={styles.formGroup}>
-            <label htmlFor="country" className={styles.label}>
-              {t('country')}
-            </label>
-            <select
-              id="country"
-              name="country"
-              value={signup.country}
-              onChange={handleChange}
-              onFocus={loadCountries}
-              onClick={loadCountries}
-              className={styles.select}
-              disabled={countryLoading}
-              required
-            >
-              {countries.length === 0 && (
-                <option value="">{countryLoading ? t('loading') : t('no_countries_available')}</option>
-              )}
-              {countries.map((country) => (
-                <option key={country.country_id} value={country.country_identity}>
-                  {country.country_identity}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <button
-            type="submit"
-            className={styles.continueButton}
-            disabled={!isFormValid || continueLoading}
-            aria-disabled={!isFormValid || continueLoading}
-          >
-                {continueLoading ? <span className={styles.spinner}></span> : t('continue')}
-          </button>
-        </form>
-      </div>
     </main>
   );
 }

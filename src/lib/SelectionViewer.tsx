@@ -16,6 +16,7 @@ type SelectionState = "loading" | "empty" | "error" | "data" | "initial";
 
 type TitleProps = {
   text: string;
+  textColor: string;
   className?: string;
   containerClass?: string;
   style?: React.CSSProperties;
@@ -23,6 +24,7 @@ type TitleProps = {
 
 type SearchProps = {
   text: string;
+  textColor: string;
   className?: string;
   background?: string;
   prefixIcon?: React.ReactNode;
@@ -154,7 +156,7 @@ const styles = `
 .selection-viewer-content {
   height: 100%;
   overflow-y: auto;
-  padding: 0 16px 16px 0px;
+  padding: 0 0px 0px 0px;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -235,7 +237,7 @@ const styles = `
 }
 
 .react-modal-sheet-content {
-  padding: 0 8px 8px 0px;
+  padding: 0 0px 0px 0px;
   height: 100%;
 }
 
@@ -414,7 +416,7 @@ const SelectionViewer: React.FC<SelectionViewerProps> = ({
               >
                 {searchProp?.backIcon || (
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M15 18L9 12L15 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M15 18L9 12L15 6" stroke= {searchProp?.textColor || 'currentColor'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                 )}
               </button>
@@ -426,7 +428,9 @@ const SelectionViewer: React.FC<SelectionViewerProps> = ({
                 value={searchValue}
                 onChange={handleSearchChange}
                 className={searchProp?.className || "selection-viewer-search-input"}
-                style={searchProp?.inputStyle}
+                style={{
+                    color: searchProp?.textColor,
+                    ...searchProp?.inputStyle}}
                 autoFocus
                 onFocus={handleSearchFocus}
                 onBlur={handleSearchBlur}
@@ -440,7 +444,7 @@ const SelectionViewer: React.FC<SelectionViewerProps> = ({
                 >
                   {searchProp?.clearIcon || (
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M18 6L6 18M6 6L18 18" stroke={searchProp?.textColor || 'currentColor'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
                   )}
                 </button>
@@ -504,6 +508,7 @@ const SelectionViewer: React.FC<SelectionViewerProps> = ({
                   className={titleProp.className || "selection-viewer-title"}
                   style={{
                     marginBottom: layoutProp?.gapBetweenTitleAndSearch || "8px",
+                    color: titleProp?.textColor || 'black',
                     ...titleProp.style
                   }}
                 >
@@ -537,7 +542,9 @@ const SelectionViewer: React.FC<SelectionViewerProps> = ({
                   value={searchValue}
                   onChange={handleSearchChange}
                   className={searchProp.className || "selection-viewer-search-input"}
-                  style={searchProp.inputStyle}
+                  style={{
+                      color: searchProp?.textColor,
+                      ...searchProp.inputStyle}}
                   autoFocus={searchProp.autoFocus}
                   onFocus={handleSearchFocus}
                   onBlur={handleSearchBlur}
@@ -591,7 +598,7 @@ const SelectionViewer: React.FC<SelectionViewerProps> = ({
                   </div>
                 )}
               </>
-            ) : (selectionState === "empty") ? (
+            ) : (selectionState === "empty" || (React.Children.count(children) <= 0 && (selectionState != "loading" && selectionState != "error"))) ? (
               <div
                 className="selection-viewer-no-results"
                 style={{
@@ -652,14 +659,14 @@ type Operation = {
   setSelectionState: (val: SelectionState) => void;
 };
 
-const useSelectionController = (): [
+const useSelectionController = (initialSelectionState?: SelectionState): [
   string,
   Operation,
   boolean,
   SelectionState
 ] => {
   const [isOpen, setIsOpen] = useState(false);
-  const [selectionState, setSelectionState] = useState('initial');
+  const [selectionState, setSelectionState] = useState(initialSelectionState || 'initial');
   const [empty, setEmpty] = useState(false);
   const selectionId = `selection-${Math.random().toString(36).substr(2, 9)}`;
 

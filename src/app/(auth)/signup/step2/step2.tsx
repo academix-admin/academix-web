@@ -9,13 +9,15 @@ import Link from 'next/link';
 import CachedLottie from '@/components/CachedLottie';
 import { getLastNameOrSingle, capitalize } from '@/utils/textUtils';
 import { supabaseBrowser } from '@/lib/supabase/client';
-import { useStack, signupConfig } from '@/lib/stacks/signup-stack';
+import { useStack, signupConfig , Country , Language} from '@/lib/stacks/signup-stack';
 import { useDemandState } from '@/lib/state-stack';
 import { useNav } from "@/lib/NavigationStack";
 import { SelectionViewer, useSelectionController } from "@/lib/SelectionViewer";
+import LoadingView from '@/components/LoadingView/LoadingView';
+import NoResultsView from '@/components/NoResultsView/NoResultsView';
+import ErrorView from '@/components/ErrorView/ErrorView';
+import DialogCancel from '@/components/DialogCancel';
 
-type Country = { country_id: string; country_identity: string };
-type Language = { language_id: string; language_identity: string };
 
 export default function SignUpStep2() {
   const { theme } = useTheme();
@@ -47,7 +49,7 @@ export default function SignUpStep2() {
   const [continueLoading, setContinueLoading] = useState(false);
   const [isFormValid, setIsFormValid] = useState(false);
 
- const [languageSelectId, languageSelectController, languageSelectIsOpen, languageSelectionState] = useSelectionController();
+ const [languageSelectId, languageSelectController, languageSelectIsOpen, languageSelectionState] = useSelectionController('loading');
  const [searchLanguageQuery, setLanguageQuery] = useState('');
 
   useEffect(() => {
@@ -84,13 +86,19 @@ export default function SignUpStep2() {
   }, [lang]);
 
   const loadLanguages = useCallback(() => {
-    demandLanguages(async ({ set }) => {
-      languageSelectController.setSelectionState("loading");
+    demandLanguages(async ({ set, get }) => {
+      const check = get().length;
+      if(!check || check === 0)languageSelectController.setSelectionState("loading");
       try {
         const { data, error } = await supabaseBrowser.rpc('fetch_languages', { p_locale: lang });
+
         if (error) throw error;
-        set(data || []);
-        languageSelectController.setSelectionState("data");
+        if(data.length > 0){
+            set(data || []);
+            languageSelectController.setSelectionState("data");
+        }else{
+            languageSelectController.setSelectionState("empty");
+        }
       } catch (err) {
         languageSelectController.setSelectionState("error");
         console.error('Failed to fetch languages:', err);
@@ -121,18 +129,22 @@ export default function SignUpStep2() {
     languageSelectController.toggle();
   };
 
+  const openCountry = () => {
+    loadLanguages();
+    languageSelectController.toggle();
+  };
+
   const handleLanguageSearch = useCallback((query: string) => {
       setLanguageQuery(query);
     }, []);
 
     // 🔹 Memoize filtered languages
    const filteredLanguages = useMemo(() => {
-       console.log(languages);
       if (!searchLanguageQuery) return languages;
       const filters = languages.filter(item =>
         item.language_identity.toLowerCase().includes(searchLanguageQuery.toLowerCase())
       );
-      if(filters.length <= 0){languageSelectController.setSelectionState("empty");}
+      if(filters.length <= 0 && languages.length > 0){languageSelectController.setSelectionState("empty");}
       return filters;
     }, [languages, searchLanguageQuery]);
 
@@ -189,35 +201,14 @@ export default function SignUpStep2() {
            <label htmlFor="language" className={styles.label}>
                         {t('language')}
             </label>
-            <button onClick={openLanguage} className={styles.select}> Select </button>
+            <button onClick={openLanguage} className={styles.select}> {signup.language?.language_identity || 'Select'} </button>
           </div>
-
-          <div className={styles.formGroup}>
-            <label htmlFor="country" className={styles.label}>
-              {t('country')}
+          <div  className={styles.formGroup}>
+           <label htmlFor="country" className={styles.label}>
+                        {t('country')}
             </label>
-            <select
-              id="country"
-              name="country"
-              value={signup.country}
-              onChange={handleChange}
-              onFocus={loadCountries}
-              onClick={loadCountries}
-              className={styles.select}
-              disabled={countryLoading}
-              required
-            >
-              {countries.length === 0 && (
-                <option value="">{countryLoading ? t('loading') : t('no_countries_available')}</option>
-              )}
-              {countries.map((country) => (
-                <option key={country.country_id} value={country.country_identity}>
-                  {country.country_identity}
-                </option>
-              ))}
-            </select>
+            <button onClick={openCountry} className={styles.select}> {signup.country?.country_identity || 'Select'} </button>
           </div>
-
           <button
             type="submit"
             className={styles.continueButton}
@@ -238,42 +229,29 @@ export default function SignUpStep2() {
                       onClose={languageSelectController.close}
                       titleProp={{
                         text: t('language'),
+                        textColor: theme === 'light' ?  "#000" : "#fff"
                       }}
                       cancelButton={{
                         position: "right",
                         onClick: languageSelectController.close,
-                        view: <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  width={16}
-                                  height={16}
-                                  viewBox="0 0 122.88 122.88"
-                                >
-                                  <circle cx="61.44" cy="61.44" r="61.44" fill="#333333" />
-                                  <path
-                                    fill="white"
-                                    fillRule="evenodd"
-                                    d="M35.38 49.72c-2.16-2.13-3.9-3.47-1.19-6.1l8.74-8.53c2.77-2.8 4.39-2.66 7 0L61.68 46.86l11.71-11.71c2.14-2.17 3.47-3.91 6.1-1.2l8.54 8.74c2.8 2.77 2.66 4.4 0 7L76.27 61.44 88 73.21c2.65 2.58 2.79 4.21 0 7l-8.54 8.74c-2.63 2.71-4 1-6.1-1.19L61.68 76 49.9 87.81c-2.58 2.64-4.2 2.78-7 0l-8.74-8.53c-2.71-2.63-1-4 1.19-6.1L47.1 61.44 35.38 49.72Z"
-                                  />
-                                </svg>
+                        view: <DialogCancel />
                         }}
                       searchProp={{
                         text: "Search languages...",
                         onChange: handleLanguageSearch,
-                        background: "#f5f5f5",
+                        background: theme === 'light' ?  "#f5f5f5" : "#272727",
+                        textColor: theme === 'light' ?  "#000" : "#fff",
                         padding: { l: "4px", r: "4px", t: "0px", b: "0px" },
                         autoFocus: false,
                       }}
                       loadingProp={{
-                        view: <div className="spin">Loading...</div>,
-                        padding: { l: "16px", r: "16px", t: "24px", b: "24px" },
+                        view: <LoadingView text={t('loading')}/>,
                       }}
                       noResultProp={{
-                        text: "No matching languages found",
-                        view: <div className="custom-empty-state">No results</div>,
+                        view: <NoResultsView text="No results found." buttonText="Try Again" onButtonClick={loadLanguages} />,
                       }}
                       errorProp={{
-                        text: "Error occurred",
-                        view: <div className="custom-empty-state">Error occurred</div>,
+                        view: <ErrorView text="Error occurred." buttonText="Try Again" onButtonClick={loadLanguages} />,
                       }}
                       layoutProp={{
                         gapBetweenHandleAndTitle: "16px",

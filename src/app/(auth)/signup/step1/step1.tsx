@@ -52,22 +52,22 @@ export default function SignUpStep1() {
     e.preventDefault();
     if (!isFormValid) return;
 
-    setContinueLoading(true);
+//     setContinueLoading(true);
     try {
-      const { data: rpcResult, error } = await supabaseBrowser.rpc('check_email_exist', {
-        p_email: signup.email
-      });
-
-      if (error) {
-        console.error('RPC Error:', error);
-        alert('Something went wrong. Please try again.');
-      } else if (rpcResult === true) {
-        setEmailExists(true);
-        setIsFormValid(false);
-      } else {
+//       const { data: rpcResult, error } = await supabaseBrowser.rpc('check_email_exist', {
+//         p_email: signup.email
+//       });
+//
+//       if (error) {
+//         console.error('RPC Error:', error);
+//         alert('Something went wrong. Please try again.');
+//       } else if (rpcResult === true) {
+//         setEmailExists(true);
+//         setIsFormValid(false);
+//       } else {
         signup$.setStep(2);
         nav.push('step2');
-      }
+//       }
     } catch (err) {
       console.error(err);
     } finally {

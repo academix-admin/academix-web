@@ -105,6 +105,27 @@ class StateStackCore {
 
   async ensureHydrated(scope: string, key: string, initial: any, persist: boolean, storage: StorageAdapter): Promise<boolean> {
     const internalKey = this.subKey(scope, key);
+
+    // If already hydrated but storage is now empty, reset the loaded state
+      if (this.hydratedKeys.has(internalKey)) {
+        try {
+          const storageKey = this.storageKey(scope, key);
+          const stored = await storage.getItem(storageKey);
+          if (stored === null) {
+            // Storage was cleared externally, reset our state
+            this.hydratedKeys.delete(internalKey);
+            this.loadedKeys.delete(internalKey);
+
+            if (this.stacks.has(scope)) {
+              this.stacks.get(scope)!.set(key, initial);
+            }
+            return false;
+          }
+        } catch (err) {
+          console.error("[StateStack] hydrate check error:", err);
+        }
+      }
+
     if (!persist || this.hydratedKeys.has(internalKey)) return false;
     try {
       const storageKey = this.storageKey(scope, key);
@@ -590,7 +611,7 @@ class StateStackCore {
           scope = key.slice(0, idx);
           subKey = key.slice(idx + 1);
         }
-
+         console.log(`scope: ${scope}  key: ${subKey}`);
         if (ev.newValue == null) {
           this.stacks.get(scope)?.delete(subKey);
           this.hydratedKeys.delete(this.subKey(scope, subKey));
@@ -864,7 +885,7 @@ export function useDemandState<T>(
 
   useEffect(() => {
     core.clearLoaded(scope, keyStr);
-  }, deps);
+  }, [deps]);
 
   const demand = useCallback(
     (loader: (helpers: { get: () => T; set: (v: T) => void }) => void | Promise<void>) => {
@@ -878,10 +899,6 @@ export function useDemandState<T>(
         },
       };
       Promise.resolve(loader(ctx))
-        .then(() => {
-          core.markLoaded(scope, keyStr);
-          core.setTTL(scope, keyStr, ttl);
-        })
         .catch((err) => {
           console.error("[useDemandState] loader error:", err);
         });

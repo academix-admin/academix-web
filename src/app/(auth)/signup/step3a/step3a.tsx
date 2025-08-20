@@ -11,8 +11,6 @@ export default function Step3a() {
   const { t } = useLanguage();
   const nav = useNav();
 
-
-
   return (
     <main className={`${styles.container} ${styles[`container_${theme}`]}`}>
 
