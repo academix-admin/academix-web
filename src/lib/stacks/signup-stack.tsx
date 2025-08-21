@@ -21,7 +21,7 @@ password: string;
 
 const signupMethods = {
 signup: {
-setStep: (state: SignupState, step: number) => ({ ...state, currentStep: step }),
+    setStep: (state: SignupState, step: number) => ({ ...state, currentStep: step }),
     setField: <K extends keyof SignupState>(state: SignupState, { field, value }: { field: K; value: SignupState[K] }) => ({
       ...state,
       [field]: value,

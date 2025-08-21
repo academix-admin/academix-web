@@ -227,6 +227,13 @@
   z-index: 9999;
 }
 
+.item {
+  padding: 0 16px 16px 16px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+
 /* Responsive styles */
 @media screen and (max-width: 800px) {
    .headerContent {
@@ -279,6 +286,3 @@
          }
 }
 
-.item{
-   padding: 0 16px 16px 16px;
- }

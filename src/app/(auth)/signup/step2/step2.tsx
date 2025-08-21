@@ -18,6 +18,43 @@ import NoResultsView from '@/components/NoResultsView/NoResultsView';
 import ErrorView from '@/components/ErrorView/ErrorView';
 import DialogCancel from '@/components/DialogCancel';
 
+interface LanguageItemProps {
+  onClick: () => void;
+  text: string;
+}
+
+const LanguageItem = ({ onClick, text }: LanguageItemProps) => {
+  return (
+    <div
+      className={styles.item}
+      onClick={onClick}
+      aria-label={`Option ${text}`}
+      role="button"
+      tabIndex={0}
+    >
+      {text}
+    </div>
+  );
+};
+
+interface CountryItemProps {
+  onClick: () => void;
+  text: string;
+}
+
+const CountryItem = ({ onClick, text }: CountryItemProps) => {
+  return (
+    <div
+      className={styles.item}
+      onClick={onClick}
+      aria-label={`Option ${text}`}
+      role="button"
+      tabIndex={0}
+    >
+      {text}
+    </div>
+  );
+};
 
 export default function SignUpStep2() {
   const { theme } = useTheme();
@@ -45,12 +82,14 @@ export default function SignUpStep2() {
 
   const [firstname, setFirstname] = useState('');
   const [canGoBack, setCanGoBack] = useState(false);
-  const [countryLoading, setCountryLoading] = useState(false);
   const [continueLoading, setContinueLoading] = useState(false);
   const [isFormValid, setIsFormValid] = useState(false);
 
- const [languageSelectId, languageSelectController, languageSelectIsOpen, languageSelectionState] = useSelectionController('loading');
+ const [languageSelectId, languageSelectController, languageSelectIsOpen, languageSelectionState] = useSelectionController();
  const [searchLanguageQuery, setLanguageQuery] = useState('');
+
+ const [countrySelectId, countrySelectController, countrySelectIsOpen, countrySelectionState] = useSelectionController();
+ const [searchCountryQuery, setCountryQuery] = useState('');
 
   useEffect(() => {
     if(!signup.fullName && __meta.isHydrated && isTop){nav.go('step1');}
@@ -61,26 +100,24 @@ export default function SignUpStep2() {
     setCanGoBack(window.history.length > 1);
   }, []);
 
-  useEffect(() => {
-    if (countries.length > 0 && !signup.country) {
-        signup$.setField({ field: 'country' as keyof typeof signup, value: countries[0].country_identity });
-    }
-    if (languages.length > 0 && !signup.language) {
-       signup$.setField({ field: 'language' as keyof typeof signup, value: languages[0].language_identity });
-    }
-  }, [countries, languages, signup.country, signup.language, signup$]);
 
   const loadCountries = useCallback(() => {
-    demandCountries(async ({ set }) => {
-      setCountryLoading(true);
+    demandCountries(async ({ set, get }) => {
+      const check = get().length;
+            if(!check || check === 0)countrySelectController.setSelectionState("loading");
       try {
         const { data, error } = await supabaseBrowser.rpc('fetch_country', { p_locale: lang });
         if (error) throw error;
-        set(data || []);
+        if(data.length > 0){
+                    set(data || []);
+                    countrySelectController.setSelectionState("data");
+                }else{
+                    countrySelectController.setSelectionState("empty");
+                }
       } catch (err) {
+                  countrySelectController.setSelectionState("error");
+
         console.error('Failed to fetch countries:', err);
-      } finally {
-        setCountryLoading(false);
       }
     });
   }, [lang]);
@@ -91,7 +128,6 @@ export default function SignUpStep2() {
       if(!check || check === 0)languageSelectController.setSelectionState("loading");
       try {
         const { data, error } = await supabaseBrowser.rpc('fetch_languages', { p_locale: lang });
-
         if (error) throw error;
         if(data.length > 0){
             set(data || []);
@@ -110,9 +146,14 @@ export default function SignUpStep2() {
     setIsFormValid(!!signup.country && !!signup.language);
   }, [signup.country, signup.language]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    signup$.setField({ field: name as keyof typeof signup, value });
+
+  const handleLanguage = (language: Language) => {
+    signup$.setField({ field: 'language', value: language });
+    languageSelectController.close();
+  };
+  const handleCountry = (country: Country) => {
+    signup$.setField({ field: 'country', value: country });
+    countrySelectController.close();
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -130,12 +171,16 @@ export default function SignUpStep2() {
   };
 
   const openCountry = () => {
-    loadLanguages();
-    languageSelectController.toggle();
+    loadCountries();
+    countrySelectController.toggle();
   };
 
   const handleLanguageSearch = useCallback((query: string) => {
       setLanguageQuery(query);
+    }, []);
+
+  const handleCountrySearch = useCallback((query: string) => {
+      setCountryQuery(query);
     }, []);
 
     // 🔹 Memoize filtered languages
@@ -147,6 +192,16 @@ export default function SignUpStep2() {
       if(filters.length <= 0 && languages.length > 0){languageSelectController.setSelectionState("empty");}
       return filters;
     }, [languages, searchLanguageQuery]);
+
+    // 🔹 Memoize filtered countries
+   const filteredCountries = useMemo(() => {
+      if (!searchCountryQuery) return countries;
+      const filters = countries.filter(item =>
+        item.country_identity.toLowerCase().includes(searchCountryQuery.toLowerCase())
+      );
+      if(filters.length <= 0 && countries.length > 0){countrySelectController.setSelectionState("empty");}
+      return filters;
+    }, [countries, searchCountryQuery]);
 
   return (
     <main className={`${styles.container} ${styles[`container_${theme}`]}`}>
@@ -272,9 +327,67 @@ export default function SignUpStep2() {
                       zIndex={1000}
                     >
                       {filteredLanguages.map((item, index) => (
-                        <div key={index} className={styles.item} aria-label={`Option ${item}`}>
-                          {item.language_identity}
-                        </div>
+                        <LanguageItem
+                          key={index}
+                          onClick={() => handleLanguage(item)}
+                          text={item.language_identity}
+                        />
+                      ))}
+                    </SelectionViewer>
+
+      <SelectionViewer
+                      id={countrySelectId}
+                      isOpen={countrySelectIsOpen}
+                      onClose={countrySelectController.close}
+                      titleProp={{
+                        text: t('country'),
+                        textColor: theme === 'light' ?  "#000" : "#fff"
+                      }}
+                      cancelButton={{
+                        position: "right",
+                        onClick: countrySelectController.close,
+                        view: <DialogCancel />
+                        }}
+                      searchProp={{
+                        text: "Search countries...",
+                        onChange: handleCountrySearch,
+                        background: theme === 'light' ?  "#f5f5f5" : "#272727",
+                        textColor: theme === 'light' ?  "#000" : "#fff",
+                        padding: { l: "4px", r: "4px", t: "0px", b: "0px" },
+                        autoFocus: false,
+                      }}
+                      loadingProp={{
+                        view: <LoadingView text={t('loading')}/>,
+                      }}
+                      noResultProp={{
+                        view: <NoResultsView text="No results found." buttonText="Try Again" onButtonClick={loadCountries} />,
+                      }}
+                      errorProp={{
+                        view: <ErrorView text="Error occurred." buttonText="Try Again" onButtonClick={loadCountries} />,
+                      }}
+                      layoutProp={{
+                        gapBetweenHandleAndTitle: "16px",
+                        gapBetweenTitleAndSearch: "8px",
+                        gapBetweenSearchAndContent: "16px",
+                        backgroundColor:  theme === 'light' ?  "#fff" : "#121212",
+                        handleColor: "#888",
+                        handleWidth: "48px",
+                      }}
+                      childrenDirection="vertical"
+                      snapPoints={[1]}
+                      initialSnap={1}
+                      minHeight="65vh"
+                      maxHeight="90vh"
+                      closeThreshold={0.2}
+                      selectionState={countrySelectionState}
+                      zIndex={1000}
+                    >
+                      {filteredCountries.map((item, index) => (
+                        <CountryItem
+                          key={index}
+                          onClick={() => handleCountry(item)}
+                          text={item.country_identity}
+                        />
                       ))}
                     </SelectionViewer>
 
