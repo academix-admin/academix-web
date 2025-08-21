@@ -24,9 +24,10 @@ interface LanguageItemProps {
 }
 
 const LanguageItem = ({ onClick, text }: LanguageItemProps) => {
+  const { theme } = useTheme();
   return (
     <div
-      className={styles.item}
+      className={`${styles.item} ${styles[`item_${theme}`]}`}
       onClick={onClick}
       aria-label={`Option ${text}`}
       role="button"
@@ -43,9 +44,10 @@ interface CountryItemProps {
 }
 
 const CountryItem = ({ onClick, text }: CountryItemProps) => {
+  const { theme } = useTheme();
   return (
     <div
-      className={styles.item}
+      className={`${styles.item} ${styles[`item_${theme}`]}`}
       onClick={onClick}
       aria-label={`Option ${text}`}
       role="button"

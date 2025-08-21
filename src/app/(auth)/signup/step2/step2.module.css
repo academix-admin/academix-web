@@ -233,6 +233,13 @@
   transition: background-color 0.2s ease;
 }
 
+.item_light{
+  color: #000;
+}
+
+.item_dark{
+  color: #fff;
+}
 
 /* Responsive styles */
 @media screen and (max-width: 800px) {
