@@ -153,10 +153,12 @@ export default function SignUpStep2() {
     signup$.setField({ field: 'language', value: language });
     languageSelectController.close();
   };
+
   const handleCountry = (country: Country) => {
-    signup$.setField({ field: 'country', value: country });
+    signup$.setField({ field: 'country', value: country }, { field: 'phoneNumber', value: '' });
     countrySelectController.close();
   };
+
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

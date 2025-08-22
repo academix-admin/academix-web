@@ -158,16 +158,39 @@ class StateStackCore {
     });
   }
 
+//   private async queueUpdate<S>(key: string, fn: () => Promise<S>): Promise<S> {
+//     if (this.pendingUpdates.has(key)) {
+//       return this.pendingUpdates.get(key)!;
+//     }
+//     const promise = fn();
+//     this.pendingUpdates.set(key, promise);
+//     try {
+//       return await promise;
+//     } finally {
+//       this.pendingUpdates.delete(key);
+//     }
+//   }
+
   private async queueUpdate<S>(key: string, fn: () => Promise<S>): Promise<S> {
-    if (this.pendingUpdates.has(key)) {
-      return this.pendingUpdates.get(key)!;
-    }
-    const promise = fn();
-    this.pendingUpdates.set(key, promise);
+    // Get current pending update if exists
+    const existingPromise = this.pendingUpdates.get(key);
+
+    // Create a new promise that chains after the existing one
+    const newPromise = (async () => {
+      if (existingPromise) {
+        await existingPromise; // Wait for previous update to complete
+      }
+      return await fn(); // Then execute our update with latest state
+    })();
+
+    this.pendingUpdates.set(key, newPromise);
     try {
-      return await promise;
+      return await newPromise;
     } finally {
-      this.pendingUpdates.delete(key);
+      // Only delete if this is still the current promise
+      if (this.pendingUpdates.get(key) === newPromise) {
+        this.pendingUpdates.delete(key);
+      }
     }
   }
 
