@@ -106,26 +106,6 @@ class StateStackCore {
   async ensureHydrated(scope: string, key: string, initial: any, persist: boolean, storage: StorageAdapter): Promise<boolean> {
     const internalKey = this.subKey(scope, key);
 
-    // If already hydrated but storage is now empty, reset the loaded state
-      if (this.hydratedKeys.has(internalKey)) {
-        try {
-          const storageKey = this.storageKey(scope, key);
-          const stored = await storage.getItem(storageKey);
-          if (stored === null) {
-            // Storage was cleared externally, reset our state
-            this.hydratedKeys.delete(internalKey);
-            this.loadedKeys.delete(internalKey);
-
-            if (this.stacks.has(scope)) {
-              this.stacks.get(scope)!.set(key, initial);
-            }
-            return false;
-          }
-        } catch (err) {
-          console.error("[StateStack] hydrate check error:", err);
-        }
-      }
-
     if (!persist || this.hydratedKeys.has(internalKey)) return false;
     try {
       const storageKey = this.storageKey(scope, key);
@@ -296,8 +276,10 @@ class StateStackCore {
             const storage = getDefaultStorage();
             const storageKey = this.storageKey(scope, key);
             await storage.removeItem(storageKey);
-            this.hydratedKeys.delete(timerKey);
-            this.loadedKeys.delete(timerKey);
+            setTimeout(() => {
+                this.hydratedKeys.delete(timerKey);
+                this.loadedKeys.delete(timerKey);
+            }, 1000);
           } catch (err) {
             console.error("[StateStack] TTL persist remove error:", err);
           }
@@ -325,8 +307,11 @@ class StateStackCore {
         if (this.history.has(timerKey)) {
           this.history.delete(timerKey);
         }
-        this.hydratedKeys.delete(timerKey);
-        this.loadedKeys.delete(timerKey);
+
+        setTimeout(() => {
+                                this.hydratedKeys.delete(timerKey);
+                                        this.loadedKeys.delete(timerKey);
+                              }, 1000);
         if (removePersist) {
           try {
             const storageKey = this.storageKey(scope, key);
@@ -343,8 +328,11 @@ class StateStackCore {
     for (const internalKey of Array.from(this.loadedKeys)) {
       const [keyScope, key] = this.parseSubKey(internalKey);
       if (keyScope === scope) {
-        this.loadedKeys.delete(internalKey);
-        this.hydratedKeys.delete(internalKey);
+
+        setTimeout(() => {
+                                        this.loadedKeys.delete(internalKey);
+                                                this.hydratedKeys.delete(internalKey);
+                                      }, 1000);
         if (removePersist) {
           try {
             const storageKey = this.storageKey(scope, key);
@@ -382,8 +370,11 @@ class StateStackCore {
           console.error("[StateStack] clearKey remove persist error:", err);
         }
       }
-      this.hydratedKeys.delete(this.subKey(scope, key));
-      this.loadedKeys.delete(this.subKey(scope, key));
+
+      setTimeout(() => {
+          this.hydratedKeys.delete(this.subKey(scope, key));
+                this.loadedKeys.delete(this.subKey(scope, key));
+                                            }, 1000);
       return;
     }
     this.stacks.get(scope)?.delete(key);
@@ -396,8 +387,11 @@ class StateStackCore {
     if (this.history.has(timerKey)) {
       this.history.delete(timerKey);
     }
-    this.hydratedKeys.delete(timerKey);
-    this.loadedKeys.delete(timerKey);
+
+    setTimeout(() => {
+              this.hydratedKeys.delete(timerKey);
+                  this.loadedKeys.delete(timerKey);
+                                                }, 1000);
     if (removePersist) {
       try {
         const storage = getDefaultStorage();
@@ -427,8 +421,11 @@ class StateStackCore {
     for (const internalKey of Array.from(this.loadedKeys)) {
       const [keyScope, key] = this.parseSubKey(internalKey);
       if (key.startsWith(prefix)) {
-        this.hydratedKeys.delete(internalKey);
-        this.loadedKeys.delete(internalKey);
+
+        setTimeout(() => {
+                      this.hydratedKeys.delete(internalKey);
+                              this.loadedKeys.delete(internalKey);
+                                                        }, 1000);
         if (removePersist) {
           try {
             const storage = getDefaultStorage();
@@ -464,8 +461,11 @@ class StateStackCore {
       const [keyScope, key] = this.parseSubKey(internalKey);
       try {
         if (condition(keyScope, key)) {
-          this.hydratedKeys.delete(internalKey);
-          this.loadedKeys.delete(internalKey);
+
+          setTimeout(() => {
+                                this.hydratedKeys.delete(internalKey);
+                                        this.loadedKeys.delete(internalKey);
+                                                                  }, 1000);
           if (removePersist) {
             try {
               const storage = getDefaultStorage();
@@ -579,6 +579,7 @@ class StateStackCore {
 
   clearLoaded(scope: string, key: string) {
     this.loadedKeys.delete(this.subKey(scope, key));
+
   }
 
   private attachStorageListener() {
@@ -614,8 +615,11 @@ class StateStackCore {
          console.log(`scope: ${scope}  key: ${subKey}`);
         if (ev.newValue == null) {
           this.stacks.get(scope)?.delete(subKey);
-          this.hydratedKeys.delete(this.subKey(scope, subKey));
-          this.loadedKeys.delete(this.subKey(scope, subKey));
+
+          setTimeout(() => {
+                          this.hydratedKeys.delete(this.subKey(scope, subKey));
+                                    this.loadedKeys.delete(this.subKey(scope, subKey));
+                      }, 1000);
           this.notify(scope, subKey);
         } else {
           try {

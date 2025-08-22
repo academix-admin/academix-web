@@ -162,6 +162,7 @@ export default function SignUpStep2() {
     e.preventDefault();
     if (!isFormValid) return;
     setContinueLoading(true);
+    signup$.setStep(3);
     nav.push('step3');
     setContinueLoading(false);
   };

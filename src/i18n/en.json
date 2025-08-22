@@ -50,5 +50,16 @@
   "country": "COUNTRY",
   "no_languages_available": "No languages available",
   "no_countries_available": "No countries available",
-  "loading": "Loading..."
+  "loading": "Loading...",
+  "phone_number_label": "Phone Number",
+  "phone_number_placeholder": "Enter your phone number",
+  "phone_number_exists": "This phone number is already registered",
+  "phone_number_invalid": "Please enter a valid phone number",
+  "phone_number_valid": "Phone number is valid",
+  "username_label": "Username",
+  "username_placeholder": "Choose a username",
+  "username_wrong_format": "Username can only contain lowercase letters, numbers, dots and underscores",
+  "username_exist": "This username is already taken",
+  "username_error": "Error checking username availability",
+  "username_valid": "Username is available"
 }

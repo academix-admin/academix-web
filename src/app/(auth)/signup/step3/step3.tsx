@@ -1,307 +1,333 @@
 'use client';
 
+import { useEffect, useState, useCallback, useRef } from 'react';
+import { useTheme } from '@/context/ThemeContext';
+import { useLanguage } from '@/context/LanguageContext';
+import Image from 'next/image';
 import styles from './step3.module.css';
-import { useState } from 'react';
-
+import Link from 'next/link';
+import CachedLottie from '@/components/CachedLottie';
+import { getLastNameOrSingle, capitalize } from '@/utils/textUtils';
+import { supabaseBrowser } from '@/lib/supabase/client';
+import { useStack, signupConfig } from '@/lib/stacks/signup-stack';
 import { useNav } from "@/lib/NavigationStack";
-import Step3a from '../step3a/step3a';
-import Step3b from '../step3b/step3b';
-import NavigationStack from "@/lib/NavigationStack";
 
 export default function SignUpStep3() {
-    const routes = {
-        step3a: Step3a,
-        step3b: Step3b
-      };
+  const { theme } = useTheme();
+  const { t } = useLanguage();
+  const { signup, signup$, __meta } = useStack('signup', signupConfig, 'signup_flow');
   const nav = useNav();
+  const isTop = nav.isTop();
+
+  const [firstname, setFirstname] = useState('');
+  const [canGoBack, setCanGoBack] = useState(false);
+  const [continueLoading, setContinueLoading] = useState(false);
+  const [isFormValid, setIsFormValid] = useState(false);
+  const [userNameState, setUserNameState] = useState('initial');
+  const [phoneNumberState, setPhoneNumberState] = useState('initial');
+  const [phoneInputValue, setPhoneInputValue] = useState('');
+  const [usernameInputValue, setUsernameInputValue] = useState('');
+
+  // Refs for tracking the latest validation request
+  const validationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const latestValidationIdRef = useRef(0);
+
+  useEffect(() => {
+    if (!signup.fullName && __meta.isHydrated && isTop) { nav.go('step1'); }
+    setFirstname(capitalize(getLastNameOrSingle(signup.fullName || '')));
+  }, [signup.fullName, __meta.isHydrated, isTop, nav]);
+
+  useEffect(() => {
+    setCanGoBack(window.history.length > 1);
+  }, []);
+
+  useEffect(() => {
+    setIsFormValid(userNameState === 'valid' && phoneNumberState === 'valid');
+  }, [userNameState, phoneNumberState]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!isFormValid) return;
+    setContinueLoading(true);
+    try {
+      const { data: rpcResult, error } = await supabaseBrowser.rpc('check_phone_exist', {
+        p_phone: signup.phoneNumber
+      });
+
+      if (error) throw error;
+
+      if (rpcResult) {
+        setPhoneNumberState('exists');
+      } else {
+        signup$.setStep(4);
+        nav.push('step4');
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setContinueLoading(false);
+    }
+  };
+
+  const isEmail = (value: string): boolean => {
+    const emailRegex = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/i;
+    return emailRegex.test(value);
+  };
+
+  const containsUpperCase = (value: string): boolean => {
+    return /[A-Z]/.test(value);
+  };
+
+  const getSpecialCharacters = (value: string): string[] => {
+    const specialCharactersRegExp = /[^a-zA-Z0-9]/g;
+    const matches = value.match(specialCharactersRegExp);
+    return matches ? matches : [];
+  };
+
+  const validateUsername = async (cleanValue: string, validationId: number) => {
+    // If this is not the latest validation request, ignore the result
+    if (validationId !== latestValidationIdRef.current) {
+      return;
+    }
+
+    try {
+      setUserNameState('checking');
+      const { data: exists, error } = await supabaseBrowser.rpc('check_username_exist', {
+        p_username: `@${cleanValue}`
+      });
+
+      // Still check if this is the latest validation request
+      if (validationId !== latestValidationIdRef.current) {
+        return;
+      }
+
+      if (error) throw error;
+
+      if (exists) {
+        setUserNameState('exists');
+        signup$.setField({ field: 'username', value: '' });
+      } else {
+        setUserNameState('valid');
+        signup$.setField({ field: 'username', value: `@${cleanValue}` });
+      }
+    } catch (err) {
+      if (validationId === latestValidationIdRef.current) {
+        setUserNameState('error');
+        signup$.setField({ field: 'username', value: '' });
+        console.error('Failed to check username:', err);
+      }
+    }
+  };
+
+  const handleUserNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { value } = e.target;
+    const cleanValue = value.replace('@', '');
+    setUsernameInputValue(cleanValue);
+
+    if (cleanValue.length === 0) {
+      // Cancel any pending validation
+      if (validationTimeoutRef.current) {
+        clearTimeout(validationTimeoutRef.current);
+        validationTimeoutRef.current = null;
+      }
+      setUserNameState('initial');
+      signup$.setField({ field: 'username', value: '' });
+      return;
+    }
+
+    // Format validation
+    if (isEmail(cleanValue) || containsUpperCase(cleanValue) ||
+        !getSpecialCharacters(cleanValue).every(c => c === '.' || c === '_')) {
+      // Cancel any pending validation
+      if (validationTimeoutRef.current) {
+        clearTimeout(validationTimeoutRef.current);
+        validationTimeoutRef.current = null;
+      }
+      setUserNameState('wrongFormat');
+      signup$.setField({ field: 'username', value: '' });
+      return;
+    }
+
+    // Cancel any previous validation timeout
+    if (validationTimeoutRef.current) {
+      clearTimeout(validationTimeoutRef.current);
+    }
+
+    // Increment validation ID to invalidate previous requests
+    latestValidationIdRef.current += 1;
+    const currentValidationId = latestValidationIdRef.current;
+
+    // Set state to checking immediately for better UX
+    setUserNameState('checking');
+
+    // Debounce the validation to avoid excessive API calls
+    validationTimeoutRef.current = setTimeout(() => {
+      validateUsername(cleanValue, currentValidationId);
+    }, 500); // 500ms debounce delay
+  };
+
+  const handlePhoneNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { value } = e.target;
+
+    if (value.length === 0) {
+      setPhoneNumberState('initial');
+      signup$.setField({ field: 'phoneNumber', value: '' });
+      setPhoneInputValue('');
+      return;
+    }
+
+    const regex = /^\d+$/;
+    const valid = regex.test(value);
+    const length = signup.country?.country_phone_digit || 0;
+
+    if (value.length <= length) {
+      setPhoneInputValue(value);
+    }
+
+    if (valid && value.length === length) {
+      setPhoneNumberState('valid');
+      signup$.setField({
+        field: 'phoneNumber',
+        value: `${signup.country?.country_phone_code || ''}${value}`
+      });
+    } else if (!valid) {
+      setPhoneNumberState('invalid');
+      signup$.setField({ field: 'phoneNumber', value: '' });
+    } else {
+      setPhoneNumberState('initial');
+      signup$.setField({ field: 'phoneNumber', value: '' });
+    }
+  };
+
+  // Clean up timeout on component unmount
+  useEffect(() => {
+    return () => {
+      if (validationTimeoutRef.current) {
+        clearTimeout(validationTimeoutRef.current);
+      }
+    };
+  }, []);
 
   return (
-    <main className={styles.container}>
+    <main className={`${styles.container} ${styles[`container_${theme}`]}`}>
+      {continueLoading && <div className={styles.continueLoadingOverlay} aria-hidden="true" />}
 
-      <header className={styles.header}>
+      <header className={`${styles.header} ${styles[`header_${theme}`]}`}>
         <div className={styles.headerContent}>
-          <h1 className={styles.title}>Header</h1>
+          {canGoBack && (
+            <button
+              className={styles.backButton}
+              onClick={() => nav.pop()}
+              aria-label="Go back"
+              disabled={continueLoading}
+            >
+              <svg className={styles.backIcon} viewBox="0 0 16 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path
+                  d="M10.0424 0.908364L1.01887 8.84376C0.695893 9.12721 0.439655 9.46389 0.264823 9.83454C0.089992 10.2052 0 10.6025 0 11.0038C0 11.405 0.089992 11.8024 0.264823 12.173C0.439655 12.5437 0.695893 12.8803 1.01887 13.1638L10.0424 21.0992C12.2373 23.0294 16 21.6507 16 18.9239V3.05306C16 0.326231 12.2373 -1.02187 10.0424 0.908364Z"
+                  fill="currentColor"
+                />
+              </svg>
+            </button>
+          )}
+
+          <h1 className={styles.title}>{t('sign_up')}</h1>
+
+          <Link className={styles.logoContainer} href="/">
+            <Image
+              className={styles.logo}
+              src="/assets/image/academix-logo.png"
+              alt="Academix Logo"
+              width={40}
+              height={40}
+              priority
+            />
+          </Link>
         </div>
       </header>
 
       <div className={styles.innerBody}>
+        <CachedLottie
+          id="signup-step2"
+          src="/assets/lottie/sign_up_step_2_lottie_1.json"
+          className={styles.welcome_wrapper}
+          restoreProgress
+        />
 
-             <NavigationStack
-                  id="step-3"
-                  navLink={routes}
-                  entry="step3a"
-                  transition = "slide"
-                  persist={true}
-                  syncHistory={true} />
+        <h2 className={styles.stepTitle}>{t('hi_name', { name: firstname })}</h2>
+        <p className={styles.stepSubtitle}>{t('step_x_of_y', {
+          current: signup.currentStep,
+          total: signupConfig.totalSteps
+        })}</p>
 
+        <form onSubmit={handleSubmit} className={styles.form}>
+          <div className={styles.formGroup}>
+            <label htmlFor="phoneNumber" className={styles.label}>{t('phone_number_label')}</label>
+            <div className={styles.phoneInputContainer}>
+              <span className={styles.prefix}>{`${signup.country?.country_phone_code || ''} - `}</span>
+              <input
+                type="text"
+                id="phoneNumber"
+                name="phoneNumber"
+                value={phoneInputValue}
+                maxLength={signup.country?.country_phone_digit || 0}
+                onChange={handlePhoneNumberChange}
+                placeholder={t('phone_number_placeholder')}
+                className={styles.input}
+                required
+              />
+            </div>
+            {phoneNumberState === 'exists' && (
+              <p className={styles.errorText}>{t('phone_number_exists')}</p>
+            )}
+            {phoneNumberState === 'invalid' && (
+              <p className={styles.errorText}>{t('phone_number_invalid')}</p>
+            )}
+            {phoneNumberState === 'valid' && (
+              <p className={styles.validText}>{t('phone_number_valid')}</p>
+            )}
+          </div>
+
+          <div className={styles.formGroup}>
+            <label htmlFor="username" className={styles.label}>{t('username_label')}</label>
+            <div className={styles.usernameInputContainer}>
+              <span className={styles.prefix}>@</span>
+              <input
+                type="text"
+                id="username"
+                name="username"
+                value={usernameInputValue}
+                onChange={handleUserNameChange}
+                placeholder={t('username_placeholder')}
+                className={styles.input}
+                required
+              />
+            </div>
+            {userNameState === 'wrongFormat' && (
+              <p className={styles.errorText}>{t('username_wrong_format')}</p>
+            )}
+            {userNameState === 'exists' && (
+              <p className={styles.errorText}>{t('username_exist')}</p>
+            )}
+            {userNameState === 'error' && (
+              <p className={styles.errorText}>{t('username_error')}</p>
+            )}
+            {userNameState === 'valid' && (
+              <p className={styles.validText}>{t('username_valid')}</p>
+            )}
+            {userNameState === 'checking' && (
+              <span className={styles.usernameSpinner}></span>
+            )}
+          </div>
+
+          <button
+            type="submit"
+            className={styles.continueButton}
+            disabled={!isFormValid || continueLoading}
+          >
+            {continueLoading ? <span className={styles.spinner}></span> : t('continue')}
+          </button>
+        </form>
       </div>
     </main>
   );
 }
-
-
-// 'use client';
-//
-// import styles from './step3.module.css';
-// import { useState, useCallback } from 'react';
-// import {SelectionViewer, useSelectionController} from "@/lib/SelectionViewer";
-// import { useNav } from "@/lib/NavigationStack";
-//
-// export default function SignUpStep3() {
-//   const [selectionId, controller, isOpen, loading, empty] = useSelectionController();
-//   const [items, setItems] = useState<string[]>(['item 1','item 2','item 3','item 4','item 5','item 6','item 7','item 8','item 9','item 10','item 11','item 12',]);
-//   const [searchQuery, setSearchQuery] = useState('');
-//   const nav = useNav();
-//
-//     // Simulate loading data
-//     const loadMore = useCallback(() => {
-//       controller.setLoading(true);
-//       setTimeout(() => {
-//         setItems(prev => [...prev, ...Array(5).fill(0).map((_, i) => `Item ${prev.length + i + 1}`)]);
-//         controller.setLoading(false);
-//       }, 1000);
-//       return items.length < 20; // Stop after 20 items
-//     }, [items.length]);
-//
-//     const handleSearch = (query: string) => {
-//       setSearchQuery(query);
-//       // Filter logic would go here
-//     };
-//
-//   return (
-//     <main className={styles.container}>
-//       <header className={styles.header}>
-//         <div className={styles.headerContent}>
-//         <button
-//                       className={styles.backButton}
-//                       onClick={() => nav.pop()}
-//                       aria-label="Go back"
-//                     >
-//                       <svg className={styles.backIcon} viewBox="0 0 16 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-//                         <path
-//                           d="M10.0424 0.908364L1.01887 8.84376C0.695893 9.12721 0.439655 9.46389 0.264823 9.83454C0.089992 10.2052 0 10.6025 0 11.0038C0 11.405 0.089992 11.8024 0.264823 12.173C0.439655 12.5437 0.695893 12.8803 1.01887 13.1638L10.0424 21.0992C12.2373 23.0294 16 21.6507 16 18.9239V3.05306C16 0.326231 12.2373 -1.02187 10.0424 0.908364Z"
-//                           fill="currentColor"
-//                         />
-//                       </svg>
-//                     </button>
-//           <h1 className={styles.title}>Header</h1>
-//         </div>
-//       </header>
-//
-//       <div className={styles.innerBody}>
-//         <button onClick={controller.toggle}>Selection Viewer</button>
-//
-//               <SelectionViewer
-//                 id={selectionId}
-//                 isOpen={isOpen}
-//                 onClose={controller.close}
-//                 titleProp={{
-//                   text: "Selector",
-//                   className: "custom-title-class"
-//                 }}
-//                 searchProp={{
-//                   text: "Search items...",
-//                   onChange: handleSearch,
-//                   background: "#f5f5f5",
-//                   padding: { l: "8px", r: "8px", t: "4px", b: "4px" },
-//                   autoFocus: false
-//                 }}
-//                 loadingProp={{
-//                   view: <div className="spin" >Loading...</div>,
-//                   padding: { l: "16px", r: "16px", t: "24px", b: "24px" }
-//                 }}
-//                 noResultProp={{
-//                   text: "No matching items found",
-//                   view: <div className="custom-empty-state">No results</div>
-//                 }}
-//                 childrenDirection="vertical"
-//                 onPaginate={loadMore}
-//                 snapPoints={[1]}
-//                 initialSnap={0.9}
-//                 minHeight="65vh"
-//                 maxHeight="90vh"
-//                 closeThreshold={0.2}
-//                 showLoading={loading}
-//                 showEmpty={empty}
-//                 zIndex={1000}
-//               >
-//                 {items
-//                   .filter(item => item.toLowerCase().includes(searchQuery.toLowerCase()))
-//                   .map((item, index) => (
-//                     <div key={index} className="item">
-//                       {item}
-//                     </div>
-//                   ))}
-//               </SelectionViewer>
-//       </div>
-//     </main>
-//   );
-// }
-
-// 'use client';
-//
-// import styles from './step3.module.css';
-// import { useState, useCallback, useMemo, useEffect } from 'react';
-// import { SelectionViewer, useSelectionController } from "@/lib/SelectionViewer";
-// import { useNav } from "@/lib/NavigationStack";
-// import { useTheme } from '@/context/ThemeContext';
-// import { useLanguage } from '@/context/LanguageContext';
-//
-// export default function SignUpStep3() {
-//       const { theme } = useTheme();
-//       const { t, lang } = useLanguage();
-//   const [selectionId, controller, isOpen, loading, empty] = useSelectionController();
-//   const [items, setItems] = useState<string[]>([]);
-//   const [searchQuery, setSearchQuery] = useState('');
-//   const nav = useNav();
-//
-//   useEffect(() => {
-//       controller.setLoading(true);
-//       setTimeout(() => {
-//         setItems(prev => {
-//           const next = [
-//             ...prev,
-//             ...Array.from({ length: 25 }, (_, i) => `Item ${prev.length + i + 1}`),
-//           ];
-//           controller.setLoading(false);
-//           return next;
-//         });
-//       }, 3000);
-//   }, []);
-//
-//   // 🔹 Load more with functional state to avoid stale closures
-//   const loadMore = useCallback(() => {
-//     controller.setLoading(true);
-//     return new Promise<boolean>((resolve) => {
-//       setTimeout(() => {
-//         setItems(prev => {
-//           if (prev.length >= 200) {
-//             controller.setLoading(false);
-//             resolve(false); // stop loading
-//             return prev;
-//           }
-//           const next = [
-//             ...prev,
-//             ...Array.from({ length: 5 }, (_, i) => `Item ${prev.length + i + 1}`),
-//           ];
-//           controller.setLoading(false);
-//           resolve(true);
-//           return next;
-//         });
-//       }, 1000);
-//     });
-//   }, [controller]);
-//
-//   // 🔹 Debounced search
-//   const handleSearch = useCallback((query: string) => {
-//     setSearchQuery(query);
-//   }, []);
-//
-//   // 🔹 Memoize filtered items
-//   const filteredItems = useMemo(() => {
-//     if (!searchQuery) return items;
-//     const filters = items.filter(item =>
-//       item.toLowerCase().includes(searchQuery.toLowerCase())
-//     );
-//     controller.setEmpty(filters.length <= 0);
-//     return filters;
-//   }, [items, searchQuery]);
-//
-//   return (
-//     <main className={styles.container}>
-//       {/* Keep your existing header for back navigation */}
-//       <header className={styles.header}>
-//         <div className={styles.headerContent}>
-//           <button
-//             className={styles.backButton}
-//             onClick={() => nav.pop()}
-//             aria-label="Go back"
-//           >
-//             <svg
-//               className={styles.backIcon}
-//               viewBox="0 0 16 22"
-//               fill="none"
-//               xmlns="http://www.w3.org/2000/svg"
-//             >
-//               <path
-//                 d="M10.0424 0.908364L1.01887 8.84376C0.695893 9.12721 0.439655 9.46389 0.264823 9.83454C0.089992 10.2052 0 10.6025 0 11.0038C0 11.405 0.089992 11.8024 0.264823 12.173C0.439655 12.5437 0.695893 12.8803 1.01887 13.1638L10.0424 21.0992C12.2373 23.0294 16 21.6507 16 18.9239V3.05306C16 0.326231 12.2373 -1.02187 10.0424 0.908364Z"
-//                 fill="currentColor"
-//               />
-//             </svg>
-//           </button>
-//           <h1 className={styles.title}>Header</h1>
-//         </div>
-//       </header>
-//
-//       <div className={styles.innerBody}>
-//         <button onClick={controller.toggle}>Open Selector</button>
-//
-//         <SelectionViewer
-//           id={selectionId}
-//           isOpen={isOpen}
-//           onClose={controller.close}
-//           titleProp={{
-//             text: "Selector",
-//           }}
-//           cancelButton={{
-//             text: "Cancel",
-//             position: "right",
-//             onClick: controller.close,
-//             view: <svg
-//                       xmlns="http://www.w3.org/2000/svg"
-//                       width={16}
-//                       height={16}
-//                       viewBox="0 0 122.88 122.88"
-//                     >
-//                       <circle cx="61.44" cy="61.44" r="61.44" fill="#333333" />
-//                       <path
-//                         fill="white"
-//                         fillRule="evenodd"
-//                         d="M35.38 49.72c-2.16-2.13-3.9-3.47-1.19-6.1l8.74-8.53c2.77-2.8 4.39-2.66 7 0L61.68 46.86l11.71-11.71c2.14-2.17 3.47-3.91 6.1-1.2l8.54 8.74c2.8 2.77 2.66 4.4 0 7L76.27 61.44 88 73.21c2.65 2.58 2.79 4.21 0 7l-8.54 8.74c-2.63 2.71-4 1-6.1-1.19L61.68 76 49.9 87.81c-2.58 2.64-4.2 2.78-7 0l-8.74-8.53c-2.71-2.63-1-4 1.19-6.1L47.1 61.44 35.38 49.72Z"
-//                       />
-//                     </svg>
-//             }}
-//           searchProp={{
-//             text: "Search items...",
-//             onChange: handleSearch,
-//             background: "#f5f5f5",
-//             padding: { l: "4px", r: "4px", t: "0px", b: "0px" },
-//             autoFocus: false,
-//           }}
-//           loadingProp={{
-//             view: <div className="spin">Loading...</div>,
-//             padding: { l: "16px", r: "16px", t: "24px", b: "24px" },
-//           }}
-//           noResultProp={{
-//             text: "No matching items found",
-//             view: <div className="custom-empty-state">No results</div>,
-//           }}
-//           layoutProp={{
-//             gapBetweenHandleAndTitle: "16px",
-//             gapBetweenTitleAndSearch: "8px",
-//             gapBetweenSearchAndContent: "16px",
-//             backgroundColor:  theme === 'light' ?  "#fff" : "#121212",
-//             handleColor: "#888",
-//             handleWidth: "48px",
-//           }}
-//           childrenDirection="vertical"
-//           onPaginate={loadMore}
-//           snapPoints={[1]}
-//           initialSnap={1}
-//           minHeight="65vh"
-//           maxHeight="90vh"
-//           closeThreshold={0.2}
-//           showLoading={loading}
-//           showEmpty={empty}
-//           zIndex={1000}
-//         >
-//           {filteredItems.map((item, index) => (
-//             <div key={index} className={styles.item} aria-label={`Option ${item}`}>
-//               {item}
-//             </div>
-//           ))}
-//         </SelectionViewer>
-//       </div>
-//     </main>
-//   );
-// }

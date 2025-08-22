@@ -60,7 +60,6 @@ export default function SignUpStep1() {
 
       if (error) {
         console.error('RPC Error:', error);
-        alert('Something went wrong. Please try again.');
       } else if (rpcResult === true) {
         setEmailExists(true);
         setIsFormValid(false);

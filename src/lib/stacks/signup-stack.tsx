@@ -1,6 +1,6 @@
 import { createStateStack } from '../state-stack';
 
-export type Country = { country_id: string; country_identity: string };
+export type Country = { country_id: string; country_identity: string, country_image: string | null, country_phone_code : string, country_phone_digit : number };
 export type Language = { language_id: string; language_identity: string };
 
 type SignupState = {

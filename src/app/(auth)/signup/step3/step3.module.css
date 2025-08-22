@@ -3,6 +3,7 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
+  min-height: 100vh;
 }
 
 .container_light {
@@ -17,13 +18,13 @@
 
 .header {
   position: fixed;
-  top: 0px;
-  left: 0;
+  top: 0;
+  left:0;
   width: 100%;
   z-index: 10;
   display: flex;
   backdrop-filter: blur(8px);
-  box-sizing: border-box;
+  box-sizing: box-border;
 }
 
 .header_light {
@@ -50,14 +51,15 @@
 
 .innerBody{
   display: flex;
+  max-width: 400px;
   flex-direction: column;
   align-items: center;
   padding: 2rem;
   padding-top: 6rem;
-        max-width: 400px;
     width: 100%;
   box-sizing: border-box;
 }
+
 
 .backButton {
   background: none;
@@ -66,9 +68,9 @@
   color: var(--text-color);
   border-radius: 50%;
   display: flex;
+  align-items: center;
     padding: 4px;
 
-  align-items: center;
   justify-content: center;
   margin-left: -8px;
 }
@@ -91,15 +93,18 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  box-sizing: box-border;
+
 }
 
 .logoContainer {
   display: flex;
   align-items: center;
   justify-content: flex-end;
+  box-sizing: box-border;
 }
 
-.logo {
+.logo{
   width: 35px;
   height: 35px;
 }
@@ -128,9 +133,10 @@
   align-self: flex-start;
 }
 
+
+
 .form {
   width: 100%;
-  max-width: 400px;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
@@ -149,37 +155,53 @@
   color: var(--text-color);
 }
 
-.select {
+.input {
   padding: 0.75rem 1rem;
   border-radius: 8px;
   border: 1px solid #C4C4C4;
   font-size: 1rem;
   width: 100%;
   box-sizing: border-box;
-  appearance: none;
-  background-position: right 1rem center;
-  background-size: 1em;
-  color: var(--text-color);
-    background-repeat: no-repeat;
-    background-position: right 1rem center;
-    background-size: 1em;
 }
 
-.container_dark .select {
-  background-color: #121212;
-  color: #ffffff;
-  background-image: url("data:image/svg+xml;utf8,<svg fill='%23fff' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'><path d='M5.5 7l4.5 4.5L14.5 7z'/></svg>");
+.input:focus {
+  outline: none;
+  border-color: #4F46E5;
 }
 
-.container_light .select {
+.container_light .input {
   background-color: #ffffff;
   color: #000;
-  background-image: url("data:image/svg+xml;utf8,<svg fill='%23000' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'><path d='M5.5 7l4.5 4.5L14.5 7z'/></svg>");
 }
 
-.select:focus {
-  outline: none;
-  border-color: #6B7280;
+.container_dark .input {
+  background-color: #1E1E1E;
+  color: #ffffff;
+  border-color: #333;
+}
+
+.errorText, .validText {
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+  text-align: left;
+  font-weight: 500;
+  line-height: 1.25;
+}
+
+.container_light .errorText {
+  color: #DC2626;
+}
+
+.container_dark .errorText {
+  color: #F87171;
+}
+
+.container_light .validText {
+  color: green;
+}
+
+.container_dark .validText {
+  color: green;
 }
 
 .continueButton {
@@ -205,6 +227,15 @@
   opacity: 0.7;
 }
 
+.usernameSpinner {
+  border: 3px solid #1D3D1E;
+  border-top: 3px solid white;
+  border-radius: 50%;
+  width: 10px;
+  height: 10px;
+  animation: spin 1s linear infinite;
+  display: inline-block;
+}
 .spinner {
   border: 3px solid rgba(255, 255, 255, 0.3);
   border-top: 3px solid white;
@@ -225,39 +256,71 @@
   z-index: 9999;
 }
 
-/* Responsive styles */
-@media screen and (max-width: 800px) {
-   .headerContent {
-     padding: 1rem 0rem;
-     margin: 0 1rem;
-   }
-    .logo {
-         width: 35px;
-         height: 35px;
-       }
-    .innerBody {
-      padding: 1.5rem;
-      padding-top: 4rem;
-    }
-       .welcome_wrapper{
-         width: 75%;
-       }
+.phoneInputContainer,
+.usernameInputContainer {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
 }
 
-@media screen and (max-width: 500px) {
-  .headerContent {
-      margin: 0;
-     padding: 1rem 1rem;
-   }
+.prefix {
+  position: absolute;
+  left: 1rem;
+  z-index: 1;
+  font-size: 1rem;
+  color: #6B7280;
+  pointer-events: none;
+}
 
+.container_dark .prefix {
+  color: #9CA3AF;
+}
+
+.phoneInputContainer .input{
+  padding-left: 4rem; /* Make space for the prefix */
+}
+.usernameInputContainer .input {
+  padding-left: 2.5rem; /* Make space for the prefix */
+}
+
+/* Tablet */
+@media screen and (min-width: 500px) and (max-width: 800px) {
+ .headerContent {
+   padding: 1rem 0rem;
+   margin: 0 1rem;
+ }
+  .logo {
+       width: 35px;
+       height: 35px;
+     }
   .innerBody {
-      padding: 1rem;
-      padding-top: 5rem;
+    padding: 1.5rem;
+    padding-top: 4rem;
+  }
+     .welcome_wrapper{
+       width: 75%;
+     }
+}
+
+/* Mobile */
+@media screen and (max-width: 500px) {
+
+ .headerContent {
+    margin: 0;
+   padding: 1rem 1rem;
+ }
+  .innerBody {
+    padding: 1rem;
+    padding-top: 5rem;
+  }
+  .titleBig {
+      font-size: 1.25rem;
     }
 
-  .stepTitle {
-    font-size: 1.25rem;
-  }
+       .welcome_wrapper{
+         width: 80%;
+       }
 
   .backIcon {
     width: 16px;
@@ -269,14 +332,20 @@
   }
 
   .logo {
-    width: 28px;
-    height: 28px;
-  }
-  .welcome_wrapper{
-           width: 80%;
-         }
-}
+      width: 28px;
+      height: 28px;
+    }
 
-.item{
-   padding: 0 16px 16px 16px;
- }
+  .phoneInputContainer .input{
+      padding-left: 3.5rem;
+    }
+
+    .usernameInputContainer .input {
+      padding-left: 2.0rem;
+    }
+
+    .prefix {
+      left: 0.75rem;
+      font-size: 0.9rem;
+    }
+}
