@@ -44,8 +44,8 @@ export default function SignUpStep3() {
   }, []);
 
   useEffect(() => {
-    setIsFormValid(userNameState === 'valid' && phoneNumberState === 'valid');
-  }, [userNameState, phoneNumberState]);
+    setIsFormValid(!!signup.phoneNumber && !!signup.username);
+  }, [signup.phoneNumber, signup.username]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
