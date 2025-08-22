@@ -254,7 +254,7 @@ export default function SignUpStep2() {
         />
 
         <h2 className={styles.stepTitle}>{t('hi_name', { name: firstname })}</h2>
-        <p className={styles.stepSubtitle}>{t('step_x_of_y', { current: signup.currentStep, total: signupConfig.totalSteps })}</p>
+        <p className={styles.stepSubtitle}>{t('step_x_of_y', { current: 2, total: signupConfig.totalSteps })}</p>
 
         <div  className={styles.form}>
           <div  className={styles.formGroup}>
