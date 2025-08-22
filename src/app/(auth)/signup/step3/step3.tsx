@@ -302,6 +302,7 @@ export default function SignUpStep3() {
                 placeholder={t('username_placeholder')}
                 className={styles.input}
                 required
+                autoCapitalize="none"
               />
             </div>
             {userNameState === 'wrongFormat' && (
