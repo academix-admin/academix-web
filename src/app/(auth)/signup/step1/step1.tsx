@@ -27,6 +27,9 @@ export default function SignUpStep1() {
     setCanGoBack(window.history.length > 1);
   }, []);
 
+  useEffect(() => {
+      validateForm(signup.fullName,signup.email);
+    }, [signup.fullName, signup.email]);
 
   const validateForm = (fullName: string, email: string) => {
     const isFullNameValid = fullName.trim().length > 3;
@@ -37,11 +40,6 @@ export default function SignUpStep1() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     signup$.setField({ field: name as keyof typeof signup, value });
-
-    const newFullName = name === 'fullName' ? value : signup.fullName;
-    const newEmail = name === 'email' ? value : signup.email;
-
-    validateForm(newFullName, newEmail);
 
     if (name === 'email') {
       setEmailExists(false);
