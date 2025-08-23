@@ -61,5 +61,8 @@
   "username_wrong_format": "Le nom d'utilisateur ne peut contenir que des lettres minuscules, des chiffres, des points et des underscores",
   "username_exist": "Ce nom d'utilisateur est déjà pris",
   "username_error": "Erreur lors de la vérification du nom d'utilisateur",
-  "username_valid": "Nom d'utilisateur disponible"
+  "username_valid": "Nom d'utilisateur disponible",
+  "birthday": "Date de naissance",
+  "gender": "Genre",
+  "date_less": "La date de naissance remonte à moins de 5 ans."
 }

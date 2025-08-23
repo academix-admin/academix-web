@@ -11,8 +11,8 @@ language: Language | null;
 country: Country | null;
 phoneNumber: string;
 username: string;
-birthday: string;
-gender: string;
+birthday: Date | null;
+gender: string | null;
 role: string;
 referral: string;
 sixDigitPin: number | null;
@@ -39,8 +39,8 @@ signup: {
       country: null,
       phoneNumber: '',
       username: '',
-      birthday: '',
-      gender: '',
+      birthday: null,
+      gender: null,
       role: '',
       referral: '',
       sixDigitPin: null,
@@ -60,7 +60,7 @@ export const signupConfig = {
     country: null,
     phoneNumber: '',
     username: '',
-    birthday: '',
+    birthday: null,
     gender: '',
     role: '',
     referral: '',

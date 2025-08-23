@@ -460,7 +460,7 @@ const SelectionViewer: React.FC<SelectionViewerProps> = ({
                 <button
                   style={{
                     position: "absolute",
-                    left: "12px",
+                    left: "0px",
                     top: "8px",
                     border: "none",
                     backgroundColor: "transparent",
