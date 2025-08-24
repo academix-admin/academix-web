@@ -249,8 +249,8 @@ export default function SignUpStep3() {
 
       <div className={styles.innerBody}>
         <CachedLottie
-          id="signup-step2"
-          src="/assets/lottie/sign_up_step_2_lottie_1.json"
+          id="signup-step3"
+          src="/assets/lottie/sign_up_step_3_lottie_1.json"
           className={styles.welcome_wrapper}
           restoreProgress
         />

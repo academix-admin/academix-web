@@ -64,5 +64,6 @@
   "username_valid": "Username is available",
   "birthday": "Birthday",
   "gender": "Gender",
-  "date_less": "Birthday is less than 5 years"
+  "date_less": "Birthday is less than 5 years",
+  "choose_role": "Choose your role"
 }

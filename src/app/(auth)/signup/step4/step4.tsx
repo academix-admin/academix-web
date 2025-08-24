@@ -10,7 +10,6 @@ import CachedLottie from '@/components/CachedLottie';
 import { getLastNameOrSingle, capitalize } from '@/utils/textUtils';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useStack, signupConfig} from '@/lib/stacks/signup-stack';
-import { useDemandState } from '@/lib/state-stack';
 import { useNav } from "@/lib/NavigationStack";
 import { BottomViewer, useBottomController } from "@/lib/BottomViewer";
 import CustomScrollDatePicker from "@/lib/CustomScrollDatePicker";
@@ -176,8 +175,8 @@ export default function SignUpStep4() {
 
       <div className={styles.innerBody}>
         <CachedLottie
-          id="signup-step2"
-          src="/assets/lottie/sign_up_step_2_lottie_1.json"
+          id="signup-step4"
+          src="/assets/lottie/sign_up_step_4_lottie_1.json"
           className={styles.welcome_wrapper}
           restoreProgress
         />
@@ -250,9 +249,9 @@ export default function SignUpStep4() {
                                         textSize={18}
                                         height={100}
                                         startFromDate={!!signup.birthday ? typeof signup.birthday === 'string' ? new Date(signup.birthday) : signup.birthday : null}
-                                        backgroundColor="#f8f9fa"
-                                        primaryTextColor="#2c3e50"
-                                        secondaryTextColor="#95a5a6"
+                                        backgroundColor = {theme === "light" ? "#f8f9fa" : "#1a1a1a"}
+                                        primaryTextColor = {theme === "light" ? "#2c3e50" : "#ecf0f1"}
+                                        secondaryTextColor = {theme === "light" ? "#7f8c8d" : "#bdc3c7"}
                                         todayText="Today"
                                         yesterdayText="Yesterday"
                                       />

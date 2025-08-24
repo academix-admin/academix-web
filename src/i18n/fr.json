@@ -64,5 +64,6 @@
   "username_valid": "Nom d'utilisateur disponible",
   "birthday": "Date de naissance",
   "gender": "Genre",
-  "date_less": "La date de naissance remonte à moins de 5 ans."
+  "date_less": "La date de naissance remonte à moins de 5 ans.",
+  "choose_role": "Choisissez votre rôle"
 }
