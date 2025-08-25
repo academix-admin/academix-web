@@ -9,19 +9,61 @@ import Link from 'next/link';
 import CachedLottie from '@/components/CachedLottie';
 import { getLastNameOrSingle, capitalize } from '@/utils/textUtils';
 import { supabaseBrowser } from '@/lib/supabase/client';
-import { useStack, signupConfig} from '@/lib/stacks/signup-stack';
+import { useStack, signupConfig, Role} from '@/lib/stacks/signup-stack';
 import { useDemandState } from '@/lib/state-stack';
 import { useNav } from "@/lib/NavigationStack";
 import LoadingView from '@/components/LoadingView/LoadingView';
 import NoResultsView from '@/components/NoResultsView/NoResultsView';
 import ErrorView from '@/components/ErrorView/ErrorView';
-export default function SignUpStep4() {
+
+
+interface RoleItemProps {
+  onClick: () => void;
+  role: Role;
+  selected: boolean;
+}
+
+const RoleItem = ({ onClick, role, selected }: RoleItemProps) => {
+  const { theme } = useTheme();
+
+  return (
+    <div
+      onClick={onClick}
+      className={`
+        ${styles.roleCard}
+        ${selected ? styles.roleCardSelected : `${styles.roleCardUnselected} ${styles[`roleCardUnselected_${theme}`]}`}
+        ${styles[`roleCard_${theme}`]}
+      `}
+      role="button"
+      tabIndex={0}
+      aria-pressed={selected}
+    >
+      <div className={styles.radioCircle}>
+        {selected && <div className={styles.radioDot} />}
+      </div>
+      <div className={styles.roleInfo}>
+        <span className={styles.roleTitle}>{role.roles_identity }</span>
+        <span className={styles.roleTier}>Tier {role.roles_level}</span>
+      </div>
+    </div>
+  );
+};
+
+
+export default function SignUpStep5() {
   const { theme } = useTheme();
   const { t, lang } = useLanguage();
   const { signup, signup$, __meta  } = useStack('signup', signupConfig, 'signup_flow');
   const nav = useNav();
   const isTop = nav.isTop();
 
+  const [roles, demandRoles, setRoles] = useDemandState<Role[]>([], {
+      key: 'roles',
+      scope: 'signup_flow',
+      persist: true,
+      ttl: 3600,
+      deps: [lang],
+    });
 
   const [firstname, setFirstname] = useState('');
   const [canGoBack, setCanGoBack] = useState(false);
@@ -37,16 +79,43 @@ export default function SignUpStep4() {
 
   useEffect(() => {
     setCanGoBack(window.history.length > 1);
+    loadRoles();
   }, []);
 
 
   useEffect(() => {
-            setIsFormValid(!!signup.role);
+    setIsFormValid(!!signup.role);
   }, [signup.role]);
 
-  const handleGender = (gender: string) => {
-    signup$.setField({ field: 'gender', value: gender });
-  };
+  useEffect(() => {
+    if(roles.length <= 0 && roleState === 'data')setRoleState("empty");
+  }, [roles]);
+
+    const loadRoles = useCallback(() => {
+  demandRoles(async ({ set, get }) => {
+        const check = get().length;
+              if(!check || check === 0)setRoleState("loading");
+        try {
+          const { data, error } = await supabaseBrowser.rpc('fetch_roles', { p_locale: lang });
+          if (error) throw error;
+          if(data.length > 0){
+                      set(data || []);
+                      setRoleState("data");
+                  }else{
+                      setRoleState("empty");
+                  }
+        } catch (err) {
+                    setRoleState("error");
+
+          console.error('Failed to fetch roles:', err);
+        }
+      });
+    }, [lang]);
+
+
+ const handleRole = (role: Role) => {
+   signup$.setField({ field: 'role', value: role });
+ };
 
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -59,9 +128,6 @@ export default function SignUpStep4() {
   };
 
 
-
-
-  
 
   return (
     <main className={`${styles.container} ${styles[`container_${theme}`]}`}>
@@ -116,6 +182,23 @@ export default function SignUpStep4() {
            <label htmlFor="role" className={styles.label}>
                         {t('choose_role')}
             </label>
+            <div className={styles.roleState}>
+             {roleState === 'loading' && roles.length <= 0 && (<LoadingView text={t('loading')}/>)}
+             {roleState === 'empty' && roles.length <= 0  && (<NoResultsView text="No results found." buttonText="Try Again" onButtonClick={loadRoles} />)}
+             {roleState === 'error' && roles.length <= 0 && (<ErrorView text="Error occurred." buttonText="Try Again" onButtonClick={loadRoles} />)}
+            </div>
+            {roles.length > 0 && (
+                <div className={styles.rolesGrid}>
+                  {[...roles].reverse().map((role) => (
+                    <RoleItem
+                      key={role.roles_id}
+                      onClick={() => handleRole(role)}
+                      role={role}
+                      selected={signup.role?.roles_id === role.roles_id}
+                    />
+                  ))}
+                </div>
+                )}
           </div>
 
           <button

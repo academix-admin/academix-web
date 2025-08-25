@@ -150,22 +150,6 @@
   color: var(--text-color);
 }
 
-.select {
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
-  border: 1px solid #C4C4C4;
-  font-size: 1rem;
-  width: 100%;
-  display: flex;
-  box-sizing: border-box;
-  appearance: none;
-  background-position: right 1rem center;
-  background-size: 1em;
-  color: var(--text-color);
-    background-repeat: no-repeat;
-    background-position: right 1rem center;
-    background-size: 1em;
-}
 
 .container_dark .select {
   background-color: #121212;
@@ -227,120 +211,99 @@
   z-index: 9999;
 }
 
-.dialogContainer{
-  padding: 0px 16px 48px 16px;
+.roleState{
+ width: 100%;
+ box-sizing: border-box;
+ display: flex;
 }
 
-
-.dialogContainer_light{
-  background-color: #fff;
-}
-
-
-.dialogContainer_dark{
-  background-color: #121212;
-}
-
-.dialogHeaderContainer{
-  align-items: center;
-  display: flex;
-  flex-direction: column;
-}
-
-.dialogBottomContainer{
-  align-items: center;
-  display: flex;
-  flex-direction: column;
-}
-
-.dialogTitle{
-  align-text: center;
-  margin: 0px;
-}
-
-
-.dialogTitle_light{
-  color: #000;
-}
-
-
-.dialogTitle_dark{
-  color: #fff;
-}
-
-.dialogDescription{
-  align-text: center;
-  margin: 0px;
-  margin-bottom: 32px;
-}
-
-
-.dialogDescription_light{
-  color: #000;
-}
-
-
-.dialogDescription_dark{
-  color: #fff;
-}
-
-.selectButton{
- padding: 0.75rem 1rem;
-   border-radius: 8px;
-   background-color: #1C6B1E;
-   color: white;
-   font-size: 1rem;
-   font-weight: 600;
-   border: none;
-   cursor: pointer;
-   transition: background-color 0.2s;
-   margin-top: 4rem;
-   margin-bottom: 5rem;
-}
-
-.itemContainer{
-  display: flex;
+.rolesGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* exactly 2 columns */
+  gap: 1rem;
   width: 100%;
+}
+
+.roleCard {
+  display: flex;
   flex-direction: column;
-  margin-top: 16px;
-}
-
-.item {
-  padding: 0 16px 16px 16px;
+  justify-content: space-between; /* pushes tier to bottom */
+  align-items: flex-start;
+  padding: 16px;
+  border-radius: 12px;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: all 0.2s ease;
+  min-height: 140px; /* ensures nice consistent height */
+  height: 100%;      /* let grid equalize row height */
+  box-sizing: border-box;
 }
 
-.item_light{
-  color: #000;
+.roleCardUnselected_light {
+  background-color: #f1f5f9;
+  color: #374151;
 }
 
-.item_dark{
+.roleCardUnselected_dark {
+  background-color: #1a1a1a;
   color: #fff;
 }
 
-.errorText, .validText {
-  font-size: 0.75rem;
-  margin-top: 0.25rem;
+.roleCardSelected {
+  background-color: #14532d;
+  color: #ffffff;
+}
+
+
+.roleCard_light {
+  border: 1px solid #d1d5db;
+}
+
+.roleCard_dark {
+  border: 1px solid #333;
+}
+
+.radioCircle {
+  width: 18px;
+  height: 18px;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+}
+
+.radioDot {
+  width: 8px;
+  height: 8px;
+  background-color: currentColor;
+  border-radius: 50%;
+}
+
+.roleInfo {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1; /* makes sure content stretches */
+  width: 100%;
+}
+
+.roleTitle {
+  font-weight: 600;
+  font-size: 1rem;
+  margin-bottom: 16px;
   text-align: left;
-  font-weight: 500;
-  line-height: 1.25;
-}
-.errorText_light {
-  color: #DC2626;
+  word-break: break-word;   /* break long words */
+  white-space: normal;      /* allow wrapping */
 }
 
-.errorText_dark {
-  color: #F87171;
+.roleTier {
+  font-size: 0.85rem;
+  opacity: 0.8;
+  margin-top: auto;   /* pushes it to the bottom */
+  align-self: flex-start;
 }
 
-.validText_light {
-  color: green;
-}
 
-.validText_dark {
-  color: green;
-}
 /* Responsive styles */
 @media screen and (max-width: 800px) {
    .headerContent {
@@ -358,13 +321,9 @@
        .welcome_wrapper{
          width: 75%;
        }
-       .dialogDescription{
-        margin-bottom: 18px;
+       .rolesGrid {
+         gap: 0.7rem;
        }
-                .selectButton{
-                   margin-top: 2rem;
-                   margin-bottom: 1rem;
-                }
 }
 
 @media screen and (max-width: 500px) {
@@ -399,12 +358,8 @@
            width: 80%;
          }
 
-.dialogDescription{
- margin-bottom: 16px;
+.rolesGrid {
+  gap: 0.5rem;
 }
-         .selectButton{
-            margin-top: 1rem;
-            margin-bottom: 0rem;
-         }
 }
 

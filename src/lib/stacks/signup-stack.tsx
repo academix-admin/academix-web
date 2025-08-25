@@ -2,6 +2,7 @@ import { createStateStack } from '../state-stack';
 
 export type Country = { country_id: string; country_identity: string, country_image: string | null, country_phone_code : string, country_phone_digit : number };
 export type Language = { language_id: string; language_identity: string };
+export type Role = { roles_id: string; roles_identity: string, roles_level: number, roles_type : string, roles_created_at: string };
 
 type SignupState = {
 currentStep: number;
@@ -13,7 +14,7 @@ phoneNumber: string;
 username: string;
 birthday: Date | null;
 gender: string | null;
-role: string;
+role: Role | null;
 referral: string;
 sixDigitPin: number | null;
 password: string;
@@ -41,7 +42,7 @@ signup: {
       username: '',
       birthday: null,
       gender: null,
-      role: '',
+      role: null,
       referral: '',
       sixDigitPin: null,
       password: '',
@@ -62,7 +63,7 @@ export const signupConfig = {
     username: '',
     birthday: null,
     gender: '',
-    role: '',
+    role: null,
     referral: '',
     sixDigitPin: null,
     password: '',
