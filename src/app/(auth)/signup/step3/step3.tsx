@@ -35,13 +35,19 @@ export default function SignUpStep3() {
   useEffect(() => {
     if (!signup.fullName && __meta.isHydrated && isTop) { nav.go('step1'); }
     setFirstname(capitalize(getLastNameOrSingle(signup.fullName || '')));
-    setPhoneInputValue(signup.phoneNumber?.replace(signup.country?.country_phone_code || '', '') || '');
-    setUsernameInputValue(signup?.username.replace('@', '') || '');
   }, [signup.fullName, __meta.isHydrated, isTop, nav]);
 
   useEffect(() => {
     setCanGoBack(window.history.length > 1);
   }, []);
+
+  useEffect(() => {
+    setPhoneInputValue(signup.phoneNumber?.replace(signup.country?.country_phone_code || '', '') || '');
+  }, [signup.phoneNumber]);
+
+  useEffect(() => {
+    setUsernameInputValue(signup?.username.replace('@', '') || '');
+  }, [signup?.username]);
 
   useEffect(() => {
     setIsFormValid(!!signup.phoneNumber && !!signup.username);

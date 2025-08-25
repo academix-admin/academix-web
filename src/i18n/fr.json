@@ -65,5 +65,10 @@
   "birthday": "Date de naissance",
   "gender": "Genre",
   "date_less": "La date de naissance remonte à moins de 5 ans.",
-  "choose_role": "Choisissez votre rôle"
+  "choose_role": "Choisissez votre rôle",
+  "referral_optional": "Parrainage (optionnel)",
+  "referral_reward_info": "Récompensez votre inviteur avec {amount} lorsque votre premier recharge atteint le seuil requis de {threshold}, à condition que votre solde reste au-dessus de ce seuil pendant {hours} heures. Les retraits en dessous du seuil seront temporairement restreints.",
+  "reward": "Récompense",
+  "search": "Rechercher",
+  "remove": "Supprimer"
 }

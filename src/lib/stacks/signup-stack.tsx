@@ -3,7 +3,7 @@ import { createStateStack } from '../state-stack';
 export type Country = { country_id: string; country_identity: string, country_image: string | null, country_phone_code : string, country_phone_digit : number };
 export type Language = { language_id: string; language_identity: string };
 export type Role = { roles_id: string; roles_identity: string, roles_level: number, roles_type : string, roles_created_at: string };
-export type Referral = { users_username: string, user_names: string, users_id: string}
+export type Referral = { users_username: string, users_names: string, users_id: string}
 
 type SignupState = {
 currentStep: number;

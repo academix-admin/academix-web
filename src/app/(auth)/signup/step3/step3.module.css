@@ -280,6 +280,7 @@
 .phoneInputContainer .input{
   padding-left: 4rem; /* Make space for the prefix */
 }
+
 .usernameInputContainer .input {
   padding-left: 2.5rem; /* Make space for the prefix */
 }

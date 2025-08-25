@@ -65,5 +65,10 @@
   "birthday": "Birthday",
   "gender": "Gender",
   "date_less": "Birthday is less than 5 years",
-  "choose_role": "Choose your role"
+  "choose_role": "Choose your role",
+  "referral_optional": "Referral(Optional)",
+  "referral_reward_info": "Reward your inviter with {amount} when your first top-up meets the required threshold {threshold}, provided your balance stays above that threshold for {hours} hours. Withdrawals below threshold will be temporarily restricted.",
+  "reward": "Reward",
+  "search": "Search",
+  "remove": "Remove"
 }
