@@ -42,16 +42,35 @@ export default function SignUpStep3() {
   }, []);
 
   useEffect(() => {
-    setPhoneInputValue(signup.phoneNumber?.replace(signup.country?.country_phone_code || '', '') || '');
-  }, [signup.phoneNumber]);
+   const cleanValue = signup.phoneNumber?.replace(signup.country?.country_phone_code || '', '') || '';
+      if(!!cleanValue && cleanValue != phoneInputValue){
+              const regex = /^\d+$/;
+              const valid = regex.test(cleanValue);
+              const length = signup.country?.country_phone_digit || 0;
+
+              if (valid && cleanValue.length === length) {
+                        setPhoneNumberState('valid');
+              }
+       setPhoneInputValue(cleanValue);
+    }
+  }, [signup.phoneNumber, signup.country]);
 
   useEffect(() => {
-    setUsernameInputValue(signup?.username.replace('@', '') || '');
-  }, [signup?.username]);
+      const cleanValue = signup?.username.replace('@', '') || '';
+      if(!!cleanValue && cleanValue != usernameInputValue){
+      setUsernameInputValue(cleanValue);
+      latestValidationIdRef.current += 1;
+        const currentValidationId = latestValidationIdRef.current;
+
+        // Set state to checking immediately for better UX
+        setUserNameState('checking');
+        validateUsername(cleanValue, currentValidationId);
+    }
+  }, [signup.username]);
 
   useEffect(() => {
-    setIsFormValid(!!signup.phoneNumber && !!signup.username);
-  }, [signup.phoneNumber, signup.username]);
+    setIsFormValid(!!signup.phoneNumber && userNameState === 'valid');
+  }, [signup.phoneNumber, userNameState]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -281,6 +300,8 @@ export default function SignUpStep3() {
                 onChange={handlePhoneNumberChange}
                 placeholder={t('phone_number_placeholder')}
                 className={styles.input}
+                inputMode="numeric"
+                pattern="[0-9]*"
                 required
               />
             </div>

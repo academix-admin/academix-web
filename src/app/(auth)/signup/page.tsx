@@ -7,6 +7,7 @@ import SignUpStep3 from './step3/step3';
 import SignUpStep4 from './step4/step4';
 import SignUpStep5 from './step5/step5';
 import SignUpStep6 from './step6/step6';
+import SignUpStep7 from './step7/step7';
 
 export default function SignUp() {
   const routes = {
@@ -15,7 +16,8 @@ export default function SignUp() {
     step3: SignUpStep3,
     step4: SignUpStep4,
     step5: SignUpStep5,
-    step6: SignUpStep6
+    step6: SignUpStep6,
+    step7: SignUpStep7
   };
   return <NavigationStack
           id="signup"

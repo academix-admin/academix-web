@@ -160,7 +160,7 @@ const onSearchClick = async () => {
                     {userNameState != 'exists' && (<div className={styles.usernameInputContainer}>
                        <span className={`${styles.prefix} ${styles[`prefix_${theme}`]}`}>@</span>
                        <input
-autoFocus
+                                                 autoFocus={userNameState === 'exists' ? false : true}
                                                  type="text"
                                                  id="username"
                                                  name="username"
@@ -169,6 +169,8 @@ autoFocus
                                                  placeholder={t('username_placeholder')}
                                                  className={styles.input}
                                                  required
+                                                 disabled={continueLoading}
+
                                                  autoCapitalize="none"
                        />
                    </div>)}
@@ -309,8 +311,8 @@ export default function SignUpStep6() {
            <label htmlFor="referral" className={styles.label}>
                         {t('referral_optional')}
             </label>
-          <div className={styles.rewardSection}>
-          <div className={styles.rewardInfo}>
+          <div className={`${styles.rewardSection} ${styles[`rewardSection_${theme}`]}`}>
+          <div className={`${styles.rewardInfo} ${styles[`rewardInfo_${theme}`]}`}>
                 {tNode('referral_reward_info', {
                   amount: <strong>500</strong>,
                   threshold: <strong>700</strong>,

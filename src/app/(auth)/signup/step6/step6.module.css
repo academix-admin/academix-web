@@ -119,7 +119,7 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    box-sizing: box-border;
+    box-sizing: border-box;
 }
 
 .stepSubtitle {
@@ -306,6 +306,15 @@
 }
 
 
+.rewardSection_light {
+  background-color: #F0EFEF;
+}
+
+.rewardSection_dark {
+  background-color: #515151;
+}
+
+
 
 .rewardInfo {
   font-size: 0.875rem;
@@ -314,12 +323,20 @@
   color: #F7E7B7B;
 }
 
+.rewardInfo_light {
+  color: #F7E7B7B;
+}
+
+.rewardInfo_dark {
+  color: #fff;
+}
+
 .actionsRow {
   display: flex;
   gap: 1rem;
   width: 100%;
     margin-top: 1rem;
-
+  margin-bottom: 3rem;
 }
 
 

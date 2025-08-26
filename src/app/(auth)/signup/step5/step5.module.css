@@ -119,7 +119,7 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    box-sizing: box-border;
+    box-sizing: border-box;
 }
 
 .stepSubtitle {
@@ -179,6 +179,7 @@
   cursor: pointer;
   transition: background-color 0.2s;
   margin-top: 1rem;
+  margin-bottom: 3rem;
 }
 
 .continueButton:hover {

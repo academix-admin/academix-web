@@ -24,7 +24,7 @@
   z-index: 10;
   display: flex;
   backdrop-filter: blur(8px);
-  box-sizing: box-border;
+  box-sizing: border-box;
 }
 
 .header_light {
@@ -93,7 +93,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  box-sizing: box-border;
+  box-sizing: border-box;
 
 }
 
@@ -101,7 +101,7 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  box-sizing: box-border;
+  box-sizing: border-box;
 }
 
 .logo{
@@ -123,7 +123,7 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    box-sizing: box-border;
+    box-sizing: border-box;
 }
 
 .stepSubtitle {
@@ -215,6 +215,7 @@
   cursor: pointer;
   transition: background-color 0.2s;
   margin-top: 1rem;
+    margin-bottom: 3rem;
 }
 
 .continueButton:hover {
