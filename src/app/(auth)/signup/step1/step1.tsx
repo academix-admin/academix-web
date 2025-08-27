@@ -8,14 +8,15 @@ import styles from './step1.module.css';
 import Link from 'next/link'
 import CachedLottie from '@/components/CachedLottie';
 import { supabaseBrowser } from '@/lib/supabase/client';
-import { useStack, signupConfig } from '@/lib/stacks/signup-stack';
+import { useSignup } from '@/lib/stacks/signup-stack';
 import { StateStack } from '@/lib/state-stack';
 import { useNav } from "@/lib/NavigationStack";
+import { capitalizeWords } from '@/utils/textUtils';
 
 export default function SignUpStep1() {
   const { theme } = useTheme();
   const { t } = useLanguage();
-  const { signup, signup$ } = useStack('signup', signupConfig, 'signup_flow');
+  const { signup, signup$ } = useSignup();
   const nav = useNav();
 
   const [canGoBack, setCanGoBack] = useState(false);
@@ -39,11 +40,14 @@ export default function SignUpStep1() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    signup$.setField({ field: name as keyof typeof signup, value });
 
     if (name === 'email') {
       setEmailExists(false);
+      signup$.setField({ field: 'email', value: value });
+    }else{
+      signup$.setField({ field: 'fullName', value: capitalizeWords(value)});
     }
+
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

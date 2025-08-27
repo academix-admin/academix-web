@@ -81,5 +81,12 @@
   "contain_lowercase": "Au moins une lettre minuscule (z)",
   "contain_number": "Au moins un chiffre (0 - 9)",
   "contain_specialChar": "Au moins un caractère spécial (.) une (_)",
-  "contain_sixChar": "Au moins 6 caractères"
+  "contain_sixChar": "Au moins 6 caractères",
+  "verification_text": "Vérification",
+  "hurray": "Hourra \uD83D\uDE09",
+  "setting_up_academix": "Configuration sur Academix !",
+  "validate_acct_label": "Valider le compte",
+  "code_through_email": "Recevoir le code par email - {email}",
+  "code_through_phone": "Recevoir le code par téléphone - {phone}",
+  "send": "Envoyer"
 }

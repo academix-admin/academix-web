@@ -158,19 +158,6 @@ class StateStackCore {
     });
   }
 
-//   private async queueUpdate<S>(key: string, fn: () => Promise<S>): Promise<S> {
-//     if (this.pendingUpdates.has(key)) {
-//       return this.pendingUpdates.get(key)!;
-//     }
-//     const promise = fn();
-//     this.pendingUpdates.set(key, promise);
-//     try {
-//       return await promise;
-//     } finally {
-//       this.pendingUpdates.delete(key);
-//     }
-//   }
-
   private async queueUpdate<S>(key: string, fn: () => Promise<S>): Promise<S> {
     // Get current pending update if exists
     const existingPromise = this.pendingUpdates.get(key);

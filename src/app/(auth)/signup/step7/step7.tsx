@@ -8,7 +8,7 @@ import styles from './step7.module.css';
 import Link from 'next/link';
 import CachedLottie from '@/components/CachedLottie';
 import { getLastNameOrSingle, capitalize } from '@/utils/textUtils';
-import { useStack, signupConfig } from '@/lib/stacks/signup-stack';
+import { useSignup } from '@/lib/stacks/signup-stack';
 import { useNav } from "@/lib/NavigationStack";
 
 // ================== Helpers ==================
@@ -42,7 +42,7 @@ const validatePassword = (value: string) => {
 export default function SignUpStep7() {
   const { theme } = useTheme();
   const { t } = useLanguage();
-  const { signup, signup$, __meta } = useStack('signup', signupConfig, 'signup_flow');
+  const { signup, signup$, __meta } = useSignup();
   const nav = useNav();
   const isTop = nav.isTop();
 
@@ -189,9 +189,17 @@ export default function SignUpStep7() {
         />
 
         <h2 className={styles.stepTitle}>{t('hi_name', { name: firstname })}</h2>
-        <p className={styles.stepSubtitle}>{t('step_x_of_y', { current: 7, total: signupConfig.totalSteps })}</p>
+        <p className={styles.stepSubtitle}>{t('step_x_of_y', { current: 7, total: 7 })}</p>
 
         <form onSubmit={handleSubmit} className={styles.form}>
+        {/* Hidden username field for accessibility */}
+                  <input
+                    type="text"
+                    name="username"
+                    autoComplete="username"
+                    style={{ display: 'none' }}
+                    aria-hidden="true"
+                  />
           {/* PIN */}
           <div className={styles.formGroup}>
             <label htmlFor="sixDigitPin" className={styles.label}>{t('sixDigitPin_label')}</label>
@@ -208,6 +216,7 @@ export default function SignUpStep7() {
                 disabled={signUpLoading}
                 inputMode="numeric"
                 pattern="[0-9]*"
+                autoComplete={'new-password'}
                 aria-invalid={sixPinState === 'invalid'}
                 required
               />
@@ -251,6 +260,7 @@ export default function SignUpStep7() {
                 placeholder={t('password_placeholder')}
                 className={styles.input}
                 disabled={signUpLoading}
+                autoComplete={'new-password'}
                 aria-invalid={!passwordChecks.valid}
                 required
               />

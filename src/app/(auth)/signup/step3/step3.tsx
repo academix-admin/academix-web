@@ -9,13 +9,13 @@ import Link from 'next/link';
 import CachedLottie from '@/components/CachedLottie';
 import { getLastNameOrSingle, capitalize } from '@/utils/textUtils';
 import { supabaseBrowser } from '@/lib/supabase/client';
-import { useStack, signupConfig } from '@/lib/stacks/signup-stack';
+import { useSignup } from '@/lib/stacks/signup-stack';
 import { useNav } from "@/lib/NavigationStack";
 
 export default function SignUpStep3() {
   const { theme } = useTheme();
   const { t } = useLanguage();
-  const { signup, signup$, __meta } = useStack('signup', signupConfig, 'signup_flow');
+  const { signup, signup$, __meta } = useSignup();
   const nav = useNav();
   const isTop = nav.isTop();
 
@@ -283,7 +283,7 @@ export default function SignUpStep3() {
         <h2 className={styles.stepTitle}>{t('hi_name', { name: firstname })}</h2>
         <p className={styles.stepSubtitle}>{t('step_x_of_y', {
           current: 3,
-          total: signupConfig.totalSteps
+          total: 7
         })}</p>
 
         <form onSubmit={handleSubmit} className={styles.form}>

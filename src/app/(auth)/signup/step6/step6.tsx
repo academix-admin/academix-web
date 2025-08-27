@@ -9,7 +9,7 @@ import Link from 'next/link';
 import CachedLottie from '@/components/CachedLottie';
 import { getLastNameOrSingle, capitalize } from '@/utils/textUtils';
 import { supabaseBrowser } from '@/lib/supabase/client';
-import { useStack, signupConfig, Referral} from '@/lib/stacks/signup-stack';
+import { useSignup, Referral} from '@/lib/stacks/signup-stack';
 import { useNav } from "@/lib/NavigationStack";
 
 const NoRewardView = ({
@@ -60,7 +60,7 @@ const RewardView = ({
 }) => {
   const { t, tNode, lang } = useLanguage();
   const { theme } = useTheme();
-  const { signup, signup$, __meta  } = useStack('signup', signupConfig, 'signup_flow');
+  const { signup, signup$, __meta  } = useSignup();
 
   const [userNameState, setUserNameState] = useState('initial');
   const [usernameInputValue, setUsernameInputValue] = useState('');
@@ -162,7 +162,7 @@ const onSearchClick = async () => {
                        <input
                                                  autoFocus={userNameState === 'exists' ? false : true}
                                                  type="text"
-                                                 id="username"
+                                                 id="username_check"
                                                  name="username"
                                                  value={usernameInputValue}
                                                  onChange={handleUserNameChange}
@@ -217,7 +217,7 @@ const onSearchClick = async () => {
 export default function SignUpStep6() {
   const { theme } = useTheme();
   const { t, tNode, lang } = useLanguage();
-  const { signup, signup$, __meta  } = useStack('signup', signupConfig, 'signup_flow');
+  const { signup, signup$, __meta  } = useSignup();
   const nav = useNav();
   const isTop = nav.isTop();
 
@@ -304,7 +304,7 @@ export default function SignUpStep6() {
         />
 
         <h2 className={styles.stepTitle}>{t('hi_name', { name: firstname })}</h2>
-        <p className={styles.stepSubtitle}>{t('step_x_of_y', { current: 6, total: signupConfig.totalSteps })}</p>
+        <p className={styles.stepSubtitle}>{t('step_x_of_y', { current: 6, total: 7 })}</p>
 
         <div  className={styles.form}>
           <div  className={styles.formGroup}>

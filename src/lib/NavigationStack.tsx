@@ -892,7 +892,9 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
     dispose() {
       transitionManager.dispose();
       memoryManager.dispose();
-
+      regEntry.listeners.clear();
+      regEntry.guards.clear();
+      regEntry.middlewares.clear();
       // Clean up parent reference
       if (regEntry.parentId) {
         const parentReg = globalRegistry.get(regEntry.parentId);

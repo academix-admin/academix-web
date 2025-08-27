@@ -9,7 +9,7 @@ import Link from 'next/link';
 import CachedLottie from '@/components/CachedLottie';
 import { getLastNameOrSingle, capitalize } from '@/utils/textUtils';
 import { supabaseBrowser } from '@/lib/supabase/client';
-import { useStack, signupConfig, Role} from '@/lib/stacks/signup-stack';
+import { useSignup, Role} from '@/lib/stacks/signup-stack';
 import { useDemandState } from '@/lib/state-stack';
 import { useNav } from "@/lib/NavigationStack";
 import LoadingView from '@/components/LoadingView/LoadingView';
@@ -53,7 +53,7 @@ const RoleItem = ({ onClick, role, selected }: RoleItemProps) => {
 export default function SignUpStep5() {
   const { theme } = useTheme();
   const { t, lang } = useLanguage();
-  const { signup, signup$, __meta  } = useStack('signup', signupConfig, 'signup_flow');
+  const { signup, signup$, __meta  } = useSignup();
   const nav = useNav();
   const isTop = nav.isTop();
 
@@ -175,7 +175,7 @@ export default function SignUpStep5() {
         />
 
         <h2 className={styles.stepTitle}>{t('hi_name', { name: firstname })}</h2>
-        <p className={styles.stepSubtitle}>{t('step_x_of_y', { current: 5, total: signupConfig.totalSteps })}</p>
+        <p className={styles.stepSubtitle}>{t('step_x_of_y', { current: 5, total: 7 })}</p>
 
         <div  className={styles.form}>
           <div  className={styles.formGroup}>

@@ -81,5 +81,12 @@
   "contain_lowercase": "At least one lowercase letter (z)",
   "contain_number": "At least one number (0 - 9)",
   "contain_specialChar": "At least one special character (.) or (_)",
-  "contain_sixChar": "At least 6 characters"
+  "contain_sixChar": "At least 6 characters",
+  "verification_text": "Verification",
+  "hurray": "Hurray \uD83D\uDE09",
+  "setting_up_academix": "Setting up in Academix!",
+  "validate_acct_label": "Validate account",
+  "code_through_email": "Get code through your email - {email}",
+  "code_through_phone": "Get code through your phone number - {phone}",
+  "send": "Send"
 }
