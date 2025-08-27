@@ -36,7 +36,6 @@ export default function Verification() {
   }, []);
 
   useEffect(() => {
-    console.log('data', getSignupData());
     setIsFormValid(!!signup.verification);
     setVerificationSelected(signup.verification || '')
   }, [signup.verification]);
@@ -270,9 +269,8 @@ export default function Verification() {
 
   const handleCreatedUser = async (userObj: UserData) => {
     // Navigate to otp screen
-    console.log('User created successfully:', userObj);
     await StateStack.core.clearScope('signup_flow');
-    nav.pushAndPopUntil('otp',(entry) => entry.key === 'step1');
+    nav.pushAndPopUntil('otp',(entry) => entry.key === 'step1', {userObj});
   };
 
 

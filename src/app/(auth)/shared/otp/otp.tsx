@@ -14,7 +14,7 @@ import { treatSpaces } from '@/utils/textUtils';
 import { UserData } from '@/models/user-data';
 import { checkLocation, checkFeatures } from '@/utils/checkers';
 
-export default function Otp() {
+export default function Otp(props: any) {
   const { theme } = useTheme();
   const { t, tNode, lang } = useLanguage();
   const { signup, signup$, __meta } = useSignup();
@@ -25,10 +25,26 @@ export default function Otp() {
   const [sendLoading, setContinueLoading] = useState(false);
 
 
+
   useEffect(() => {
+      console.log(props);
     setCanGoBack(window.history.length > 1);
   }, []);
 
+// return _supabaseClient.auth
+//         .verifyOTP(type: OtpType.signup, email: email, token: otp);
+
+// return _supabaseClient.auth
+//         .verifyOTP(type: OtpType.sms, phone: phone, token: otp);
+
+
+//   Future<ResendResponse> resendTokenForEmail(OtpType otpType, String email) {
+//     return _supabaseClient.auth.resend(type: otpType, email: email);
+//   }
+//
+//   Future<ResendResponse> resendTokenForPhone(OtpType otpType, String phone) {
+//     return _supabaseClient.auth.resend(type: otpType, phone: phone);
+//   }
 
   return (
     <main className={`${styles.container} ${styles[`container_${theme}`]}`}>
