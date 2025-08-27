@@ -178,6 +178,7 @@
 
 .errorText, .validText {
   font-size: 0.75rem;
+  margin: 0px;
   margin-top: 0.15rem;
   text-align: left;
   font-weight: 500;
@@ -200,7 +201,7 @@
   color: green;
 }
 
-.continueButton {
+.signUpButton {
   padding: 0.75rem 1rem;
   border-radius: 8px;
   background-color: #1C6B1E;
@@ -214,11 +215,11 @@
   margin-bottom: 3rem;
 }
 
-.continueButton:hover {
+.signUpButton:hover {
   background-color: #1D3D1E;
 }
 
-.continueButton:disabled {
+.signUpButton:disabled {
   background-color: #9CA3AF;
   cursor: not-allowed;
   opacity: 0.7;
@@ -244,6 +245,42 @@
   z-index: 9999;
 }
 
+
+
+
+.inputWrapper {
+  position: relative;
+  width: 100%;
+}
+
+.eyeButton {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #1C6B1E;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.eyeButton:hover {
+  color: #1D3D1E;
+}
+
+.eyeIcon {
+  width: 20px;
+  height: 20px;
+}
+
+/* Adjust input padding to make room for the eye icon */
+.input {
+  padding-right: 40px !important;
+}
 
 /* Responsive styles */
 @media screen and (max-width: 800px) {
@@ -296,7 +333,14 @@
   .welcome_wrapper{
            width: 80%;
          }
+.eyeIcon {
+    width: 18px;
+    height: 18px;
+  }
 
+  .input {
+    padding-right: 36px !important;
+  }
 
 }
 
