@@ -113,7 +113,7 @@ export const signupConfig = {
     verification: '',
   },
   persist: true,
-  ttl: 300, // 5 minutes
+  ttl: 600, // 10 minutes
   historyDepth: 10,
   clearOnZeroSubscribers: false,
 };

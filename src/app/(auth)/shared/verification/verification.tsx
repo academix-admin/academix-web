@@ -14,11 +14,13 @@ import { useNav } from "@/lib/NavigationStack";
 import { treatSpaces } from '@/utils/textUtils';
 import { UserData } from '@/models/user-data';
 import { checkLocation, checkFeatures } from '@/utils/checkers';
+import { useOtp } from '@/lib/stacks/otp-stack';
 
 export default function Verification() {
   const { theme } = useTheme();
   const { t, tNode, lang } = useLanguage();
   const { signup, signup$, __meta } = useSignup();
+  const { otpTimer, otpTimer$ } = useOtp();
   const nav = useNav();
   const isTop = nav.isTop();
 
@@ -27,9 +29,6 @@ export default function Verification() {
   const [isFormValid, setIsFormValid] = useState(false);
   const [verificationSelected, setVerificationSelected] = useState('');
 
-  useEffect(() => {
-    if(!signup.fullName && __meta.isHydrated && isTop){nav.go('step1');}
-  }, [signup.fullName,__meta.isHydrated, isTop]);
 
   useEffect(() => {
     setCanGoBack(window.history.length > 1);
@@ -93,7 +92,7 @@ export default function Verification() {
       // Handle email
       const userObj = await signUpWithEmail(signUpData);
       if(userObj){
-        handleCreatedUser(userObj);
+        handleCreatedUser(signUpData.users_login_type,signUpData.users_email,userObj);
         setContinueLoading(false);
       } else {
         console.error('Failed to create user');
@@ -103,7 +102,7 @@ export default function Verification() {
       // Handle phone
       const userObj = await signUpWithPhone(signUpData);
       if(userObj){
-          handleCreatedUser(userObj);
+          handleCreatedUser(signUpData.users_login_type,signUpData.users_phone,userObj);
           setContinueLoading(false);
       } else {
           console.error('Failed to create user');
@@ -267,10 +266,11 @@ export default function Verification() {
     }
   };
 
-  const handleCreatedUser = async (userObj: UserData) => {
+  const handleCreatedUser = async (type: string, value: string, userObj: UserData) => {
     // Navigate to otp screen
+    otpTimer$.start(300);
     await StateStack.core.clearScope('signup_flow');
-    nav.pushAndPopUntil('otp',(entry) => entry.key === 'step1', {userObj});
+    nav.pushAndPopUntil('otp',(entry) => entry.key === 'step1', { verificationType: type, verificationValue: value });
   };
 
 

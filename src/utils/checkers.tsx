@@ -19,18 +19,19 @@ export type LocationData = {
 }
 
 
-const checkLocation = async () : Promise<LocationData | null> => {
+const checkLocation = async (): Promise<LocationData | null> => {
   try {
-    const res = await fetch("https://ip-api.com/json");
+    const res = await fetch("/api/location");
     if (!res.ok) throw new Error("Failed to fetch location");
     const data: LocationData = await res.json();
-    data.countryCode = data.countryCode.toLowerCase();
+    data.countryCode = data.countryCode?.toLowerCase?.() ?? "";
     return data;
   } catch (err) {
     console.error("Location check failed:", err);
     return null;
   }
 };
+
 
 const checkFeatures = async (featureChecker: string, locale: string, country: string, gender: string, birthday: string ) : Promise<boolean> => {
           try {

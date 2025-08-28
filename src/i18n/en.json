@@ -88,5 +88,18 @@
   "validate_acct_label": "Validate account",
   "code_through_email": "Get code through your email - {email}",
   "code_through_phone": "Get code through your phone number - {phone}",
-  "send": "Send"
+  "send": "Send",
+  "otp_text": "OTP Code",
+  "six_digit_sent_to": "Enter the 6-digit code sent to",
+  "incorrect_code": "Incorrect code. Try again.",
+  "network_error": "Network error. Please try again.",
+  "resend_failed": "Failed to resend code. Please try again.",
+  "remaining": "remaining",
+  "resend": "Resend code",
+  "verifying": "Verifying...",
+  "code_expired": "Code has expired. Please request a new one.",
+  "success_verification": "Verification successful!",
+  "enter_manually": "Or enter code manually:",
+  "did_not_receive": "Didn't receive the code?",
+  "request_new_code": "Request new code"
 }
