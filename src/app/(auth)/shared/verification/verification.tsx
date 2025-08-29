@@ -208,7 +208,7 @@ export default function Verification() {
       );
 
       if(!feature){
-        console.log('feature not available');
+        console.log('feature not available', {location});
         return null;
       }
 
