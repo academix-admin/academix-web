@@ -77,7 +77,8 @@ export default function SignUpStep1() {
   };
 
   const cancelSignUp = async () => {
-    nav.pop();
+    await nav.pop();
+    nav.dispose();
     await StateStack.core.clearScope('signup_flow');
   };
 

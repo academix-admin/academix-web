@@ -10,7 +10,7 @@ import { supabaseBrowser } from '@/lib/supabase/client';
 import { useNav } from "@/lib/NavigationStack";
 import { useOtp } from '@/lib/stacks/otp-stack';
 import { createStateStack, useDemandState, StateStack } from '@/lib/state-stack';
-import { useRouter } from 'next/navigation';
+import { useAwaitableRouter } from "@/hooks/useAwaitableRouter";
 
 // Define types for OTPInput props
 interface OTPInputProps {
@@ -161,7 +161,7 @@ export default function Otp(props: OtpProps) {
   const { t, tNode, lang } = useLanguage();
   const { otpTimer, otpTimer$, __meta } = useOtp();
   const nav = useNav();
-  const router = useRouter();
+  const { replaceAndWait } = useAwaitableRouter();
 
   const [otpValue, setOtpValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -175,9 +175,6 @@ export default function Otp(props: OtpProps) {
 
   const firstInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    router.prefetch('/main');
-  }, [router]);
 
   useEffect(() => {
     setCanGoBack(window.history.length > 1);
@@ -247,9 +244,9 @@ export default function Otp(props: OtpProps) {
         if (navigator.vibrate) navigator.vibrate(200);
       } else {
         // OTP verified successfully
-        router.push('/main');
+        await replaceAndWait("/main");
         __meta.clear();
-//         nav.popToRoot();
+        nav.dispose();
       }
     } catch (error) {
       console.error("OTP verification error:", error);

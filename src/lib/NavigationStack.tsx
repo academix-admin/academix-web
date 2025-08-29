@@ -70,6 +70,7 @@ export type NavStackAPI = {
   registerGuard: (guard: GuardFn) => () => void;
   registerMiddleware: (middleware: MiddlewareFn) => () => void;
   dispose: () => void;
+  clearAllPersistedStacks: () => void;
   syncWithBrowserHistory: (enabled: boolean) => void;
   isTop: (uid?: string) => boolean;
   getFullPath: () => string;
@@ -122,6 +123,7 @@ const globalRegistry = new Map<string, {
   childIds: Set<string>;
   navLink?: NavigationMap; // store navLink for each registry entry
   api?: NavStackAPI;
+  currentPath?: string;
 }>();
 
 class TransitionManager {
@@ -463,6 +465,7 @@ function updateNavQueryParamForStack(stackId: string, path: string | null) {
     const current = url.searchParams.get('nav');
     const map = parseCombinedNavParam(current || undefined);
 
+
     if (path && path.length > 0) {
       map[stackId] = path;
     } else {
@@ -505,7 +508,9 @@ function setNavQueryParamIfDifferent(fullPath: string) {
   }
 }
 
-function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, parentApi: NavStackAPI | null): NavStackAPI {
+function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, parentApi: NavStackAPI | null, currentPath: string): NavStackAPI {
+
+
   const transitionManager = new TransitionManager();
   const memoryManager = new PageMemoryManager();
 
@@ -540,6 +545,17 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
 
   function emit() {
     const stackCopy = regEntry!.stack.slice();
+  const regEntryCurrentPath = regEntry.currentPath || (typeof window !== 'undefined' ? window.location.pathname : '');
+
+  if ((syncHistory || regEntry.historySyncEnabled) && regEntryCurrentPath) {
+    if (typeof window !== 'undefined' && window.location.pathname !== regEntryCurrentPath) {
+      console.warn(`NavigationStack ${id}: Path changed from ${regEntryCurrentPath} to ${window.location.pathname}, disabling URL updates`);
+      regEntry.listeners.forEach((l) => {
+        try { l(stackCopy); } catch (e) { console.warn(e); }
+      });
+      return;
+    }
+  }
 
     // Build the path for this stack alone and update only this stack's segment in the combined param
     try {
@@ -895,6 +911,16 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
       regEntry.listeners.clear();
       regEntry.guards.clear();
       regEntry.middlewares.clear();
+
+      try {
+            if (typeof window !== "undefined") {
+              // Clear from sessionStorage
+              sessionStorage.removeItem(storageKeyFor(id));
+            }
+      } catch (e) {
+            console.warn(`Failed to clear persisted storage for stack ${id}:`, e);
+      }
+
       // Clean up parent reference
       if (regEntry.parentId) {
         const parentReg = globalRegistry.get(regEntry.parentId);
@@ -917,8 +943,27 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
       } catch {}
 
       globalRegistry.delete(id);
-    }
+    },
+
+    clearAllPersistedStacks() {
+        if (typeof window === "undefined") return;
+
+        try {
+          // Clear all navstack-related items from storage
+          for (let i = 0; i < sessionStorage.length; i++) {
+            const key = sessionStorage.key(i);
+            if (key && key.startsWith('navstack:')) {
+              sessionStorage.removeItem(key);
+            }
+          }
+        } catch (e) {
+          console.warn('Failed to clear all persisted stacks:', e);
+        }
+      }
+
   };
+
+
 
   // attach api into registry for other code to inspect navLink etc.
   regEntry.api = api;
@@ -1119,9 +1164,17 @@ export default function NavigationStack(props: {
 
   const [isInitialized, setInitialized] = useState(false);
   const [stackSnapshot, setStackSnapshot] = useState<StackEntry[]>([]);
+  const [currentPath, setCurrentPath] = useState(
+      typeof window !== 'undefined' ? window.location.pathname : ''
+    );
+
+  useEffect(() => {
+      if (typeof window === 'undefined') return;
+        setCurrentPath(window.location.pathname);
+    }, []);
 
   const api = useMemo(() => {
-    const newApi = createApiFor(id, navLink, syncHistory || false, parentApi);
+    const newApi = createApiFor(id, navLink, syncHistory || false, parentApi, currentPath);
 
     // Auto-register as child if we have a parent
     if (parentApi) {
@@ -1132,7 +1185,16 @@ export default function NavigationStack(props: {
     }
 
     return newApi;
-  }, [id, navLink, syncHistory, parentApi]);
+  }, [id, navLink, syncHistory, parentApi, currentPath]);
+
+  // Update the registry with the current path
+    useEffect(() => {
+      const regEntry = globalRegistry.get(id);
+      if (regEntry) {
+        // Store the current path in the registry so emit() can access it
+        regEntry.currentPath = currentPath;
+      }
+    }, [id, currentPath]);
 
   // In NavigationStack component
   useIsomorphicLayoutEffect(() => {
@@ -1226,13 +1288,6 @@ export default function NavigationStack(props: {
   useEffect(() => {
     const unsub = api.subscribe((stack) => {
       setStackSnapshot(stack);
-      try {
-        console.log('Stack changed:', {
-          stack: stack.map(s => s.key),
-          // log the combined param for debugging
-          currentUrl: typeof window !== 'undefined' ? window.location.href : 'server'
-        });
-      } catch {}
       if (persist) writePersistedStack(id, stack);
     });
     return unsub;
@@ -1510,7 +1565,7 @@ export default function NavigationStack(props: {
 if (typeof module !== 'undefined' && (module as any).hot) {
   (module as any).hot.dispose(() => {
     globalRegistry.forEach((_, id) => {
-      const api = createApiFor(id, {}, false, null);
+      const api = createApiFor(id, {}, false, null,'');
       api.dispose();
     });
   });

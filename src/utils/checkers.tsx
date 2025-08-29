@@ -1,23 +1,5 @@
 import { supabaseBrowser } from '@/lib/supabase/client';
 
-
-// export type LocationData = {
-//   status: string;
-//   country: string;
-//   countryCode: string;
-//   region: string;
-//   regionName: string;
-//   city: string;
-//   zip: string;
-//   lat: number;
-//   lon: number;
-//   timezone: string;
-//   isp: string;
-//   org: string;
-//   as: string;
-//   query: string;
-// }
-
 export type LocationData = {
   ip: string;
   success: boolean;
@@ -57,20 +39,6 @@ export type LocationData = {
   };
 };
 
-
-
-// const checkLocation = async (): Promise<LocationData | null> => {
-//   try {
-//     const res = await fetch("/api/location");
-//     if (!res.ok) throw new Error("Failed to fetch location");
-//     const data: LocationData = await res.json();
-//     data.countryCode = data.countryCode?.toLowerCase?.() ?? "";
-//     return data;
-//   } catch (err) {
-//     console.error("Location check failed:", err);
-//     return null;
-//   }
-// };
 
 const checkLocation = async (): Promise<LocationData | null> => {
   try {

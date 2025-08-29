@@ -122,14 +122,13 @@ export default function Verification() {
       const feature = await checkFeatures(
         'Features.sign_up_email',
         lang,
-//         location.countryCode,
         location.country_code,
         signUpData.users_sex,
         signUpData.users_dob
       );
 
       if(!feature){
-        console.log('feature not available', {location});
+        console.log('feature not available');
         return null;
       }
 
@@ -201,14 +200,13 @@ export default function Verification() {
       const feature = await checkFeatures(
         'Features.sign_up_phone',
         lang,
-//         location.countryCode,
         location.country_code,
         signUpData.users_sex,
         signUpData.users_dob
       );
 
       if(!feature){
-        console.log('feature not available', {location});
+        console.log('feature not available');
         return null;
       }
 
