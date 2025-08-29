@@ -1,30 +1,87 @@
 import { supabaseBrowser } from '@/lib/supabase/client';
 
 
-export type LocationData = {
-  status: string;
-  country: string;
-  countryCode: string;
-  region: string;
-  regionName: string;
-  city: string;
-  zip: string;
-  lat: number;
-  lon: number;
-  timezone: string;
-  isp: string;
-  org: string;
-  as: string;
-  query: string;
-}
+// export type LocationData = {
+//   status: string;
+//   country: string;
+//   countryCode: string;
+//   region: string;
+//   regionName: string;
+//   city: string;
+//   zip: string;
+//   lat: number;
+//   lon: number;
+//   timezone: string;
+//   isp: string;
+//   org: string;
+//   as: string;
+//   query: string;
+// }
 
+export type LocationData = {
+  ip: string;
+  success: boolean;
+  type: string;
+  continent: string;
+  continent_code: string;
+  country: string;
+  country_code: string;
+  region: string;
+  region_code: string;
+  city: string;
+  latitude: number;
+  longitude: number;
+  is_eu: boolean;
+  postal: string;
+  calling_code: string;
+  capital: string;
+  borders: string;
+  flag: {
+    img: string;
+    emoji: string;
+    emoji_unicode: string;
+  };
+  connection: {
+    asn: number;
+    org: string;
+    isp: string;
+    domain: string;
+  };
+  timezone: {
+    id: string;
+    abbr: string;
+    is_dst: boolean;
+    offset: number;
+    utc: string;
+    current_time: string;
+  };
+};
+
+
+
+// const checkLocation = async (): Promise<LocationData | null> => {
+//   try {
+//     const res = await fetch("/api/location");
+//     if (!res.ok) throw new Error("Failed to fetch location");
+//     const data: LocationData = await res.json();
+//     data.countryCode = data.countryCode?.toLowerCase?.() ?? "";
+//     return data;
+//   } catch (err) {
+//     console.error("Location check failed:", err);
+//     return null;
+//   }
+// };
 
 const checkLocation = async (): Promise<LocationData | null> => {
   try {
     const res = await fetch("/api/location");
     if (!res.ok) throw new Error("Failed to fetch location");
+
     const data: LocationData = await res.json();
-    data.countryCode = data.countryCode?.toLowerCase?.() ?? "";
+
+    // Normalize country_code to lowercase for consistency
+    data.country_code = data.country_code?.toLowerCase?.() ?? "";
+
     return data;
   } catch (err) {
     console.error("Location check failed:", err);

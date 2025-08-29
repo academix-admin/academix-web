@@ -122,7 +122,8 @@ export default function Verification() {
       const feature = await checkFeatures(
         'Features.sign_up_email',
         lang,
-        location.countryCode,
+//         location.countryCode,
+        location.country_code,
         signUpData.users_sex,
         signUpData.users_dob
       );
@@ -200,7 +201,8 @@ export default function Verification() {
       const feature = await checkFeatures(
         'Features.sign_up_phone',
         lang,
-        location.countryCode,
+//         location.countryCode,
+        location.country_code,
         signUpData.users_sex,
         signUpData.users_dob
       );
