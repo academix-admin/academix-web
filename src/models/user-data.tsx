@@ -18,3 +18,17 @@ export interface UserData {
   languageId: string;
   usersCreatedAt: string;
 }
+
+
+export type LoginModel = {
+  loginType: string;
+  loginDetails: string
+};
+
+
+export type UserLoginAccount = {
+  users_email: string;
+  users_phone: string
+  users_names: string
+  users_login_type: string
+};

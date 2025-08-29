@@ -1,4 +1,6 @@
 import { supabaseBrowser } from '@/lib/supabase/client';
+import { LoginModel } from '@/models/user-data';
+import { UserLoginAccount } from '@/models/user-data';
 
 export type LocationData = {
   ip: string;
@@ -79,4 +81,46 @@ const checkFeatures = async (featureChecker: string, locale: string, country: st
               }
     }
 
-export { checkLocation, checkFeatures };
+const fetchUserPartialDetails = async (email?: string, phone?: string) => {
+      try {
+        let params = null;
+        if (email) {
+          params = {
+              p_login_type: 'UserLoginType.email',
+              p_login_check: email
+          }
+        } else if (phone) {
+          params = {
+             p_login_type: 'UserLoginType.phone',
+             p_login_check: phone
+          }
+        }else{
+          console.error('Error getting user details');
+          return null;
+        }
+
+        const { data, error } = await supabaseBrowser.rpc('get_partial_user_record', params);
+        if (error) throw error;
+        return data;
+      } catch (error) {
+        console.error('Error fetching partial user details:', error);
+        return null;
+      }
+    };
+
+const fetchUserDetails = async (loginModel: LoginModel): Promise<UserLoginAccount | null> => {
+      try {
+        const { data, error } = await supabaseBrowser.rpc('get_user_login_record', {
+          p_login_type: loginModel.loginType,
+          p_login_check: loginModel.loginDetails,
+        });
+
+        if (error) throw error;
+        return data;
+      } catch (error) {
+        console.error('Error fetching user details:', error);
+        return null;
+      }
+    };
+
+export { checkLocation, checkFeatures, fetchUserPartialDetails, fetchUserDetails };

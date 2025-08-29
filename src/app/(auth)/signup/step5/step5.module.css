@@ -212,7 +212,7 @@
   z-index: 9999;
 }
 
-.roleState{
+.emptyState{
  width: 100%;
  box-sizing: border-box;
  display: flex;

@@ -270,7 +270,7 @@ export default function Verification() {
     // Navigate to otp screen
     otpTimer$.start(300);
     await StateStack.core.clearScope('signup_flow');
-    nav.pushAndPopUntil('otp',(entry) => entry.key === 'step1', { verificationType: type, verificationValue: value });
+    nav.pushAndPopUntil('otp',(entry) => entry.key === 'step1', { verificationType: type, verificationValue: value, verificationRequest: 'SignUp' });
   };
 
 

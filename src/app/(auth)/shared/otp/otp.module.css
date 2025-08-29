@@ -317,6 +317,8 @@
   margin: 0;
   margin-top: 16px;
   text-align: center;
+    text-decoration: none;
+
     word-break: break-word;   /* break long words */
     white-space: normal;      /* allow wrapping */
 }

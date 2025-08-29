@@ -154,6 +154,7 @@ const Keypad: React.FC<KeypadProps> = ({ value, onChange, disabled = false, erro
 interface OtpProps {
   verificationType: 'UserLoginType.email' | 'UserLoginType.phone';
   verificationValue: string;
+  verificationRequest: 'SignUp' | 'Recovery';
 }
 
 export default function Otp(props: OtpProps) {
@@ -170,7 +171,7 @@ export default function Otp(props: OtpProps) {
   const [isRequesting, setIsRequesting] = useState(false);
   const [canGoBack, setCanGoBack] = useState(false);
 
-  const { verificationType, verificationValue } = props;
+  const { verificationType, verificationValue, verificationRequest } = props;
   const disableOperation = isLoading || isRequesting || (otpTimer.isRunning && remainingSeconds > 0);
 
   const firstInputRef = useRef<HTMLInputElement>(null);
@@ -209,11 +210,20 @@ export default function Otp(props: OtpProps) {
     setIsRequesting(true);
     setError('');
     try {
+
+      if(verificationRequest === 'SignUp'){
       if (verificationType === 'UserLoginType.email') {
         await resendTokenForEmail(verificationValue);
       } else if (verificationType === 'UserLoginType.phone') {
         await resendTokenForPhone(verificationValue);
       }
+     }else{
+         if (verificationType === 'UserLoginType.email') {
+           await resetPasswordForEmail(verificationValue);
+         } else if (verificationType === 'UserLoginType.phone') {
+           await resetPasswordForPhone(verificationValue);
+         }
+     }
 
       otpTimer$.start(300);
     } catch (error) {
@@ -233,20 +243,36 @@ export default function Otp(props: OtpProps) {
 
     try {
       let result;
+      if(verificationRequest === 'SignUp'){
+
       if (verificationType === 'UserLoginType.email') {
         result = await verifyEmailAddressWithOTP(verificationValue, otpValue);
       } else if (verificationType === 'UserLoginType.phone') {
         result = await verifyPhoneNumberWithOTP(verificationValue, otpValue);
       }
+     }else{
+      if (verificationType === 'UserLoginType.email') {
+        result = await verifyPasswordResetEmailOTP(verificationValue, otpValue);
+      } else if (verificationType === 'UserLoginType.phone') {
+        result = await verifyPhoneNumberWithOTP(verificationValue, otpValue);
+      }
+     }
+     console.log(result);
       if (result?.error) {
         setError(t('incorrect_code'));
         // Vibrate on error
         if (navigator.vibrate) navigator.vibrate(200);
       } else {
         // OTP verified successfully
+              if(verificationRequest === 'SignUp'){
+
         await replaceAndWait("/main");
         __meta.clear();
         nav.dispose();
+        }else{
+          __meta.clear();
+          await nav.pushAndPopUntil('reset_password',(entry) => entry.key === 'login');
+        }
       }
     } catch (error) {
       console.error("OTP verification error:", error);
@@ -282,12 +308,37 @@ export default function Otp(props: OtpProps) {
     if (error) throw error;
   };
 
+  const resetPasswordForEmail = async (email: string) => {
+      const { data, error } = await supabaseBrowser.auth.resetPasswordForEmail(email);
+      if (error) {
+        console.error('Error resetting password for email:', error);
+        throw error;
+      }
+      return data;
+    }
+    const resetPasswordForPhone = async (phone: string) => {
+      const { data, error } = await supabaseBrowser.auth.signInWithOtp({phone, options: { shouldCreateUser: false }});
+      if (error) {
+        console.error('Error resetting password for phone:', error);
+        throw error;
+      }
+      return data;
+    }
+
   const verifyEmailAddressWithOTP = async (email: string, token: string) => {
     return await supabaseBrowser.auth.verifyOtp({
       email,
       token,
       type: 'email'
     });
+  };
+
+  const verifyPasswordResetEmailOTP = async (email: string, token: string) => {
+      return await supabaseBrowser.auth.verifyOtp({
+        email,
+        token,
+        type: 'recovery'
+      });
   };
 
   const verifyPhoneNumberWithOTP = async (phone: string, token: string) => {

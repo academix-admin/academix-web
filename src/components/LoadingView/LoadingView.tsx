@@ -4,7 +4,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import styles from './LoadingView.module.css';
 import CachedLottie from '@/components/CachedLottie';
 
-export default function LoadingView({text = null }: { text: string | null;}) {
+export default function LoadingView({text = null }: { text?: string | null;}) {
   const { theme } = useTheme();
   const { t } = useLanguage();
 

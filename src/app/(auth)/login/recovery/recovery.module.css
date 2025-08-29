@@ -19,7 +19,7 @@
 .header {
   position: fixed;
   top: 0;
-  left: 0;
+  left:0;
   width: 100%;
   z-index: 10;
   display: flex;
@@ -51,14 +51,15 @@
 
 .innerBody{
   display: flex;
+  max-width: 400px;
   flex-direction: column;
   align-items: center;
   padding: 2rem;
   padding-top: 6rem;
-        max-width: 400px;
     width: 100%;
   box-sizing: border-box;
 }
+
 
 .backButton {
   background: none;
@@ -67,9 +68,9 @@
   color: var(--text-color);
   border-radius: 50%;
   display: flex;
+  align-items: center;
     padding: 4px;
 
-  align-items: center;
   justify-content: center;
   margin-left: -8px;
 }
@@ -92,16 +93,18 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  box-sizing: border-box;
+
 }
 
 .logoContainer {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-    box-sizing: border-box;
+  box-sizing: border-box;
 }
 
-.logo {
+.logo{
   width: 35px;
   height: 35px;
 }
@@ -110,11 +113,22 @@
   width: 65%;
 }
 
-.stepTitle {
+.titleSmall {
+  font-size: 0.875rem;
+  color: #6B7280;
+  margin: 0;
+      margin-top: 2rem;
+      text-align: start;
+        align-self: flex-start;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      box-sizing: border-box;
+}
+
+.titleBig {
   font-size: 1.5rem;
   font-weight: 600;
-    margin: 0;
-    margin-top: 2rem;
     text-align: start;
       align-self: flex-start;
     white-space: nowrap;
@@ -123,16 +137,11 @@
     box-sizing: border-box;
 }
 
-.stepSubtitle {
-  font-size: 0.875rem;
-  color: #6B7280;
-  margin-bottom: 2rem;
-  align-self: flex-start;
-}
+
 
 .form {
   width: 100%;
-  max-width: 400px;
+  margin-top: 2rem;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
@@ -151,19 +160,6 @@
   color: var(--text-color);
 }
 
-.input {
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
-  border: 1px solid #C4C4C4;
-  font-size: 1rem;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.input:focus {
-  outline: none;
-  border-color: #4F46E5;
-}
 
 .container_light .input {
   background-color: #ffffff;
@@ -176,10 +172,9 @@
   border-color: #333;
 }
 
-.errorText, .validText {
+.errorText {
   font-size: 0.75rem;
-  margin: 0px;
-  margin-top: 0.15rem;
+  margin-top: 0.25rem;
   text-align: left;
   font-weight: 500;
   line-height: 1.25;
@@ -193,15 +188,61 @@
   color: #F87171;
 }
 
-.container_light .validText {
-  color: green;
+.radioGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1rem;
 }
 
-.container_dark .validText {
-  color: green;
+.radioLabel {
+  display: flex;
+  align-items: flex-start;
+  padding: 1rem;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.signUpButton {
+.radioLabel:hover {
+  border-color: #1C6B1E;
+}
+
+.radioLabelSelected {
+  border-color: #1C6B1E;
+  background-color: rgba(28, 107, 30, 0.05);
+}
+
+.radioInput {
+  margin-right: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+.radioContent {
+  flex: 1;
+  text-align: left;
+}
+
+.radioText {
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.container_light .radioLabel {
+  background-color: #FFFFFF;
+}
+
+.container_dark .radioLabel {
+  background-color: #1E1E1E;
+  border-color: #333;
+}
+
+.container_dark .radioLabelSelected {
+  background-color: rgba(28, 107, 30, 0.1);
+}
+
+.sendButton {
   padding: 0.75rem 1rem;
   border-radius: 8px;
   background-color: #1C6B1E;
@@ -212,14 +253,14 @@
   cursor: pointer;
   transition: background-color 0.2s;
   margin-top: 1rem;
-  margin-bottom: 3rem;
+  margin-bottom: 5rem;
 }
 
-.signUpButton:hover {
+.sendButton:hover {
   background-color: #1D3D1E;
 }
 
-.signUpButton:disabled {
+.sendButton:disabled {
   background-color: #9CA3AF;
   cursor: not-allowed;
   opacity: 0.7;
@@ -245,76 +286,49 @@
   z-index: 9999;
 }
 
-
-
-.inputWrapper {
-  position: relative;
-  width: 100%;
+.emptyState{
+ width: 100%;
+ box-sizing: border-box;
+ display: flex;
 }
 
-.eyeButton {
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: #1C6B1E;
-  padding: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.eyeButton:hover {
-  color: #1D3D1E;
-}
-
-.eyeIcon {
-  width: 20px;
-  height: 20px;
-}
-
-/* Adjust input padding to make room for the eye icon */
-.input {
-  padding-right: 40px !important;
-}
-
-/* Responsive styles */
-@media screen and (max-width: 800px) {
-   .headerContent {
-     padding: 1rem 0rem;
-     margin: 0 1rem;
-   }
-    .logo {
-         width: 35px;
-         height: 35px;
-       }
-    .innerBody {
-      padding: 1.5rem;
-      padding-top: 6rem;
-    }
-       .welcome_wrapper{
-         width: 75%;
-       }
-
-}
-
-@media screen and (max-width: 500px) {
-  .headerContent {
-      margin: 0;
-     padding: 1rem 1rem;
-   }
-
+/* Tablet */
+@media screen and (min-width: 500px) and (max-width: 800px) {
+ .headerContent {
+   padding: 1rem 0rem;
+   margin: 0 1rem;
+ }
+  .logo {
+       width: 35px;
+       height: 35px;
+     }
   .innerBody {
-      padding: 1rem;
-      padding-top: 5rem;
+    padding: 1.5rem;
+    padding-top: 4rem;
+  }
+     .welcome_wrapper{
+       width: 75%;
+     }
+}
+
+/* Mobile */
+@media screen and (max-width: 500px) {
+
+ .headerContent {
+    margin: 0;
+   padding: 1rem 1rem;
+ }
+  .innerBody {
+    padding: 1rem;
+    padding-top: 5rem;
+  }
+  .titleBig {
+      font-size: 1.25rem;
     }
 
-  .stepTitle {
-    font-size: 1.25rem;
-  }
+       .welcome_wrapper{
+         width: 80%;
+       }
 
   .backIcon {
     width: 16px;
@@ -326,20 +340,17 @@
   }
 
   .logo {
-    width: 28px;
-    height: 28px;
+      width: 28px;
+      height: 28px;
+    }
+.form {
+    margin-top: 1rem;
   }
-  .welcome_wrapper{
-           width: 80%;
-         }
-.eyeIcon {
-    width: 18px;
-    height: 18px;
-  }
+  .radioLabel {
+      padding: 0.75rem;
+    }
 
-  .input {
-    padding-right: 36px !important;
-  }
-
+    .radioText {
+      font-size: 0.8rem;
+    }
 }
-

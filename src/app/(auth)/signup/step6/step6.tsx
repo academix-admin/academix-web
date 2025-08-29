@@ -318,7 +318,7 @@ export default function SignUpStep6() {
                   threshold: <strong>700</strong>,
                   hours: <strong>24</strong>
                 })}
-              </div>
+          </div>
           </div>
 
             {!rewardState && (<NoRewardView onRewardClick={handleReward} onContinueClick={handleSubmit} continueLoading={continueLoading} />)}

@@ -8,7 +8,7 @@ import SignUpStep4 from './step4/step4';
 import SignUpStep5 from './step5/step5';
 import SignUpStep6 from './step6/step6';
 import SignUpStep7 from './step7/step7';
-import Verification from '../shared/verification/verification';
+import Verification from './verification/verification';
 import Otp from '../shared/otp/otp';
 
 export default function SignUp() {

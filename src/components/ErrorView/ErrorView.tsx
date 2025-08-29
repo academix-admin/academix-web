@@ -10,8 +10,8 @@ export default function ErrorView({
   onButtonClick = null
 }: {
   text: string | null;
-  buttonText: string | null;
-  onButtonClick: (() => void) | null;
+  buttonText?: string | null;
+  onButtonClick?: (() => void) | null;
 }) {
   const { theme } = useTheme();
   const { t } = useLanguage();
