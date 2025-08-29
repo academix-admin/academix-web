@@ -35,3 +35,17 @@ export function treatSpaces(str) {
     .join(' '); // Join with single spaces
 }
 
+export function formatDateToDBString(date) {
+  const dateObj = date instanceof Date ? date : new Date(date);
+
+  // Validate the date
+  if (isNaN(dateObj.getTime())) {
+    throw new Error('Invalid date provided to formatDateToDBString');
+  }
+
+  const isoString = dateObj.toISOString();
+
+  // Convert from "2025-08-28T22:00:00.000Z" to "2025-08-28 22:00:00.000"
+  return isoString.replace('T', ' ').replace('Z', '');
+}
+

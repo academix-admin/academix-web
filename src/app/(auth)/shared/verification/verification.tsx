@@ -12,6 +12,7 @@ import { useSignup, UserRegistrationData } from '@/lib/stacks/signup-stack';
 import { StateStack } from '@/lib/state-stack';
 import { useNav } from "@/lib/NavigationStack";
 import { treatSpaces } from '@/utils/textUtils';
+import { formatDateToDBString } from '@/utils/textUtils';
 import { UserData } from '@/models/user-data';
 import { checkLocation, checkFeatures } from '@/utils/checkers';
 import { useOtp } from '@/lib/stacks/otp-stack';
@@ -61,7 +62,7 @@ export default function Verification() {
     return {
       users_email: signup.email,
       users_phone: signup.phoneNumber,
-      users_dob: String(signup.birthday),
+      users_dob: formatDateToDBString(signup.birthday),
       users_sex: signup.gender === 'Male' ? 'Gender.male' : 'Gender.female',
       users_username: signup.username,
       users_names: treatSpaces(signup.fullName),
@@ -80,7 +81,6 @@ export default function Verification() {
     if (!isFormValid) return;
 
     const signUpData = getSignupData();
-
     if(!signUpData){
        console.error('Something is wrong');
        return;
