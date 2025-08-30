@@ -43,6 +43,7 @@ export default function Verification() {
   }, [signup.verification]);
 
   const handleChange = (type: string) => {
+                 setError('');
     signup$.setField({ field: 'verification', value: type });
   };
 
