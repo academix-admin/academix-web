@@ -140,7 +140,7 @@ export default function ForgotPassword() {
 
             if (verificationMethods.length > 0) {
               accountDetails$.setField({ field: 'methods', value: verificationMethods });
-              nav.replace('recovery');
+              nav.replace('recovery',{names: userLoginAccount.users_names});
             } else {
               console.error('No verification methods available');
                                                   setError(t('error_occurred'));

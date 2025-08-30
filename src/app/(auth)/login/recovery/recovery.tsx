@@ -15,13 +15,18 @@ import { checkLocation, checkFeatures } from '@/utils/checkers';
 import { useOtp } from '@/lib/stacks/otp-stack';
 import NoResultsView from '@/components/NoResultsView/NoResultsView';
 
-export default function Recovery() {
+interface RecoveryProps {
+  names: string;
+}
+export default function Recovery(props: RecoveryProps) {
   const { theme } = useTheme();
   const { t, tNode, lang } = useLanguage();
   const { accountDetails, accountDetails$, __meta} = useAccountDetails();
   const { otpTimer, otpTimer$ } = useOtp();
   const nav = useNav();
   const isTop = nav.isTop();
+
+  const { names } = props;
 
   const [canGoBack, setCanGoBack] = useState(false);
   const [sendLoading, setSendLoading] = useState(false);
@@ -97,7 +102,7 @@ export default function Recovery() {
     // Navigate to otp screen
     otpTimer$.start(300);
     __meta.clear();
-    await nav.pushAndPopUntil('otp',(entry) => entry.key === 'login',{ verificationType: type, verificationValue: value, verificationRequest: 'Recovery' });
+    await nav.pushAndPopUntil('otp',(entry) => entry.key === 'login',{ verificationType: type, verificationValue: value, verificationRequest: 'Recovery', names });
   };
 
 

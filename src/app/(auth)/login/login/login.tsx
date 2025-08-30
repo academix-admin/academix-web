@@ -151,7 +151,7 @@ export default function LoginUser() {
 
       } catch (err) {
         console.error(err);
-                                            setError(t('error_occurred'));
+        setError(t('error_occurred'));
       } finally {
         setLoginLoading(false);
       }
@@ -306,8 +306,8 @@ export default function LoginUser() {
 
   const handleCreatedUser = async (type: string, value: string, userObj: UserData) => {
       // Navigate to main screen
-      await StateStack.core.clearScope('login_flow');
       await replaceAndWait("/main");
+      await StateStack.core.clearScope('login_flow');
       __meta.clear();
       nav.dispose();
       setLoginInputValue('');

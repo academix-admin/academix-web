@@ -94,8 +94,6 @@
   overflow: hidden;
   text-overflow: ellipsis;
   box-sizing: border-box;
-    word-break: break-word;   /* break long words */
-    white-space: normal;      /* allow wrapping */
 }
 
 .logoContainer {

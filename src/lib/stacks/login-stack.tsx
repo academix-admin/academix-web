@@ -18,11 +18,16 @@ type LoginState = {
   password: string;
 };
 
-
 type AccountDetailsState = {
   accountDetails: LoginModel | null;
   methods: VerificationMethodModel[];
 };
+
+type ResetState = {
+  password: string;
+  confirm_password: string;
+};
+
 
 const methods = {
   login: {
@@ -55,6 +60,21 @@ const methods = {
        methods: []
      }),
  },
+  resetPassword: {
+     setField: <K extends keyof ResetState>(
+       state: ResetState,
+       ...updates: { field: K; value: ResetState[K] }[]
+     ) => {
+        return updates.reduce(
+          (s, u) => ({ ...s, [u.field]: u.value }),
+          { ...state }
+        );
+     },
+     reset: () => ({
+         password: '',
+         confirm_password: ''
+     }),
+ },
 };
 
 export const { useStack } = createStateStack(methods);
@@ -81,6 +101,17 @@ export const accountDetailsConfig = {
   clearOnZeroSubscribers: false,
 };
 
+export const resetPasswordConfig = {
+  initial: {
+    password: '',
+    confirm_password: ''
+  },
+  persist: true,
+  ttl: 300, // 5 minutes
+  historyDepth: 1,
+  clearOnZeroSubscribers: false,
+};
+
 export const useLogin = () => {
   return useStack('login', loginConfig, 'login_flow');
 };
@@ -88,4 +119,9 @@ export const useLogin = () => {
 
 export const useAccountDetails = () => {
   return useStack('accountDetails', accountDetailsConfig, 'login_flow');
+};
+
+
+export const useResetPassword = () => {
+  return useStack('resetPassword', resetPasswordConfig, 'login_flow');
 };

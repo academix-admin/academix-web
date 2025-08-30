@@ -3,7 +3,7 @@
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useRef, useCallback } from "react";
 
-export function useAwaitableRouter(timeout = 5000) {
+export function useAwaitableRouter(timeout = 10000) {
   const router = useRouter();
   const pathname = usePathname();
 

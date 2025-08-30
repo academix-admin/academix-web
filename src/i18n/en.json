@@ -126,5 +126,15 @@
   "error_occurred": "Error occurred!!!",
   "feature_unavailable": "Feature not available",
   "invalid_login_credentials": "Invalid Login Credentials",
-  "unable_to_create_account": "Unable to create account"
+  "unable_to_create_account": "Unable to create account",
+  "access_to_academix": "Access to Academix!",
+  "confirm_password_label": "CONFIRM PASSWORD",
+  "confirm_password_placeholder": "Confirm your password",
+  "reset": "Reset",
+  "password_reset": "Password Reset",
+  "enter_password": "Please enter your password first",
+  "password_no_match": "Password does not match",
+  "password_not_valid": "Password is not valid",
+  "password_match": "Password matches",
+  "same_password": "Enter a different password"
 }

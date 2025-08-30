@@ -126,5 +126,15 @@
   "error_occurred": "Une erreur s’est produite !!!",
   "feature_unavailable": "Fonctionnalité non disponible",
   "invalid_login_credentials": "Identifiants de connexion invalides",
-  "unable_to_create_account": "Impossible de créer un compte"
+  "unable_to_create_account": "Impossible de créer un compte",
+  "access_to_academix": "Accédez à Academix !",
+  "confirm_password_label": "CONFIRMER LE MOT DE PASSE",
+  "confirm_password_placeholder": "Confirmez votre mot de passe",
+  "reset": "Réinitialiser",
+  "password_reset": "Réinitialisation du mot de passe",
+  "enter_password": "Veuillez d'abord entrer votre mot de passe",
+  "password_no_match": "Les mots de passe ne correspondent pas",
+  "password_not_valid": "Le mot de passe n'est pas valide",
+  "password_match": "Les mots de passe correspondent",
+  "same_password": "Entrez un mot de passe différent"
 }

@@ -154,6 +154,7 @@ const Keypad: React.FC<KeypadProps> = ({ value, onChange, disabled = false, erro
 interface OtpProps {
   verificationType: 'UserLoginType.email' | 'UserLoginType.phone';
   verificationValue: string;
+  names: string;
   verificationRequest: 'SignUp' | 'Recovery';
 }
 
@@ -171,7 +172,7 @@ export default function Otp(props: OtpProps) {
   const [isRequesting, setIsRequesting] = useState(false);
   const [canGoBack, setCanGoBack] = useState(false);
 
-  const { verificationType, verificationValue, verificationRequest } = props;
+  const { verificationType, verificationValue, verificationRequest, names } = props;
   const disableOperation = isLoading || isRequesting || (otpTimer.isRunning && remainingSeconds > 0);
 
   const firstInputRef = useRef<HTMLInputElement>(null);
@@ -270,7 +271,7 @@ export default function Otp(props: OtpProps) {
         nav.dispose();
         }else{
           __meta.clear();
-          await nav.pushAndPopUntil('reset_password',(entry) => entry.key === 'login');
+          await nav.pushAndPopUntil('reset_password',(entry) => entry.key === 'login',{names});
         }
       }
     } catch (error) {
