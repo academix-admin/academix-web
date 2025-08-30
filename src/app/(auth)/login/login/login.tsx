@@ -77,6 +77,9 @@ export default function LoginUser() {
   const [passwordChecks, setPasswordChecks] = useState(validatePassword(''));
   const [showPassword, setShowPassword] = useState(false);
 
+  const [error, setError] = useState('');
+
+
   useEffect(() => {
     setCanGoBack(window.history.length > 1);
   }, []);
@@ -85,11 +88,14 @@ export default function LoginUser() {
     setIsFormValid(loginState !== 'error' && loginState !== 'initial' && !!login.password);
   }, [login.login, login.password, loginState]);
 
+
   useEffect(() => {
     if (login?.password) {
       const result = validatePassword(login.password);
       setPasswordChecks(result);
       setPasswordInputValue(login.password);
+    }else{
+      setPasswordInputValue('');
     }
   }, [login.password]);
 
@@ -103,10 +109,14 @@ export default function LoginUser() {
              setLoginState('phone');
            } else if (!isEmail(normalizedValue) &&
                !containsUpperCase(normalizedValue) &&
-               getSpecialCharacters(normalizedValue).every((c) => c === '.' || c === '_')) {
+               getSpecialCharacters(normalizedValue).every((c) => c === '.' || c === '_') && normalizedValue.length > 0) {
              setLoginState('username');
+           }else{
+                            setLoginState('initial');
            }
        setLoginInputValue(normalizedValue);
+    }else{
+                                    setLoginState('initial');
     }
   }, [login.login]);
 
@@ -114,10 +124,12 @@ export default function LoginUser() {
       if (!isFormValid || !login?.login) return;
 
       setLoginLoading(true);
+                                          setError('');
+
       try {
         const userLoginAccount: UserLoginAccount | null = await fetchUserDetails(login.login);
         if (!userLoginAccount) {
-          console.error('User not found');
+          setError(t('user_not_found'));
           return;
         }
 
@@ -136,8 +148,10 @@ export default function LoginUser() {
             userLoginAccount.users_login_type === 'UserLoginType.email' ? userLoginAccount.users_email : userLoginAccount.users_phone,
             userObj);
         }
+
       } catch (err) {
         console.error(err);
+                                            setError(t('error_occurred'));
       } finally {
         setLoginLoading(false);
       }
@@ -151,6 +165,7 @@ export default function LoginUser() {
          const location = await checkLocation();
          if (!location) {
            console.log('location not determined');
+           setError(t('error_occurred'));
            return null;
          }
 
@@ -165,6 +180,7 @@ export default function LoginUser() {
 
          if (!feature) {
            console.log('feature not available');
+           setError(t('feature_unavailable'));
            return null;
          }
 
@@ -186,17 +202,21 @@ export default function LoginUser() {
 
          return null;
        } catch (error: any) {
-         console.error('Signin error:', error);
+         console.error('Signin error:', error.code);
 
          if (error.code === 'email_not_confirmed') {
            await resendTokenForEmail(email);
            otpTimer$.start(300);
-           await StateStack.core.clearScope('signup_flow');
+           await StateStack.core.clearScope('login_flow');
+           setLoginInputValue('');
+                 setPasswordInputValue('');
+                 setError('');
            nav.pushAndPopUntil('otp', (entry: any) => entry.key === 'login', {
              verificationType: 'UserLoginType.email',
              verificationValue: email
            });
-         } else if (error.message?.includes('Invalid login credentials')) {
+         } else if (error.code === 'invalid_credentials') {
+           setError(t('invalid_login_credentials'));
            return null;
          }
 
@@ -209,6 +229,7 @@ export default function LoginUser() {
          const location = await checkLocation();
          if (!location) {
            console.log('location not determined');
+           setError(t('error_occurred'));
            return null;
          }
 
@@ -223,6 +244,7 @@ export default function LoginUser() {
 
          if (!feature) {
            console.log('feature not available');
+           setError(t('feature_unavailable'));
            return null;
          }
 
@@ -249,12 +271,16 @@ export default function LoginUser() {
          if (error.code === 'phone_not_confirmed') {
            await resendTokenForPhone(phone);
            otpTimer$.start(300);
-           await StateStack.core.clearScope('signup_flow');
+           await StateStack.core.clearScope('login_flow');
+           setLoginInputValue('');
+                 setPasswordInputValue('');
+                 setError('');
            nav.pushAndPopUntil('otp', (entry: any) => entry.key === 'login', {
              verificationType: 'UserLoginType.phone',
              verificationValue: phone
            });
-         } else if (error.message?.includes('Invalid login credentials')) {
+         } else if (error.code === 'invalid_credentials') {
+           setError(t('invalid_login_credentials'));
            return null;
          }
 
@@ -279,11 +305,14 @@ export default function LoginUser() {
      };
 
   const handleCreatedUser = async (type: string, value: string, userObj: UserData) => {
-      // Navigate to otp screen
+      // Navigate to main screen
       await StateStack.core.clearScope('login_flow');
       await replaceAndWait("/main");
-              __meta.clear();
-              nav.dispose();
+      __meta.clear();
+      nav.dispose();
+      setLoginInputValue('');
+      setPasswordInputValue('');
+      setError('');
     };
 
   const cancelLogin = async () => {
@@ -316,6 +345,7 @@ export default function LoginUser() {
     const cleanValue = value.trim();
 
     setLoginInputValue(cleanValue);
+                                    setError('');
 
     if (cleanValue.length === 0) {
       setLoginState('initial');
@@ -357,6 +387,7 @@ export default function LoginUser() {
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = e.target;
     setPasswordInputValue(value);
+                                    setError('');
 
     const result = validatePassword(value);
     setPasswordChecks(result);
@@ -368,7 +399,11 @@ export default function LoginUser() {
     setShowPassword(!showPassword);
   };
 
-  const handleForgotPassword = () => {
+  const handleForgotPassword =  async () => {
+      await StateStack.core.clearScope('login_flow');
+      setError('');
+      setLoginInputValue('');
+      setPasswordInputValue('');
       nav.push('forgot_password');
   };
 
@@ -494,6 +529,12 @@ export default function LoginUser() {
           >
              {t('forgot_password')}
           </button>
+
+         {error && ( <div className={styles.errorSection}>
+            <p className={styles.errorText}>
+                      {error}
+            </p>
+          </div>)}
 
           <button
             type="submit"

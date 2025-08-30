@@ -257,7 +257,6 @@ export default function Otp(props: OtpProps) {
         result = await verifyPhoneNumberWithOTP(verificationValue, otpValue);
       }
      }
-     console.log(result);
       if (result?.error) {
         setError(t('incorrect_code'));
         // Vibrate on error

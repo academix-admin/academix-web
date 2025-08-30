@@ -92,6 +92,8 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  word-break: break-word;   /* break long words */
+    white-space: normal;      /* allow wrapping */
 }
 
 .logoContainer {
@@ -121,6 +123,8 @@
     overflow: hidden;
     text-overflow: ellipsis;
     box-sizing: border-box;
+    word-break: break-word;   /* break long words */
+      white-space: normal;      /* allow wrapping */
 }
 
 .stepSubtitle {
@@ -128,6 +132,8 @@
   color: #6B7280;
   margin-bottom: 2rem;
   align-self: flex-start;
+  word-break: break-word;   /* break long words */
+    white-space: normal;      /* allow wrapping */
 }
 
 .form {
@@ -149,6 +155,8 @@
   font-weight: 600;
   text-align: left;
   color: var(--text-color);
+  word-break: break-word;   /* break long words */
+    white-space: normal;      /* allow wrapping */
 }
 
 .input {
@@ -183,6 +191,8 @@
   text-align: left;
   font-weight: 500;
   line-height: 1.25;
+  word-break: break-word;   /* break long words */
+    white-space: normal;      /* allow wrapping */
 }
 
 .container_light .errorText {

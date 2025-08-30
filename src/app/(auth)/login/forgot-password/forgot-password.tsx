@@ -46,8 +46,10 @@ export default function ForgotPassword() {
   const [accountDetailsLoading, setLoginLoading] = useState(false);
   const [isFormValid, setIsFormValid] = useState(false);
 
-  const [accountDetailsState, setLoginState] = useState('initial');
+  const [accountDetailsState, setAccountDetailsState] = useState('initial');
   const [accountDetailsInputValue, setLoginInputValue] = useState('');
+
+  const [error, setError] = useState('');
 
   useEffect(() => {
     setCanGoBack(window.history.length > 1);
@@ -63,33 +65,43 @@ export default function ForgotPassword() {
        // Use the normalize function to display the clean value
        const normalizedValue = normalizeLoginInputValue(accountDetails.accountDetails);
        if (normalizedValue.includes("@") && isEmail(normalizedValue)) {
-             setLoginState('email');
+             setAccountDetailsState('email');
            } else if (!normalizedValue.includes("@") && allNumber(normalizedValue)) {
-             setLoginState('phone');
+             setAccountDetailsState('phone');
            } else if (!isEmail(normalizedValue) &&
                !containsUpperCase(normalizedValue) &&
-               getSpecialCharacters(normalizedValue).every((c) => c === '.' || c === '_')) {
-             setLoginState('username');
-           }
+               getSpecialCharacters(normalizedValue).every((c) => c === '.' || c === '_') && normalizedValue.length > 0) {
+             setAccountDetailsState('username');
+           }else{
+                                           setAccountDetailsState('initial');
+               }
+
        setLoginInputValue(normalizedValue);
-    }
+    }else{
+                                         setAccountDetailsState('initial');
+         }
   }, [accountDetails.accountDetails]);
 
   const handleSubmit = async () => {
       if (!isFormValid || !accountDetails?.accountDetails) return;
 
       setLoginLoading(true);
+                                          setError('');
+
       try {
           
           const userLoginAccount: UserLoginAccount | null = await fetchUserDetails(accountDetails.accountDetails);
                   if (!userLoginAccount) {
                     console.error('User not found');
+                    setError(t('user_not_found'));
                     return;
                   }
 
               const location = await checkLocation();
                        if (!location) {
                          console.log('location not determined');
+                                    setError(t('error_occurred'));
+
                          return null;
                        }
 
@@ -104,6 +116,7 @@ export default function ForgotPassword() {
 
                        if (!feature) {
                          console.log('feature not available');
+                                    setError(t('feature_unavailable'));
                          return null;
                        }
 
@@ -121,18 +134,21 @@ export default function ForgotPassword() {
               });
             } else {
               console.error('Invalid login type for recovery');
+                                                  setError(t('error_occurred'));
               return;
             }
 
             if (verificationMethods.length > 0) {
               accountDetails$.setField({ field: 'methods', value: verificationMethods });
-              nav.push('recovery');
+              nav.replace('recovery');
             } else {
               console.error('No verification methods available');
+                                                  setError(t('error_occurred'));
             }
 
       } catch (err) {
         console.error(err);
+        setError(t('error_occurred'));
       } finally {
         setLoginLoading(false);
       }
@@ -163,9 +179,10 @@ export default function ForgotPassword() {
     const cleanValue = value.trim();
 
     setLoginInputValue(cleanValue);
+                                    setError('');
 
     if (cleanValue.length === 0) {
-      setLoginState('initial');
+      setAccountDetailsState('initial');
       accountDetails$.setField({ field: 'accountDetails', value: null });
       return;
     }
@@ -177,13 +194,13 @@ export default function ForgotPassword() {
         loginType: 'UserLoginType.email',
         loginDetails: cleanValue
       };
-      setLoginState('email');
+      setAccountDetailsState('email');
     } else if (!cleanValue.includes("@") && allNumber(cleanValue)) {
       loginModel = {
         loginType: 'UserLoginType.phone',
         loginDetails: `+${cleanValue}`
       };
-      setLoginState('phone');
+      setAccountDetailsState('phone');
     } else if (!isEmail(cleanValue) &&
         !containsUpperCase(cleanValue) &&
         getSpecialCharacters(cleanValue).every((c) => c === '.' || c === '_')) {
@@ -191,9 +208,9 @@ export default function ForgotPassword() {
         loginType: 'UserLoginType.username',
         loginDetails: `@${cleanValue}`
       };
-      setLoginState('username');
+      setAccountDetailsState('username');
     } else {
-      setLoginState('error');
+      setAccountDetailsState('error');
     }
 
     if (loginModel) {
@@ -272,20 +289,25 @@ export default function ForgotPassword() {
               autoComplete="username"
               autoCapitalize="none"
             />
-            {accountDetailsState === 'error' && (
+            {accountDetailsState === 'error' && !error && (
               <p className={styles.errorText}>{t('login_error')}</p>
             )}
-            {accountDetailsState === 'username' && (
+            {accountDetailsState === 'username' && !error && (
               <p className={styles.validText}>{t('login_username')}</p>
             )}
-            {accountDetailsState === 'phone' && (
+            {accountDetailsState === 'phone'&& !error && (
               <p className={styles.validText}>{t('login_phone')}</p>
             )}
-            {accountDetailsState === 'email' && (
+            {accountDetailsState === 'email' && !error && (
               <p className={styles.validText}>{t('login_email')}</p>
             )}
           </div>
 
+        {error && ( <div className={styles.errorSection}>
+                    <p className={styles.errorText}>
+                              {error}
+                    </p>
+                  </div>)}
 
           <button
             type="submit"

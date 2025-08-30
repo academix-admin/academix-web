@@ -82,7 +82,7 @@ const checkFeatures = async (featureChecker: string, locale: string, country: st
     }
 
 const fetchUserPartialDetails = async (email?: string, phone?: string) => {
-      try {
+//       try {
         let params = null;
         if (email) {
           params = {
@@ -102,14 +102,14 @@ const fetchUserPartialDetails = async (email?: string, phone?: string) => {
         const { data, error } = await supabaseBrowser.rpc('get_partial_user_record', params);
         if (error) throw error;
         return data;
-      } catch (error) {
-        console.error('Error fetching partial user details:', error);
-        return null;
-      }
+//       } catch (error) {
+//         console.error('Error fetching partial user details:', error);
+//         return null;
+//       }
     };
 
 const fetchUserDetails = async (loginModel: LoginModel): Promise<UserLoginAccount | null> => {
-      try {
+//       try {
         const { data, error } = await supabaseBrowser.rpc('get_user_login_record', {
           p_login_type: loginModel.loginType,
           p_login_check: loginModel.loginDetails,
@@ -117,10 +117,10 @@ const fetchUserDetails = async (loginModel: LoginModel): Promise<UserLoginAccoun
 
         if (error) throw error;
         return data;
-      } catch (error) {
-        console.error('Error fetching user details:', error);
-        return null;
-      }
+//       } catch (error) {
+//         console.error('Error fetching user details:', error);
+//         return null;
+//       }
     };
 
 export { checkLocation, checkFeatures, fetchUserPartialDetails, fetchUserDetails };

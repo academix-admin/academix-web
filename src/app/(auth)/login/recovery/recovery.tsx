@@ -28,6 +28,8 @@ export default function Recovery() {
   const [isFormValid, setIsFormValid] = useState(false);
   const [verificationSelected, setVerificationSelected] = useState<VerificationMethodModel>();
 
+  const [error, setError] = useState('');
+
 
   useEffect(() => {
     setCanGoBack(window.history.length > 1);
@@ -50,6 +52,8 @@ export default function Recovery() {
     if (!isFormValid) return;
 
     setSendLoading(true);
+                                              setError('');
+
     try {
 
     if(verificationSelected?.type === 'UserLoginType.email'){
@@ -60,9 +64,13 @@ export default function Recovery() {
          handleRecovery(verificationSelected.type,verificationSelected.value)
     }else{
         console.error('Unknown verification type');
+                                                         setError(t('error_occurred'));
+
     }
     } catch (error) {
       console.error('Error during password reset:', error);
+                                                       setError(t('error_occurred'));
+
     } finally {
       setSendLoading(false);
     }
@@ -89,7 +97,7 @@ export default function Recovery() {
     // Navigate to otp screen
     otpTimer$.start(300);
     __meta.clear();
-    await nav.push('otp',{ verificationType: type, verificationValue: value, verificationRequest: 'Recovery' });
+    await nav.pushAndPopUntil('otp',(entry) => entry.key === 'login',{ verificationType: type, verificationValue: value, verificationRequest: 'Recovery' });
   };
 
 
@@ -165,6 +173,13 @@ export default function Recovery() {
             </div>
 
           </div>
+
+
+           {error && ( <div className={styles.errorSection}>
+                      <p className={styles.errorText}>
+                                {error}
+                      </p>
+                    </div>)}
 
 
           { accountDetails?.methods.length > 0 && (<button

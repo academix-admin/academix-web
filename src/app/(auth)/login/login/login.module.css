@@ -94,6 +94,8 @@
   overflow: hidden;
   text-overflow: ellipsis;
   box-sizing: border-box;
+  word-break: break-word;   /* break long words */
+    white-space: normal;      /* allow wrapping */
 
 }
 
@@ -124,6 +126,8 @@
       overflow: hidden;
       text-overflow: ellipsis;
       box-sizing: border-box;
+      word-break: break-word;   /* break long words */
+        white-space: normal;      /* allow wrapping */
 }
 
 .titleBig {
@@ -135,6 +139,8 @@
     overflow: hidden;
     text-overflow: ellipsis;
     box-sizing: border-box;
+    word-break: break-word;   /* break long words */
+      white-space: normal;      /* allow wrapping */
 }
 
 
@@ -158,6 +164,8 @@
   font-weight: 600;
   text-align: left;
   color: var(--text-color);
+    word-break: break-word;   /* break long words */
+    white-space: normal;      /* allow wrapping */
 }
 
 .input {
@@ -192,6 +200,8 @@
   text-align: left;
   font-weight: 500;
   line-height: 1.25;
+  word-break: break-word;   /* break long words */
+  white-space: normal;      /* allow wrapping */
 }
 
 .container_light .errorText {
@@ -302,6 +312,18 @@
 .forgotPasswordLink:hover {
   color: var(--accent-color-hover);
 }
+
+.errorSection {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
+
+
+}
+
 
 /* Tablet */
 @media screen and (min-width: 500px) and (max-width: 800px) {

@@ -119,5 +119,11 @@
   "recovery_text": "Récupération",
   "ouch": "Oups! \uD83D\uDC94",
   "get_back_to_academix": "Retournez à Academix !",
-  "verify_identity_label": "Vérifier l'identité"
+  "verify_identity_label": "Vérifier l'identité",
+  "pin_incomplete": "Le code PIN doit comporter 6 chiffres",
+  "username_empty": "Nom d’utilisateur introuvable",
+  "user_not_found": "Utilisateur introuvable",
+  "error_occurred": "Une erreur s’est produite !!!",
+  "feature_unavailable": "Fonctionnalité non disponible",
+  "invalid_login_credentials": "Identifiants de connexion invalides"
 }

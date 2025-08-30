@@ -94,6 +94,8 @@
   overflow: hidden;
   text-overflow: ellipsis;
   box-sizing: border-box;
+  word-break: break-word;   /* break long words */
+    white-space: normal;      /* allow wrapping */
 
 }
 
@@ -124,6 +126,8 @@
       overflow: hidden;
       text-overflow: ellipsis;
       box-sizing: border-box;
+      word-break: break-word;   /* break long words */
+        white-space: normal;      /* allow wrapping */
 }
 
 .titleBig {
@@ -135,6 +139,8 @@
     overflow: hidden;
     text-overflow: ellipsis;
     box-sizing: border-box;
+    word-break: break-word;   /* break long words */
+      white-space: normal;      /* allow wrapping */
 }
 
 
@@ -158,6 +164,8 @@
   font-weight: 600;
   text-align: left;
   color: var(--text-color);
+  word-break: break-word;   /* break long words */
+    white-space: normal;      /* allow wrapping */
 }
 
 
@@ -178,6 +186,8 @@
   text-align: left;
   font-weight: 500;
   line-height: 1.25;
+  word-break: break-word;   /* break long words */
+    white-space: normal;      /* allow wrapping */
 }
 
 .container_light .errorText {

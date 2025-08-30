@@ -133,6 +133,8 @@ const styles = `
   font-size: 18px;
   font-weight: 600;
   padding: 0px 16px 0px 16px;
+    word-break: break-word;   /* break long words */
+    white-space: normal;      /* allow wrapping */
 }
 
 .selection-viewer-search {

@@ -92,6 +92,8 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+    word-break: break-word;   /* break long words */
+    white-space: normal;      /* allow wrapping */
 }
 
 .logoContainer {
@@ -120,6 +122,8 @@
     overflow: hidden;
     text-overflow: ellipsis;
     box-sizing: border-box;
+      word-break: break-word;   /* break long words */
+      white-space: normal;      /* allow wrapping */
 }
 
 .stepSubtitle {
@@ -127,6 +131,8 @@
   color: #6B7280;
   margin-bottom: 2rem;
   align-self: flex-start;
+    word-break: break-word;   /* break long words */
+    white-space: normal;      /* allow wrapping */
 }
 
 .form {
@@ -310,6 +316,8 @@
   padding: 0 16px 16px 0px;
   cursor: pointer;
   transition: background-color 0.2s ease;
+    word-break: break-word;   /* break long words */
+    white-space: normal;      /* allow wrapping */
 }
 
 .item_light{
@@ -326,6 +334,8 @@
   text-align: left;
   font-weight: 500;
   line-height: 1.25;
+    word-break: break-word;   /* break long words */
+    white-space: normal;      /* allow wrapping */
 }
 .errorText_light {
   color: #DC2626;

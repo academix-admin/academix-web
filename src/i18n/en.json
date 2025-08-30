@@ -119,5 +119,11 @@
   "recovery_text": "Recovery",
   "ouch": "Ouch! \uD83D\uDC94",
   "get_back_to_academix": "Get back to Academix!",
-  "verify_identity_label": "Verify identity"
+  "verify_identity_label": "Verify identity",
+  "pin_incomplete": "Pin must be 6 digits",
+  "username_empty": "Username not found",
+  "user_not_found": "User is not found",
+  "error_occurred": "Error occurred!!!",
+  "feature_unavailable": "Feature not available",
+  "invalid_login_credentials": "Invalid Login Credentials"
 }

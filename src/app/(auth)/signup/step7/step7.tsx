@@ -52,7 +52,7 @@ export default function SignUpStep7() {
 
   // PIN states
   const [sixPinInputValue, setSixPinInputValue] = useState('');
-  const [sixPinState, setSixPinState] = useState<'initial' | 'valid' | 'invalid'>('initial');
+  const [sixPinState, setSixPinState] = useState<'initial' | 'valid' | 'invalid' | 'incomplete'>('incomplete');
   const [showPin, setShowPin] = useState(false);
 
   // Password states
@@ -103,7 +103,7 @@ export default function SignUpStep7() {
     const { value } = e.target;
 
     if (!value) {
-      setSixPinState('initial');
+      setSixPinState('incomplete');
       signup$.setField({ field: 'sixDigitPin', value: null });
       setSixPinInputValue('');
       return;
@@ -115,11 +115,17 @@ export default function SignUpStep7() {
     if (result.valid) {
       setSixPinState('valid');
       signup$.setField({ field: 'sixDigitPin', value });
-    } else if(!result.valid && value.length === 6) {
-      setSixPinState('invalid');
+    } else if(!result.valid) {
+      const regex = /^\d+$/;
+      const hasNumber = regex.test(String(value));
+      if(value.length < 6 && hasNumber){
+         setSixPinState('incomplete');
+      }else{
+         setSixPinState('invalid');
+      }
       signup$.setField({ field: 'sixDigitPin', value: null });
     }else{
-      setSixPinState('initial');
+      setSixPinState('incomplete');
       signup$.setField({ field: 'sixDigitPin', value: null });
    }
   };
@@ -243,6 +249,7 @@ export default function SignUpStep7() {
                 )}
               </button>
             </div>
+            {sixPinState === 'incomplete' && <p className={styles.errorText}>{t('pin_incomplete')}</p>}
             {sixPinState === 'invalid' && <p className={styles.errorText}>{t('pin_invalid')}</p>}
             {sixPinState === 'valid' && <p className={styles.validText}>{t('pin_valid')}</p>}
           </div>
