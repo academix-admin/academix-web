@@ -19,6 +19,6 @@ export default function Login() {
           entry="login"
           transition = "slide"
           persist={true}
-          syncHistory={true}
+//           syncHistory={true}
         />;
 }

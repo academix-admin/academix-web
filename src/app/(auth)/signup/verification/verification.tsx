@@ -30,6 +30,8 @@ export default function Verification() {
   const [isFormValid, setIsFormValid] = useState(false);
   const [verificationSelected, setVerificationSelected] = useState('');
 
+  const [error, setError] = useState('');
+
 
   useEffect(() => {
     setCanGoBack(window.history.length > 1);
@@ -83,10 +85,13 @@ export default function Verification() {
     const signUpData = getSignupData();
     if(!signUpData){
        console.error('Something is wrong');
+                  setError(t('error_occurred'));
+
        return;
     }
 
     setContinueLoading(true);
+           setError('');
 
     if(signUpData.users_login_type === 'UserLoginType.email'){
       // Handle email
@@ -116,6 +121,8 @@ export default function Verification() {
       const location = await checkLocation();
       if(!location){
         console.log('location not determined');
+                   setError(t('error_occurred'));
+
         return null;
       }
 
@@ -129,6 +136,8 @@ export default function Verification() {
 
       if(!feature){
         console.log('feature not available');
+                   setError(t('feature_unavailable'));
+
         return null;
       }
 
@@ -158,7 +167,8 @@ export default function Verification() {
       }
 
       if (!result.user) {
-        throw new Error('No user returned from signup');
+                   setError(t('unable_to_create_account'));
+                   return null;
       }
 
       return {
@@ -184,6 +194,8 @@ export default function Verification() {
 
     } catch (err) {
       console.error('Signup error:', err);
+                         setError(t('error_occurred'));
+
       return null;
     }
   };
@@ -194,6 +206,8 @@ export default function Verification() {
       const location = await checkLocation();
       if(!location){
         console.log('location not determined');
+                   setError(t('error_occurred'));
+
         return null;
       }
 
@@ -207,6 +221,8 @@ export default function Verification() {
 
       if(!feature){
         console.log('feature not available');
+                   setError(t('feature_unavailable'));
+
         return null;
       }
 
@@ -236,7 +252,8 @@ export default function Verification() {
       }
 
       if (!result.user) {
-        throw new Error('No user returned from signup');
+                           setError(t('unable_to_create_account'));
+                           return  null;
       }
 
       return {
@@ -262,6 +279,8 @@ export default function Verification() {
 
     } catch (err) {
       console.error('Signup error:', err);
+                         setError(t('error_occurred'));
+
       return null;
     }
   };
@@ -356,6 +375,12 @@ export default function Verification() {
               </label>
             </div>
           </div>
+
+          {error && ( <div className={styles.errorSection}>
+                      <p className={styles.errorText}>
+                                {error}
+                      </p>
+                    </div>)}
 
           <button
             type="submit"

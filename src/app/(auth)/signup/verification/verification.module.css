@@ -296,6 +296,17 @@
   z-index: 9999;
 }
 
+.errorSection {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
+
+
+}
+
 /* Tablet */
 @media screen and (min-width: 500px) and (max-width: 800px) {
  .headerContent {

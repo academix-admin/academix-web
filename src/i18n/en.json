@@ -125,5 +125,6 @@
   "user_not_found": "User is not found",
   "error_occurred": "Error occurred!!!",
   "feature_unavailable": "Feature not available",
-  "invalid_login_credentials": "Invalid Login Credentials"
+  "invalid_login_credentials": "Invalid Login Credentials",
+  "unable_to_create_account": "Unable to create account"
 }

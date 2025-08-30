@@ -125,5 +125,6 @@
   "user_not_found": "Utilisateur introuvable",
   "error_occurred": "Une erreur s’est produite !!!",
   "feature_unavailable": "Fonctionnalité non disponible",
-  "invalid_login_credentials": "Identifiants de connexion invalides"
+  "invalid_login_credentials": "Identifiants de connexion invalides",
+  "unable_to_create_account": "Impossible de créer un compte"
 }
