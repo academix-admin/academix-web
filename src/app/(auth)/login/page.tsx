@@ -20,7 +20,6 @@ export default function Login() {
           navLink={routes}
           entry="login"
           transition = "slide"
-          persist={true}
-//           syncHistory={true}
+          persist={false}
         />;
 }
