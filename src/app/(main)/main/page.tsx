@@ -25,6 +25,16 @@ const SignupPage = () => {
       <button onClick={() => nav.push('welcome', { userId: '1234' })}>
         Sign Up
       </button>
+      {
+          <NavigationStack
+              id="test"
+              navLink={loginNavLink}
+              entry="login"
+              syncHistory
+              transition = "slide"
+              persist
+            />
+            }
     </div>
   );
 };

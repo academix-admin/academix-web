@@ -491,7 +491,7 @@ function updateNavQueryParamForStack(stackId: string, path: string | null, group
       delete map[stackId];
     }
 
-    const newParam = groupContext ? `${stackId}:${map[stackId]}`  : buildCombinedNavParam(map);
+    const newParam = buildCombinedNavParam(map);
 
     if (newParam) {
       if(groupContext)url.searchParams.set('group', groupStackId || '');
@@ -521,8 +521,8 @@ function removeNavQueryParamForStack(stackId: string, groupContext: GroupNavigat
 
     const newHref = url.toString();
     if (window.location.href !== newHref) {
-      if(groupContext)window.history.replaceState({ group: groupStackId }, "", newHref);
-//       window.history.replaceState({ navStack: newParam }, "", newHref);
+      if(groupContext)window.history.replaceState({ group: null }, "", newHref);
+      window.history.replaceState({ navStack: null }, "", newHref);
     }
   } catch (e) {
   }
@@ -1211,9 +1211,20 @@ export function GroupNavigationStack({
   // Sync activeStackId with current prop when it changes from external
   useEffect(() => {
     if(current === activeStackId || !hydrated)return;
+    restUrl();
     setActiveStackId(current);
   }, [current]);
 
+  const restUrl = () => {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('group');
+      url.searchParams.delete('nav');
+      const newHref = url.toString();
+      if (window.location.href !== newHref) {
+            window.history.replaceState({ group: null }, "", newHref);
+            window.history.replaceState({ navStack: null }, "", newHref);
+      }
+  }
 
   // Group context implementation
   const groupContext: GroupNavigationContextType = useMemo(() => ({
@@ -1223,6 +1234,7 @@ export function GroupNavigationStack({
 
     goToGroupId: async (groupId: string) => {
       if (navStack.has(groupId)) {
+        restUrl();
         setActiveStackId(groupId);
         onCurrentChange?.(groupId);
         return true;
@@ -1244,6 +1256,7 @@ export function GroupNavigationStack({
       if (savedState) {
         // If we have a saved active stack and it's different from current activeStackId, update it
         if (savedState.activeStack && savedState.activeStack !== activeStackId && navStack.has(savedState.activeStack)) {
+           restUrl();
            setActiveStackId(savedState.activeStack);
            onCurrentChange?.(savedState.activeStack);
         }
@@ -1265,9 +1278,9 @@ export function GroupNavigationStack({
 
     const handler = (e: PopStateEvent) => {
       if (e.state && e.state.group && navStack.has(e.state.group)) {
+        restUrl();
         setActiveStackId(e.state.group);
         onCurrentChange?.(e.state.group);
-
       }
     };
     window.addEventListener("popstate", handler);
