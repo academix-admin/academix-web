@@ -491,7 +491,8 @@ function updateNavQueryParamForStack(stackId: string, path: string | null, group
       delete map[stackId];
     }
 
-    const newParam = buildCombinedNavParam(map);
+    const newParam = groupContext ? `${stackId}:${map[stackId]}`  : buildCombinedNavParam(map);
+
     if (newParam) {
       if(groupContext)url.searchParams.set('group', groupStackId || '');
       url.searchParams.set('nav', newParam);
@@ -504,6 +505,24 @@ function updateNavQueryParamForStack(stackId: string, path: string | null, group
     if (window.location.href !== newHref) {
       if(groupContext)window.history.replaceState({ group: groupStackId }, "", newHref);
       window.history.replaceState({ navStack: newParam }, "", newHref);
+    }
+  } catch (e) {
+  }
+}
+function removeNavQueryParamForStack(stackId: string, groupContext: GroupNavigationContextType | null, groupStackId: string | null) {
+  if (typeof window === "undefined") return;
+
+  try {
+    const url = new URL(window.location.href);
+
+    if(groupContext)url.searchParams.delete('group');
+    url.searchParams.delete('nav');
+
+
+    const newHref = url.toString();
+    if (window.location.href !== newHref) {
+      if(groupContext)window.history.replaceState({ group: groupStackId }, "", newHref);
+//       window.history.replaceState({ navStack: newParam }, "", newHref);
     }
   } catch (e) {
   }
@@ -1193,7 +1212,7 @@ export function GroupNavigationStack({
   useEffect(() => {
     if(current === activeStackId || !hydrated)return;
     setActiveStackId(current);
-  }, [current, activeStackId]);
+  }, [current]);
 
 
   // Group context implementation
@@ -1439,9 +1458,9 @@ export default function NavigationStack(props: {
       const active = groupContext.isActiveStack(groupStackId);
       if((syncHistory || currentRegEntry.historySyncEnabled) && active){
           const localPath = buildUrlPath([{ navLink, stack: currentRegEntry.stack }]);
-          updateNavQueryParamForStack(id, localPath, groupContext, groupStackId)
-      }else{
-          updateNavQueryParamForStack(id, '', groupContext, groupStackId)
+          updateNavQueryParamForStack(id, localPath, groupContext, groupStackId);
+      }else if(!(syncHistory || currentRegEntry.historySyncEnabled)){
+           removeNavQueryParamForStack(id, groupContext, groupStackId)
       }
   }, [id, navLink, syncHistory, groupContext?.getCurrent]);
 
