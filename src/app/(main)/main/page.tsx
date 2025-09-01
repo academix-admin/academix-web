@@ -63,7 +63,7 @@ const signupNavLink = {
 };
 
 const Main = () => {
-  const [currentGroup, setCurrentGroup] = useState<'login' | 'signup'>('login');
+  const [currentGroup, setCurrentGroup] = useState('login');
 
   const navStackMap = new Map([
     ['login', (
@@ -107,6 +107,7 @@ const Main = () => {
         </button>
       </div>
 
+      <div style={{  height: '1000px' }}>
       <GroupNavigationStack
         id="auth-group"
         navStack={navStackMap}
@@ -114,6 +115,7 @@ const Main = () => {
         onCurrentChange={setCurrentGroup}
         persist
       />
+    </div>
     </div>
   );
 };
