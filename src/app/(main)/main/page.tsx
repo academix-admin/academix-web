@@ -14,7 +14,7 @@ import { useLanguage } from '@/context/LanguageContext';
 const Main = () => {
   const { theme } = useTheme();
   const { t } = useLanguage();
-  const [active, setActive] = useState('home');
+  const [active, setActive] = useState('home-stack');
 
   const navStackMap = new Map([
     ['home-stack', <HomeStack />],
