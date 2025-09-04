@@ -46,13 +46,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setUser(newSession?.user ?? null)
 
             const publicRoutes = ['/', '/login', '/signup']
-            const protectedRoutes = ['/main', '/dashboard']
+            const protectedRoutes = ['/main']
 
             if (!newSession && protectedRoutes.some(route => pathname.startsWith(route))) {
               setInitialized(false)
               await replaceAndWait("/")
             } else if (newSession && publicRoutes.includes(pathname)) {
-              setInitialized(false)
               await replaceAndWait("/main")
             }
 

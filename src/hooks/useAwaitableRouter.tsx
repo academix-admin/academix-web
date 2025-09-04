@@ -48,7 +48,7 @@ export function useAwaitableRouter(timeout = 10000) {
 
         if (pendingRef.current) {
           clearTimeout(pendingRef.current.timeoutId);
-          pendingRef.current.reject(new Error("Navigation superseded"));
+          pendingRef.current.resolve();
         }
 
         const timeoutId = setTimeout(() => {
@@ -81,7 +81,7 @@ export function useAwaitableRouter(timeout = 10000) {
 
         if (pendingRef.current) {
           clearTimeout(pendingRef.current.timeoutId);
-          pendingRef.current.reject(new Error("Navigation superseded"));
+          pendingRef.current.resolve();
         }
 
         const timeoutId = setTimeout(() => {
