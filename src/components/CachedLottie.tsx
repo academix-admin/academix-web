@@ -1,6 +1,8 @@
 import { useEffect, useState, useRef } from 'react';
 import Lottie, { LottieRefCurrentProps } from 'lottie-react';
 import { preloadLottie, getCachedLottie } from '@/lib/lottieCache';
+import { useTheme } from '@/context/ThemeContext';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface CachedLottieProps {
   id: string;
@@ -24,6 +26,8 @@ const CachedLottie: React.FC<CachedLottieProps> = ({
   const [animationData, setAnimationData] = useState<any>(getCachedLottie(id));
   const [animationInstance, setAnimationInstance] = useState<any>(null);
   const lottieRef = useRef<LottieRefCurrentProps>(null);
+  const { theme } = useTheme();
+  const { t } = useLanguage();
 
   useEffect(() => {
     if (!animationData) {
@@ -59,7 +63,14 @@ const CachedLottie: React.FC<CachedLottieProps> = ({
     return () => clearInterval(interval);
   }, [restoreProgress, animationInstance]);
 
-  if (!animationData) return <p>Loading animation...</p>;
+  if (!animationData) {
+
+      return (
+          <div style={{ color: theme === 'light' ? '#000' : '#fff' }}>
+            {t('loading')}
+          </div>
+          );
+  }
 
   return (
     <Lottie

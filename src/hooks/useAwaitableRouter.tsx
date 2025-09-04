@@ -53,7 +53,7 @@ export function useAwaitableRouter(timeout = 10000) {
 
         const timeoutId = setTimeout(() => {
           if (pendingRef.current?.path === path) {
-            pendingRef.current.reject(new Error(`Navigation to ${path} timed out after ${timeout}ms`));
+            pendingRef.current.resolve();
             pendingRef.current = null;
           }
         }, timeout);
@@ -86,7 +86,7 @@ export function useAwaitableRouter(timeout = 10000) {
 
         const timeoutId = setTimeout(() => {
           if (pendingRef.current?.path === path) {
-            pendingRef.current.reject(new Error(`Navigation to ${path} timed out after ${timeout}ms`));
+            pendingRef.current.resolve();
             pendingRef.current = null;
           }
         }, timeout);

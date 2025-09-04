@@ -3,6 +3,7 @@ import './globals.css';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { LanguageProvider } from '@/context/LanguageContext';
 import { Poppins } from 'next/font/google'
+import { AuthProvider } from '@/providers/AuthProvider'
 
 const poppins = Poppins({
   subsets: ['latin'],
@@ -19,11 +20,13 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={poppins.variable}>
-      <ThemeProvider>
-        <LanguageProvider>
-        {children}
-        </LanguageProvider>
-      </ThemeProvider>
+        <AuthProvider>
+          <ThemeProvider>
+            <LanguageProvider>
+              {children}
+            </LanguageProvider>
+          </ThemeProvider>
+        </AuthProvider>
     </html>
   );
 }
