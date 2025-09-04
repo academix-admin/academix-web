@@ -110,8 +110,8 @@ const Main = () => {
                                 className={styles.logo}
                                 src="/assets/image/academix-logo.png"
                                 alt="Academix Logo"
-                                width={40}
-                                height={40}
+                                width={25}
+                                height={25}
                                 priority
                               />}
           />
