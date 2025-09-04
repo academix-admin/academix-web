@@ -6,11 +6,11 @@ import styles from './page.module.css';
 import { GroupNavigationStack } from "@/lib/CompleteStackManagement";
 import NavigationBar from "@/lib/NavigationBar";
 import SideBar from "@/lib/SideBar";
-import { HomeStack } from '../home-stack/home-stack';
-import { RewardsStack } from '../rewards-stack/rewards-stack';
-import { QuizStack } from '../quiz-stack/quiz-stack';
-import { PaymentStack } from '../payment-stack/payment-stack';
-import { ProfileStack } from '../profile-stack/profile-stack';
+import { HomeStack } from './home-stack/home-stack';
+import { RewardsStack } from './rewards-stack/rewards-stack';
+import { QuizStack } from './quiz-stack/quiz-stack';
+import { PaymentStack } from './payment-stack/payment-stack';
+import { ProfileStack } from './profile-stack/profile-stack';
 import { useLanguage } from '@/context/LanguageContext';
 import Image from 'next/image';
 

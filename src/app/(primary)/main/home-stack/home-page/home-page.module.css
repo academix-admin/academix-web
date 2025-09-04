@@ -1,0 +1,256 @@
+/* home-page.module.css */
+
+.mainContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 16px;
+  background-color: #f5f5f7; /* Light gray background similar to screenshot */
+  color: #333; /* Dark text color */
+  min-height: 100vh;
+  max-width: 500px; /* Mobile-first design */
+  margin: 0 auto;
+}
+
+/* Title Section Styles */
+.titleSection h1 {
+  font-size: 24px;
+  font-weight: bold;
+  margin: 0;
+  color: #1a1a1a;
+}
+
+.titleSection p {
+  font-size: 16px;
+  margin: 4px 0 0;
+  color: #666;
+}
+
+/* Experience Points Section Styles */
+.experienceSection {
+  background-color: white;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.experienceSection h2 {
+  font-size: 18px;
+  margin: 0 0 16px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.levelInfo {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.levelLabel {
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.pointsToNext {
+  color: #666;
+  font-size: 14px;
+}
+
+.progressBar {
+  height: 8px;
+  background-color: #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background-color: #4a90e2; /* Blue progress bar */
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+/* Performance Section Styles */
+.performanceSection {
+  background-color: white;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.performanceSection h2 {
+  font-size: 18px;
+  margin: 0 0 16px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.performanceGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.performanceItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.performanceValue {
+  font-size: 24px;
+  font-weight: bold;
+  color: #1a1a1a;
+}
+
+.performanceLabel {
+  font-size: 14px;
+  color: #666;
+}
+
+/* Statistics Section Styles */
+.statisticsSection {
+  background-color: white;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.statisticsSection h2 {
+  font-size: 18px;
+  margin: 0 0 16px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.statItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.statValue {
+  font-size: 24px;
+  font-weight: bold;
+  color: #1a1a1a;
+}
+
+.statLabel {
+  font-size: 14px;
+  color: #666;
+  letter-spacing: 0.5px;
+}
+
+/* History Section Styles */
+.historySection {
+  background-color: white;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 70px; /* Space for bottom navigation */
+}
+
+.historySection h2 {
+  font-size: 18px;
+  margin: 0 0 16px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.historyList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.historyItem {
+  border-bottom: 1px solid #e0e0e0;
+  padding-bottom: 16px;
+}
+
+.historyItem:last-child {
+  border-bottom: none;
+}
+
+.historyMain {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.historyTopic {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.historyTime {
+  font-size: 12px;
+  color: #666;
+}
+
+.historyDetails {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 14px;
+  color: #666;
+}
+
+.duration,
+.questions,
+.rank,
+.participants,
+.responseTime {
+  display: flex;
+  align-items: center;
+}
+
+.earnings {
+  margin-left: auto;
+  font-weight: 600;
+  color: #34c759; /* Green for earnings */
+}
+
+
+
+/* Responsive Styles */
+@media screen and (min-width: 801px) {
+  .mainContainer {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 24px;
+  }
+}
+
+@media screen and (min-width: 500px) and (max-width: 800px) {
+  .mainContainer {
+    padding: 20px;
+  }
+}
+
+@media screen and (max-width: 500px) {
+  .mainContainer {
+    padding: 16px;
+  }
+
+  .historyDetails {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .earnings {
+    margin-left: 0;
+  }
+}

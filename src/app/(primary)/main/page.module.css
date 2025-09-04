@@ -12,6 +12,7 @@
   overflow: hidden;
 }
 
+
 .sidebarContainer {
   height: 100%;
   z-index: 10;
@@ -38,6 +39,11 @@
     position: relative;
   }
 
+  .contentArea{
+     max-height: 100vh;
+  }
+
+
   .navigationContainer {
     display: none;
   }
@@ -52,6 +58,10 @@
   .navigationContainer {
     left: 16px;
   }
+    .contentArea{
+       padding-bottom: 32px;
+    }
+
 }
 
 /* Mobile */
@@ -59,6 +69,9 @@
   .sidebarContainer {
     display: none;
   }
+  .contentArea{
+         padding-bottom: 16px;
+      }
 }
 
 /* Theme-specific styles */

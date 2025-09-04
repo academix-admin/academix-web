@@ -1,0 +1,196 @@
+/* profile-page.module.css */
+
+.mainContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 16px;
+  background-color: #f5f5f7;
+  color: #333;
+  min-height: 100vh;
+  max-width: 500px;
+  margin: 0 auto;
+  padding-bottom: 80px; /* Space for bottom navigation */
+}
+
+/* Header Section Styles */
+.headerSection h1 {
+  font-size: 24px;
+  font-weight: bold;
+  margin: 0;
+  color: #1a1a1a;
+}
+
+/* Overview Section Styles */
+.overviewSection {
+  background-color: white;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.overviewSection h2 {
+  font-size: 18px;
+  margin: 0 0 16px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.userInfo {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.userAvatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 30px;
+  background-color: #4a90e2;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 20px;
+}
+
+.userDetails {
+  flex: 1;
+}
+
+.userName {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 4px;
+}
+
+.userUsername {
+  font-size: 14px;
+  color: #666;
+}
+
+.creatorRole {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+}
+
+.roleLabel {
+  font-size: 14px;
+  color: #666;
+}
+
+.roleValue {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.divider {
+  height: 1px;
+  background-color: #e0e0e0;
+  margin: 16px -16px -16px;
+}
+
+/* Accounts Section Styles */
+.accountsSection {
+  background-color: white;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.accountsSection h2 {
+  font-size: 18px;
+  margin: 0 0 16px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+/* Contacts Section Styles */
+.contactsSection {
+  background-color: white;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.contactsSection h2 {
+  font-size: 18px;
+  margin: 0 0 16px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+/* Menu List Styles */
+.menuList {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  padding: 16px 0;
+  border-bottom: 1px solid #f0f0f0;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.menuItem:last-child {
+  border-bottom: none;
+}
+
+.menuItem:hover {
+  background-color: #f8f9fa;
+}
+
+.menuIcon {
+  font-size: 20px;
+  margin-right: 16px;
+  width: 24px;
+  text-align: center;
+}
+
+.menuLabel {
+  flex: 1;
+  font-size: 16px;
+  color: #1a1a1a;
+}
+
+.menuArrow {
+  color: #666;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+/* Responsive Styles */
+@media screen and (min-width: 801px) {
+  .mainContainer {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 24px;
+    padding-bottom: 80px;
+  }
+}
+
+@media screen and (min-width: 500px) and (max-width: 800px) {
+  .mainContainer {
+    padding: 20px;
+    padding-bottom: 80px;
+  }
+}
+
+@media screen and (max-width: 500px) {
+  .mainContainer {
+    padding: 16px;
+    padding-bottom: 80px;
+  }
+}

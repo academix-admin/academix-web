@@ -1,0 +1,308 @@
+/* quiz-page.module.css */
+
+.mainContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 16px;
+  background-color: #f5f5f7;
+  color: #333;
+  min-height: 100vh;
+  max-width: 500px;
+  margin: 0 auto;
+  padding-bottom: 80px; /* Space for bottom navigation */
+}
+
+/* Header Section Styles */
+.headerSection h1 {
+  font-size: 24px;
+  font-weight: bold;
+  margin: 0;
+  color: #1a1a1a;
+}
+
+.headerSection p {
+  font-size: 16px;
+  margin: 4px 0 0;
+  color: #666;
+}
+
+/* Waiting Time Section Styles */
+.waitingTimeSection {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #666;
+}
+
+.waitingTimeLabel {
+  font-weight: 600;
+}
+
+.waitingTimeValue {
+  color: #888;
+}
+
+/* Section Header Styles */
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.sectionHeader h2 {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+  color: #1a1a1a;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.seeAll {
+  color: #666;
+  font-weight: bold;
+}
+
+/* Divider Styles */
+.divider {
+  height: 1px;
+  background-color: #e0e0e0;
+  margin: 16px -16px -16px;
+}
+
+/* Pending Quiz Section Styles */
+.pendingQuizSection {
+  background-color: white;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.quizCard {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.quizTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.quizDetails {
+  font-size: 14px;
+  color: #666;
+}
+
+.quizCode {
+  font-family: monospace;
+  font-size: 16px;
+  font-weight: 600;
+  color: #4a90e2;
+  letter-spacing: 1px;
+}
+
+.quizActions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.leaveButton {
+  background-color: #ff3b30;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Followed Creators Section Styles */
+.followedCreatorsSection {
+  background-color: white;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.creatorCard {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.creatorHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.creatorStatus {
+  font-size: 14px;
+  color: #4a90e2;
+  font-weight: 600;
+}
+
+.creatorContent {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.creatorAvatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 20px;
+  background-color: #4a90e2;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.creatorInfo {
+  flex: 1;
+}
+
+.creatorType {
+  font-size: 12px;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.creatorName {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.creatorCode {
+  font-family: monospace;
+  font-size: 14px;
+  font-weight: 600;
+  color: #4a90e2;
+  letter-spacing: 1px;
+  text-align: right;
+}
+
+/* Favorite Contributors Section Styles */
+.favoriteContributorsSection {
+  background-color: white;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.contributorCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.contributorAvatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 20px;
+  background-color: #4a90e2;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.contributorInfo {
+  flex: 1;
+}
+
+.contributorName {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 4px;
+}
+
+.contributorDetails {
+  font-size: 12px;
+  color: #666;
+}
+
+/* Might Interest You Section Styles */
+.mightInterestYouSection {
+  background-color: white;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.interestCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.interestAvatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 20px;
+  background-color: #34c759;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.interestInfo {
+  flex: 1;
+}
+
+.interestName {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 4px;
+}
+
+.interestDetails {
+  font-size: 12px;
+  color: #666;
+}
+
+
+
+/* Responsive Styles */
+@media screen and (min-width: 801px) {
+  .mainContainer {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 24px;
+    padding-bottom: 80px;
+  }
+}
+
+@media screen and (min-width: 500px) and (max-width: 800px) {
+  .mainContainer {
+    padding: 20px;
+    padding-bottom: 80px;
+  }
+}
+
+@media screen and (max-width: 500px) {
+  .mainContainer {
+    padding: 16px;
+    padding-bottom: 80px;
+  }
+}

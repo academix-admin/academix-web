@@ -1,0 +1,219 @@
+/* rewards-page.module.css */
+
+.mainContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 16px;
+  background-color: #f5f5f7;
+  color: #333;
+  min-height: 100vh;
+  max-width: 500px;
+  margin: 0 auto;
+  padding-bottom: 80px; /* Space for bottom navigation */
+}
+
+/* Header Section Styles */
+.headerSection h1 {
+  font-size: 24px;
+  font-weight: bold;
+  margin: 0;
+  color: #1a1a1a;
+}
+
+.headerSection p {
+  font-size: 16px;
+  margin: 4px 0 0;
+  color: #666;
+}
+
+/* Academic Ratio Section Styles */
+.academicRatioSection {
+  background-color: white;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.academicRatioSection h2 {
+  font-size: 18px;
+  margin: 0 0 16px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.ratioValue {
+  font-size: 32px;
+  font-weight: bold;
+  text-align: center;
+  color: #4a90e2;
+  margin: 16px 0;
+}
+
+.divider {
+  height: 1px;
+  background-color: #e0e0e0;
+  margin: 16px -16px -16px;
+}
+
+/* Streaks Section Styles */
+.streaksSection {
+  background-color: white;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.streaksSection h2 {
+  font-size: 18px;
+  margin: 0 0 16px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.streaksCalendar {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.weekDays, .weekStatus {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+}
+
+.day, .status {
+  text-align: center;
+  padding: 8px 0;
+}
+
+.day {
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.status {
+  font-size: 18px;
+}
+
+/* Milestones Section Styles */
+.milestonesSection {
+  background-color: white;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.milestonesSection h2 {
+  font-size: 18px;
+  margin: 0 0 16px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.milestonesGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.milestoneItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.milestoneValue {
+  font-size: 24px;
+  font-weight: bold;
+  color: #1a1a1a;
+}
+
+.milestoneLabel {
+  font-size: 14px;
+  color: #666;
+  letter-spacing: 0.5px;
+}
+
+/* Friends Section Styles */
+.friendsSection {
+  background-color: white;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.friendsSection h2 {
+  font-size: 18px;
+  margin: 0 0 16px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.friendsList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.friendItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.friendAvatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 20px;
+  background-color: #4a90e2;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+
+.friendInfo {
+  flex: 1;
+}
+
+.friendName {
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 4px;
+}
+
+.friendDetails {
+  font-size: 12px;
+  color: #666;
+}
+
+/* Responsive Styles */
+@media screen and (min-width: 801px) {
+  .mainContainer {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 24px;
+    padding-bottom: 80px;
+  }
+}
+
+@media screen and (min-width: 500px) and (max-width: 800px) {
+  .mainContainer {
+    padding: 20px;
+    padding-bottom: 80px;
+  }
+}
+
+@media screen and (max-width: 500px) {
+  .mainContainer {
+    padding: 16px;
+    padding-bottom: 80px;
+  }
+
+  .milestonesGrid {
+    gap: 16px;
+  }
+}
