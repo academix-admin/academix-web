@@ -136,5 +136,10 @@
   "password_no_match": "Les mots de passe ne correspondent pas",
   "password_not_valid": "Le mot de passe n'est pas valide",
   "password_match": "Les mots de passe correspondent",
-  "same_password": "Entrez un mot de passe différent"
+  "same_password": "Entrez un mot de passe différent",
+  "rewards_text": "Récompenses",
+  "quiz_text": "Quiz",
+  "payment_text": "Paiement",
+  "profile_text": "Profil",
+  "home_text": "Accueil"
 }

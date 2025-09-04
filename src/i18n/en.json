@@ -136,5 +136,10 @@
   "password_no_match": "Password does not match",
   "password_not_valid": "Password is not valid",
   "password_match": "Password matches",
-  "same_password": "Enter a different password"
+  "same_password": "Enter a different password",
+  "rewards_text": "Rewards",
+  "quiz_text": "Quiz",
+  "payment_text": "Payment",
+  "profile_text": "Profile",
+  "home_text": "Home"
 }
