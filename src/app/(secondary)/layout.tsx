@@ -7,7 +7,7 @@ const poppins = Poppins({
   display: 'swap',
 })
 
-export default function PrimaryLayout({ children }: { children: React.ReactNode }) {
+export default function SecondaryLayout({ children }: { children: React.ReactNode }) {
   return (
       <div>
         {children}

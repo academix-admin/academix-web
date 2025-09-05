@@ -1,0 +1,248 @@
+/* home-statistics.module.css */
+.statisticsContainer {
+  width: 100%;
+}
+
+[data-theme='dark'] .statisticsContainer {
+  background: var(--card-bg-dark, #2d2d2d);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.statisticsTitle {
+  font-size: 18px;
+  font-weight: bold;
+  margin: 0;
+  margin-bottom: 12px;
+}
+
+[data-theme='dark'] .statisticsTitle {
+  color: var(--text-primary-dark, #ffffff);
+}
+
+.statisticsWrapper {
+  width: 100%;
+  overflow: hidden;
+}
+
+.statisticsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  width: 100%;
+}
+
+.statisticsCard {
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(135deg, #015c2a, #067a3c);
+  border-radius: 10px;
+  padding: 12px;
+  gap: 16px;
+  min-height: 100px;
+  flex-shrink: 0;
+}
+
+.cardIcon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.lottieIcon {
+  width: 24px;
+  height: 24px;
+}
+
+.cardContent {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.cardLabel {
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cardValue {
+  font-size: 18px;
+  font-weight: 700;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Desktop - 3 cards in a row */
+@media screen and (min-width: 1025px) {
+  .statisticsGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .statisticsWrapper {
+    overflow: visible;
+  }
+}
+
+/* Tablet - 2 full cards + partial third with scroll */
+@media screen and (max-width: 1024px) and (min-width: 769px) {
+  .statisticsWrapper {
+    overflow-x: auto;
+    padding-bottom: 8px;
+    margin-right: -16px;
+    margin-left: -16px;
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .statisticsGrid {
+    display: flex;
+    gap: 12px;
+    width: max-content;
+  }
+
+  .statisticsCard {
+    width: calc(50vw - 40px);
+    min-width: 200px;
+    max-width: 250px;
+  }
+
+  .statisticsCard:last-child {
+    margin-right: 8px;
+  }
+
+  /* Hide scrollbar but keep functionality */
+  .statisticsWrapper::-webkit-scrollbar {
+    height: 4px;
+  }
+
+  .statisticsWrapper::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 2px;
+  }
+
+  .statisticsWrapper::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* Mobile - 2 full cards + partial third with scroll */
+@media screen and (max-width: 768px) {
+
+
+  .statisticsWrapper {
+    overflow-x: auto;
+    padding-bottom: 6px;
+    margin-right: -12px;
+    margin-left: -12px;
+    padding-left: 12px;
+    padding-right: 12px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .statisticsGrid {
+    display: flex;
+    gap: 10px;
+    width: max-content;
+  }
+
+  .statisticsCard {
+    width: calc(50vw - 30px);
+    min-width: 160px;
+    max-width: 200px;
+    padding: 10px;
+    min-height: 70px;
+  }
+
+  .statisticsCard:last-child {
+    margin-right: 8px;
+  }
+
+  .cardIcon {
+    width: 36px;
+    height: 36px;
+    margin-right: 10px;
+  }
+
+  .lottieIcon {
+    width: 22px;
+    height: 22px;
+  }
+
+  .cardLabel {
+    font-size: 11px;
+  }
+
+  .cardValue {
+    font-size: 16px;
+  }
+
+  /* Hide scrollbar for cleaner look but keep functionality */
+  .statisticsWrapper::-webkit-scrollbar {
+    display: none;
+  }
+
+  .statisticsWrapper {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+/* Small Mobile */
+@media screen and (max-width: 480px) {
+
+  .statisticsWrapper {
+    margin-right: -10px;
+    margin-left: -10px;
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .statisticsCard {
+    width: calc(10vw - 25px);
+    min-width: 140px;
+    max-width: 160px;
+    padding: 8px;
+    min-height: 65px;
+  }
+
+  .cardIcon {
+    width: 32px;
+    height: 32px;
+    margin-right: 8px;
+  }
+
+  .lottieIcon {
+    width: 20px;
+    height: 20px;
+  }
+
+  .cardLabel {
+    font-size: 10px;
+  }
+
+  .cardValue {
+    font-size: 14px;
+  }
+}
+
+/* Animation for better appearance */
+.statisticsCard {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.statisticsCard:hover {
+  transform: translateY(-2px);
+}

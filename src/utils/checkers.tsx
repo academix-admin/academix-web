@@ -1,6 +1,7 @@
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { LoginModel } from '@/models/user-data';
 import { UserLoginAccount } from '@/models/user-data';
+import { UserData } from '@/models/user-data';
 
 export type LocationData = {
   ip: string;
@@ -42,6 +43,14 @@ export type LocationData = {
 };
 
 
+export type ParamaticalData = {
+  usersId: string;
+  locale: string;
+  country: string;
+  age: number;
+  gender: string;
+}
+
 const checkLocation = async (): Promise<LocationData | null> => {
   try {
     const res = await fetch("https://ipwho.is/");
@@ -55,6 +64,32 @@ const checkLocation = async (): Promise<LocationData | null> => {
     return data;
   } catch (err) {
     console.error("Location check failed:", err);
+    return null;
+  }
+};
+
+
+
+const getParamatical = async (usersId: string, locale: string, gender: string, birthday: string  ): Promise<ParamaticalData | null> => {
+  try {
+
+    const location: LocationData | null = await checkLocation();
+
+    if(!location) throw Error('Unable to get ParamaticalData');
+
+
+    return {
+          usersId: usersId,
+          locale: locale,
+          country: location.country_code,
+          age: Math.floor(
+                                          (Date.now() - new Date(birthday).getTime()) / (1000 * 60 * 60 * 24 * 365.25)
+                                        ),
+          gender: gender === "Gender.male" ? 'm' : 'f'
+
+        };
+  } catch (err) {
+    console.error('Unable to get ParamaticalData');
     return null;
   }
 };
@@ -82,7 +117,6 @@ const checkFeatures = async (featureChecker: string, locale: string, country: st
     }
 
 const fetchUserPartialDetails = async (email?: string, phone?: string) => {
-//       try {
         let params = null;
         if (email) {
           params = {
@@ -102,14 +136,9 @@ const fetchUserPartialDetails = async (email?: string, phone?: string) => {
         const { data, error } = await supabaseBrowser.rpc('get_partial_user_record', params);
         if (error) throw error;
         return data;
-//       } catch (error) {
-//         console.error('Error fetching partial user details:', error);
-//         return null;
-//       }
     };
 
 const fetchUserDetails = async (loginModel: LoginModel): Promise<UserLoginAccount | null> => {
-//       try {
         const { data, error } = await supabaseBrowser.rpc('get_user_login_record', {
           p_login_type: loginModel.loginType,
           p_login_check: loginModel.loginDetails,
@@ -117,10 +146,15 @@ const fetchUserDetails = async (loginModel: LoginModel): Promise<UserLoginAccoun
 
         if (error) throw error;
         return data;
-//       } catch (error) {
-//         console.error('Error fetching user details:', error);
-//         return null;
-//       }
-    };
+};
 
-export { checkLocation, checkFeatures, fetchUserPartialDetails, fetchUserDetails };
+const fetchUserData = async (usersId: string): Promise<UserData | null> => {
+        const { data: userData, error: userError } = await supabaseBrowser.rpc("get_user_record", {
+          p_user_id: usersId
+        });
+
+        if (userError) throw userError;
+        return userData;
+};
+
+export { checkLocation, checkFeatures, fetchUserPartialDetails, fetchUserDetails, fetchUserData, getParamatical };

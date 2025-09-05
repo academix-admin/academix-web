@@ -172,26 +172,26 @@ export default function Verification() {
                    return null;
       }
 
-      return {
-        usersId: result.user.id,
-        usersUsername: signUpData.users_username,
-        userNames: signUpData.users_names,
-        usersEmail: result.user.email!,
-        usersPhone: signUpData.users_phone,
-        usersDob: signUpData.users_dob,
-        usersSex: signUpData.users_sex,
-        userImage: null,
-        usersReferredId: signUpData.users_referred_id,
-        userRole: {
-          rolesId: signUpData.role.roles_id,
-          rolesLevel: signUpData.role.roles_level,
-          rolesType: signUpData.role.roles_type
-        },
-        usersVerified: false,
-        countryId: signUpData.country_id,
-        languageId: signUpData.language_id,
-        usersCreatedAt: result.user.created_at
-      };
+      return new UserData({
+               users_id: result.user.id,
+               users_username: signUpData.users_username,
+               users_names: signUpData.users_names,
+               users_email: result.user.email!,
+               users_phone: signUpData.users_phone,
+               users_dob: signUpData.users_dob,
+               users_sex: signUpData.users_sex,
+               users_image: null,
+               users_referred_id: signUpData.users_referred_id,
+               users_verified: false,
+               country_id: signUpData.country_id,
+               language_id: signUpData.language_id,
+               users_created_at: result.user.created_at,
+               roles_table: {
+                 roles_id: signUpData.role.roles_id,
+                 roles_level: signUpData.role.roles_level,
+                 roles_checker: signUpData.role.roles_type
+               }
+             });
 
     } catch (err) {
       console.error('Signup error:', err);
@@ -257,26 +257,26 @@ export default function Verification() {
                            return  null;
       }
 
-      return {
-        usersId: result.user.id,
-        usersUsername: signUpData.users_username,
-        userNames: signUpData.users_names,
-        usersEmail: signUpData.users_email,
-        usersPhone: result.user.email!,
-        usersDob: signUpData.users_dob,
-        usersSex: signUpData.users_sex,
-        userImage: null,
-        usersReferredId: signUpData.users_referred_id,
-        userRole: {
-          rolesId: signUpData.role.roles_id,
-          rolesLevel: signUpData.role.roles_level,
-          rolesType: signUpData.role.roles_type
-        },
-        usersVerified: false,
-        countryId: signUpData.country_id,
-        languageId: signUpData.language_id,
-        usersCreatedAt: result.user.created_at
-      };
+      return new UserData({
+               users_id: result.user.id,
+               users_username: signUpData.users_username,
+               users_names: signUpData.users_names,
+               users_email: signUpData.users_email,
+               users_phone: result.user.phone!,
+               users_dob: signUpData.users_dob,
+               users_sex: signUpData.users_sex,
+               users_image: null,
+               users_referred_id: signUpData.users_referred_id,
+               users_verified: false,
+               country_id: signUpData.country_id,
+               language_id: signUpData.language_id,
+               users_created_at: result.user.created_at,
+               roles_table: {
+                 roles_id: signUpData.role.roles_id,
+                 roles_level: signUpData.role.roles_level,
+                 roles_checker: signUpData.role.roles_type
+               }
+             });
 
     } catch (err) {
       console.error('Signup error:', err);

@@ -11,6 +11,9 @@ import { useNav } from "@/lib/NavigationStack";
 import { useOtp } from '@/lib/stacks/otp-stack';
 import { createStateStack, useDemandState, StateStack } from '@/lib/state-stack';
 import { useAwaitableRouter } from "@/hooks/useAwaitableRouter";
+import { UserData } from '@/models/user-data';
+import { useUserData } from '@/lib/stacks/user-stack';
+import {  fetchUserData } from '@/utils/checkers';
 
 // Define types for OTPInput props
 interface OTPInputProps {
@@ -162,6 +165,7 @@ export default function Otp(props: OtpProps) {
   const { theme } = useTheme();
   const { t, tNode, lang } = useLanguage();
   const { otpTimer, otpTimer$, __meta } = useOtp();
+  const { userData, userData$ } = useUserData();
   const nav = useNav();
   const { replaceAndWait } = useAwaitableRouter();
 
@@ -258,17 +262,33 @@ export default function Otp(props: OtpProps) {
         result = await verifyPhoneNumberWithOTP(verificationValue, otpValue);
       }
      }
+
       if (result?.error) {
         setError(t('incorrect_code'));
         // Vibrate on error
         if (navigator.vibrate) navigator.vibrate(200);
       } else {
         // OTP verified successfully
-              if(verificationRequest === 'SignUp'){
+        if(verificationRequest === 'SignUp'){
 
-        await replaceAndWait("/main");
-        __meta.clear();
-        nav.dispose();
+          if (result?.data.user != null) {
+             const userObj : UserData | null = await fetchUserData(result?.data.user.id);
+
+             if(userObj){
+                await userData$.set(userObj);
+                await replaceAndWait("/main");
+                __meta.clear();
+                nav.dispose();
+                return;
+             }else{
+                       __meta.clear();
+               await nav.popToRoot();
+             }
+          }else{
+                                  setError(t('error_occurred'));
+          }
+
+
         }else{
           __meta.clear();
           await nav.pushAndPopUntil('reset_password',(entry) => entry.key === 'login',{names});

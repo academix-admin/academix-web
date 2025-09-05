@@ -10,29 +10,11 @@ import CachedLottie from '@/components/CachedLottie';
 import { getLastNameOrSingle, capitalize } from '@/utils/textUtils';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useNav } from "@/lib/NavigationStack";
+import HomeTitle from "./home-title/home-title";
+import HomeExperience from "./home-experience/home-experience";
+import HomePerformance from "./home-performance/home-performance";
+import HomeStatistics from "./home-statistics/home-statistics";
 
-// Define TypeScript interfaces for our data models
-interface HomeEngagementProgress {
-  currentPoints: number;
-  engagementLevelsId: number;
-  pointsToNextLevel: number;
-  currentProgressPercent: number;
-  nextEngagementLevelsId: number;
-  engagementLevelsIdentity: string;
-  nextEngagementLevelsIdentity: string;
-}
-
-interface UserEngagementModel {
-  userEngagementProgressTime: number;
-  userEngagementProgressQuestions: number;
-  userEngagementProgressQuizCount: number;
-  userEngagementProgressPointsDetails: HomeEngagementProgress;
-}
-
-interface DailyPerformance {
-  dailyPerformanceEarnings: number;
-  dailyPerformanceQuiz: number;
-}
 
 interface QuizHistory {
   poolsId: string;
@@ -52,26 +34,6 @@ export default function HomePage() {
   const { theme } = useTheme();
   const { t } = useLanguage();
 
-  // State for data with dummy data
-  const [userEngagement, setUserEngagement] = useState<UserEngagementModel | null>({
-    userEngagementProgressTime: 92, // 1m32s in seconds
-    userEngagementProgressQuestions: 28,
-    userEngagementProgressQuizCount: 38,
-    userEngagementProgressPointsDetails: {
-      currentPoints: 0, // Not shown in UI
-      engagementLevelsId: 4,
-      pointsToNextLevel: 23983,
-      currentProgressPercent: 45, // Approximate based on level progress
-      nextEngagementLevelsId: 5,
-      engagementLevelsIdentity: "Level 4",
-      nextEngagementLevelsIdentity: "Level 5"
-    }
-  });
-
-  const [dailyPerformance, setDailyPerformance] = useState<DailyPerformance | null>({
-    dailyPerformanceEarnings: 0, // Not sure from UI
-    dailyPerformanceQuiz: 0 // Not sure from UI
-  });
 
   const [quizHistory, setQuizHistory] = useState<QuizHistory[]>([
     {
@@ -112,7 +74,6 @@ export default function HomePage() {
     }
   ]);
 
-  const [userName, setUserName] = useState('Irekamni');
 
   // Format time from seconds to minutes and seconds
   const formatTime = (seconds: number): string => {
@@ -156,64 +117,11 @@ export default function HomePage() {
 
   return (
     <div className={styles.mainContainer}>
-      {/* Title Section */}
-      <div className={styles.titleSection}>
-        <h1>{userName}</h1>
-        <p>Welcome back</p>
-      </div>
 
-      {/* Experience Points Section */}
-      <div className={styles.experienceSection}>
-        <h2>Experience points</h2>
-        {userEngagement && (
-          <>
-            <div className={styles.levelInfo}>
-              <span className={styles.levelLabel}>Level {userEngagement.userEngagementProgressPointsDetails.engagementLevelsId}</span>
-              <span className={styles.pointsToNext}>
-                {Math.floor(userEngagement.userEngagementProgressPointsDetails.pointsToNextLevel)} points to next level
-              </span>
-            </div>
-            <div className={styles.progressBar}>
-              <div
-                className={styles.progressFill}
-                style={{ width: `${userEngagement.userEngagementProgressPointsDetails.currentProgressPercent}%` }}
-              ></div>
-            </div>
-          </>
-        )}
-      </div>
-
-      {/* Performance Section */}
-      <div className={styles.performanceSection}>
-        <h2>Performance</h2>
-        <div className={styles.performanceGrid}>
-          <div className={styles.performanceItem}>
-            <span className={styles.performanceValue}>0</span>
-            <span className={styles.performanceLabel}>Quiz</span>
-          </div>
-          <div className={styles.performanceItem}>
-            <span className={styles.performanceValue}>OK</span>
-            <span className={styles.performanceLabel}>Earning</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Statistics Section */}
-      <div className={styles.statisticsSection}>
-        <h2>Statistics</h2>
-        {userEngagement && (
-          <div className={styles.statsGrid}>
-            <div className={styles.statItem}>
-              <span className={styles.statValue}>{userEngagement.userEngagementProgressQuestions}</span>
-              <span className={styles.statLabel}>QUESTIONS</span>
-            </div>
-            <div className={styles.statItem}>
-              <span className={styles.statValue}>{userEngagement.userEngagementProgressQuizCount}</span>
-              <span className={styles.statLabel}>QUIZZES</span>
-            </div>
-          </div>
-        )}
-      </div>
+      <HomeTitle />
+      <HomeExperience />
+      <HomePerformance />
+      <HomeStatistics />
 
       {/* History Section */}
       <div className={styles.historySection}>

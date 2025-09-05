@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import styles from './page.module.css';
 import { GroupNavigationStack } from "@/lib/CompleteStackManagement";
@@ -13,11 +13,35 @@ import { PaymentStack } from './payment-stack/payment-stack';
 import { ProfileStack } from './profile-stack/profile-stack';
 import { useLanguage } from '@/context/LanguageContext';
 import Image from 'next/image';
+import { UserData } from '@/models/user-data';
+import { useUserData } from '@/lib/stacks/user-stack';
+import { supabaseBrowser } from '@/lib/supabase/client';
 
 const Main = () => {
   const { theme } = useTheme();
   const { t } = useLanguage();
   const [active, setActive] = useState('home-stack');
+   const { userData, userData$, __meta } = useUserData();
+
+useEffect(() => {
+  let isMounted = true;
+
+  const handleSignOut = async () => {
+    if (!userData && isMounted) {
+      try {
+        await supabaseBrowser.auth.signOut();
+      } catch (error) {
+        console.error('Sign out error:', error);
+      }
+    }
+  };
+
+  handleSignOut();
+
+  return () => {
+    isMounted = false;
+  };
+}, [userData]);
 
   const navStackMap = new Map([
     ['home-stack', <HomeStack />],

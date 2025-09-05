@@ -6,17 +6,19 @@ import { Session, User } from '@supabase/supabase-js'
 import { supabaseBrowser } from '@/lib/supabase/client'
 import { useAwaitableRouter } from "@/hooks/useAwaitableRouter"
 import LoadingView from '@/components/LoadingView/LoadingView'
+import { UserData } from '@/models/user-data';
+import { useUserData } from '@/lib/stacks/user-stack';
 
 interface AuthContextType {
   initialized: boolean
   session: Session | null
-  user: User | null
+  userData: UserData | null
 }
 
 const AuthContext = createContext<AuthContextType>({
   initialized: false,
   session: null,
-  user: null,
+  userData: null,
 })
 
 export function useAuthContext() {
@@ -29,6 +31,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [initialized, setInitialized] = useState(false)
   const [session, setSession] = useState<Session | null>(null)
   const [user, setUser] = useState<User | null>(null)
+  const { userData, userData$, __meta } = useUserData();
   const { replaceAndWait } = useAwaitableRouter()
 
   useEffect(() => {
@@ -45,13 +48,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setSession(newSession)
             setUser(newSession?.user ?? null)
 
+
             const publicRoutes = ['/', '/login', '/signup']
             const protectedRoutes = ['/main']
 
             if (!newSession && protectedRoutes.some(route => pathname.startsWith(route))) {
               setInitialized(false)
               await replaceAndWait("/")
-            } else if (newSession && publicRoutes.includes(pathname)) {
+            } else if (newSession && publicRoutes.includes(pathname) && userData) {
+                console.log('Went to main')
               await replaceAndWait("/main")
             }
 
@@ -73,7 +78,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   if (!initialized) {
     return (
       <body>
-        <AuthContext.Provider value={{ initialized, session, user }}>
+        <AuthContext.Provider value={{ initialized, session, userData }}>
             <LoadingView />
         </AuthContext.Provider>
       </body>
@@ -81,7 +86,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ initialized, session, user }}>
+    <AuthContext.Provider value={{ initialized, session, userData }}>
       {children}
     </AuthContext.Provider>
   )

@@ -9,12 +9,13 @@ import Link from 'next/link'
 import CachedLottie from '@/components/CachedLottie';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useLogin } from '@/lib/stacks/login-stack';
+import { useUserData } from '@/lib/stacks/user-stack';
 import { StateStack } from '@/lib/state-stack';
 import { useNav } from "@/lib/NavigationStack";
 import { UserData } from '@/models/user-data';
 import { LoginModel } from '@/models/user-data';
 import { UserLoginAccount } from '@/models/user-data';
-import { checkLocation, checkFeatures, fetchUserPartialDetails, fetchUserDetails } from '@/utils/checkers';
+import { checkLocation, checkFeatures, fetchUserPartialDetails, fetchUserDetails, fetchUserData } from '@/utils/checkers';
 import { useOtp } from '@/lib/stacks/otp-stack';
 import { useAwaitableRouter } from "@/hooks/useAwaitableRouter";
 
@@ -61,6 +62,7 @@ export default function LoginUser() {
   const { theme } = useTheme();
   const { t, lang } = useLanguage();
   const { login, login$, __meta} = useLogin();
+  const { userData, userData$ } = useUserData();
   const nav = useNav();
   const { otpTimer, otpTimer$ } = useOtp();
   const { replaceAndWait } = useAwaitableRouter();
@@ -192,17 +194,13 @@ export default function LoginUser() {
          if (error) throw error;
 
          if (data.user != null) {
-           const { data: userData, error: userError } = await supabaseBrowser.rpc("get_user_record", {
-             p_user_id: data.user.id
-           });
-
-           if (userError) throw userError;
+           const userData : UserData | null = await fetchUserData(data.user.id);
            return userData;
          }
 
          return null;
        } catch (error: any) {
-         console.error('Signin error:', error.code);
+         console.error('Signin error:', error);
 
          if (error.code === 'email_not_confirmed') {
            await resendTokenForEmail(email);
@@ -213,7 +211,7 @@ export default function LoginUser() {
                  setError('');
            nav.pushAndPopUntil('otp', (entry: any) => entry.key === 'login', {
              verificationType: 'UserLoginType.email',
-             verificationValue: email
+             verificationValue: email, verificationRequest: 'SignUp'
            });
          } else if (error.code === 'invalid_credentials') {
            setError(t('invalid_login_credentials'));
@@ -256,11 +254,7 @@ export default function LoginUser() {
          if (error) throw error;
 
          if (data.user != null) {
-           const { data: userData, error: userError } = await supabaseBrowser.rpc("get_user_record", {
-             p_user_id: data.user.id
-           });
-
-           if (userError) throw userError;
+           const userData : UserData | null = await fetchUserData(data.user.id);
            return userData;
          }
 
@@ -277,7 +271,7 @@ export default function LoginUser() {
                  setError('');
            nav.pushAndPopUntil('otp', (entry: any) => entry.key === 'login', {
              verificationType: 'UserLoginType.phone',
-             verificationValue: phone
+             verificationValue: phone, verificationRequest: 'SignUp'
            });
          } else if (error.code === 'invalid_credentials') {
            setError(t('invalid_login_credentials'));
@@ -304,16 +298,22 @@ export default function LoginUser() {
        if (error) throw error;
      };
 
-  const handleCreatedUser = async (type: string, value: string, userObj: UserData) => {
-      // Navigate to main screen
-      await replaceAndWait("/main");
-      await StateStack.core.clearScope('login_flow');
-      __meta.clear();
-      nav.dispose();
-      setLoginInputValue('');
-      setPasswordInputValue('');
-      setError('');
-    };
+const handleCreatedUser = async (type: string, value: string, userObj: UserData) => {
+
+  await userData$.set(userObj);
+
+  // Clear only the login flow
+  await StateStack.core.clearScope('login_flow');
+
+  __meta.clear();
+  nav.dispose();
+  setLoginInputValue('');
+  setPasswordInputValue('');
+  setError('');
+
+  await replaceAndWait("/main");
+};
+
 
   const cancelLogin = async () => {
     await nav.pop();

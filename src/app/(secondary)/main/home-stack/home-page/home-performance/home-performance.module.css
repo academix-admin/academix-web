@@ -1,0 +1,114 @@
+/* home-performance.module.css */
+.performanceContainer {
+  width: 100%;
+}
+
+
+.performanceTitle {
+  font-size: 18px;
+  font-weight: bold;
+  margin: 0;
+  margin-bottom: 12px;
+}
+
+.performanceTitle_light {
+  color: #000;
+}
+
+.performanceTitle_dark {
+  color: #fff;
+}
+
+
+.performanceGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.performanceItem {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #000;
+  padding: 8px;
+  border-radius: 8px;
+}
+
+.performanceContent {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.performanceLabel {
+  font-size: 14px;
+  color: #666;
+  font-weight: 500;
+}
+
+.performanceValueContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.performanceValue {
+  font-size: 24px;
+  font-weight: bold;
+  color: #1a1a1a;
+}
+
+.performanceStatus {
+  display: flex;
+  align-items: center;
+  gap: 0px;
+  background-color: #f0f8f0;
+  padding: 4px;
+  border-radius: 12px;
+}
+
+
+/* Responsive Styles */
+@media screen and (min-width: 801px) {
+  .performanceTitle {
+    font-size: 20px;
+  }
+
+  .performanceValue {
+    font-size: 26px;
+  }
+
+  .performanceLabel {
+    font-size: 15px;
+  }
+}
+
+@media screen and (max-width: 800px) {
+
+  .performanceGrid {
+    gap: 14px;
+  }
+
+  .performanceValue {
+    font-size: 22px;
+  }
+
+}
+
+@media screen and (max-width: 500px) {
+  .performanceTitle {
+    font-size: 16px;
+  }
+
+  .performanceGrid {
+    gap: 12px;
+  }
+
+  .performanceValue {
+    font-size: 20px;
+  }
+
+  .performanceLabel {
+    font-size: 13px;
+  }
+}

@@ -1,0 +1,228 @@
+/* home-experience.module.css */
+.experienceContainer {
+  width: 100%;
+}
+
+.experienceSection {
+  background: linear-gradient(90deg, #015c2a, #067a3c);
+  border-radius: 16px;
+  padding: 16px;
+  color: white;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.experienceTitle {
+  font-size: 18px;
+  font-weight: bold;
+  margin: 0px;
+  margin-bottom: 12px;
+}
+
+.experienceTitle_light {
+  color: #000;
+}
+
+.experienceTitle_dark {
+  color: #fff;
+}
+
+.levelInfo {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.levelIcon {
+  width: 40px;
+  height: 40px;
+  background: rgba(0,0,0,0.3);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.levelText {
+  display: flex;
+  flex-direction: column;
+}
+
+.levelName {
+  font-size: 16px;
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.pointsToNext {
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.progressWrapper {
+  display: flex;
+  align-items: center;
+  gap: 0px;
+}
+
+.levelBadge {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: orange;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.progressContainer {
+  position: relative;
+  flex: 1;
+  height: 12px;
+}
+
+.progressTrack {
+  position: relative;
+  width: calc(100% + 2px);
+  height: 100%;
+  margin-left: -2px;
+  background: rgba(255,165,0,0.3);
+  border-radius: 0px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: orange;
+  opacity: 0.85;
+  border-radius: 0px;
+  transition: width 0.3s ease;
+}
+
+.progressMarker {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 28px;
+  height: 28px;
+  background: orange;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* Responsive Styles */
+@media screen and (min-width: 801px) {
+  .experienceTitle {
+    font-size: 20px;
+  }
+
+  .levelName {
+    font-size: 17px;
+  }
+
+  .pointsToNext {
+    font-size: 15px;
+  }
+
+  .levelBadge {
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+  }
+}
+
+@media screen and (max-width: 800px) {
+  .experienceSection {
+    padding: 14px;
+  }
+
+  .levelInfo {
+    margin-bottom: 14px;
+  }
+
+  .levelIcon {
+    width: 36px;
+    height: 36px;
+    margin-right: 10px;
+  }
+
+  .levelName {
+    font-size: 15px;
+  }
+
+  .pointsToNext {
+    font-size: 13px;
+  }
+
+  .levelBadge {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+  }
+
+  .progressWrapper {
+    gap: 0px;
+  }
+}
+
+@media screen and (max-width: 500px) {
+  .experienceTitle {
+    font-size: 16px;
+    margin-bottom: 10px;
+  }
+
+  .experienceSection {
+    padding: 12px;
+    border-radius: 12px;
+  }
+
+  .levelInfo {
+    margin-bottom: 12px;
+  }
+
+  .levelIcon {
+    width: 32px;
+    height: 32px;
+    margin-right: 8px;
+  }
+
+  .svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  .levelName {
+    font-size: 14px;
+  }
+
+  .pointsToNext {
+    font-size: 12px;
+  }
+
+  .levelBadge {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+  }
+
+  .progressContainer {
+    height: 10px;
+  }
+
+  .progressMarker {
+    width: 24px;
+    height: 24px;
+  }
+
+  .progressMarker svg {
+    width: 12px;
+    height: 12px;
+  }
+}

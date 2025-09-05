@@ -5,109 +5,13 @@
   flex-direction: column;
   gap: 24px;
   padding: 16px;
-  background-color: #f5f5f7; /* Light gray background similar to screenshot */
-  color: #333; /* Dark text color */
   min-height: 100vh;
   max-width: 500px; /* Mobile-first design */
   margin: 0 auto;
 }
 
-/* Title Section Styles */
-.titleSection h1 {
-  font-size: 24px;
-  font-weight: bold;
-  margin: 0;
-  color: #1a1a1a;
-}
 
-.titleSection p {
-  font-size: 16px;
-  margin: 4px 0 0;
-  color: #666;
-}
 
-/* Experience Points Section Styles */
-.experienceSection {
-  background-color: white;
-  border-radius: 12px;
-  padding: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.experienceSection h2 {
-  font-size: 18px;
-  margin: 0 0 16px;
-  font-weight: 600;
-  color: #1a1a1a;
-}
-
-.levelInfo {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 8px;
-}
-
-.levelLabel {
-  font-weight: 600;
-  color: #1a1a1a;
-}
-
-.pointsToNext {
-  color: #666;
-  font-size: 14px;
-}
-
-.progressBar {
-  height: 8px;
-  background-color: #e0e0e0;
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.progressFill {
-  height: 100%;
-  background-color: #4a90e2; /* Blue progress bar */
-  border-radius: 4px;
-  transition: width 0.3s ease;
-}
-
-/* Performance Section Styles */
-.performanceSection {
-  background-color: white;
-  border-radius: 12px;
-  padding: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.performanceSection h2 {
-  font-size: 18px;
-  margin: 0 0 16px;
-  font-weight: 600;
-  color: #1a1a1a;
-}
-
-.performanceGrid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-}
-
-.performanceItem {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.performanceValue {
-  font-size: 24px;
-  font-weight: bold;
-  color: #1a1a1a;
-}
-
-.performanceLabel {
-  font-size: 14px;
-  color: #666;
-}
 
 /* Statistics Section Styles */
 .statisticsSection {

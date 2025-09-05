@@ -141,5 +141,15 @@
   "quiz_text": "Quiz",
   "payment_text": "Payment",
   "profile_text": "Profile",
-  "home_text": "Home"
+  "home_text": "Home",
+  "welcome_back": "Welcome back",
+  "experience_points": "Experience points",
+  "level": "Level {value}",
+  "point_next_level": "{value} points to next level",
+  "performance_text": "Performance",
+  "earning_text": "Earning",
+  "statistics_text": "Statistics",
+  "questions_text": "QUESTIONS",
+  "quizzes_text": "QUIZZES",
+  "time_text": "TIME"
 }
