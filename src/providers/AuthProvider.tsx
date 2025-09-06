@@ -8,6 +8,8 @@ import { useAwaitableRouter } from "@/hooks/useAwaitableRouter"
 import LoadingView from '@/components/LoadingView/LoadingView'
 import { UserData } from '@/models/user-data';
 import { useUserData } from '@/lib/stacks/user-stack';
+import { useTheme } from '@/context/ThemeContext';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface AuthContextType {
   initialized: boolean
@@ -33,6 +35,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const { userData, userData$, __meta } = useUserData();
   const { replaceAndWait } = useAwaitableRouter()
+  const { theme } = useTheme();
+  const { t } = useLanguage();
 
   useEffect(() => {
     const initializeAuth = async () => {
@@ -40,14 +44,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Get current user and session separately
         const { data: { user: initialUser } } = await supabaseBrowser.auth.getUser()
         const { data: { session: initialSession } } = await supabaseBrowser.auth.getSession()
-        setUser(initialUser)
-        setSession(initialSession)
+        setUser(initialUser);
+        setSession(initialSession);
 
         const { data: { subscription } } = supabaseBrowser.auth.onAuthStateChange(
           async (event, newSession) => {
             setSession(newSession)
             setUser(newSession?.user ?? null)
-
 
             const publicRoutes = ['/', '/login', '/signup']
             const protectedRoutes = ['/main']
@@ -64,7 +67,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
         )
 
-
         return () => subscription.unsubscribe()
       } catch (error) {
         console.error('Auth initialization error:', error)
@@ -72,18 +74,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    initializeAuth()
-  }, [router, pathname, replaceAndWait])
+    if(__meta.isHydrated)initializeAuth();
+  }, [router, pathname, replaceAndWait, __meta.isHydrated])
 
-  if (!initialized) {
-    return (
-      <body>
-        <AuthContext.Provider value={{ initialized, session, userData }}>
-            <LoadingView />
-        </AuthContext.Provider>
-      </body>
-    )
-  }
+   if (!initialized) {
+     return (
+       <AuthContext.Provider value={{ initialized, session, userData }}>
+         <LoadingView text={t('loading')} />
+       </AuthContext.Provider>
+     )
+   }
+
 
   return (
     <AuthContext.Provider value={{ initialized, session, userData }}>

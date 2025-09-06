@@ -20,13 +20,15 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={poppins.variable}>
-        <AuthProvider>
+      <body>
+        <LanguageProvider>
           <ThemeProvider>
-            <LanguageProvider>
+            <AuthProvider>
               {children}
-            </LanguageProvider>
+            </AuthProvider>
           </ThemeProvider>
-        </AuthProvider>
+        </LanguageProvider>
+      </body>
     </html>
   );
 }

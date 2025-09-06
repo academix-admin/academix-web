@@ -13,21 +13,22 @@ import LandingFeatures from '@/components/LandingFeatures/LandingFeatures';
 import LandingAcademixCalculator from '@/components/LandingAcademixCalculator/LandingAcademixCalculator';
 
 export default function LandingPage() {
-  const { theme, toggleTheme } = useTheme();
-  const { lang, setLang, t } = useLanguage();
+  const { theme } = useTheme();
+  const { t } = useLanguage();
 
   return (
-    <>
-    <LandingHeader />
-    <HeroLanding />
-    <LandingAccounting />
-    <LandingShortAbout />
-    <LandingRoles />
-    <LandingMoreAbout />
-    <LandingFeatures />
-    <LandingAcademixCalculator />
-    <LandingFooter />
-    </>
+    <div className={`${styles.landingContainer} ${styles[`landingContainer_${theme}`]}`}>
+      <LandingHeader />
+      <HeroLanding />
+      <LandingAccounting />
+      <LandingShortAbout />
+      <LandingRoles />
+      <LandingMoreAbout />
+      <LandingFeatures />
+      <LandingAcademixCalculator />
+      <LandingFooter />
+    </div>
   );
 }
+
 

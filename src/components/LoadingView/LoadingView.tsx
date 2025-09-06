@@ -1,4 +1,5 @@
 'use client';
+
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import styles from './LoadingView.module.css';

@@ -32,6 +32,11 @@ export default function Verification() {
 
   const [error, setError] = useState('');
 
+  useEffect(() => {
+      if (!signup.fullName && __meta.isHydrated && isTop) {
+        nav.go('step1');
+      }
+  }, [signup.fullName, __meta.isHydrated, isTop]);
 
   useEffect(() => {
     setCanGoBack(window.history.length > 1);

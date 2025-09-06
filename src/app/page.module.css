@@ -1,0 +1,12 @@
+
+.landingContainer{
+  transition: background 0.3s, color 0.3s;
+}
+
+.landingContainer_light {
+  background: #ffffff;
+}
+
+.landingContainer_dark {
+  background: #121212;
+}

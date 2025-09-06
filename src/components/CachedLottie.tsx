@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import Lottie, { LottieRefCurrentProps } from 'lottie-react';
 import { preloadLottie, getCachedLottie } from '@/lib/lottieCache';
 import { useTheme } from '@/context/ThemeContext';
@@ -12,6 +12,7 @@ interface CachedLottieProps {
   className?: string;
   preserveAspectRatio?: string;
   restoreProgress?: boolean;
+  loadingView?: React.ReactNode;
 }
 
 const CachedLottie: React.FC<CachedLottieProps> = ({
@@ -22,6 +23,7 @@ const CachedLottie: React.FC<CachedLottieProps> = ({
   className,
   preserveAspectRatio = 'xMidYMid slice',
   restoreProgress = false,
+  loadingView
 }) => {
   const [animationData, setAnimationData] = useState<any>(getCachedLottie(id));
   const [animationInstance, setAnimationInstance] = useState<any>(null);
@@ -63,14 +65,15 @@ const CachedLottie: React.FC<CachedLottieProps> = ({
     return () => clearInterval(interval);
   }, [restoreProgress, animationInstance]);
 
-  if (!animationData) {
-
-      return (
-          <div style={{ color: theme === 'light' ? '#000' : '#fff' }}>
-            {t('loading')}
-          </div>
-          );
-  }
+  if (!animationData) return loadingView;
+//   if (!animationData) {
+//
+//       return (
+//           <div style={{ color: theme === 'light' ? '#000' : '#fff' }}>
+//             {t('loading')}
+//           </div>
+//           );
+//   }
 
   return (
     <Lottie

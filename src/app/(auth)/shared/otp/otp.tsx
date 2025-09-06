@@ -167,6 +167,7 @@ export default function Otp(props: OtpProps) {
   const { otpTimer, otpTimer$, __meta } = useOtp();
   const { userData, userData$ } = useUserData();
   const nav = useNav();
+  const isTop = nav.isTop();
   const { replaceAndWait } = useAwaitableRouter();
 
   const [otpValue, setOtpValue] = useState('');
@@ -181,6 +182,11 @@ export default function Otp(props: OtpProps) {
 
   const firstInputRef = useRef<HTMLInputElement>(null);
 
+    useEffect(() => {
+        if (!otpTimer.expiresAt && __meta.isHydrated && isTop) {
+          nav.popToRoot();
+        }
+    }, [otpTimer.expiresAt, __meta.isHydrated, isTop]);
 
   useEffect(() => {
     setCanGoBack(window.history.length > 1);
