@@ -116,7 +116,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className={styles.mainContainer}>
+    <div className={`${styles.mainContainer} ${styles[`mainContainer_${theme}`]}`}>
 
       <HomeTitle />
       <HomeExperience />

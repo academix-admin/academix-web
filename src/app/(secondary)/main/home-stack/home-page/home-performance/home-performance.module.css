@@ -1,8 +1,7 @@
 /* home-performance.module.css */
 .performanceContainer {
-  width: 100%;
+    padding: 0 28px 0 28px;
 }
-
 
 .performanceTitle {
   font-size: 18px;
@@ -29,9 +28,18 @@
 .performanceItem {
   display: flex;
   flex-direction: column;
-  border: 1px solid #000;
   padding: 8px;
   border-radius: 8px;
+}
+
+.performanceItem_light {
+  border: 1px solid #CECECE;
+  background-color: #F7F6F6;
+}
+
+.performanceItem_dark {
+  border: 1px solid #424242;
+  background-color: #1c1c1c;
 }
 
 .performanceContent {
@@ -55,14 +63,21 @@
 .performanceValue {
   font-size: 24px;
   font-weight: bold;
-  color: #1a1a1a;
+}
+
+.performanceValue_light {
+  color: #000;
+}
+
+.performanceValue_dark {
+  color: #fff;
 }
 
 .performanceStatus {
   display: flex;
   align-items: center;
   gap: 0px;
-  background-color: #f0f8f0;
+  background-color: #1C6B1E1A;
   padding: 4px;
   border-radius: 12px;
 }
@@ -84,7 +99,9 @@
 }
 
 @media screen and (max-width: 800px) {
-
+.performanceContainer {
+    padding: 0 24px 0 24px;
+}
   .performanceGrid {
     gap: 14px;
   }
@@ -96,6 +113,9 @@
 }
 
 @media screen and (max-width: 500px) {
+ .performanceContainer {
+    padding: 0 16px 0 16px;
+ }
   .performanceTitle {
     font-size: 16px;
   }

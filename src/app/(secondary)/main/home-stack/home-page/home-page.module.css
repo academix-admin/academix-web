@@ -4,53 +4,19 @@
   display: flex;
   flex-direction: column;
   gap: 24px;
-  padding: 16px;
   min-height: 100vh;
   max-width: 500px; /* Mobile-first design */
   margin: 0 auto;
 }
 
-
-
-
-/* Statistics Section Styles */
-.statisticsSection {
-  background-color: white;
-  border-radius: 12px;
-  padding: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+.mainContainer_light {
+  background-color: #fff;
 }
 
-.statisticsSection h2 {
-  font-size: 18px;
-  margin: 0 0 16px;
-  font-weight: 600;
-  color: #1a1a1a;
+.mainContainer_dark {
+  background-color: #121212;
 }
 
-.statsGrid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-}
-
-.statItem {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.statValue {
-  font-size: 24px;
-  font-weight: bold;
-  color: #1a1a1a;
-}
-
-.statLabel {
-  font-size: 14px;
-  color: #666;
-  letter-spacing: 0.5px;
-}
 
 /* History Section Styles */
 .historySection {
@@ -139,15 +105,15 @@
 
 @media screen and (min-width: 500px) and (max-width: 800px) {
   .mainContainer {
-    padding: 20px;
+    gap: 24px;
   }
 }
 
 @media screen and (max-width: 500px) {
-  .mainContainer {
-    padding: 16px;
-  }
 
+  .mainContainer {
+    gap: 18px;
+  }
   .historyDetails {
     flex-direction: column;
     align-items: flex-start;

@@ -1,6 +1,6 @@
 /* home-experience.module.css */
 .experienceContainer {
-  width: 100%;
+    padding: 0 28px 0 28px;
 }
 
 .experienceSection {
@@ -119,6 +119,7 @@
 
 /* Responsive Styles */
 @media screen and (min-width: 801px) {
+
   .experienceTitle {
     font-size: 20px;
   }
@@ -139,6 +140,9 @@
 }
 
 @media screen and (max-width: 800px) {
+.experienceContainer {
+    padding: 0 24px 0 24px;
+}
   .experienceSection {
     padding: 14px;
   }
@@ -173,6 +177,9 @@
 }
 
 @media screen and (max-width: 500px) {
+.experienceContainer {
+    padding: 0 16px 0 16px;
+}
   .experienceTitle {
     font-size: 16px;
     margin-bottom: 10px;

@@ -4,7 +4,7 @@
   justify-content: space-between;
   align-items: flex-start;
   gap: 1rem;
-  padding: 0.5rem 0;
+    padding: 24px 28px 32px 28px;
 }
 
 .titleSection {
@@ -112,6 +112,8 @@
 
   .mainSection {
     gap: 0.875rem;
+    padding: 18px 20px 24px 20px;
+
   }
 }
 
@@ -132,6 +134,8 @@
 
   .mainSection {
     gap: 0.75rem;
+    padding: 16px 16px 18px 16px;
+
   }
 
   .titleTop {

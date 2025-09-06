@@ -78,11 +78,11 @@ export default function HomePerformance() {
         </h2>
       <div className={styles.performanceSection}>
         <div className={styles.performanceGrid}>
-          <div className={styles.performanceItem}>
+          <div className={`${styles.performanceItem} ${styles[`performanceItem_${theme}`]}`}>
             <div className={styles.performanceContent}>
-              <span className={styles.performanceLabel}>{t('quiz_text')}</span>
+              <span className={`${styles.performanceLabel} ${styles[`performanceLabel_${theme}`]}`}>{t('quiz_text')}</span>
               <div className={styles.performanceValueContainer}>
-                <span className={styles.performanceValue}>{performanceData.dailyPerformanceQuiz}</span>
+                <span className={`${styles.performanceValue} ${styles[`performanceValue_${theme}`]}`}>{performanceData.dailyPerformanceQuiz}</span>
                 <div className={styles.performanceStatus}>
                   <svg width="16" height="18" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M6 12L10 8L6 4" stroke="#249E27" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -92,11 +92,11 @@ export default function HomePerformance() {
             </div>
           </div>
 
-          <div className={styles.performanceItem}>
+          <div className={`${styles.performanceItem} ${styles[`performanceItem_${theme}`]}`}>
             <div className={styles.performanceContent}>
-              <span className={styles.performanceLabel}>{t('earning_text')}</span>
+              <span className={`${styles.performanceLabel} ${styles[`performanceLabel_${theme}`]}`} >{t('earning_text')}</span>
               <div className={styles.performanceValueContainer}>
-                <span className={styles.performanceValue}>{formatValue(performanceData.dailyPerformanceEarnings)}</span>
+                <span className={`${styles.performanceValue} ${styles[`performanceValue_${theme}`]}`}>{formatValue(performanceData.dailyPerformanceEarnings)}</span>
                 <div className={styles.performanceStatus}>
                   <svg width="16" height="18" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                      <path d="M6 12L10 8L6 4" stroke="#249E27" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>

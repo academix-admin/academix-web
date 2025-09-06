@@ -52,7 +52,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setSession(newSession)
             setUser(newSession?.user ?? null)
 
-            const publicRoutes = ['/', '/login', '/signup']
+            const publicRoutes = ['/', '/login', '/signup','/welcome']
             const protectedRoutes = ['/main']
 
             if (!newSession && protectedRoutes.some(route => pathname.startsWith(route))) {
