@@ -1,3 +1,6 @@
+// state-stack.tsx
+'use client';
+
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useSyncExternalStore } from "react";
@@ -6,20 +9,29 @@ const DEBUG = process.env.NODE_ENV === "development";
 
 type Subscriber = () => void;
 
+/**
+ * StorageAdapter abstracts persistence. All methods return Promise for
+ * uniformity even if the implementation is synchronous (localStorage).
+ */
 export interface StorageAdapter {
   getItem(key: string): Promise<string | null>;
   setItem(key: string, value: string): Promise<void>;
   removeItem(key: string): Promise<void>;
 }
 
+/**
+ * Browser adapter (localStorage) - synchronous but wrapped in Promise for API consistency.
+ */
 const browserStorageAdapter: StorageAdapter = {
   getItem: async (k) =>
-    typeof window !== "undefined" ? localStorage.getItem(k) : null,
+    typeof window !== "undefined" ? Promise.resolve(localStorage.getItem(k)) : Promise.resolve(null),
   setItem: async (k, v) => {
     if (typeof window !== "undefined") localStorage.setItem(k, v);
+    return Promise.resolve();
   },
   removeItem: async (k) => {
     if (typeof window !== "undefined") localStorage.removeItem(k);
+    return Promise.resolve();
   },
 };
 
@@ -50,11 +62,39 @@ export function initStateStack(opts: StateStackInitOptions) {
 }
 
 export const getDefaultStorage = (): StorageAdapter =>
-  _globalConfig.defaultStorageAdapter ??
-  (typeof window !== "undefined" ? defaultStorageAdapter : fallbackStorageAdapter);
+  _globalConfig.defaultStorageAdapter ?? (typeof window !== "undefined" ? defaultStorageAdapter : fallbackStorageAdapter);
 
 const INTERNAL_SEPARATOR = "::";
 
+/**
+ * Utility: safe structured clone with fallback.
+ */
+function safeClone<T>(v: T): T {
+  try {
+    // structuredClone is preferable (preserves Dates, Maps, etc.)
+    // but may not be available in older environments.
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    if (typeof (globalThis as any).structuredClone === "function") {
+      // @ts-ignore
+      return (globalThis as any).structuredClone(v);
+    }
+    return JSON.parse(JSON.stringify(v));
+  } catch {
+    return v;
+  }
+}
+
+/**
+ * Production-ready StateStack core implementing:
+ * - persistence (via StorageAdapter)
+ * - hydration with promise coordination to avoid races
+ * - cross-tab sync via storage event
+ * - undo/redo history
+ * - TTL timers
+ * - demand-loading helpers
+ * - atom utilities
+ */
 class StateStackCore {
   private static _instance: StateStackCore | null = null;
   static get instance() {
@@ -73,10 +113,15 @@ class StateStackCore {
   private scopeSubscriberCounts = new Map<string, number>();
   private autoClearScopes = new Set<string>();
   private storageEventListenerAttached = false;
+
+  // hydration state management
   private hydratedKeys = new Set<string>();
   private loadedKeys = new Set<string>();
-  private pendingHydration = new Set<string>();
+  private pendingHydration = new Map<string, Promise<boolean>>();
   private hydrationSubscribers = new Map<string, Set<Subscriber>>();
+
+  // demand operation guards
+  private pendingDemandOperations = new Map<string, Promise<void>>();
 
   private debugLog(...args: any[]) {
     if (_globalConfig.debug) {
@@ -99,89 +144,94 @@ class StateStackCore {
     return [subKey.slice(0, idx), subKey.slice(idx + INTERNAL_SEPARATOR.length)];
   }
 
+  /**
+   * Ensure hydration for a given scope:key. Returns true if data was loaded
+   * from storage (i.e., persisted state exists), false otherwise.
+   *
+   * To avoid races we store and return a single Promise per key. Subsequent
+   * callers will await the same promise.
+   */
   async ensureHydrated(scope: string, key: string, initial: any, persist: boolean, storage: StorageAdapter): Promise<boolean> {
     const internalKey = this.subKey(scope, key);
 
-    // If not persistent, mark as hydrated immediately
     if (!persist) {
+      // Mark as hydrated and loaded immediately for non-persistent state to
+      // signal that hydration is not required.
       this.hydratedKeys.add(internalKey);
       this.loadedKeys.add(internalKey);
       return false;
     }
 
-    // If already hydrated, skip
     if (this.hydratedKeys.has(internalKey)) return false;
 
-    // If hydration is already in progress, wait for it
+    // If a hydration is already in progress, return the same promise.
     if (this.pendingHydration.has(internalKey)) {
-      await new Promise(resolve => {
-        const check = () => {
-          if (this.hydratedKeys.has(internalKey)) {
-            resolve(true);
-          } else {
-            setTimeout(check, 10);
-          }
-        };
-        check();
-      });
-      return false;
+      return this.pendingHydration.get(internalKey)!;
     }
 
-    this.pendingHydration.add(internalKey);
-    let dataLoaded = false;
-
-    try {
-      const storageKey = this.storageKey(scope, key);
-      const stored = await storage.getItem(storageKey);
-
-      if (stored != null) {
-        const parsed = JSON.parse(stored);
-        if (!this.stacks.has(scope)) this.stacks.set(scope, new Map());
-        this.stacks.get(scope)!.set(key, parsed);
-        dataLoaded = true;
-      } else {
-        // Backwards-compat attempt: try old ':' format
-        if (_globalConfig.storagePrefix !== undefined) {
-          const prefix = _globalConfig.storagePrefix ? `${_globalConfig.storagePrefix}:` : "";
-          const altKey = `${prefix}${scope}:${key}`;
-          const altStored = await storage.getItem(altKey);
-          if (altStored != null) {
+    const p = (async (): Promise<boolean> => {
+      try {
+        const storageKey = this.storageKey(scope, key);
+        const stored = await storage.getItem(storageKey);
+        if (stored != null) {
+          try {
+            const parsed = JSON.parse(stored);
+            if (!this.stacks.has(scope)) this.stacks.set(scope, new Map());
+            this.stacks.get(scope)!.set(key, parsed);
+            this.hydratedKeys.add(internalKey);
+            this.loadedKeys.add(internalKey);
+            this.notifyHydration(scope, key);
+            return true;
+          } catch (err) {
+            console.warn("[StateStack] failed to parse persisted JSON; ignoring.", err);
+          }
+        } else {
+          // Backwards compatibility: attempt legacy ":" delimiter when prefix defined
+          if (_globalConfig.storagePrefix !== undefined) {
+            const prefix = _globalConfig.storagePrefix ? `${_globalConfig.storagePrefix}:` : "";
+            const altKey = `${prefix}${scope}:${key}`;
             try {
-              const parsed = JSON.parse(altStored);
-              if (!this.stacks.has(scope)) this.stacks.set(scope, new Map());
-              this.stacks.get(scope)!.set(key, parsed);
-              dataLoaded = true;
-            } catch {
-              console.warn("[StateStack] Failed to parse legacy storage format");
+              const altStored = await storage.getItem(altKey);
+              if (altStored != null) {
+                const parsedAlt = JSON.parse(altStored);
+                if (!this.stacks.has(scope)) this.stacks.set(scope, new Map());
+                this.stacks.get(scope)!.set(key, parsedAlt);
+                this.hydratedKeys.add(internalKey);
+                this.loadedKeys.add(internalKey);
+                this.notifyHydration(scope, key);
+                return true;
+              }
+            } catch (err) {
+              console.warn("[StateStack] legacy persist parse failed", err);
             }
           }
         }
+
+        // Mark hydrated even if nothing found to prevent infinite attempts
+        this.hydratedKeys.add(internalKey);
+        this.loadedKeys.add(internalKey);
+        this.notifyHydration(scope, key);
+        return false;
+      } catch (err) {
+        console.error("[StateStack] hydrate error:", err);
+        this.hydratedKeys.add(internalKey);
+        this.loadedKeys.add(internalKey);
+        this.notifyHydration(scope, key);
+        return false;
+      } finally {
+        this.pendingHydration.delete(internalKey);
       }
+    })();
 
-      // MARK AS HYDRATED REGARDLESS OF WHETHER DATA WAS FOUND
-      this.hydratedKeys.add(internalKey);
-      this.loadedKeys.add(internalKey);
-      this.notifyHydration(scope, key);
-
-      return dataLoaded;
-
-    } catch (err) {
-      console.error("[StateStack] hydrate error:", err);
-      // Even on error, mark as hydrated to prevent infinite retries
-      this.hydratedKeys.add(internalKey);
-      this.loadedKeys.add(internalKey);
-      this.notifyHydration(scope, key);
-      return false;
-    } finally {
-      this.pendingHydration.delete(internalKey);
-    }
+    this.pendingHydration.set(internalKey, p);
+    return p;
   }
 
   getStateSync<S>(scope: string, key: string, initial: S): S {
     if (!this.stacks.has(scope)) this.stacks.set(scope, new Map());
     const scopeStack = this.stacks.get(scope)!;
     if (!scopeStack.has(key)) {
-      scopeStack.set(key, initial);
+      scopeStack.set(key, safeClone(initial));
     }
     return scopeStack.get(key) as S;
   }
@@ -202,7 +252,7 @@ class StateStackCore {
         try {
           await existingPromise;
         } catch (error) {
-          console.debug("[StateStack] Previous update had error:", error);
+          this.debugLog("previous update error", error);
         }
       }
       return await fn();
@@ -212,7 +262,7 @@ class StateStackCore {
     try {
       return await newPromise;
     } catch (error) {
-      console.error("[StateStack] Queue update error:", error);
+      console.error("[StateStack] queue update error:", error);
       throw error;
     } finally {
       if (this.pendingUpdates.get(key) === newPromise) {
@@ -227,18 +277,21 @@ class StateStackCore {
       if (!this.stacks.has(scope)) this.stacks.set(scope, new Map());
       const scopeStack = this.stacks.get(scope)!;
       const prev = scopeStack.get(key);
+
       if (pushHistory) {
         const historyKey = this.subKey(scope, key);
         if (!this.history.has(historyKey)) {
           this.history.set(historyKey, { past: [], future: [], maxDepth: 50 });
         }
         const h = this.history.get(historyKey)!;
-        h.past.push(prev === undefined ? null : this._clone(prev));
+        h.past.push(prev === undefined ? null : safeClone(prev));
         if (h.past.length > h.maxDepth) h.past.shift();
         h.future = [];
       }
-      scopeStack.set(key, value);
+
+      scopeStack.set(key, safeClone(value));
       this.loadedKeys.add(internalKey);
+
       if (persist) {
         try {
           const storageKey = this.storageKey(scope, key);
@@ -371,7 +424,7 @@ class StateStackCore {
       this.stacks.delete(scope);
     }
 
-    // Also remove any tracked loaded/hydrated keys matching this scope
+    // Also remove tracked loaded/hydrated keys matching scope
     for (const internalKey of Array.from(this.loadedKeys)) {
       const [keyScope, key] = this.parseSubKey(internalKey);
       if (keyScope === scope) {
@@ -410,9 +463,7 @@ class StateStackCore {
         try {
           const storage = getDefaultStorage();
           const storageKey = this.storageKey(scope, key);
-          storage
-            .removeItem(storageKey)
-            .catch((err) => console.error("[StateStack] clearKey remove persist error:", err));
+          storage.removeItem(storageKey).catch((err) => console.error("[StateStack] clearKey remove persist error:", err));
         } catch (err) {
           console.error("[StateStack] clearKey remove persist error:", err);
         }
@@ -442,9 +493,7 @@ class StateStackCore {
       try {
         const storage = getDefaultStorage();
         const storageKey = this.storageKey(scope, key);
-        storage
-          .removeItem(storageKey)
-          .catch((err) => console.error("[StateStack] clearKey remove persist error:", err));
+        storage.removeItem(storageKey).catch((err) => console.error("[StateStack] clearKey remove persist error:", err));
       } catch (err) {
         console.error("[StateStack] clearKey remove persist error:", err);
       }
@@ -559,7 +608,7 @@ class StateStackCore {
       if (!h || h.past.length === 0) return;
       const current = this.stacks.get(scope)?.get(key);
       const prev = h.past.pop()!;
-      h.future.push(this._clone(current));
+      h.future.push(safeClone(current));
       if (!this.stacks.has(scope)) this.stacks.set(scope, new Map());
       this.stacks.get(scope)!.set(key, prev);
       this.loadedKeys.add(hk);
@@ -575,7 +624,7 @@ class StateStackCore {
       const h = this.history.get(hk);
       if (!h || h.future.length === 0) return;
       const next = h.future.pop()!;
-      h.past.push(this._clone(this.stacks.get(scope)?.get(key)));
+      h.past.push(safeClone(this.stacks.get(scope)?.get(key)));
       this.stacks.get(scope)!.set(key, next);
       this.loadedKeys.add(hk);
       if (persist) await (storage || getDefaultStorage()).setItem(this.storageKey(scope, key), JSON.stringify(next));
@@ -590,14 +639,6 @@ class StateStackCore {
       return;
     }
     this.history.get(hk)!.maxDepth = Math.max(1, depth);
-  }
-
-  private _clone<T>(v: T): T {
-    try {
-      return JSON.parse(JSON.stringify(v));
-    } catch {
-      return v;
-    }
   }
 
   isLoaded(scope: string, key: string) {
@@ -645,6 +686,17 @@ class StateStackCore {
     if (!this.hydrationSubscribers.has(k)) this.hydrationSubscribers.set(k, new Set());
     this.hydrationSubscribers.get(k)!.add(fn);
 
+    // If already hydrated, call immediately (replay behavior)
+    if (this.isHydrated(scope, key)) {
+      queueMicrotask(() => {
+        try {
+          fn();
+        } catch (err) {
+          console.error("[StateStack] hydration subscriber immediate call error:", err);
+        }
+      });
+    }
+
     return () => {
       if (this.hydrationSubscribers.has(k)) {
         this.hydrationSubscribers.get(k)!.delete(fn);
@@ -655,6 +707,26 @@ class StateStackCore {
     };
   }
 
+  async runDemandOperation<S>(scope: string, key: string, operation: () => Promise<void>): Promise<void> {
+    const operationKey = this.subKey(scope, key);
+
+    if (this.pendingDemandOperations.has(operationKey)) {
+      return this.pendingDemandOperations.get(operationKey)!;
+    }
+
+    const promise = (async () => {
+      try {
+        if (this.isLoaded(scope, key)) return;
+        await operation();
+      } finally {
+        this.pendingDemandOperations.delete(operationKey);
+      }
+    })();
+
+    this.pendingDemandOperations.set(operationKey, promise);
+    return promise;
+  }
+
   private attachStorageListener() {
     if (this.storageEventListenerAttached || typeof window === "undefined") return;
     if (_globalConfig.crossTabSync === false) {
@@ -662,6 +734,7 @@ class StateStackCore {
       return;
     }
     this.storageEventListenerAttached = true;
+
     window.addEventListener("storage", (ev) => {
       try {
         if (!ev.key) return;
@@ -697,7 +770,9 @@ class StateStackCore {
             this.hydratedKeys.add(this.subKey(scope, subKey));
             this.loadedKeys.add(this.subKey(scope, subKey));
             this.notify(scope, subKey);
-          } catch {}
+          } catch {
+            // ignore parse errors from other origins
+          }
         }
       } catch (err) {
         console.error("[StateStack] storage event handler error:", err);
@@ -725,9 +800,12 @@ class StateStackCore {
   }
 }
 
+/* -------------------------
+   Public helpers & hooks
+   ------------------------- */
+
 type MethodFn<S = any> = (state: S, ...args: any[]) => S;
 type MethodDict<S = any> = Record<string, MethodFn<S>>;
-
 type ParamsForMethod<F> = F extends (state: any, ...args: infer A) => any ? A : never;
 
 export interface StackConfig<S> {
@@ -743,6 +821,10 @@ export interface StackConfig<S> {
 type InferStateFromMethods<T> = T extends MethodDict<infer S> ? S : never;
 type MethodsFor<T> = T extends MethodDict<infer S> ? T : never;
 
+/**
+ * createStateStack: consumes method blueprints and returns useStack hook factory.
+ * Keeps API compatible with your previous implementation.
+ */
 export function createStateStack<
   Blueprints extends Record<string, MethodDict>
 >(methodBlueprints: Blueprints) {
@@ -760,11 +842,8 @@ export function createStateStack<
     const ttl = config.ttl;
     const historyDepth = config.historyDepth ?? 50;
 
-    const [isHydrated, setIsHydrated] = useState(() =>
-          core.isHydrated(scope, keyStr)
-    );
+    const [isHydrated, setIsHydrated] = useState(() => core.isHydrated(scope, keyStr));
 
-    // Subscribe to hydration changes
     useEffect(() => {
       return core.subscribeToHydration(scope, keyStr, () => {
         setIsHydrated(core.isHydrated(scope, keyStr));
@@ -872,6 +951,9 @@ export function createStateStack<
   return { useStack };
 }
 
+/**
+ * useDemandState: lazy-loaded state helper with demand(loader) function.
+ */
 export function useDemandState<T>(
   initial: T,
   opts?: {
@@ -914,12 +996,8 @@ export function useDemandState<T>(
   const core = StateStackCore.instance;
   const keyStr = key;
 
-  // Add reactive hydration state
-  const [isHydrated, setIsHydrated] = useState(() =>
-    core.isHydrated(scope, keyStr)
-  );
+  const [isHydrated, setIsHydrated] = useState(() => core.isHydrated(scope, keyStr));
 
-  // Subscribe to hydration changes
   useEffect(() => {
     return core.subscribeToHydration(scope, keyStr, () => {
       setIsHydrated(core.isHydrated(scope, keyStr));
@@ -981,23 +1059,26 @@ export function useDemandState<T>(
 
   useEffect(() => {
     core.clearLoaded(scope, keyStr);
-  }, [deps]);
+  }, deps);
 
   const demand = useCallback(
     (loader: (helpers: { get: () => T; set: (v: T) => void }) => void | Promise<void>) => {
-      if (core.isLoaded(scope, keyStr)) return;
-      const ctx = {
-        get: () => core.getStateSync(scope, keyStr, initial) as T,
-        set: (v: T) => {
-          core.setState(scope, keyStr, v, persist, storage);
-          core.setTTL(scope, keyStr, ttl);
-          core.markLoaded(scope, keyStr);
-        },
-      };
-      Promise.resolve(loader(ctx))
-        .catch((err) => {
-          console.error("[useDemandState] loader error:", err);
-        });
+      // If already loaded, skip
+      if (core.isLoaded(scope, key)) return;
+      core.runDemandOperation(scope, keyStr, async () => {
+        const ctx = {
+          get: () => core.getStateSync(scope, keyStr, initial) as T,
+          set: (v: T) => {
+            core.setState(scope, keyStr, v, persist, storage);
+            core.setTTL(scope, keyStr, ttl);
+            core.markLoaded(scope, keyStr);
+          },
+        };
+
+        await Promise.resolve(loader(ctx));
+      }).catch((err) => {
+        console.error("[useDemandState] loader error:", err);
+      });
     },
     [scope, keyStr, ttl, persist, storage, core, initial]
   );
@@ -1036,6 +1117,7 @@ export function useDemandState<T>(
   return [state, demand, set, { clear, clearByScope, clearByPathname, clearByPrefix, clearByCondition, isHydrated }];
 }
 
+/* Atom store for tiny local atoms (non-persistent) */
 class AtomStore {
   private atoms = new Map<string, any>();
   private subs = new Map<string, Set<() => void>>();
@@ -1055,13 +1137,13 @@ class AtomStore {
   }
 
   get<T>(key: string, initial: T): T {
-    if (!this.atoms.has(key)) this.atoms.set(key, initial);
+    if (!this.atoms.has(key)) this.atoms.set(key, safeClone(initial));
     return this.atoms.get(key) as T;
   }
 
   set<T>(key: string, value: T) {
     this.queueUpdate(key, async () => {
-      this.atoms.set(key, value);
+      this.atoms.set(key, safeClone(value));
       queueMicrotask(() => {
         const s = this.subs.get(key);
         if (!s) return;
@@ -1203,7 +1285,6 @@ export const StateStack = {
   clearByCondition: (condition: (scope: string, key: string) => boolean, removePersist = true) => {
     StateStackCore.instance.clearByCondition(condition, removePersist);
   },
-  // New helper exposed at top level
   clearMatching: (opts: {
     prefix?: string;
     contains?: string;

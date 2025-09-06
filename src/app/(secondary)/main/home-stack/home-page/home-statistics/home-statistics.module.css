@@ -32,6 +32,7 @@
   grid-template-columns: repeat(3, 1fr);
   gap: 12px;
   width: 100%;
+     box-sizing: border-box;
 }
 
 .statisticsCard {
@@ -92,6 +93,7 @@
 @media screen and (min-width: 1025px) {
   .statisticsGrid {
     grid-template-columns: repeat(3, 1fr);
+            padding: 0 28px 0 28px;
   }
 
   .statisticsWrapper {
@@ -100,8 +102,12 @@
 }
 
 /* Tablet - 2 full cards + partial third with scroll */
+
 @media screen and (max-width: 800px){
 
+  .statisticsGrid {
+    padding: 0 24px 0 24px;
+  }
     .statisticsTitle {
         font-size: 20px;
               padding: 0 24px 0 24px;
@@ -118,16 +124,13 @@
   .statisticsWrapper {
     overflow-x: auto;
     padding-bottom: 8px;
-    margin-right: -16px;
-    margin-left: -16px;
-    padding-left: 16px;
-    padding-right: 16px;
-  }
+    }
 
   .statisticsGrid {
     display: flex;
     gap: 12px;
     width: max-content;
+    padding: 0 0px 0 0px;
   }
 
   .statisticsCard {
@@ -135,7 +138,6 @@
     min-width: 200px;
     max-width: 250px;
   }
-
 
 
   /* Hide scrollbar but keep functionality */
@@ -150,6 +152,12 @@
 
   .statisticsWrapper::-webkit-scrollbar-thumb:hover {
     background: rgba(0, 0, 0, 0.3);
+  }
+}
+
+@media screen and (min-width: 801px){
+  .statisticsGrid {
+    padding: 0 24px 0 24px;
   }
 }
 
@@ -170,6 +178,8 @@
     display: flex;
     gap: 10px;
     width: max-content;
+        padding: 0 0px 0 0px;
+
   }
 
   .statisticsCard {

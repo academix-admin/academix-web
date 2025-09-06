@@ -5,7 +5,7 @@
   flex-direction: column;
   gap: 24px;
   min-height: 100vh;
-  max-width: 500px; /* Mobile-first design */
+  max-width: 800px; /* Mobile-first design */
   margin: 0 auto;
 }
 
@@ -18,79 +18,6 @@
 }
 
 
-/* History Section Styles */
-.historySection {
-  background-color: white;
-  border-radius: 12px;
-  padding: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  margin-bottom: 70px; /* Space for bottom navigation */
-}
-
-.historySection h2 {
-  font-size: 18px;
-  margin: 0 0 16px;
-  font-weight: 600;
-  color: #1a1a1a;
-}
-
-.historyList {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.historyItem {
-  border-bottom: 1px solid #e0e0e0;
-  padding-bottom: 16px;
-}
-
-.historyItem:last-child {
-  border-bottom: none;
-}
-
-.historyMain {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-}
-
-.historyTopic {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 600;
-  color: #1a1a1a;
-}
-
-.historyTime {
-  font-size: 12px;
-  color: #666;
-}
-
-.historyDetails {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  font-size: 14px;
-  color: #666;
-}
-
-.duration,
-.questions,
-.rank,
-.participants,
-.responseTime {
-  display: flex;
-  align-items: center;
-}
-
-.earnings {
-  margin-left: auto;
-  font-weight: 600;
-  color: #34c759; /* Green for earnings */
-}
 
 
 
@@ -114,13 +41,5 @@
   .mainContainer {
     gap: 18px;
   }
-  .historyDetails {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
-  }
 
-  .earnings {
-    margin-left: 0;
-  }
 }

@@ -151,5 +151,18 @@
   "statistics_text": "Statistiques",
   "questions_text": "QUESTIONS",
   "quizzes_text": "QUIZ",
-  "time_text": "TEMPS"
+  "time_text": "TEMPS",
+  "history_text": "Historique",
+  "duration_text": "{value} Questions",
+  "rank_1st": "{rank}er",
+  "rank_2nd": "{rank}ème",
+  "rank_3rd": "{rank}ème",
+  "rank_other": "{rank}ème",
+  "points": "{points} points",
+  "time_ms": "{time}ms",
+  "time_s_ms": "{seconds}s {milliseconds}ms",
+  "time_m_s_ms": "{minutes}m {seconds}s {milliseconds}ms",
+  "history_empty": "You have empty quiz history. {refresh}",
+  "refresh_text": "Rafraîchir",
+  "history_empty": "Vous n’avez aucun historique de quiz."
 }
