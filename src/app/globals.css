@@ -16,6 +16,15 @@ html, body {
   background-color: transparent;
 }
 
+body.light {
+  background: #fff;
+  color: #121212;
+}
+
+body.dark {
+  background: #121212;
+  color: #fff;
+}
 
 
 

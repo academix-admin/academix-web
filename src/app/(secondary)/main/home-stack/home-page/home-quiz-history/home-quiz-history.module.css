@@ -212,6 +212,27 @@
   height: 40px;   /* enough space for observer */
 }
 
+.moreSpinnerContainer {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.moreSpinner {
+  border: 3px solid #1D3D1E;
+  border-top: 3px solid white;
+  border-radius: 50%;
+  width: 10px;
+  height: 10px;
+  animation: spin 1s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+
 /* Tablet Responsive */
 @media screen and (max-width: 800px) {
   .historyContainer {

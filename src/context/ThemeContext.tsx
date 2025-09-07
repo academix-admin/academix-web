@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect} from 'react';
 
 // Step 1: Define all your supported themes
 const SUPPORTED_THEMES = ['light', 'dark'] as const;
@@ -25,6 +25,14 @@ const ThemeContext = createContext<ThemeContextProps>({
 // Step 4: Provider component
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   const [theme, setTheme] = useState<SupportedTheme>('light');
+
+  // Ensure theme is applied to <body>
+  useEffect(() => {
+    // Remove all supported theme classes
+    SUPPORTED_THEMES.forEach(t => document.body.classList.remove(t));
+    // Add the current theme class
+    document.body.classList.add(theme);
+  }, [theme]);
 
   // Toggle only between light/dark (default behavior)
   const toggleTheme = () => {

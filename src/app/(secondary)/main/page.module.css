@@ -6,13 +6,6 @@
   position: relative;
 }
 
-.mainContainer_light {
-  background-color: #fff;
-}
-
-.mainContainer_dark {
-  background-color: #121212;
-}
 
 .contentWrapper {
   display: flex;

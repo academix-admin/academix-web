@@ -25,6 +25,7 @@ export default function HomeQuizHistory({ onStateChange }: ComponentStateProps) 
 
   const [paginateModel, setPaginateModel] = useState<PaginateModel>(new PaginateModel());
   const [firstLoaded, setFirstLoaded] = useState(false);
+  const [historyLoading, setHistoryLoading] = useState(false);
 
 
   const [quizHistoryData, demandQuizHistoryData, setQuizHistoryData] = useDemandState<QuizHistory[]>(
@@ -129,10 +130,22 @@ useEffect(() => {
 
   const callPaginate = async () => {
     if (!userData || quizHistoryData.length <= 0) return;
+    setHistoryLoading(true);
     const quizHistories = await fetchQuizHistory(userData, 20, paginateModel);
+    setHistoryLoading(false);
     if (quizHistories.length > 0) {
       extractLatest(quizHistories);
       processQuizHistoryPaginate(quizHistories);
+    }
+  };
+  const refreshData = async () => {
+    if (!userData || quizHistoryData.length > 0) return;
+    setHistoryLoading(true);
+    const quizHistories = await fetchQuizHistory(userData, 10, paginateModel);
+    if (quizHistories.length > 0) {
+      extractLatest(quizHistories);
+      setHistoryLoading(false);
+      setQuizHistoryData(quizHistories);
     }
   };
 
@@ -269,7 +282,8 @@ useEffect(() => {
         ))}
       </div>
 
-      { quizHistoryData.length === 0 && <span className={`${styles.refreshContainer} ${styles[`refreshContainer_${theme}`]}`}>{t('history_empty')} <span role="button" onClick={()=> console.log('refresh')} className={`${styles.refreshButton} ${styles[`refreshButton_${theme}`]}`}> Refresh </span></span>}
+      { historyLoading && <div className={styles.moreSpinnerContainer}><span className={styles.moreSpinner}></span></div>}
+      { !historyLoading && quizHistoryData.length === 0 && <span className={`${styles.refreshContainer} ${styles[`refreshContainer_${theme}`]}`}>{t('history_empty')} <span role="button" onClick={refreshData} className={`${styles.refreshButton} ${styles[`refreshButton_${theme}`]}`}> Refresh </span></span>}
       { quizHistoryData.length > 0 && <div ref={loaderRef} className={styles.loadMoreSentinel}></div>}
 
     </div>

@@ -16,6 +16,7 @@ import Image from 'next/image';
 import { UserData } from '@/models/user-data';
 import { useUserData } from '@/lib/stacks/user-stack';
 import { supabaseBrowser } from '@/lib/supabase/client';
+import { StateStack } from '@/lib/state-stack';
 
 const Main = () => {
   const { theme } = useTheme();
@@ -29,6 +30,7 @@ useEffect(() => {
   const handleSignOut = async () => {
     if (!userData && isMounted) {
       try {
+        await StateStack.core.clearScope('secondary_flow');
         await supabaseBrowser.auth.signOut();
       } catch (error) {
         console.error('Sign out error:', error);
