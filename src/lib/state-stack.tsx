@@ -121,6 +121,7 @@ class StateStackCore {
   private hydrationSubscribers = new Map<string, Set<Subscriber>>();
 
   // demand operation guards
+  private demandedKeys = new Set<string>();
   private pendingDemandOperations = new Map<string, Promise<void>>();
 
   private debugLog(...args: any[]) {
@@ -381,6 +382,7 @@ class StateStackCore {
             await storage.removeItem(storageKey);
             this.hydratedKeys.delete(timerKey);
             this.loadedKeys.delete(timerKey);
+            this.demandedKeys.delete(timerKey);
           } catch (err) {
             console.error("[StateStack] TTL persist remove error:", err);
           }
@@ -411,6 +413,7 @@ class StateStackCore {
 
         this.hydratedKeys.delete(timerKey);
         this.loadedKeys.delete(timerKey);
+        this.demandedKeys.delete(timerKey);
 
         if (removePersist) {
           try {
@@ -429,6 +432,7 @@ class StateStackCore {
       const [keyScope, key] = this.parseSubKey(internalKey);
       if (keyScope === scope) {
         this.loadedKeys.delete(internalKey);
+        this.demandedKeys.delete(internalKey);
         this.hydratedKeys.delete(internalKey);
 
         if (removePersist) {
@@ -471,6 +475,7 @@ class StateStackCore {
 
       this.hydratedKeys.delete(internalKey);
       this.loadedKeys.delete(internalKey);
+      this.demandedKeys.delete(internalKey);
       return;
     }
 
@@ -488,6 +493,7 @@ class StateStackCore {
 
     this.hydratedKeys.delete(internalKey);
     this.loadedKeys.delete(internalKey);
+    this.demandedKeys.delete(internalKey);
 
     if (removePersist) {
       try {
@@ -514,6 +520,7 @@ class StateStackCore {
       if (key.startsWith(prefix)) {
         this.hydratedKeys.delete(internalKey);
         this.loadedKeys.delete(internalKey);
+        this.demandedKeys.delete(internalKey);
 
         if (removePersist) {
           try {
@@ -549,6 +556,7 @@ class StateStackCore {
         if (condition(keyScope, key)) {
           this.hydratedKeys.delete(internalKey);
           this.loadedKeys.delete(internalKey);
+          this.demandedKeys.delete(internalKey);
 
           if (removePersist) {
             try {
@@ -653,6 +661,18 @@ class StateStackCore {
     this.loadedKeys.delete(this.subKey(scope, key));
   }
 
+  isDemanded(scope: string, key: string) {
+    return this.demandedKeys.has(this.subKey(scope, key));
+  }
+
+  markDemanded(scope: string, key: string) {
+    this.demandedKeys.add(this.subKey(scope, key));
+  }
+
+  clearDemanded(scope: string, key: string) {
+    this.demandedKeys.delete(this.subKey(scope, key));
+  }
+
   isHydrated(scope: string, key: string): boolean {
     const internalKey = this.subKey(scope, key);
     return this.hydratedKeys.has(internalKey);
@@ -716,7 +736,7 @@ class StateStackCore {
 
     const promise = (async () => {
       try {
-        if (this.isLoaded(scope, key)) return;
+        if (this.isDemanded(scope, key)) return;
         await operation();
       } finally {
         this.pendingDemandOperations.delete(operationKey);
@@ -1058,20 +1078,20 @@ export function useDemandState<T>(
   }, [scope, clearOnZeroSubscribers]);
 
   useEffect(() => {
-    core.clearLoaded(scope, keyStr);
+    core.clearDemanded(scope, keyStr);
   }, deps);
 
   const demand = useCallback(
     (loader: (helpers: { get: () => T; set: (v: T) => void }) => void | Promise<void>) => {
-      // If already loaded, skip
-      if (core.isLoaded(scope, key)) return;
+      // If already demanded, skip
+      if (core.isDemanded(scope, key)) return;
       core.runDemandOperation(scope, keyStr, async () => {
         const ctx = {
           get: () => core.getStateSync(scope, keyStr, initial) as T,
           set: (v: T) => {
             core.setState(scope, keyStr, v, persist, storage);
             core.setTTL(scope, keyStr, ttl);
-            core.markLoaded(scope, keyStr);
+            core.markDemanded(scope, keyStr);
           },
         };
 
@@ -1089,7 +1109,7 @@ export function useDemandState<T>(
       const next = typeof v === "function" ? (v as any)(prev) : v;
       core.setState(scope, keyStr, next, persist, storage);
       core.setTTL(scope, keyStr, ttl);
-      core.markLoaded(scope, keyStr);
+      core.markDemanded(scope, keyStr);
     },
     [scope, keyStr, ttl, persist, storage, core, initial]
   );
