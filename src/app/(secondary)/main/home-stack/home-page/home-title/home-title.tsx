@@ -1,15 +1,30 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import styles from './home-title.module.css';
 import { useLanguage } from '@/context/LanguageContext';
 import { useUserData } from '@/lib/stacks/user-stack';
 import { getLastNameOrSingle, capitalize } from '@/utils/textUtils';
+import { ComponentStateProps } from '@/hooks/use-component-state';
 
-export default function HomeTitle() {
+export default function HomeTitle({ onStateChange }: ComponentStateProps) {
   const { theme } = useTheme();
   const { t } = useLanguage();
   const { userData } = useUserData();
+
+// ✅ After
+useEffect(() => {
+  onStateChange?.("loading"); // first mark as loading
+
+  if (!userData) {
+    onStateChange?.("none");
+    return;
+  }
+
+  onStateChange?.("data");
+}, [userData]);
+
 
   if(!userData)return null;
 

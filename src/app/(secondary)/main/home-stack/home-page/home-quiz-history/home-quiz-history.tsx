@@ -14,15 +14,18 @@ import { BackendQuizHistory } from '@/models/quiz-history';
 import { QuizHistory } from '@/models/quiz-history';
 import { PaginateModel } from '@/models/paginate-model';
 import Image from 'next/image';
+import { ComponentStateProps } from '@/hooks/use-component-state';
 
-export default function HomeQuizHistory() {
+export default function HomeQuizHistory({ onStateChange }: ComponentStateProps) {
   const { theme } = useTheme();
   const { t, lang, tNode } = useLanguage();
   const { userData, userData$ } = useUserData();
+  const loaderRef = useRef<HTMLDivElement | null>(null);
 
 
   const [paginateModel, setPaginateModel] = useState<PaginateModel>(new PaginateModel());
-  
+  const [firstLoaded, setFirstLoaded] = useState(false);
+
 
   const [quizHistoryData, demandQuizHistoryData, setQuizHistoryData] = useDemandState<QuizHistory[]>(
     [],
@@ -34,6 +37,26 @@ export default function HomeQuizHistory() {
       deps: [lang, userData],
     }
   );
+
+
+useEffect(() => {
+  if (!loaderRef.current) return;
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      if (entries[0].isIntersecting) {
+        callPaginate();
+      }
+    },
+    { threshold: 1.0 }
+  );
+
+  observer.observe(loaderRef.current);
+
+  return () => {
+    if (loaderRef.current) observer.unobserve(loaderRef.current);
+  };
+}, [quizHistoryData, paginateModel]);
 
   const fetchQuizHistory = useCallback(async (userData: UserData, limitBy: number, paginateModel: PaginateModel): Promise<QuizHistory[]> => {
     if (!userData) return [];
@@ -65,6 +88,7 @@ export default function HomeQuizHistory() {
       return (data || []).map((row: BackendQuizHistory) => new QuizHistory(row));
     } catch (err) {
       console.error("[HomeQuizHistory] error:", err);
+      onStateChange?.('error');
       return [];
     }
   }, [lang]);
@@ -95,17 +119,16 @@ export default function HomeQuizHistory() {
 
     demandQuizHistoryData(async ({ get, set }) => {
       const quizHistories = await fetchQuizHistory(userData, 10, paginateModel);
-      if (quizHistories.length > 0) {
-        extractLatest(quizHistories);
-        set(quizHistories);
-      }
+      extractLatest(quizHistories);
+      set(quizHistories);
+      setFirstLoaded(true);
+      onStateChange?.('data');
     });
-  }, [demandQuizHistoryData, userData]);
-  
+  }, [demandQuizHistoryData]);
+
 
   const callPaginate = async () => {
-    if (!userData) return;
-
+    if (!userData || quizHistoryData.length <= 0) return;
     const quizHistories = await fetchQuizHistory(userData, 20, paginateModel);
     if (quizHistories.length > 0) {
       extractLatest(quizHistories);
@@ -175,6 +198,8 @@ export default function HomeQuizHistory() {
     return t('rank_other', { rank });
   };
 
+  if(!firstLoaded)return null;
+
   return (
     <div className={styles.historyContainer}>
       <h2 className={`${styles.historyTitle} ${styles[`historyTitle_${theme}`]}`}>
@@ -201,7 +226,7 @@ export default function HomeQuizHistory() {
 
             <div className={styles.historyItem}>
               <div className={styles.historyMain}>
-                <span className={styles.topicName}>{quiz.topicsIdentity}</span>
+                <span className={`${styles.topicName} ${styles[`topicName_${theme}`]}`}>{quiz.topicsIdentity}</span>
                 <span className={styles.historyTime}>{formatDate(quiz.poolsMembersCreatedAt)}</span>
               </div>
 
@@ -245,6 +270,7 @@ export default function HomeQuizHistory() {
       </div>
 
       { quizHistoryData.length === 0 && <span className={`${styles.refreshContainer} ${styles[`refreshContainer_${theme}`]}`}>{t('history_empty')} <span role="button" onClick={()=> console.log('refresh')} className={`${styles.refreshButton} ${styles[`refreshButton_${theme}`]}`}> Refresh </span></span>}
+      { quizHistoryData.length > 0 && <div ref={loaderRef} className={styles.loadMoreSentinel}></div>}
 
     </div>
   );

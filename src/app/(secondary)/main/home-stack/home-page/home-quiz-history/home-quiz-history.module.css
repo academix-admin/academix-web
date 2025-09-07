@@ -16,6 +16,8 @@
   color: #fff;
 }
 
+
+
 .historyList {
   display: flex;
   flex-direction: column;
@@ -73,6 +75,14 @@
     overflow: hidden;
     text-overflow: ellipsis;
     box-sizing: border-box;
+}
+
+.topicName_light {
+  color: #000;
+}
+
+.topicName_dark {
+  color: #fff;
 }
 
 .historyTime {
@@ -160,7 +170,7 @@
 }
 
 .crossText_dark {
-  color: #000;
+  color: #fff;
 }
 
 .refreshContainer{
@@ -196,6 +206,10 @@
 
 .refreshButton_dark{
  color: #fff;
+}
+
+.loadMoreSentinel {
+  height: 40px;   /* enough space for observer */
 }
 
 /* Tablet Responsive */

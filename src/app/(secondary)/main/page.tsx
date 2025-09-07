@@ -113,7 +113,7 @@ useEffect(() => {
   const borderColor = theme === 'light' ? "#e5e7eb" : "#2a2a2a";
 
   return (
-    <div className={`${styles.mainContainer} ${theme}`}>
+    <div className={`${styles.mainContainer} ${styles[`mainContainer_${theme}`]}`}>
       <div className={styles.contentWrapper}>
         <div className={styles.sidebarContainer}>
           <SideBar

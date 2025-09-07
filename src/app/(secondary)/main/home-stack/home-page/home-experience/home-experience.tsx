@@ -10,8 +10,9 @@ import { useUserData } from '@/lib/stacks/user-stack';
 import { useDemandState } from '@/lib/state-stack';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { UserEngagementModel } from '@/models/user-engagement';
+import { ComponentStateProps } from '@/hooks/use-component-state';
 
-export default function HomeExperience() {
+export default function HomeExperience({ onStateChange }: ComponentStateProps) {
   const { theme } = useTheme();
   const { t, lang, tNode } = useLanguage();
   const { userData, userData$ } = useUserData();
@@ -30,6 +31,7 @@ export default function HomeExperience() {
   useEffect(() => {
     if(!userData)return;
     demandUserEngagement(async ({ get, set }) => {
+      onStateChange?.('loading');
       try {
         const paramatical = await getParamatical(
           userData.usersId,
@@ -52,12 +54,22 @@ export default function HomeExperience() {
 
         if (data.status === "EngagementStatus.success") {
           set(engagement);
+                onStateChange?.('data');
+
         }
       } catch (err) {
         console.error("[HomeExperience] demand error:", err);
       }
     });
   }, [lang, userData, demandUserEngagement]);
+
+    useEffect(() => {
+        if(userEngagement){
+            onStateChange?.('data');
+        }else{
+           onStateChange?.('none');
+        }
+    }, [userEngagement]);
 
   if (!userEngagement) return null;
 

@@ -11,8 +11,9 @@ import { useDemandState } from '@/lib/state-stack';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { UserEngagementModel } from '@/models/user-engagement';
 import CachedLottie from '@/components/CachedLottie';
+import { ComponentStateProps } from '@/hooks/use-component-state';
 
-export default function HomeStatistics() {
+export default function HomeStatistics({ onStateChange }: ComponentStateProps) {
   const { theme } = useTheme();
   const { t, lang, tNode } = useLanguage();
   const { userData, userData$ } = useUserData();
@@ -27,6 +28,14 @@ export default function HomeStatistics() {
       deps: [lang, userData],
     }
   );
+
+    useEffect(() => {
+      if(!userEngagement){
+          onStateChange?.('none');
+      }else{
+          onStateChange?.('data');
+      }
+    }, [userEngagement]);
 
   if (!userEngagement) return null;
 

@@ -10,8 +10,9 @@ import { useUserData } from '@/lib/stacks/user-stack';
 import { useDemandState } from '@/lib/state-stack';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { DailyPerformanceModel } from '@/models/daily-performance';
+import { ComponentStateProps } from '@/hooks/use-component-state';
 
-export default function HomePerformance() {
+export default function HomePerformance({ onStateChange }: ComponentStateProps) {
   const { theme } = useTheme();
   const { t, lang, tNode } = useLanguage();
   const { userData, userData$ } = useUserData();
@@ -31,6 +32,7 @@ export default function HomePerformance() {
     if(!userData)return;
     demandPerformanceData(async ({ get, set }) => {
       try {
+        onStateChange?.('loading');
         const paramatical = await getParamatical(
           userData.usersId,
           lang,
@@ -51,14 +53,27 @@ export default function HomePerformance() {
 
         if (data.status === "PerformanceStatus.success") {
           set(dailyPerformance);
+          onStateChange?.('data');
+          return;
         }
+          onStateChange?.("none");
       } catch (err) {
         console.error("[HomePerformance] demand error:", err);
+        onStateChange?.('error');
       }
     });
   }, [lang, userData, demandPerformanceData]);
 
+  useEffect(() => {
+      if(performanceData){
+          onStateChange?.('data');
+      }else{
+         onStateChange?.('none');
+      }
+  }, [performanceData]);
+
   if (!performanceData) return null;
+
 
   const formatValue = (value: number) => {
     if (value >= 1000000000) {
