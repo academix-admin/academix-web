@@ -32,10 +32,6 @@ export default function HomePage() {
     [compState]
   );
 
-  useEffect(() => {
-    console.log(compState);
-  }, [compState]);
-
   // we have an error but not all loaded yet
   const error = loadedCount < 5 && errorCount > 0;
 

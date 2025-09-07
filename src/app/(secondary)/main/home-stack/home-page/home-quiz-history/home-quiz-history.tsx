@@ -15,11 +15,14 @@ import { QuizHistory } from '@/models/quiz-history';
 import { PaginateModel } from '@/models/paginate-model';
 import Image from 'next/image';
 import { ComponentStateProps } from '@/hooks/use-component-state';
+import { usePinnedState } from '@/hooks/pinned-state-hook';
+
 
 export default function HomeQuizHistory({ onStateChange }: ComponentStateProps) {
   const { theme } = useTheme();
   const { t, lang, tNode } = useLanguage();
   const { userData, userData$ } = useUserData();
+  const { ref: pinnedRef, stuck } = usePinnedState<HTMLHeadingElement>({ offset: 0 });
   const loaderRef = useRef<HTMLDivElement | null>(null);
 
 
@@ -40,24 +43,28 @@ export default function HomeQuizHistory({ onStateChange }: ComponentStateProps) 
   );
 
 
-useEffect(() => {
-  if (!loaderRef.current) return;
+  useEffect(() => {
+    console.log('stuck',stuck);
+  }, [stuck]);
 
-  const observer = new IntersectionObserver(
-    (entries) => {
-      if (entries[0].isIntersecting) {
-        callPaginate();
-      }
-    },
-    { threshold: 1.0 }
-  );
+  useEffect(() => {
+        if (!loaderRef.current) return;
 
-  observer.observe(loaderRef.current);
+     const observer = new IntersectionObserver(
+        (entries) => {
+            if (entries[0].isIntersecting) {
+                callPaginate();
+            }
+        },
+        { threshold: 1.0 }
+    );
 
-  return () => {
-    if (loaderRef.current) observer.unobserve(loaderRef.current);
-  };
-}, [quizHistoryData, paginateModel]);
+    observer.observe(loaderRef.current);
+
+        return () => {
+            if (loaderRef.current) observer.unobserve(loaderRef.current);
+        };
+    }, [quizHistoryData, paginateModel]);
 
   const fetchQuizHistory = useCallback(async (userData: UserData, limitBy: number, paginateModel: PaginateModel): Promise<QuizHistory[]> => {
     if (!userData) return [];
@@ -90,6 +97,7 @@ useEffect(() => {
     } catch (err) {
       console.error("[HomeQuizHistory] error:", err);
       onStateChange?.('error');
+      setHistoryLoading(false);
       return [];
     }
   }, [lang]);
@@ -210,12 +218,12 @@ useEffect(() => {
     if (rank === 3) return t('rank_3rd', { rank });
     return t('rank_other', { rank });
   };
+// ${stuck ? styles.historyTitlePinned : ''}
 
-  if(!firstLoaded)return null;
-
+  if(!firstLoaded && quizHistoryData.length <= 0)return null;
   return (
     <div className={styles.historyContainer}>
-      <h2 className={`${styles.historyTitle} ${styles[`historyTitle_${theme}`]}`}>
+      <h2 ref={pinnedRef} className={`${styles.historyTitle} ${styles[`historyTitle_${theme}`]}`}>
          {t('history_text')}
       </h2>
 
