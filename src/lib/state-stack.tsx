@@ -781,6 +781,7 @@ class StateStackCore {
           this.stacks.get(scope)?.delete(subKey);
           this.hydratedKeys.delete(this.subKey(scope, subKey));
           this.loadedKeys.delete(this.subKey(scope, subKey));
+          this.demandedKeys.delete(this.subKey(scope, subKey));
           this.notify(scope, subKey);
         } else {
           try {
