@@ -31,6 +31,14 @@
   height: 15px;
 }
 
+.academixRatioArrow_light{
+  color: #000;
+}
+
+.academixRatioArrow_dark{
+  color: #fff;
+}
+
 /* Value Pill */
 .academixRatioValueContainer {
   display: flex;

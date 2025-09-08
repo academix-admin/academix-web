@@ -67,7 +67,7 @@ export class UserData {
   }
 
   copyWith(data: Partial<UserData>): UserData {
-    return new UserData({
+    const backendLike: BackendUserData = {
       users_id: data.usersId ?? this.usersId,
       users_username: data.usersUsername ?? this.usersUsername,
       users_names: data.usersNames ?? this.usersNames,
@@ -94,8 +94,11 @@ export class UserData {
             roles_checker: this.usersRole.rolesType,
           }
         : null,
-    });
+    };
+
+    return new UserData(backendLike);
   }
+
 }
 
 

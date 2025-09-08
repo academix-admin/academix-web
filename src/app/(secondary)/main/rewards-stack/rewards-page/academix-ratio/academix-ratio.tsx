@@ -97,7 +97,7 @@ export default function AcademixRatio({ onStateChange }: ComponentStateProps) {
       </div>
 
       <svg
-        className={styles.academixRatioArrow}
+        className={`${styles.academixRatioArrow} ${styles[`academixRatioArrow_${theme}`]}`}
         xmlns="http://www.w3.org/2000/svg"
         width="9"
         height="15"
@@ -108,7 +108,7 @@ export default function AcademixRatio({ onStateChange }: ComponentStateProps) {
           fillRule="evenodd"
           clipRule="evenodd"
           d="M8.21663 6.07858C8.49753 6.35983 8.65531 6.74108 8.65531 7.13858C8.65531 7.53608 8.49753 7.91733 8.21663 8.19858L2.56063 13.8566C2.27923 14.1378 1.89763 14.2958 1.49977 14.2957C1.10192 14.2956 0.72039 14.1375 0.439127 13.8561C0.157865 13.5747 -9.37265e-05 13.1931 4.17234e-08 12.7952C9.38099e-05 12.3974 0.158233 12.0158 0.439627 11.7346L5.03563 7.13858L0.439627 2.54258C0.166254 2.25981 0.0148813 1.88098 0.0181122 1.48768C0.0213432 1.09438 0.178919 0.718084 0.456901 0.43984C0.734883 0.161595 1.11103 0.00366479 1.50432 6.29798e-05C1.89762 -0.00353884 2.2766 0.147477 2.55963 0.420583L8.21763 6.07758L8.21663 6.07858Z"
-          fill="black"
+          fill="currentColor"
         />
       </svg>
     </div>
