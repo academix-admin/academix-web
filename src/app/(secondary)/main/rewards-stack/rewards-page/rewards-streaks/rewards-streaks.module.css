@@ -84,8 +84,7 @@
   max-height: 0;
   overflow: hidden;
   transition: max-height 0.3s ease;
-    padding-top: 16px;
-    padding-bottom: 16px;
+
 }
 
 .rewardsContainer.open {
@@ -170,14 +169,20 @@
 
 .missedReward {
   background-color: rgba(255, 0, 0, 0.3);
+      padding-top: 16px;
+      padding-bottom: 16px;
 }
 
 .futureReward {
   background-color: rgba(0, 0, 0, 0.3);
+      padding-top: 16px;
+      padding-bottom: 16px;
 }
 
 .claimedReward {
   background-color: rgba(255, 165, 0, 0.3);
+      padding-top: 16px;
+      padding-bottom: 16px;
 }
 
 .rewardContent {
