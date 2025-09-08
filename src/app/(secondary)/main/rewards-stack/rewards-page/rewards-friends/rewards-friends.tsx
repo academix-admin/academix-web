@@ -297,7 +297,6 @@ export default function RewardsFriends({ onStateChange }: ComponentStateProps) {
         ))}
       </div>
 
-      {friendsLoading && <div className={styles.moreSpinnerContainer}><span className={styles.moreSpinner}></span></div>}
       {!friendsLoading && friendsModel.length === 0 && <div className={`${styles.rewardInfo} ${styles[`rewardInfo_${theme}`]}`}>
                                                          {t('referral_reward_info_username', {
                                                            amount: '500',
@@ -317,6 +316,8 @@ export default function RewardsFriends({ onStateChange }: ComponentStateProps) {
                                                          </div>
                                                        </div>}
       {friendsModel.length > 0 && <div ref={loaderRef} className={styles.loadMoreSentinel}></div>}
+            {friendsLoading && <div className={styles.moreSpinnerContainer}><span className={styles.moreSpinner}></span></div>}
+
     </div>
   );
 }
