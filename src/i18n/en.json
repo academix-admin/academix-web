@@ -193,5 +193,6 @@
   "friends_text": "Friends",
   "active_text": "ACTIVE",
   "completed_text": "COMPLETED",
-  "failed_text": "FAILED"
+  "failed_text": "FAILED",
+  "today_text": "Today"
 }

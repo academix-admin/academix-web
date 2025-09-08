@@ -193,5 +193,6 @@
   "friends_text": "Amis",
   "active_text": "ACTIF",
   "completed_text": "TERMINÉ",
-  "failed_text": "ÉCHOUÉ"
+  "failed_text": "ÉCHOUÉ",
+  "today_text": "Aujourd'hui"
 }

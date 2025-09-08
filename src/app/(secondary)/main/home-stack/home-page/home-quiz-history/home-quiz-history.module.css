@@ -17,7 +17,16 @@
 }
 
 .historyTitlePinned{
+  width: 100%;
+  text-align: center;
+  background-color: red;
+  position: fixed;
+  top: 0px;
+  left: 0px;
+}
 
+.historyTitleHidden{
+  display: none;
 }
 
 .historyList {

@@ -223,6 +223,9 @@ export default function HomeQuizHistory({ onStateChange }: ComponentStateProps) 
   if(!firstLoaded && quizHistoryData.length <= 0)return null;
   return (
     <div className={styles.historyContainer}>
+      <h2 className={`${stuck ? styles.historyTitlePinned : styles.historyTitleHidden}`}>
+         {t('history_text')}
+      </h2>
       <h2 ref={pinnedRef} className={`${styles.historyTitle} ${styles[`historyTitle_${theme}`]}`}>
          {t('history_text')}
       </h2>

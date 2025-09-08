@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import Image from 'next/image';
@@ -10,6 +10,8 @@ import CachedLottie from '@/components/CachedLottie';
 import { getLastNameOrSingle, capitalize } from '@/utils/textUtils';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useNav } from "@/lib/NavigationStack";
+import PaymentTitle from './payment-title/payment-title'
+import { useComponentState, ComponentStateProps, getComponentStatus } from '@/hooks/use-component-state';
 
 
 // Define TypeScript interfaces for our data models
@@ -141,6 +143,23 @@ export default function PaymentPage() {
   const { theme } = useTheme();
   const { t } = useLanguage();
 
+    const { compState, handleStateChange, getComponentState, resetComponentState } = useComponentState();
+
+    const { loadedCount, errorCount, noneCount, loadingCount } = useMemo(
+      () => getComponentStatus(compState),
+      [compState]
+    );
+
+    // we have an error but not all loaded yet
+    const error = loadedCount < 5 && errorCount > 0;
+
+    // we can show loading
+    const loading = loadedCount < 5 && errorCount === 0 && loadingCount > 0;
+
+    // show ui
+    const show = !error && !loading;
+
+
   // State for data with dummy data
   const [userBalance, setUserBalance] = useState<UserBalanceModel | null>(null);
   const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
@@ -215,10 +234,9 @@ export default function PaymentPage() {
 
   return (
     <div className={styles.mainContainer}>
-      {/* Header Section */}
-      <div className={styles.headerSection}>
-        <h1>Today {getCurrentDate()}</h1>
-      </div>
+
+     <PaymentTitle onStateChange={(state) => handleStateChange('paymentTitle', state)}/>
+
 
       {/* Payment Details Section */}
       <div className={styles.paymentDetailsSection}>
