@@ -1,0 +1,195 @@
+/* milestone-view.module.css */
+.performanceContainer {
+    padding: 0 28px 0 28px;
+}
+
+.performanceTitle {
+  font-size: 18px;
+  font-weight: bold;
+  margin: 0;
+  margin-bottom: 12px;
+}
+
+.performanceTitle_light {
+  color: #000;
+}
+
+.performanceTitle_dark {
+  color: #fff;
+}
+
+.performanceSection {
+  margin-bottom: 20px;
+}
+
+.performanceGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.performanceItem {
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.performanceItem:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.performanceItem_light {
+  background: linear-gradient(90deg, #015c2a, #067a3c);
+}
+
+.performanceItem_dark {
+  background: linear-gradient(90deg, #015c2a, #067a3c);
+}
+
+.performanceContent {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.performanceValueContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex: 1;
+}
+
+.valueSection {
+  display: flex;
+  flex-direction: column;
+}
+
+.performanceValue {
+  font-size: 24px;
+  font-weight: bold;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.performanceValue_light,
+.performanceValue_dark {
+  color: #fff;
+}
+
+.performanceLabel {
+  font-size: 12px;
+  font-weight: 500;
+  opacity: 0.9;
+}
+
+.performanceLabel_light,
+.performanceLabel_dark {
+  color: #fff;
+}
+
+.rightSection {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.redeemBadge {
+  background-color: #F44336;
+  color: white;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.arrowContainer {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.arrowContainer svg {
+  color: white;
+}
+
+/* Responsive Styles */
+@media screen and (min-width: 801px) {
+  .performanceTitle {
+    font-size: 20px;
+  }
+
+  .performanceValue {
+    font-size: 26px;
+  }
+
+  .performanceLabel {
+    font-size: 13px;
+  }
+}
+
+@media screen and (max-width: 800px) {
+  .performanceContainer {
+    padding: 0 24px 0 24px;
+  }
+
+  .performanceGrid {
+    gap: 14px;
+  }
+
+  .performanceItem {
+    padding: 14px;
+  }
+
+  .performanceValue {
+    font-size: 22px;
+  }
+}
+
+@media screen and (max-width: 500px) {
+  .performanceContainer {
+    padding: 0 16px 0 16px;
+  }
+
+  .performanceTitle {
+    font-size: 16px;
+  }
+
+  .performanceGrid {
+    gap: 12px;
+  }
+
+  .performanceItem {
+    padding: 12px;
+  }
+
+  .performanceValue {
+    font-size: 20px;
+  }
+
+  .performanceLabel {
+    font-size: 11px;
+  }
+
+  .arrowContainer {
+    width: 28px;
+    height: 28px;
+  }
+
+  .redeemBadge {
+    width: 20px;
+    height: 20px;
+    font-size: 10px;
+  }
+}

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import styles from './page.module.css';
-import { GroupNavigationStack } from "@/lib/CompleteStackManagement";
+import { GroupNavigationStack } from "@/lib/NavigationStack";
 import NavigationBar from "@/lib/NavigationBar";
 import SideBar from "@/lib/SideBar";
 import { HomeStack } from './home-stack/home-stack';
@@ -67,7 +67,7 @@ useEffect(() => {
     },
     {
       id: 'rewards-stack',
-      text: t('rewards_text'),
+      text: t('reward_text'),
       svg: (
         <svg fill="none" height="1.30em" viewBox="0 0 22 22" width="1.30em" xmlns="http://www.w3.org/2000/svg">
             <path

@@ -2,8 +2,8 @@
 
 
 import styles from './payment-stack.module.css';
-import {useNav } from "@/lib/CompleteStackManagement";
-import NavigationStack from "@/lib/CompleteStackManagement";
+import {useNav } from "@/lib/NavigationStack";
+import NavigationStack from "@/lib/NavigationStack";
 import PaymentPage from "./payment-page/payment-page";
 
 const paymentStackNavLink = {

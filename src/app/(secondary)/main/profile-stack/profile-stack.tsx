@@ -1,8 +1,8 @@
 'use client';
 
 import styles from './profile-stack.module.css';
-import {useNav } from "@/lib/CompleteStackManagement";
-import NavigationStack from "@/lib/CompleteStackManagement";
+import {useNav } from "@/lib/NavigationStack";
+import NavigationStack from "@/lib/NavigationStack";
 import ProfilePage from "./profile-page/profile-page";
 
 const profileStackNavLink = {

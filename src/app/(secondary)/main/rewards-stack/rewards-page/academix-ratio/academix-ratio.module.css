@@ -1,0 +1,141 @@
+.academixRatioContainer {
+  padding: 0 28px;
+}
+
+/* Title */
+.academixRatioTitle {
+  font-weight: bold;
+  margin: 0;
+  margin-bottom: 12px;
+  font-size: 18px;
+}
+
+.academixRatioTitle_light {
+  color: #000;
+}
+
+.academixRatioTitle_dark {
+  color: #fff;
+}
+
+/* Section Layout */
+.academixRatioSection {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.academixRatioArrow {
+  flex-shrink: 0;
+  width: 9px;
+  height: 15px;
+}
+
+/* Value Pill */
+.academixRatioValueContainer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(90deg, #0a7f2e, #075c22);
+  border-radius: 20px;
+  padding: 4px 10px;
+  color: #fff;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+/* Flame Icon */
+.academixRatioIconWrapper {
+  display: flex;
+  align-items: flex-end;
+  margin-top: -8px; /* keeps flame slightly above */
+}
+
+.academixRatioIcon {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+}
+
+.academixRatioValue {
+  line-height: 1;
+}
+
+
+/* ---------- Responsive Breakpoints ---------- */
+
+/* Tablets and larger desktops */
+@media screen and (min-width: 801px) {
+  .academixRatioTitle {
+    font-size: 20px;
+  }
+
+  .academixRatioValueContainer {
+    font-size: 15px;
+    padding: 6px 12px;
+  }
+
+  .academixRatioIcon {
+    width: 24px;
+    height: 24px;
+  }
+
+  .academixRatioArrow {
+    width: 10px;
+    height: 16px;
+  }
+}
+
+/* Tablets / Small laptops */
+@media screen and (max-width: 800px) {
+  .academixRatioContainer {
+    padding: 0 24px;
+  }
+
+  .academixRatioTitle {
+    font-size: 18px;
+    margin-bottom: 10px;
+  }
+
+  .academixRatioValueContainer {
+    font-size: 13px;
+    padding: 5px 10px;
+  }
+
+  .academixRatioIcon {
+    width: 21px;
+    height: 21px;
+  }
+
+  .academixRatioArrow {
+    width: 9px;
+    height: 15px;
+  }
+}
+
+/* Mobile */
+@media screen and (max-width: 500px) {
+  .academixRatioContainer {
+    padding: 0 16px;
+  }
+
+  .academixRatioTitle {
+    font-size: 16px;
+    margin-bottom: 8px;
+  }
+
+  .academixRatioValueContainer {
+    font-size: 12px;
+    padding: 4px 8px;
+  }
+
+  .academixRatioIcon {
+    width: 18px;
+    height: 18px;
+  }
+
+  .academixRatioArrow {
+    width: 8px;
+    height: 13px;
+  }
+}

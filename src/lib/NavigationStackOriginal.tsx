@@ -76,9 +76,6 @@ export type NavStackAPI = {
   getFullPath: () => string;
   getNavLink: () => NavigationMap;
   isActiveStack: () => boolean;
-  isInGroup: () => boolean;
-  getGroupId: () => string | null;
-  goToGroupId: (groupId: string) => Promise<boolean>;
 };
 
 type NavigationMap = Record<string, ComponentType<any> | (() => LazyComponent)>;
@@ -114,56 +111,23 @@ const NAV_STACK_VERSION = '1';
 const STACK_SEPARATOR = 'x';
 
 // ==================== Global Systems ====================
-// Only create these on the client side
-let globalRegistry: Map<string, any>;
-let isServer = typeof window === 'undefined';
+const globalRegistry = new Map<string, {
+  stack: StackEntry[];
+  listeners: Set<StackChangeListener>;
+  guards: Set<GuardFn>;
+  middlewares: Set<MiddlewareFn>;
+  maxStackSize: number;
+  historySyncEnabled: boolean;
+  snapshotBuffer: StackEntry[];
+  parentId: string | null;
+  childIds: Set<string>;
+  navLink?: NavigationMap; // store navLink for each registry entry
+  api?: NavStackAPI;
+  currentPath?: string;
+}>();
 
-if (!isServer) {
-  globalRegistry = new Map<string, {
-    stack: StackEntry[];
-    listeners: Set<StackChangeListener>;
-    guards: Set<GuardFn>;
-    middlewares: Set<MiddlewareFn>;
-    maxStackSize: number;
-    historySyncEnabled: boolean;
-    snapshotBuffer: StackEntry[];
-    parentId: string | null;
-    childIds: Set<string>;
-    navLink?: NavigationMap;
-    api?: NavStackAPI;
-    currentPath?: string;
-    isInGroup?: boolean;
-    groupId?: string;
-  }>();
-} else {
-  // Server-side stub
-  globalRegistry = new Map();
-}
-
-// ==================== Group Context ====================
-type GroupNavigationContextType = {
-  getGroupId: () => string | null;
-  getCurrent: () => string;
-  goToGroupId: (groupId: string) => Promise<boolean>;
-  isActiveStack: (stackId: string) => boolean;
-};
-
-const GroupNavigationContext = createContext<GroupNavigationContextType | null>(null);
-const GroupStackIdContext = createContext<string | null>(null);
-
-function useGroupNavigation() {
-  const context = useContext(GroupNavigationContext);
-  return context;
-}
-
-function useGroupStackId() {
-  const context = useContext(GroupStackIdContext);
-  return context;
-}
-
-// ==================== Transition Manager ====================
 class TransitionManager {
-  private activeTransitions = new Map<string, any>();
+  private activeTransitions = new Map<string, any>(); // browser timers are numbers
   private completedTransitions = new Set<string>();
 
   start(uid: string, duration: number, onComplete: () => void) {
@@ -195,7 +159,6 @@ class TransitionManager {
   }
 }
 
-// ==================== Page Memory Manager ====================
 class PageMemoryManager {
   private cache = new Map<string, {
     element: ReactNode;
@@ -272,14 +235,12 @@ function generateStableUid(key: string, params?: NavParams): string {
   for (let i = 0; i < str.length; i++) {
     const char = str.charCodeAt(i);
     hash = ((hash << 5) - hash) + char;
-    hash = hash & hash;
+    hash = hash & hash; // Convert to 32bit integer
   }
   return `uid_${Math.abs(hash)}`;
 }
 
 function parseRawKey(raw: string, params?: NavParams) {
-  if (!raw) return { key: '', params };
-
   const [k, qs] = raw.split("?");
   let merged = params;
   if (qs) {
@@ -325,11 +286,16 @@ function writePersistedStack(id: string, stack: StackEntry[]) {
   } catch (e) {}
 }
 
+/**
+ * Encode a route key to a short code based on navLink ordering.
+ * If not found in navLink, return a safe fallback 'k:<encodedKey>' so we don't lose it.
+ */
 function encodeStackPath(navLink: NavigationMap, key: string): string {
   const keys = Object.keys(navLink);
   const index = keys.indexOf(key);
 
   if (index === -1) {
+    // Fallback to using the raw key in a safe form
     try {
       return 'k:' + encodeURIComponent(key);
     } catch {
@@ -344,6 +310,10 @@ function encodeStackPath(navLink: NavigationMap, key: string): string {
   return `${firstChar}${secondChar}1`;
 }
 
+/**
+ * Decode a code into the original key using navLink ordering.
+ * Also supports 'k:' fallback format.
+ */
 function decodeStackPath(navLink: NavigationMap, code: string): string | null {
   if (code.startsWith('k:')) {
     try {
@@ -380,6 +350,7 @@ function decodeStackPath(navLink: NavigationMap, code: string): string | null {
 function encodeParams(params: NavParams): string {
   if (!params) return '';
   try {
+    // keep it URL-safe and utf8-friendly via encodeURIComponent
     return 'p:' + btoa(encodeURIComponent(JSON.stringify(params)));
   } catch {
     return '';
@@ -399,6 +370,7 @@ function buildUrlPath(stacks: Array<{navLink: NavigationMap, stack: StackEntry[]
   let path = NAV_STACK_VERSION;
 
   stacks.forEach(({navLink, stack}, depth) => {
+    // Add separator for nested stacks
     if (depth > 0) path += '.' + STACK_SEPARATOR;
 
     stack.forEach(entry => {
@@ -407,6 +379,7 @@ function buildUrlPath(stacks: Array<{navLink: NavigationMap, stack: StackEntry[]
 
       path += '.' + code;
 
+      // Include params if they exist
       if (entry.params) {
         const paramsStr = encodeParams(entry.params);
         if (paramsStr) path += '.' + paramsStr;
@@ -429,9 +402,10 @@ function parseUrlPathIntoStacks(path: string) {
     if (!token) continue;
 
     if (token === STACK_SEPARATOR) {
-      if (currentStack.length > 0) {
+      if (currentStack.length > 0) {  // Only push non-empty stacks
         stacks.push(currentStack);
       } else {
+        // push empty to preserve depth mapping if user intentionally left an empty stack
         stacks.push([]);
       }
       currentStack = [];
@@ -439,19 +413,23 @@ function parseUrlPathIntoStacks(path: string) {
     }
 
     if (token.startsWith('p:')) {
+      // Handle params - attach to previous code if present
       if (currentStack.length > 0) {
         currentStack[currentStack.length - 1].params = decodeParams(token);
       }
       continue;
     }
 
+    // Normal code token
     currentStack.push({ code: token });
   }
 
+  // Push the last stack (could be empty)
   stacks.push(currentStack);
 
   return stacks;
 }
+
 
 function parseCombinedNavParam(navParam: string | null | undefined): Record<string, string> {
   const map: Record<string, string> = {};
@@ -466,9 +444,11 @@ function parseCombinedNavParam(navParam: string | null | undefined): Record<stri
       if (id) map[id] = path;
     });
   } catch (e) {
+    // ignore parsing errors, return empty map
   }
   return map;
 }
+
 
 function buildCombinedNavParam(map: Record<string, string>): string {
   return Object.keys(map)
@@ -477,13 +457,14 @@ function buildCombinedNavParam(map: Record<string, string>): string {
     .join('|');
 }
 
-function updateNavQueryParamForStack(stackId: string, path: string | null, groupContext: GroupNavigationContextType | null, groupStackId: string | null) {
+function updateNavQueryParamForStack(stackId: string, path: string | null) {
   if (typeof window === "undefined") return;
 
   try {
     const url = new URL(window.location.href);
     const current = url.searchParams.get('nav');
     const map = parseCombinedNavParam(current || undefined);
+
 
     if (path && path.length > 0) {
       map[stackId] = path;
@@ -492,44 +473,44 @@ function updateNavQueryParamForStack(stackId: string, path: string | null, group
     }
 
     const newParam = buildCombinedNavParam(map);
-
     if (newParam) {
-      if(groupContext)url.searchParams.set('group', groupStackId || '');
       url.searchParams.set('nav', newParam);
     } else {
-      if(groupContext)url.searchParams.delete('group');
       url.searchParams.delete('nav');
     }
 
     const newHref = url.toString();
     if (window.location.href !== newHref) {
-      if(groupContext)window.history.replaceState({ group: groupStackId }, "", newHref);
       window.history.replaceState({ navStack: newParam }, "", newHref);
     }
   } catch (e) {
+    // ignore
   }
 }
-function removeNavQueryParamForStack(stackId: string, groupContext: GroupNavigationContextType | null, groupStackId: string | null) {
+
+function setNavQueryParamIfDifferent(fullPath: string) {
   if (typeof window === "undefined") return;
 
   try {
-    const url = new URL(window.location.href);
+    const newUrl = new URL(window.location.href);
+    if (fullPath) {
+      newUrl.searchParams.set('nav', fullPath);
+    } else {
+      newUrl.searchParams.delete('nav');
+    }
 
-    if(groupContext)url.searchParams.delete('group');
-    url.searchParams.delete('nav');
-
-
-    const newHref = url.toString();
+    const newHref = newUrl.toString();
     if (window.location.href !== newHref) {
-      if(groupContext)window.history.replaceState({ group: null }, "", newHref);
-      window.history.replaceState({ navStack: null }, "", newHref);
+      window.history.replaceState({ navStack: fullPath }, "", newHref);
     }
   } catch (e) {
+    // ignore
   }
 }
 
+function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, parentApi: NavStackAPI | null, currentPath: string): NavStackAPI {
 
-function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, parentApi: NavStackAPI | null, currentPath: string, groupContext: GroupNavigationContextType | null = null, groupStackId : string | null): NavStackAPI {
+
   const transitionManager = new TransitionManager();
   const memoryManager = new PageMemoryManager();
 
@@ -556,6 +537,7 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
       }
     }
   } else {
+    // update navLink & parent if api recreated (HMR)
     safeRegEntry.navLink = navLink;
     safeRegEntry.parentId = parentApi?.id || null;
   }
@@ -563,44 +545,48 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
 
   function emit() {
     const stackCopy = regEntry!.stack.slice();
-    const regEntryCurrentPath = regEntry.currentPath || (typeof window !== 'undefined' ? window.location.pathname : '');
+  const regEntryCurrentPath = regEntry.currentPath || (typeof window !== 'undefined' ? window.location.pathname : '');
 
-    if ((syncHistory || regEntry.historySyncEnabled) && regEntryCurrentPath) {
-      if (typeof window !== 'undefined' && window.location.pathname !== regEntryCurrentPath) {
-        console.warn(`NavigationStack ${id}: Path changed from ${regEntryCurrentPath} to ${window.location.pathname}, disabling URL updates`);
-        regEntry.listeners.forEach((l: StackChangeListener) => {
-          try { l(stackCopy); } catch (e) { console.warn(e); }
-        });
-        return;
-      }
+  if ((syncHistory || regEntry.historySyncEnabled) && regEntryCurrentPath) {
+    if (typeof window !== 'undefined' && window.location.pathname !== regEntryCurrentPath) {
+      console.warn(`NavigationStack ${id}: Path changed from ${regEntryCurrentPath} to ${window.location.pathname}, disabling URL updates`);
+      regEntry.listeners.forEach((l) => {
+        try { l(stackCopy); } catch (e) { console.warn(e); }
+      });
+      return;
     }
+  }
 
-    if (syncHistory || regEntry.historySyncEnabled) {
+    // Build the path for this stack alone and update only this stack's segment in the combined param
+    try {
+      // Build local path for this stack (versioned)
+      const localPath = buildUrlPath([{ navLink, stack: stackCopy }]);
+      if (syncHistory || regEntry.historySyncEnabled) {
+        updateNavQueryParamForStack(id, localPath);
+      }
+    } catch (e) {
+      // fallback - try to set a simple encoding (non-versioned)
       try {
-        const localPath = buildUrlPath([{ navLink, stack: stackCopy }]);
-        updateNavQueryParamForStack(id, localPath, groupContext, groupStackId);
-      } catch (e) {
-        try {
+        if (syncHistory || regEntry.historySyncEnabled) {
           const fallback = buildUrlPath([{ navLink, stack: stackCopy }]);
-          updateNavQueryParamForStack(id, fallback, groupContext, groupStackId);
-        } catch {}
-      }
+          updateNavQueryParamForStack(id, fallback);
+        }
+      } catch {}
     }
 
-    regEntry.listeners.forEach((l: StackChangeListener) => {
+    regEntry.listeners.forEach((l) => {
       try { l(stackCopy); } catch (e) { console.warn(e); }
     });
   }
 
   function runMiddlewares(action: Parameters<MiddlewareFn>[0]) {
-    regEntry.middlewares.forEach((m: MiddlewareFn) => {
+    regEntry.middlewares.forEach((m) => {
       try { m(action); } catch (e) { console.warn("Nav middleware threw:", e); }
     });
   }
 
   async function runGuards(action: Parameters<GuardFn>[0]): Promise<boolean> {
-   const guards = Array.from(regEntry.guards) as GuardFn[];
-    for (const g of guards) {
+    for (const g of Array.from(regEntry.guards)) {
       try {
         const res = await Promise.resolve(g(action));
         if (!res) return false;
@@ -843,12 +829,14 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
 
     syncWithBrowserHistory(enabled) {
       regEntry.historySyncEnabled = enabled;
-      if (enabled ) {
+      if (enabled) {
         try {
+          // set this stack's segment into the combined nav param
           const localPath = buildUrlPath([{ navLink, stack: regEntry.stack }]);
-          updateNavQueryParamForStack(id, localPath, groupContext, groupStackId);
+          updateNavQueryParamForStack(id, localPath);
         } catch {
-          updateNavQueryParamForStack(id, buildUrlPath([{ navLink, stack: regEntry.stack }]), groupContext, groupStackId);
+          // fallback
+          updateNavQueryParamForStack(id, buildUrlPath([{ navLink, stack: regEntry.stack }]));
         }
       }
     },
@@ -877,17 +865,21 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
       let currentId: string | null = id;
       let currentNavLink = navLink;
 
+      // Walk up the parent chain and collect stacks that have historySyncEnabled.
+      // We unshift so the root-most stack appears first in the path.
       while (currentId) {
         const reg = globalRegistry.get(currentId);
         if (!reg) break;
 
         if (reg.historySyncEnabled) {
+          // Use the navLink associated with that registry entry; if missing, fall back to currentNavLink
           allStacks.unshift({ navLink: reg.navLink || currentNavLink, stack: reg.stack });
         }
 
         currentId = reg.parentId;
       }
 
+      // If nothing enabled (edge-case), at least include this stack
       if (allStacks.length === 0) {
         allStacks.push({ navLink: navLink, stack: regEntry.stack });
       }
@@ -900,34 +892,18 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
     },
 
     isActiveStack() {
+      // The stack is active if it's the deepest one with history sync enabled
       if (!regEntry.historySyncEnabled) return false;
 
-      const childIds = Array.from(regEntry.childIds || []) as string[];
+      // Safely iterate through childIds (convert to array if needed)
+      const childIds = Array.from(regEntry.childIds || []);
       for (const childId of childIds) {
-        const childReg = globalRegistry.get(childId as string);
+        const childReg = globalRegistry.get(childId);
         if (childReg?.historySyncEnabled) return false;
       }
 
       return true;
     },
-
-    isInGroup() {
-      return groupContext !== null;
-    },
-
-    getGroupId() {
-      return groupContext ? groupContext.getGroupId() : null;
-    },
-
-    async goToGroupId(groupId: string) {
-      if (!groupContext) {
-        console.warn(`goToGroupId called on non-group stack ${id}`);
-        return false;
-      }
-
-      return groupContext.goToGroupId(groupId);
-    },
-
 
     dispose() {
       transitionManager.dispose();
@@ -936,14 +912,18 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
       regEntry.guards.clear();
       regEntry.middlewares.clear();
 
+
+
       try {
             if (typeof window !== "undefined") {
+              // Clear from sessionStorage
               sessionStorage.removeItem(storageKeyFor(id));
             }
       } catch (e) {
             console.warn(`Failed to clear persisted storage for stack ${id}:`, e);
       }
 
+      // Clean up parent reference
       if (regEntry.parentId) {
         const parentReg = globalRegistry.get(regEntry.parentId);
         if (parentReg) {
@@ -951,15 +931,17 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
         }
       }
 
-      regEntry.childIds?.forEach((childId : string) => {
-        const childReg = globalRegistry.get(childId as string);
+      // Clean up child references
+      regEntry.childIds?.forEach(childId => {
+        const childReg = globalRegistry.get(childId);
         if (childReg) {
           childReg.parentId = null;
         }
       });
 
+      // Remove this stack's segment from URL if present
       try {
-        updateNavQueryParamForStack(id, null, groupContext, groupStackId);
+        updateNavQueryParamForStack(id, null);
       } catch {}
 
       globalRegistry.delete(id);
@@ -969,6 +951,7 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
         if (typeof window === "undefined") return;
 
         try {
+          // Clear all navstack-related items from storage
           for (let i = 0; i < sessionStorage.length; i++) {
             const key = sessionStorage.key(i);
             if (key && key.startsWith('navstack:')) {
@@ -979,8 +962,12 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
           console.warn('Failed to clear all persisted stacks:', e);
         }
       }
+
   };
 
+
+
+  // attach api into registry for other code to inspect navLink etc.
   regEntry.api = api;
 
   return api;
@@ -1069,6 +1056,7 @@ function SlideTransitionRenderer({
       setStage("init");
       const frame = requestAnimationFrame(() => {
         setStage("active");
+        // Remove active class after transition duration
         setTimeout(() => setStage("done"), DEFAULT_TRANSITION_DURATION);
       });
       return () => cancelAnimationFrame(frame);
@@ -1111,6 +1099,7 @@ function FadeTransitionRenderer({
   useEffect(() => {
     if (state === "enter") {
       setStage("active");
+      // Remove active class after transition duration
       setTimeout(() => setStage("done"), DEFAULT_TRANSITION_DURATION);
     }
   }, [state]);
@@ -1137,180 +1126,6 @@ export function useNav() {
   return context;
 }
 
-// ==================== Group Navigation Stack ====================
-type GroupNavigationStackProps = {
-  id: string;
-  navStack: Map<string, React.ReactElement>;
-  current: string;
-  onCurrentChange?: (id: string) => void;
-  persist?: boolean;
-  preloadAll?: boolean;
-  defaultStack?: string;
-};
-
-const GROUP_STATE_STORAGE_KEY = 'navstack-group-state';
-
-function readGroupState(groupId: string): { activeStack: string;} | null {
-  try {
-    if (typeof window === "undefined") return null;
-    const raw = sessionStorage.getItem(`${GROUP_STATE_STORAGE_KEY}:${groupId}`);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    return parsed;
-  } catch (e) {
-    return null;
-  }
-}
-
-function writeGroupState(groupId: string, activeStack: string) {
-  try {
-    if (typeof window === "undefined") return;
-    const state = { activeStack, timestamp: Date.now() };
-    sessionStorage.setItem(`${GROUP_STATE_STORAGE_KEY}:${groupId}`, JSON.stringify(state));
-  } catch (e) {}
-}
-
-function clearGroupState(groupId: string) {
-  try {
-    if (typeof window === "undefined") return;
-    sessionStorage.removeItem(`${GROUP_STATE_STORAGE_KEY}:${groupId}`);
-  } catch (e) {}
-}
-
-export function GroupNavigationStack({
-  id,
-  navStack,
-  current,
-  onCurrentChange,
-  persist = false,
-  preloadAll = false,
-  defaultStack
-}: GroupNavigationStackProps) {
-
-
-  // Get initial active stack from URL or fallback to current prop
-  const getInitialActiveStackId = (): string => {
-    if (typeof window === 'undefined') return current;
-
-    try {
-      const urlParams = new URLSearchParams(window.location.search);
-      const urlGroup = urlParams.get('group');
-      return (urlGroup && navStack.has(urlGroup)) ? urlGroup : current;
-    } catch (e) {
-      console.warn('Failed to parse URL for group navigation:', e);
-      return current;
-    }
-  };
-
-  const [activeStackId, setActiveStackId] = useState<string>(getInitialActiveStackId);
-  const [hydrated, setHydrated] = useState(false);
-  useEffect(() => {
-      onCurrentChange?.(getInitialActiveStackId());
-      setHydrated(true);}, []);
-
-  // Sync activeStackId with current prop when it changes from external
-  useEffect(() => {
-    if(current === activeStackId || !hydrated)return;
-    restUrl();
-    setActiveStackId(current);
-  }, [current]);
-
-  const restUrl = () => {
-      const url = new URL(window.location.href);
-      url.searchParams.delete('group');
-      url.searchParams.delete('nav');
-      const newHref = url.toString();
-      if (window.location.href !== newHref) {
-            window.history.replaceState({ group: null }, "", newHref);
-            window.history.replaceState({ navStack: null }, "", newHref);
-      }
-  }
-
-  // Group context implementation
-  const groupContext: GroupNavigationContextType = useMemo(() => ({
-    getGroupId: () => id,
-
-    getCurrent: () => activeStackId,
-
-    goToGroupId: async (groupId: string) => {
-      if (navStack.has(groupId)) {
-        restUrl();
-        setActiveStackId(groupId);
-        onCurrentChange?.(groupId);
-        return true;
-      }
-      return false;
-    },
-
-
-
-    isActiveStack: (stackId: string) => {
-      return stackId === activeStackId;
-    }
-  }), [id, activeStackId, navStack, persist]);
-
-  // Load group state from storage on mount
-  useEffect(() => {
-    if (persist && typeof window !== 'undefined') {
-      const savedState = readGroupState(id);
-      if (savedState) {
-        // If we have a saved active stack and it's different from current activeStackId, update it
-        if (savedState.activeStack && savedState.activeStack !== activeStackId && navStack.has(savedState.activeStack)) {
-           restUrl();
-           setActiveStackId(savedState.activeStack);
-           onCurrentChange?.(savedState.activeStack);
-        }
-      }
-    }
-  }, [id, persist, navStack]);
-
-  // Save group state to storage when it changes
-  useEffect(() => {
-    if (persist && typeof window !== 'undefined') {
-      writeGroupState(id, activeStackId);
-    }
-  }, [id, activeStackId, persist]);
-
-
-  // Handle back/forward browser buttons
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const handler = (e: PopStateEvent) => {
-      if (e.state && e.state.group && navStack.has(e.state.group)) {
-        restUrl();
-        setActiveStackId(e.state.group);
-        onCurrentChange?.(e.state.group);
-      }
-    };
-    window.addEventListener("popstate", handler);
-    return () => window.removeEventListener("popstate", handler);
-  }, [navStack]);
-
-  return (
-    <GroupNavigationContext.Provider value={groupContext}>
-      <div className="group-navigation-stack">
-        {Array.from(navStack.entries()).map(([stackId, stackEl]) => {
-          const isActive = hydrated && stackId === activeStackId;
-
-          return (
-            <div
-              key={stackId}
-              style={{ display: isActive ? "block" : "none" }}
-              aria-hidden={!isActive}
-            >
-              <GroupStackIdContext.Provider value={stackId}>
-                {stackEl}
-              </GroupStackIdContext.Provider>
-            </div>
-          );
-        })}
-      </div>
-    </GroupNavigationContext.Provider>
-  );
-}
-
-// ==================== Main NavigationStack Component ====================
 export default function NavigationStack(props: {
   id: string;
   navLink: NavigationMap;
@@ -1343,13 +1158,11 @@ export default function NavigationStack(props: {
     syncHistory = false,
     lazyComponents,
     missingRouteConfig,
-    persist = false,
+    persist = false
   } = props;
 
   // Auto-detect parent navigation context
   const parentApi = findParentNavContext();
-  const groupContext = useGroupNavigation();
-  const groupStackId = useGroupStackId();
 
   const [isInitialized, setInitialized] = useState(false);
   const [stackSnapshot, setStackSnapshot] = useState<StackEntry[]>([]);
@@ -1363,8 +1176,9 @@ export default function NavigationStack(props: {
     }, []);
 
   const api = useMemo(() => {
-    const newApi = createApiFor(id, navLink, syncHistory || false, parentApi, currentPath, groupContext, groupStackId);
+    const newApi = createApiFor(id, navLink, syncHistory || false, parentApi, currentPath);
 
+    // Auto-register as child if we have a parent
     if (parentApi) {
       const parentReg = globalRegistry.get(parentApi.id);
       if (parentReg) {
@@ -1373,16 +1187,18 @@ export default function NavigationStack(props: {
     }
 
     return newApi;
-  }, [id, navLink, syncHistory, parentApi, currentPath, groupContext]);
+  }, [id, navLink, syncHistory, parentApi, currentPath]);
 
   // Update the registry with the current path
     useEffect(() => {
       const regEntry = globalRegistry.get(id);
       if (regEntry) {
+        // Store the current path in the registry so emit() can access it
         regEntry.currentPath = currentPath;
       }
     }, [id, currentPath]);
 
+  // In NavigationStack component
   useIsomorphicLayoutEffect(() => {
     let regEntry = globalRegistry.get(id);
     if (!regEntry) {
@@ -1400,25 +1216,29 @@ export default function NavigationStack(props: {
       };
       globalRegistry.set(id, regEntry);
     } else {
+      // ensure navLink is available
       regEntry.navLink = navLink;
       regEntry.parentId = parentApi?.id || null;
     }
 
-
-    // First priority: Parse from URL
+    // Parse from URL (tokenize only, resolution of tokens -> keys happens per-stack)
     if (typeof window !== 'undefined') {
       const searchParams = new URLSearchParams(window.location.search);
       const navPathCombined = searchParams.get('nav');
 
       if (navPathCombined) {
+        // parse map and pick our own segment
         const map = parseCombinedNavParam(navPathCombined);
         const ourPath = map[id];
         if (ourPath) {
           const tokenizedStacks = parseUrlPathIntoStacks(ourPath);
 
+          // For backward compatibility we used to rely on depth; now each stack has its own segment
+          // We'll take the first (and only) parsed stacks array for this stack
           const ourTokens = tokenizedStacks[0] || [];
 
           if (ourTokens.length > 0) {
+            // Resolve codes into keys using our navLink (we only know our navLink here)
             regEntry.stack = ourTokens.map(t => {
               const resolvedKey = decodeStackPath(navLink, t.code) || (t.code.startsWith('k:') ? (() => {
                 try { return decodeURIComponent(t.code.slice(2)); } catch { return t.code.slice(2); }
@@ -1430,6 +1250,7 @@ export default function NavigationStack(props: {
               } as StackEntry;
             });
             setStackSnapshot([...regEntry.stack]);
+            if (syncHistory) api.syncWithBrowserHistory(true);
             setInitialized(true);
             return;
           }
@@ -1437,18 +1258,19 @@ export default function NavigationStack(props: {
       }
     }
 
-    // Second priority: Fall back to persisted storage
-    if (persist ) {
+    // Fall back to persisted storage
+    if (persist) {
       const persisted = readPersistedStack(id);
       if (persisted && persisted.length > 0) {
         regEntry.stack = persisted;
         setStackSnapshot([...persisted]);
+        if (syncHistory) api.syncWithBrowserHistory(true);
         setInitialized(true);
         return;
       }
     }
 
-    // Final fallback: Use initial entry
+    // Fall back to initial entry
     const { key, params } = parseRawKey(entry);
     if (!navLink[key]) {
       console.error(`Entry route "${key}" not found in navLink`);
@@ -1460,44 +1282,35 @@ export default function NavigationStack(props: {
       params
     }];
     setStackSnapshot([...regEntry.stack]);
-    if (persist ) writePersistedStack(id, regEntry.stack);
+    if (persist) writePersistedStack(id, regEntry.stack);
+    if (syncHistory) api.syncWithBrowserHistory(true);
     setInitialized(true);
-  }, [id, entry, navLink, groupContext]);
-
-
-  useEffect(() => {
-      const currentRegEntry = globalRegistry.get(id);
-      if (!currentRegEntry || !groupContext || !groupStackId) return;
-      const active = groupContext.isActiveStack(groupStackId);
-      if((syncHistory || currentRegEntry.historySyncEnabled) && active){
-          const localPath = buildUrlPath([{ navLink, stack: currentRegEntry.stack }]);
-          updateNavQueryParamForStack(id, localPath, groupContext, groupStackId);
-      }else if(!(syncHistory || currentRegEntry.historySyncEnabled)){
-           removeNavQueryParamForStack(id, groupContext, groupStackId)
-      }
-  }, [id, navLink, syncHistory, groupContext?.getCurrent]);
+  }, [id, entry, navLink]);
 
   useEffect(() => {
     const unsub = api.subscribe((stack) => {
       setStackSnapshot(stack);
-      if (persist ) writePersistedStack(id, stack);
+      if (persist) writePersistedStack(id, stack);
     });
     return unsub;
-  }, [api, persist, id, groupContext]);
+  }, [api, persist, id]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
 
     const handlePopState = (event: PopStateEvent) => {
+      // Get the current registry entry
       const currentRegEntry = globalRegistry.get(id);
       if (!currentRegEntry) return;
 
+      // Only handle if this is the active stack
       if (!api.isActiveStack()) return;
 
       const searchParams = new URLSearchParams(window.location.search);
       const navPathCombined = searchParams.get('nav');
       if (!navPathCombined) return;
 
+      // parse combined and read our segment
       const map = parseCombinedNavParam(navPathCombined);
       const ourPath = map[id];
       if (!ourPath) return;
@@ -1519,26 +1332,29 @@ export default function NavigationStack(props: {
       if (!isEqual(currentRegEntry.stack, newStack)) {
         currentRegEntry.stack = newStack;
         setStackSnapshot([...newStack]);
-        if (persist ) writePersistedStack(id, newStack);
+        if (persist) writePersistedStack(id, newStack);
       }
     };
 
-    if (syncHistory ) {
+    if (syncHistory) {
       window.addEventListener('popstate', handlePopState);
     }
 
     return () => {
-      if (syncHistory ) {
+      if (syncHistory) {
         window.removeEventListener('popstate', handlePopState);
       }
-      if (autoDispose && !groupContext) api.dispose();
+      if (autoDispose) api.dispose();
     };
-  }, [id, navLink, syncHistory, autoDispose, api, persist, groupContext]);
+  }, [id, navLink, syncHistory, autoDispose, api, persist]);
 
   const lastLen = useRef(stackSnapshot.length);
 
+
+  // Replace the current stack length effect with this:
   useEffect(() => {
     const handleStackEmpty = () => {
+      // 1. Try onExit first
       if (onExitStack) {
         try {
           onExitStack();
@@ -1548,8 +1364,10 @@ export default function NavigationStack(props: {
         }
       }
 
+      // 2. Bubble to parent
       if (parentApi) {
         parentApi.pop().catch(() => {
+          // If parent pop fails, try history back
           if (typeof window !== "undefined" && window.history.length > 0) {
             window.history.back();
           }
@@ -1557,6 +1375,7 @@ export default function NavigationStack(props: {
         return;
       }
 
+      // 3. Final fallback
       if (typeof window !== "undefined" && window.history.length > 0) {
         window.history.back();
       }
@@ -1565,7 +1384,7 @@ export default function NavigationStack(props: {
     const unsub = api.subscribe((stack) => {
       setStackSnapshot(stack);
       if (lastLen.current > 0 && stack.length === 0) {
-        if(!groupContext)handleStackEmpty();
+        handleStackEmpty();
       }
       lastLen.current = stack.length;
     });
@@ -1748,7 +1567,7 @@ export default function NavigationStack(props: {
 if (typeof module !== 'undefined' && (module as any).hot) {
   (module as any).hot.dispose(() => {
     globalRegistry.forEach((_, id) => {
-      const api = createApiFor(id, {}, false, null,'', null, null);
+      const api = createApiFor(id, {}, false, null,'');
       api.dispose();
     });
   });

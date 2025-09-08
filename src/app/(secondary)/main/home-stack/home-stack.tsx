@@ -1,8 +1,8 @@
 'use client';
 
 import styles from './home-stack.module.css';
-import {useNav } from "@/lib/CompleteStackManagement";
-import NavigationStack from "@/lib/CompleteStackManagement";
+import {useNav } from "@/lib/NavigationStack";
+import NavigationStack from "@/lib/NavigationStack";
 import HomePage from "./home-page/home-page";
 
 

@@ -53,9 +53,11 @@ export default function HomePage() {
       {show && (<HomeQuizHistory onStateChange={(state) => handleStateChange('homeQuizHistory', state)}/>)}
 
 
+     <div>
       {error && (<ErrorView text="Error occurred." buttonText="Try Again" onButtonClick={()=> console.log('error')} />)}
-      {loading && (<LoadingView />)}
-      {none && (<LoadingView />)}
+           {loading && (<LoadingView />)}
+           {none && (<LoadingView />)}
+     </div>
 
     </div>
   );

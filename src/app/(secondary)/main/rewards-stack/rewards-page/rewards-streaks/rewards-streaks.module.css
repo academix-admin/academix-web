@@ -1,0 +1,299 @@
+/* rewards-streaks.module.css */
+.dailyStreaksContainer {
+  padding: 0 28px 0 28px;
+}
+
+.dailyStreaksSection {
+  background: linear-gradient(90deg, #015c2a, #067a3c);
+  border-radius: 16px;
+  padding: 0px;
+  color: white;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  overflow: hidden;
+}
+
+.dailyStreaksTitle {
+  font-size: 18px;
+  font-weight: bold;
+  margin: 0px;
+  margin-bottom: 12px;
+}
+
+.dailyStreaksTitle_light {
+  color: #000;
+}
+
+.dailyStreaksTitle_dark {
+  color: #fff;
+}
+
+
+
+
+/* Days Row */
+.daysRow {
+  display: flex;
+  justify-content: space-between;
+  position: relative;
+  background:  #0e5c33;
+}
+
+.dayItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 0 4px 0;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.dayItem:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.activeDay {
+  background-color: #0000003a;
+}
+
+.dayContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.dayName {
+  color: white;
+  font-weight: 600;
+  font-size: 12px;
+  margin-bottom: 4px;
+  text-align: center;
+}
+
+.dayCircle {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Rewards Container */
+.rewardsContainer {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.rewardsContainer.open {
+  max-height: 150px;
+}
+
+.rewardsNavigation {
+  display: flex;
+  align-items: center;
+  padding: 16px 16;
+}
+
+.navButton {
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+
+.navButton:hover {
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+.rewardView {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  padding: 0 8px;
+}
+
+/* Reward Views */
+.claimButton {
+  background-color: #ff8c00;
+  color: white;
+  border: none;
+  border-radius: 16px;
+  padding: 12px 24px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.claimButton:hover:not(:disabled) {
+  background-color: #e67e00;
+}
+
+.claimButton:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.loadingSpinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid transparent;
+  border-top: 2px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.missedReward,
+.futureReward,
+.claimedReward {
+  background-color: rgba(0, 0, 0, 0.3);
+  border-radius: 16px;
+  padding: 12px;
+  width: 100%;
+  text-align: center;
+  position: relative;
+}
+
+.missedReward {
+  background-color: rgba(255, 0, 0, 0.3);
+}
+
+.futureReward {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+.claimedReward {
+  background-color: rgba(255, 165, 0, 0.3);
+}
+
+.rewardContent {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.coinIcon {
+  font-size: 24px;
+}
+
+.rewardAmount {
+  font-size: 22px;
+  font-weight: bold;
+}
+
+.rewardCode {
+  font-size: 16px;
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.rewardExpiry {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.copyButton {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: transparent;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.copyButton:hover {
+  background-color: rgba(255, 255, 255, 0.5);
+}
+
+/* Toggle Button */
+.toggleButton {
+  width: 100%;
+  background-color: rgba(0, 0, 0, 0.2);
+  border: none;
+  color: white;
+  padding: 10px;
+  cursor: pointer;
+  border-radius: 0 0 16px 16px;
+  transition: background-color 0.2s;
+}
+
+.toggleButton:hover {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+/* Responsive Styles */
+@media screen and (min-width: 801px) {
+  .dailyStreaksTitle {
+    font-size: 20px;
+  }
+}
+
+@media screen and (max-width: 800px) {
+  .dailyStreaksContainer {
+    padding: 0 24px 0 24px;
+  }
+
+  .dailyStreaksSection {
+    padding: 0px;
+  }
+
+  .dayItem {
+    padding: 12px 0 4px 0;
+  }
+}
+
+@media screen and (max-width: 500px) {
+  .dailyStreaksContainer {
+    padding: 0 16px 0 16px;
+  }
+
+  .dailyStreaksTitle {
+    font-size: 16px;
+    margin-bottom: 10px;
+  }
+
+  .dailyStreaksSection {
+    padding: 0px;
+    border-radius: 12px;
+  }
+
+    .dayItem {
+      padding: 8px 0 4px 0;
+    }
+
+  .dayName {
+    font-size: 10px;
+  }
+
+  .dayCircle {
+    width: 20px;
+    height: 20px;
+  }
+
+  .rewardAmount {
+    font-size: 18px;
+  }
+
+  .rewardCode,
+  .rewardExpiry {
+    font-size: 14px;
+  }
+}
