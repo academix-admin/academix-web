@@ -145,9 +145,9 @@ export default function RewardsFriends({ onStateChange }: ComponentStateProps) {
     if (!userData || friendsModel.length > 0) return;
     setFriendsLoading(true);
     const friendHistories = await fetchFriendsModel(userData, 10, paginateModel);
+    setFriendsLoading(false);
     if (friendHistories.length > 0) {
       extractLatest(friendHistories);
-      setFriendsLoading(false);
       setFriendsModel(friendHistories);
     }
   };

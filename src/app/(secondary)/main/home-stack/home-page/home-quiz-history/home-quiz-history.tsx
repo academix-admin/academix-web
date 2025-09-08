@@ -150,9 +150,9 @@ export default function HomeQuizHistory({ onStateChange }: ComponentStateProps) 
     if (!userData || quizHistoryData.length > 0) return;
     setHistoryLoading(true);
     const quizHistories = await fetchQuizHistory(userData, 10, paginateModel);
+    setHistoryLoading(false);
     if (quizHistories.length > 0) {
       extractLatest(quizHistories);
-      setHistoryLoading(false);
       setQuizHistoryData(quizHistories);
     }
   };
