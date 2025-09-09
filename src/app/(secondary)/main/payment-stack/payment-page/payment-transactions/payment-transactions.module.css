@@ -1,0 +1,308 @@
+.historyContainer {
+  padding: 0 28px 0 28px;
+}
+
+.historyTitle {
+  font-size: 18px;
+  font-weight: bold;
+  margin: 0px;
+  margin-bottom: 20px;
+}
+
+.historyTitle_light {
+  color: #000;
+}
+
+.historyTitle_dark {
+  color: #fff;
+}
+
+.historyList {
+  display: flex;
+  flex-direction: column;
+}
+
+.historyItemContainer {
+  display: flex;
+  flex-direction: column;
+  padding: 0px 0;
+}
+
+.historyItemContainer.clickable {
+  cursor: pointer;
+}
+
+.historyItemContainer.clickable:hover {
+  background-color: rgba(0, 0, 0, 0.03);
+}
+
+.historyItemContainer.clickable:hover.historyItemContainer_dark {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.divider {
+  height: 1px;
+  width: 100%;
+  margin: 8px 0;
+}
+
+.divider_light {
+  background-color: #e0e0e0;
+}
+
+.divider_dark {
+  background-color: #333;
+}
+
+.historyLayout {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.historyItem {
+  width: 100%;
+}
+
+.historyMain {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.topicName {
+  font-weight: 500;
+  font-size: 16px;
+  line-height: 1.4;
+}
+
+.topicName_light {
+  color: #000;
+}
+
+.topicName_dark {
+  color: #fff;
+}
+
+.amountContainer {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.amount {
+  font-weight: 500;
+  font-size: 16px;
+}
+
+.statusCompleted {
+  color: #1C6B1E; /* Green for completed */
+}
+
+.statusFailed {
+  color: #DC362E; /* Red for failed */
+  font-style: italic;
+  text-decoration: line-through;
+}
+
+.statusPending {
+  color: #E9B949; /* Orange for pending */
+}
+
+.statusCancelled {
+  color: #9E9E9E; /* Grey for cancelled */
+}
+
+.statusUnknown {
+  color: #9E9E9E; /* Grey for unknown */
+}
+
+.historyContent {
+  display: flex;
+  justify-content: space-between;
+}
+
+.historyDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.historyDetail {
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.historyDetails_light {
+  color: #666;
+}
+
+.historyDetails_dark {
+  color: #ccc;
+}
+
+.historyTime {
+  font-size: 14px;
+  font-weight: 500;
+  margin-top: 4px;
+}
+
+.refreshContainer {
+  display: flex;
+  font-size: 14px;
+  align-items: center;
+  gap: 8px;
+  margin-top: 18px;
+  padding: 0 16px;
+}
+
+.refreshContainer_light {
+  color: #000;
+}
+
+.refreshContainer_dark {
+  color: #fff;
+}
+
+.refreshButton {
+  border: none;
+  font-weight: bold;
+  background-color: transparent;
+  cursor: pointer;
+}
+
+.refreshButton_light {
+  color: #000;
+}
+
+.refreshButton_dark {
+  color: #fff;
+}
+
+.loadMoreSentinel {
+  height: 40px;
+}
+
+.moreSpinnerContainer {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.moreSpinner {
+  border: 3px solid #1D3D1E;
+  border-top: 3px solid white;
+  border-radius: 50%;
+  width: 10px;
+  height: 10px;
+  animation: spin 1s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.transactionIcon {
+  margin-right: 12px;
+  margin-top: 2px;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.statusContainer {
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+
+.statusText {
+  font-size: 12px;
+  font-weight: 500;
+  font-style: normal;
+  text-decoration: none;
+}
+
+/* Adjust the currency icon size */
+.currencyIcon {
+  width: 16px;
+  height: 16px;
+}
+
+/* Tablet Responsive */
+@media screen and (max-width: 800px) {
+  .historyContainer {
+    padding: 0 24px 0 24px;
+  }
+
+  .historyTitle {
+    font-size: 17px;
+  }
+
+  .topicName {
+    font-size: 15px;
+  }
+
+  .amount {
+    font-size: 15px;
+  }
+
+  .historyDetail,
+  .historyTime {
+    font-size: 13px;
+  }
+
+  .refreshContainer {
+    font-size: 13px;
+    margin-top: 16px;
+    padding: 0 14px;
+  }
+
+  .currencyIcon {
+    width: 15px;
+    height: 15px;
+  }
+}
+
+/* Mobile Responsive */
+@media screen and (max-width: 500px) {
+  .historyContainer {
+    padding: 0 16px 0 16px;
+  }
+
+  .historyTitle {
+    font-size: 16px;
+  }
+
+  .topicName {
+    font-size: 14px;
+  }
+
+  .amount {
+    font-size: 14px;
+  }
+
+  .historyDetail,
+  .historyTime {
+    font-size: 12px;
+  }
+
+  .refreshContainer {
+    font-size: 12px;
+    margin-top: 14px;
+    padding: 0 12px;
+  }
+
+  .currencyIcon {
+    width: 14px;
+    height: 14px;
+  }
+
+  .transactionIcon {
+    margin-right: 8px;
+    width: 18px;
+    height: 18px;
+  }
+}

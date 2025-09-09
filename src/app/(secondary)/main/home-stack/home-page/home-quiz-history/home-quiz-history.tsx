@@ -294,7 +294,7 @@ export default function HomeQuizHistory({ onStateChange }: ComponentStateProps) 
       </div>
 
       { historyLoading && <div className={styles.moreSpinnerContainer}><span className={styles.moreSpinner}></span></div>}
-      { !historyLoading && quizHistoryData.length === 0 && <span className={`${styles.refreshContainer} ${styles[`refreshContainer_${theme}`]}`}>{t('history_empty')} <span role="button" onClick={refreshData} className={`${styles.refreshButton} ${styles[`refreshButton_${theme}`]}`}> Refresh </span></span>}
+      { !historyLoading && quizHistoryData.length === 0 && <span className={`${styles.refreshContainer} ${styles[`refreshContainer_${theme}`]}`}>{t('history_empty')} <span role="button" onClick={refreshData} className={`${styles.refreshButton} ${styles[`refreshButton_${theme}`]}`}> {t('refresh')} </span></span>}
       { quizHistoryData.length > 0 && <div ref={loaderRef} className={styles.loadMoreSentinel}></div>}
 
     </div>

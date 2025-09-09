@@ -11,6 +11,7 @@ import { UserData } from '@/models/user-data';
 import { useUserData } from '@/lib/stacks/user-stack';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
+import { StateStack } from '@/lib/state-stack';
 
 interface AuthContextType {
   initialized: boolean
@@ -61,6 +62,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               await replaceAndWait("/")
             } else if (newSession && publicRoutes.includes(pathname) && userData) {
               await replaceAndWait("/main")
+            }else if(!newSession && userData){
+              await StateStack.core.clearScope('secondary_flow');
             }
 
             setInitialized(true)

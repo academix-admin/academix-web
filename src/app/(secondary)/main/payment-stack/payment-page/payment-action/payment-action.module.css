@@ -1,0 +1,137 @@
+/* payment-action.module.css */
+.experienceContainer {
+  padding: 0 28px 0 28px;
+}
+
+.experienceTitle {
+  font-size: 18px;
+  font-weight: bold;
+  margin: 0px;
+  margin-bottom: 20px;
+}
+
+.experienceTitle_light {
+  color: #000;
+}
+
+.experienceTitle_dark {
+  color: #fff;
+}
+
+.actionsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.actionItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 8px;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+
+.actionIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  margin-bottom: 12px;
+}
+
+.actionIcon_light {
+  background-color: #e8f5e8;
+  color: #1C6B1E;
+}
+
+.actionIcon_dark {
+  background-color: #2d4a2f;
+  color: #fff;
+}
+
+.actionText {
+  font-size: 14px;
+  text-align: center;
+  font-weight: 500;
+}
+
+.actionText_light {
+  color: #333;
+}
+
+.actionText_dark {
+  color: #fff;
+}
+
+/* Responsive Styles */
+@media screen and (min-width: 801px) {
+  .experienceTitle {
+    font-size: 20px;
+  }
+
+  .actionsGrid {
+    justify-content: space-around;
+  }
+}
+
+@media screen and (max-width: 800px) {
+  .experienceContainer {
+    padding: 0 24px 0 24px;
+  }
+
+  .actionsGrid {
+    justify-content: space-around;
+    gap: 12px;
+  }
+
+  .actionItem {
+    padding: 14px 6px;
+  }
+
+  .actionIcon {
+    width: 44px;
+    height: 44px;
+  }
+
+  .actionText {
+    font-size: 13px;
+  }
+}
+
+@media screen and (max-width: 500px) {
+  .experienceContainer {
+    padding: 0 16px 0 16px;
+  }
+
+  .experienceTitle {
+    font-size: 16px;
+  }
+
+  .actionsGrid {
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .actionItem {
+    padding: 12px 4px;
+  }
+
+  .actionIcon {
+    width: 40px;
+    height: 40px;
+    margin-bottom: 8px;
+  }
+
+  .actionText {
+    font-size: 12px;
+  }
+}

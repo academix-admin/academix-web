@@ -1,0 +1,147 @@
+/* user-balance.module.css */
+.experienceContainer {
+    padding: 0 28px 0 28px;
+}
+
+.experienceTitle {
+  font-size: 18px;
+  font-weight: bold;
+  margin: 0px;
+  margin-bottom: 12px;
+}
+
+.experienceTitle_light {
+  color: #000;
+}
+
+.experienceTitle_dark {
+  color: #fff;
+}
+
+.paymentCard {
+  background: linear-gradient(90deg, #015c2a, #067a3c);
+  border-radius: 16px;
+  padding: 16px;
+  color: white;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.balanceLabel {
+  font-size: 12px;
+  font-weight: bold;
+  opacity: 0.9;
+}
+
+.eyeButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.balanceAmount {
+  display: flex;
+  align-items: center;
+  margin: 8px 0 16px;
+}
+
+.currencySymbol {
+  margin-right: 8px;
+  display: flex;
+  align-items: center;
+}
+
+.amount {
+  font-size: 24px;
+  font-weight: bold;
+  flex: 1;
+}
+
+.userInfo {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.nameSection {
+  flex: 1;
+}
+
+.nameLabel {
+  font-size: 9px;
+  opacity: 0.7;
+  font-weight: bold;
+  margin-bottom: 2px;
+  margin-top: 32px;
+}
+
+.userName {
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.institution {
+  font-size: 24px;
+  font-weight: bold;
+  font-family: 'Aclonica', sans-serif;
+}
+
+/* Responsive Styles */
+@media screen and (min-width: 801px) {
+  .experienceTitle {
+    font-size: 20px;
+  }
+}
+
+@media screen and (max-width: 800px) {
+  .experienceContainer {
+    padding: 0 24px 0 24px;
+  }
+
+  .paymentCard {
+    padding: 14px;
+  }
+
+  .nameLabel {
+    margin-top: 24px;
+  }
+}
+
+@media screen and (max-width: 500px) {
+  .experienceContainer {
+    padding: 0 16px 0 16px;
+  }
+
+  .experienceTitle {
+    font-size: 16px;
+  }
+
+  .paymentCard {
+    padding: 12px;
+    border-radius: 12px;
+  }
+
+  .amount {
+    font-size: 20px;
+  }
+
+  .nameLabel {
+    margin-top: 16px;
+  }
+
+  .institution {
+    font-size: 20px;
+  }
+}
