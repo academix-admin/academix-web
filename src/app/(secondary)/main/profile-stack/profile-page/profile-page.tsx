@@ -32,15 +32,27 @@ export default function ProfilePage() {
       );
 
 
+    // we have an error but not all loaded yet
+    const error = loadedCount < 4 && errorCount > 0;
 
+    // we can show loading
+    const loading = loadedCount < 4 && errorCount === 0 && loadingCount > 0;
+
+    // show ui
+    const show = !error && !loading;
 
   return (
     <div className={styles.mainContainer}>
 
-      <ProfileTitle onStateChange={(state) => handleStateChange('profileTitle', state)}/>
-      <ProfileOverview onStateChange={(state) => handleStateChange('profileOverview', state)}/>
-      <ProfileAccounts onStateChange={(state) => handleStateChange('profileAccounts', state)}/>
-      <ProfileContacts onStateChange={(state) => handleStateChange('profileContacts', state)}/>
+      {show && (<ProfileTitle onStateChange={(state) => handleStateChange('profileTitle', state)}/>)}
+      {show && (<ProfileOverview onStateChange={(state) => handleStateChange('profileOverview', state)}/>)}
+      {show && (<ProfileAccounts onStateChange={(state) => handleStateChange('profileAccounts', state)}/>)}
+      {show && (<ProfileContacts onStateChange={(state) => handleStateChange('profileContacts', state)}/>)}
+
+                 <div>
+                 {error && (<ErrorView text="Error occurred." buttonText="Try Again" onButtonClick={()=> console.log('error')} />)}
+                       {loading && (<LoadingView />)}
+                 </div>
 
     </div>
   );
