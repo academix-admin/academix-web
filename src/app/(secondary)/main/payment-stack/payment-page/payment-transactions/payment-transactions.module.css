@@ -154,7 +154,6 @@
   align-items: center;
   gap: 8px;
   margin-top: 18px;
-  padding: 0 16px;
 }
 
 .refreshContainer_light {
@@ -257,7 +256,6 @@
   .refreshContainer {
     font-size: 13px;
     margin-top: 16px;
-    padding: 0 14px;
   }
 
   .currencyIcon {

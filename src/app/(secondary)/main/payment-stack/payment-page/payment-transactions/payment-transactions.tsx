@@ -345,9 +345,9 @@ export default function PaymentTransactions({ onStateChange }: ComponentStatePro
         ))}
       </div>
 
-      {!transactionsLoading && transactionModels.length === 0 &&
+      {!transactionsLoading && transactionModels.length >= 0 &&
         <span className={`${styles.refreshContainer} ${styles[`refreshContainer_${theme}`]}`}>
-          {t('history_empty')}
+          {t('transaction_empty')}
           <span role="button" onClick={refreshData} className={`${styles.refreshButton} ${styles[`refreshButton_${theme}`]}`}>
             {t('refresh')}
           </span>

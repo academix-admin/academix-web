@@ -213,5 +213,19 @@
   "opay_text": "Opay",
   "academix_coin_text": "Academix Coin",
   "processing_text": "Processing",
-  "cancelled_text": "Cancelled"
+  "cancelled_text": "Cancelled",
+  "transaction_empty": "You do not have any transaction.",
+  "unknown_role_text": "Unknown Role",
+  "tier_text": "Tier {value}",
+  "overview_text": "Overview",
+  "creator_text": "Creator role",
+  "celebrity_text": "Celebrity role",
+  "accounts_text": "Accounts",
+  "edit_profile": "Edit profile",
+  "parental": "Parental",
+  "security": "Security",
+  "redeem_codes": "Redeem codes",
+  "help_text": "Help",
+  "about_us_text": "About us",
+  "contacts_text": "Contacts"
 }

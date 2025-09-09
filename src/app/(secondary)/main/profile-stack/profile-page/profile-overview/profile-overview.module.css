@@ -1,0 +1,239 @@
+/* profile-overview.module.css */
+.container {
+    padding: 0 20px;
+}
+
+.title {
+  font-size: 18px;
+  font-weight: bold;
+  margin: 0px;
+  margin-bottom: 12px;
+}
+
+.title_light {
+    color: #1a1a1a;
+}
+
+.title_dark {
+    color: #ffffff;
+}
+
+.card {
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+}
+
+.card_light, .card_dark {
+    /* Same styling for both themes as per image */
+}
+
+.topSection {
+    background: linear-gradient(90deg, #015c2a, #067a3c);
+    padding: 20px;
+    color: white;
+}
+
+.bottomSection {
+    background-color: #083017;
+    padding: 16px 20px;
+    color: white;
+}
+
+.profileInfo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.avatarContainer {
+    flex-shrink: 0;
+}
+
+.avatar,
+.initials {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.initials {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 20px;
+    background: rgba(255, 255, 255, 0.3);
+    color: #ffffff;
+}
+
+.userDetails {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.nameRow {
+    display: flex;
+    align-items: center;
+}
+
+.userName {
+    font-weight: 600;
+    font-size: 18px;
+    line-height: 1.2;
+}
+
+.usernameRow {
+    margin-bottom: 2px;
+}
+
+.userHandle {
+    font-size: 14px;
+    opacity: 0.9;
+}
+
+.qrCode {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.roleInfo {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.roleDetails {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.roleIcon {
+    display: flex;
+    align-items: center;
+    width: 16px;
+    height: 16px;
+}
+
+.roleText {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.tierDetails {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.tierText {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.arrowIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.arrow {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+/* Responsive Styles */
+@media screen and (min-width: 801px) {
+    .container {
+        padding: 0 28px;
+    }
+
+    .title {
+        font-size: 20px;
+    }
+
+    .userName {
+        font-size: 20px;
+    }
+
+    .avatar,
+    .initials {
+        width: 64px;
+        height: 64px;
+    }
+
+    .initials {
+        font-size: 24px;
+    }
+
+    .topSection {
+        padding: 24px;
+    }
+
+    .bottomSection {
+        padding: 18px 24px;
+    }
+}
+
+@media screen and (max-width: 800px) {
+    .container {
+        padding: 0 20px;
+    }
+
+    .topSection {
+        padding: 18px;
+    }
+
+    .bottomSection {
+        padding: 14px 18px;
+    }
+}
+
+@media screen and (max-width: 500px) {
+    .container {
+        padding: 0 16px;
+    }
+
+    .title {
+        font-size: 16px;
+    }
+
+    .card {
+        border-radius: 12px;
+    }
+
+    .topSection {
+        padding: 16px;
+    }
+
+    .bottomSection {
+        padding: 12px 16px;
+    }
+
+    .avatar,
+    .initials {
+        width: 48px;
+        height: 48px;
+    }
+
+    .initials {
+        font-size: 16px;
+    }
+
+    .userName {
+        font-size: 16px;
+    }
+
+    .userHandle {
+        font-size: 13px;
+    }
+
+    .roleText, .tierText {
+        font-size: 13px;
+    }
+}

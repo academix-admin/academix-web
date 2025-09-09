@@ -212,7 +212,20 @@
   "private_account_text": "Compte Privé",
   "opay_text": "Opay",
   "academix_coin_text": "Academix Coin",
-  "account_text": "Compte",
   "processing_text": "En traitement",
-  "cancelled_text": "Annulé"
+  "cancelled_text": "Annulé",
+  "transaction_empty": "Vous n’avez aucune transaction.",
+  "unknown_role_text": "Rôle inconnu",
+  "tier_text": "Niveau {value}",
+  "overview_text": "Aperçu",
+  "creator_text": "Rôle de créateur",
+  "celebrity_text": "Rôle de célébrité",
+  "accounts_text": "Comptes",
+  "edit_profile": "Modifier le profil",
+  "parental": "Parental",
+  "security": "Sécurité",
+  "redeem_codes": "Codes de réclamation",
+  "help_text": "Aide",
+  "about_us_text": "À propos de nous",
+  "contacts_text": "Contacts"
 }

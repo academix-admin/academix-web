@@ -1,0 +1,167 @@
+/* profile-accounts.module.css */
+.container {
+    padding: 0 20px;
+}
+
+.title {
+  font-size: 18px;
+  font-weight: bold;
+  margin: 0px;
+  margin-bottom: 12px;
+}
+
+.title_light {
+    color: #1a1a1a;
+}
+
+.title_dark {
+    color: #ffffff;
+}
+
+.accountsSection {
+    background: linear-gradient(90deg, #015c2a, #067a3c);
+    border-radius: 16px;
+    padding: 8px 0;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+}
+
+.accountsSection_light, .accountsSection_dark {
+    /* Same styling for both themes as per image */
+}
+
+.menuList {
+    display: flex;
+    flex-direction: column;
+}
+
+.menuItem {
+    display: flex;
+    align-items: center;
+    padding: 16px 20px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.menuItem_light:hover, .menuItem_dark:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.iconContainer {
+    margin-right: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.iconBackground {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.menuLabel {
+    flex: 1;
+    font-size: 16px;
+    font-weight: 500;
+    color: #ffffff;
+}
+
+.menuArrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.arrow {
+    width: 9px;
+    height: 15px;
+}
+
+.divider {
+    height: 1px;
+    background-color: rgba(255, 255, 255, 0.2);
+    margin: 0 20px;
+}
+
+/* Responsive Styles */
+@media screen and (min-width: 801px) {
+    .container {
+        padding: 0 28px;
+    }
+
+    .title {
+        font-size: 20px;
+    }
+
+    .accountsSection {
+        border-radius: 18px;
+    }
+
+    .menuItem {
+        padding: 18px 24px;
+    }
+
+    .menuLabel {
+        font-size: 17px;
+    }
+
+    .iconBackground {
+        width: 36px;
+        height: 36px;
+    }
+}
+
+@media screen and (max-width: 800px) {
+    .container {
+        padding: 0 20px;
+    }
+
+    .menuItem {
+        padding: 14px 18px;
+    }
+}
+
+@media screen and (max-width: 500px) {
+    .container {
+        padding: 0 16px;
+    }
+
+    .title {
+        font-size: 16px;
+    }
+
+    .accountsSection {
+        border-radius: 12px;
+    }
+
+    .menuItem {
+        padding: 12px 16px;
+    }
+
+    .menuLabel {
+        font-size: 15px;
+    }
+
+    .iconContainer {
+        margin-right: 14px;
+    }
+
+    .iconBackground {
+        width: 30px;
+        height: 30px;
+    }
+
+    .arrow {
+        width: 7px;
+        height: 12px;
+    }
+
+    .divider {
+        margin: 0 16px;
+    }
+}
