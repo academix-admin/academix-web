@@ -6,6 +6,7 @@ import { Session, User } from '@supabase/supabase-js'
 import { supabaseBrowser } from '@/lib/supabase/client'
 import { useAwaitableRouter } from "@/hooks/useAwaitableRouter"
 import LoadingView from '@/components/LoadingView/LoadingView'
+import AuthBlocker from '@/components/AuthBlocker/AuthBlocker'
 import { UserData } from '@/models/user-data';
 import { useUserData } from '@/lib/stacks/user-stack';
 import { useTheme } from '@/context/ThemeContext';
@@ -59,7 +60,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               setInitialized(false)
               await replaceAndWait("/")
             } else if (newSession && publicRoutes.includes(pathname) && userData) {
-                console.log('Went to main')
               await replaceAndWait("/main")
             }
 
@@ -77,18 +77,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if(__meta.isHydrated)initializeAuth();
   }, [router, pathname, replaceAndWait, __meta.isHydrated])
 
-   if (!initialized) {
-     return (
-       <AuthContext.Provider value={{ initialized, session, userData }}>
-         <LoadingView text={t('loading')} />
-       </AuthContext.Provider>
-     )
-   }
-
-
   return (
     <AuthContext.Provider value={{ initialized, session, userData }}>
-      {children}
+      <AuthBlocker children={children}/>
     </AuthContext.Provider>
   )
 }

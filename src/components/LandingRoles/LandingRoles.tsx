@@ -1,10 +1,10 @@
 'use client';
 
+import styles from './LandingRoles.module.css';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Autoplay } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/navigation';
-import styles from './LandingRoles.module.css';
 
 const data = [
   {
@@ -59,6 +59,9 @@ export default function LandingRoles() {
       </div>
 
       <Swiper
+       className={styles.swiper}
+       style={{
+                   padding: '2rem'}}
         modules={[Navigation, Autoplay]}
         loop={data.length > 1}
         slidesPerView={1}
@@ -77,7 +80,6 @@ export default function LandingRoles() {
           768: { slidesPerView: 2, spaceBetween: 24 },
           1024: { slidesPerView: 3, spaceBetween: 32 },
         }}
-        className={styles.swiper}
       >
         {data.map((card, idx) => (
           <SwiperSlide key={idx}>

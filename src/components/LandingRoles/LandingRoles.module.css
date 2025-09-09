@@ -1,5 +1,4 @@
 .carouselContainer {
-  position: relative;
   width: 100%;
   max-width: 1400px;
   margin: 0 auto;
@@ -8,9 +7,11 @@
   display: flex;
   justify-content: center;
   align-items: stretch;
+  position: relative;
 }
 
 .swiper {
+  margin: 0px;
   padding: 2rem;
   box-sizing: border-box;
   width: 100%;
@@ -165,6 +166,7 @@
     padding: 2rem 0rem;
   }
 
+
   .card {
     min-height: 340px;
     padding: 1.5rem;
@@ -185,6 +187,7 @@
     min-height: 320px;
     padding: 1.25rem;
   }
+
 
   .swiper-slide {
     display: flex;

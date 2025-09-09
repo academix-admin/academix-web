@@ -1,8 +1,8 @@
 'use client';
+import styles from './LandingHeader.module.css';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { useEffect, useRef, useState } from 'react';
-import styles from './LandingHeader.module.css';
 import Image from 'next/image';
 import Link from 'next/link'
 
@@ -66,7 +66,12 @@ export default function LandingHeader() {
   const renderLanguageSelector = (
     <select
       className={`${styles.lanSwitch} ${styles[`lanSwitch_${theme}`]}`}
-      onChange={(e) => setLang(e.target.value)}
+      onChange={(e) => {
+          const newLang = e.target.value;
+          if (newLang === 'en' || newLang === 'fr') {
+            setLang(newLang);
+          }
+        }}
       value={lang}
       aria-label="Select language"
     >

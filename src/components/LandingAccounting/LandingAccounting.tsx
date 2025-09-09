@@ -1,7 +1,7 @@
 'use client';
+import styles from './LandingAccounting.module.css';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
-import styles from './LandingAccounting.module.css';
 import Link from 'next/link'
 
 export default function LandingAccounting() {

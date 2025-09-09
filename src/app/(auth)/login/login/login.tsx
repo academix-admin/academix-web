@@ -300,10 +300,12 @@ export default function LoginUser() {
 
 const handleCreatedUser = async (type: string, value: string, userObj: UserData) => {
 
-  await userData$.set(userObj);
+  await StateStack.core.clearScope('secondary_flow');
 
-  // Clear only the login flow
+
+  // Clear only the login flow & secondary_flow
   await StateStack.core.clearScope('login_flow');
+  await userData$.set(userObj);
 
   __meta.clear();
   nav.dispose();

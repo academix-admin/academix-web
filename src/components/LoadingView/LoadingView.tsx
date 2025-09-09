@@ -1,8 +1,8 @@
 'use client';
 
+import styles from './LoadingView.module.css';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
-import styles from './LoadingView.module.css';
 import CachedLottie from '@/components/CachedLottie';
 
 export default function LoadingView({text = null }: { text?: string | null;}) {

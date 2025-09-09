@@ -1,6 +1,6 @@
 'use client';
-import Image from 'next/image';
 import styles from './HeroLanding.module.css';
+import Image from 'next/image';
 
 export default function HeroLanding() {
   return (

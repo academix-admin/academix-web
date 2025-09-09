@@ -21,13 +21,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={poppins.variable}>
       <body>
-        <LanguageProvider>
-          <ThemeProvider>
+        <ThemeProvider>
+          <LanguageProvider>
             <AuthProvider>
               {children}
             </AuthProvider>
-          </ThemeProvider>
-        </LanguageProvider>
+          </LanguageProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

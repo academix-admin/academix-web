@@ -1,7 +1,7 @@
 'use client';
+import styles from './LandingFooter.module.css';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
-import styles from './LandingFooter.module.css';
 import Image from 'next/image';
 
 const SOCIAL_LINKS = [

@@ -1,7 +1,7 @@
 'use client';
+import styles from './LandingMoreAbout.module.css';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
-import styles from './LandingMoreAbout.module.css';
 
 interface StepColors {
   light: string;

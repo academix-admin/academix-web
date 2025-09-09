@@ -1,0 +1,25 @@
+.ab_span {
+  position: relative; /* ✅ safer than absolute */
+  box-sizing: border-box;
+}
+
+.overlay {
+  position: fixed; /* ✅ sits on top of children */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 9999999;
+}
+
+.overlay_light{
+ background-color: #fff;
+}
+
+.overlay_dark{
+ background-color: #000;
+}
+
+.hide {
+  display: none;
+}

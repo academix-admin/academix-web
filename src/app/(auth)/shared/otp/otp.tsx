@@ -281,17 +281,18 @@ export default function Otp(props: OtpProps) {
              const userObj : UserData | null = await fetchUserData(result?.data.user.id);
 
              if(userObj){
+                await StateStack.core.clearScope('secondary_flow');
                 await userData$.set(userObj);
-                await replaceAndWait("/main");
                 __meta.clear();
                 nav.dispose();
+                await replaceAndWait("/main");
                 return;
              }else{
-                       __meta.clear();
+               __meta.clear();
                await nav.popToRoot();
              }
           }else{
-                                  setError(t('error_occurred'));
+                 setError(t('error_occurred'));
           }
 
 

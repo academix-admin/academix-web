@@ -25,10 +25,9 @@ const Main = () => {
    const { userData, userData$, __meta } = useUserData();
 
 useEffect(() => {
-  let isMounted = true;
 
   const handleSignOut = async () => {
-    if (!userData && isMounted) {
+    if (!userData && __meta.isHydrated) {
       try {
         await StateStack.core.clearScope('secondary_flow');
         await supabaseBrowser.auth.signOut();
@@ -39,11 +38,7 @@ useEffect(() => {
   };
 
   handleSignOut();
-
-  return () => {
-    isMounted = false;
-  };
-}, [userData]);
+}, [userData,__meta.isHydrated]);
 
   const navStackMap = new Map([
     ['home-stack', <HomeStack />],

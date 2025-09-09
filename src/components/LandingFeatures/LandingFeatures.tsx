@@ -1,7 +1,7 @@
 'use client';
+import styles from './LandingFeatures.module.css';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
-import styles from './LandingFeatures.module.css';
 
 export default function LandingFeatures() {
   const { theme } = useTheme();

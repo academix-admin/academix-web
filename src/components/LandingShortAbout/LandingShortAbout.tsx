@@ -1,7 +1,7 @@
 'use client';
+import styles from './LandingShortAbout.module.css';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
-import styles from './LandingShortAbout.module.css';
 
 export default function LandingShortAbout() {
   const { theme } = useTheme();
