@@ -15,6 +15,9 @@ import UserBalance from './user-balance/user-balance'
 import PaymentAction from './payment-action/payment-action'
 import PaymentTransactions from './payment-transactions/payment-transactions'
 import { useComponentState, ComponentStateProps, getComponentStatus } from '@/hooks/use-component-state';
+import LoadingView from '@/components/LoadingView/LoadingView'
+import NoResultsView from '@/components/NoResultsView/NoResultsView';
+import ErrorView from '@/components/ErrorView/ErrorView';
 
 export default function PaymentPage() {
   const { theme } = useTheme();
