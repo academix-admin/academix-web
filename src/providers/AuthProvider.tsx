@@ -65,7 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                   console.log('return to home');
                   await replaceAndWait("/")
               }
-              if(userData)await StateStack.core.clearScope('secondary_flow');
+              await StateStack.core.clearScope('secondary_flow');
             }
 
             setInitialized(true)
