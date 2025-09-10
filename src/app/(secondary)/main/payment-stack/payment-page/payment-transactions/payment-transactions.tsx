@@ -35,7 +35,7 @@ export default function PaymentTransactions({ onStateChange }: ComponentStatePro
       persist: true,
       ttl: 3600,
       scope: "secondary_flow",
-      deps: [lang, userData],
+      deps: [lang],
     }
   );
 

@@ -1,7 +1,7 @@
 import { useDemandState } from '../state-stack';
 import { UserData } from '@/models/user-data';
 
-export const useAcademixRatio = (lang: string, userData: UserData | null) => {
+export const useAcademixRatio = (lang: string) => {
   return useDemandState(
              0,
              {
@@ -9,7 +9,7 @@ export const useAcademixRatio = (lang: string, userData: UserData | null) => {
                persist: true,
                ttl: 3600,
                scope: "secondary_flow",
-               deps: [lang, userData],
+               deps: [lang],
              }
            );
 };

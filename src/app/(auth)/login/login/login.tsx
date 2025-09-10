@@ -305,7 +305,8 @@ const handleCreatedUser = async (type: string, value: string, userObj: UserData)
 
   // Clear only the login flow & secondary_flow
   await StateStack.core.clearScope('login_flow');
-  await userData$.set(userObj);
+  console.log('saved',await userData$.set(userObj));
+
 
   __meta.clear();
   nav.dispose();

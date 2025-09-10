@@ -17,7 +17,7 @@ export default function AcademixRatio({ onStateChange }: ComponentStateProps) {
   const { t, lang, tNode } = useLanguage();
   const { userData, userData$ } = useUserData();
 
-  const [academixRatioData, demandAcademixRatio, setAcademixRatio] = useAcademixRatio(lang, userData);
+  const [academixRatioData, demandAcademixRatio, setAcademixRatio] = useAcademixRatio(lang);
 
   useEffect(() => {
     if(!userData)return;

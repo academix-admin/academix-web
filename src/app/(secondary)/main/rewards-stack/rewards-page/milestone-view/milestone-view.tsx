@@ -28,7 +28,7 @@ export default function MilestoneView({ onStateChange }: ComponentStateProps) {
       persist: true,
       ttl: 3600,
       scope: "secondary_flow",
-      deps: [lang, userData],
+      deps: [lang],
     }
   );
 
@@ -39,7 +39,7 @@ export default function MilestoneView({ onStateChange }: ComponentStateProps) {
       persist: true,
       ttl: 3600,
       scope: "secondary_flow",
-      deps: [lang, userData],
+      deps: [lang],
     }
   );
 

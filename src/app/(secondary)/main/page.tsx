@@ -26,11 +26,13 @@ const Main = () => {
 
 useEffect(() => {
 
+ console.log(`IH: ${__meta.isHydrated}  ud: ${userData}`);
   const handleSignOut = async () => {
     if (!userData && __meta.isHydrated) {
       try {
-        await StateStack.core.clearScope('secondary_flow');
+          console.log('log_out');
         await supabaseBrowser.auth.signOut();
+        await StateStack.core.clearScope('secondary_flow');
       } catch (error) {
         console.error('Sign out error:', error);
       }
@@ -39,6 +41,7 @@ useEffect(() => {
 
   handleSignOut();
 }, [userData,__meta.isHydrated]);
+
 
   const navStackMap = new Map([
     ['home-stack', <HomeStack />],

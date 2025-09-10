@@ -59,11 +59,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
             if (!newSession && protectedRoutes.some(route => pathname.startsWith(route))) {
               setInitialized(false)
+                        console.log('return to home');
+
               await replaceAndWait("/")
-            } else if (newSession && publicRoutes.includes(pathname) && userData) {
-              await replaceAndWait("/main")
-            }else if(!newSession && userData){
               await StateStack.core.clearScope('secondary_flow');
+            } else if (newSession && publicRoutes.includes(pathname) && userData ) {
+                                        console.log('went to main');
+
+              await replaceAndWait("/main")
             }
 
             setInitialized(true)
