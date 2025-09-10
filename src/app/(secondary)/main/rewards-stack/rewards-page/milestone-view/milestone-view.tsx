@@ -123,12 +123,12 @@ export default function MilestoneView({ onStateChange }: ComponentStateProps) {
 
   const handleMissionClick = () => {
     // Navigate to mission screen
-    nav.push('mission');
+    nav.push('mission_page');
   };
 
   const handleAchievementClick = () => {
     // Navigate to achievement screen
-        nav.push('achievement');
+        nav.push('achievement_page');
 
   };
 

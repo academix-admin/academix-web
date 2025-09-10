@@ -5,10 +5,12 @@ import styles from './rewards-stack.module.css';
 import {useNav } from "@/lib/NavigationStack";
 import NavigationStack from "@/lib/NavigationStack";
 import RewardsPage from "./rewards-page/rewards-page";
+import MissionPage from "./mission-page/mission-page";
 
 
 const rewardsStackNavLink = {
   reward_page: RewardsPage,
+  mission_page: MissionPage,
 };
 
 export const RewardsStack = () => (

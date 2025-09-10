@@ -1,0 +1,412 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  min-height: 100vh;
+}
+
+.container_light {
+  background-color: #ffffff;
+  color: #000;
+}
+
+.container_dark {
+  background-color: #121212;
+  color: #ffffff;
+}
+
+.header {
+  position: fixed;
+  top: 0;
+  left:0;
+  width: 100%;
+  z-index: 10;
+  display: flex;
+  backdrop-filter: blur(8px);
+  box-sizing: border-box;
+}
+
+.header_light {
+  background-color: rgba(255, 255, 255, 0.8);
+  border-bottom: 1px solid #C4C4C4;
+}
+
+.header_dark {
+  background-color: rgba(18, 18, 18, 0.8);
+  border-bottom: 1px solid #333;
+}
+
+.headerContent {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 1rem;
+  padding: 1rem 0;
+  margin: 0 20%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.innerBody{
+  display: flex;
+  max-width: 400px;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+  padding-top: 6rem;
+    width: 100%;
+  box-sizing: border-box;
+}
+
+
+.backButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-color);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+    padding: 4px;
+
+  justify-content: center;
+  margin-left: -8px;
+}
+
+.backButton:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.backIcon {
+  width: 20px;
+  height: 20px;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+  flex-grow: 1;
+  text-align: start;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-sizing: border-box;
+}
+
+.logoContainer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  box-sizing: border-box;
+}
+
+.logo{
+  width: 35px;
+  height: 35px;
+}
+
+.welcome_wrapper{
+  width: 65%;
+}
+
+.titleSmall {
+  font-size: 0.875rem;
+  color: #6B7280;
+  margin: 0;
+      margin-top: 2rem;
+      text-align: start;
+        align-self: flex-start;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      box-sizing: border-box;
+       word-break: break-word;   /* break long words */
+          white-space: normal;      /* allow wrapping */
+}
+
+.titleBig {
+  font-size: 1.5rem;
+  font-weight: 600;
+    text-align: start;
+      align-self: flex-start;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    box-sizing: border-box;
+     word-break: break-word;   /* break long words */
+        white-space: normal;      /* allow wrapping */
+}
+
+
+
+.form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-align: left;
+  color: var(--text-color);
+   word-break: break-word;   /* break long words */
+      white-space: normal;      /* allow wrapping */
+}
+
+.input {
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border: 1px solid #C4C4C4;
+  font-size: 1rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #4F46E5;
+}
+
+.container_light .input {
+  background-color: #ffffff;
+  color: #000;
+}
+
+.container_dark .input {
+  background-color: #1E1E1E;
+  color: #ffffff;
+  border-color: #333;
+}
+
+.errorText, .validText {
+  font-size: 0.75rem;
+  margin: 0px;
+  margin-top: 0.15rem;
+  text-align: left;
+  font-weight: 500;
+  line-height: 1.25;
+   word-break: break-word;   /* break long words */
+      white-space: normal;      /* allow wrapping */
+}
+
+.container_light .errorText {
+  color: #DC2626;
+}
+
+.container_dark .errorText {
+  color: #F87171;
+}
+
+.container_light .validText {
+  color: green;
+}
+
+.container_dark .validText {
+  color: green;
+}
+
+.continueButton {
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  background-color: #1C6B1E;
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin-top: 1rem;
+    margin-bottom: 3rem;
+}
+
+.continueButton:hover {
+  background-color: #1D3D1E;
+}
+
+.continueButton:disabled {
+  background-color: #9CA3AF;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.spinner {
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top: 3px solid white;
+  border-radius: 50%;
+  width: 10px;
+  height: 10px;
+  animation: spin 1s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loadingOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+}
+
+.inputWrapper {
+  position: relative;
+  width: 100%;
+}
+
+.eyeButton {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #1C6B1E;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.eyeButton:hover {
+  color: #1D3D1E;
+}
+
+.eyeIcon {
+  width: 20px;
+  height: 20px;
+}
+
+/* Adjust input padding to make room for the eye icon */
+.input {
+  padding-right: 40px !important;
+}
+
+.forgotPasswordLink {
+  background: none;
+  border: none;
+  display: flex;
+  justify-content: flex-end;
+  color: var(--accent-color);
+  font-size: 14px;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.forgotPasswordLink:hover {
+  color: var(--accent-color-hover);
+}
+
+.instructionSection {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  border-radius: 8px;
+}
+
+
+.instructionSection_light {
+  background-color: #F0EFEF;
+}
+
+.instructionSection_dark {
+  background-color: #515151;
+}
+
+.instructionInfo {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  text-align: left;
+  color: #F7E7B7B;
+}
+
+.instructionInfo_light {
+  color: #F7E7B7B;
+}
+
+.instructionInfo_dark {
+  color: #fff;
+}
+
+.errorSection {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
+
+
+}
+
+/* Tablet */
+@media screen and (min-width: 500px) and (max-width: 800px) {
+ .headerContent {
+   padding: 1rem 0rem;
+   margin: 0 1rem;
+ }
+  .logo {
+       width: 35px;
+       height: 35px;
+     }
+  .innerBody {
+    padding: 1.5rem;
+    padding-top: 4rem;
+  }
+     .welcome_wrapper{
+       width: 75%;
+     }
+}
+
+/* Mobile */
+@media screen and (max-width: 500px) {
+
+ .headerContent {
+    margin: 0;
+   padding: 1rem 1rem;
+ }
+  .innerBody {
+    padding: 1rem;
+    padding-top: 5rem;
+  }
+  .titleBig {
+      font-size: 1.25rem;
+    }
+
+       .welcome_wrapper{
+         width: 80%;
+       }
+
+  .backIcon {
+    width: 16px;
+    height: 16px;
+  }
+
+  .title {
+    font-size: 1.2rem;
+  }
+
+  .logo {
+      width: 28px;
+      height: 28px;
+    }
+.form {
+    margin-top: 1rem;
+  }
+  .eyeIcon {
+      width: 18px;
+      height: 18px;
+    }
+
+}

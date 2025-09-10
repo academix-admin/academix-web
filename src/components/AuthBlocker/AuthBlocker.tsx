@@ -12,8 +12,8 @@ export default function AuthBlocker({ children }: { children: React.ReactNode })
   const { initialized } = useAuthContext();
 
   return (
-    <div className={styles.ab_span}>
-       {children}
+    <div className={styles.ab_span} >
+       <div className={!initialized ? styles.hide : '' }>{children}</div>
        <div className={!initialized ?  `${styles.overlay} ${styles[`overlay_${theme}`]}` : styles.hide}>
           <LoadingView text={t('loading')} />
        </div>

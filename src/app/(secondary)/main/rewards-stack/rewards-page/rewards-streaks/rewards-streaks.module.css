@@ -118,7 +118,7 @@
   justify-content: center;
   align-items: center;
   height: 100%;
-  padding: 0 8px;
+  padding: 16px 8px;
 }
 
 /* Reward Views */
@@ -238,7 +238,6 @@
   color: white;
   padding: 10px;
   cursor: pointer;
-  border-radius: 0 0 16px 16px;
   transition: background-color 0.2s;
 }
 

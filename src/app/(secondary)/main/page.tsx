@@ -29,8 +29,8 @@ useEffect(() => {
   const handleSignOut = async () => {
     if (!userData && __meta.isHydrated) {
       try {
-        await supabaseBrowser.auth.signOut();
         await StateStack.core.clearScope('secondary_flow');
+        await supabaseBrowser.auth.signOut();
       } catch (error) {
         console.error('Sign out error:', error);
       }
