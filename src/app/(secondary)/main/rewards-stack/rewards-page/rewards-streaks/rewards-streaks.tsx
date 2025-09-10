@@ -234,7 +234,7 @@ export default function RewardsStreaks({ onStateChange }: ComponentStateProps) {
   const { t, lang } = useLanguage();
   const { userData } = useUserData();
 
-  const [academixRatioData, demandAcademixRatio, setAcademixRatio] = useAcademixRatio(lang, userData);
+  const [academixRatioData, demandAcademixRatio, setAcademixRatio] = useAcademixRatio(lang);
 
   const [dailyStreaks, demandDailyStreaks, setDailyStreaks] = useDemandState<DailyStreaksModel[]>(
     [],

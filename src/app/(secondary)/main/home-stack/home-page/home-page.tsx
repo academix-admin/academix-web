@@ -44,6 +44,8 @@ export default function HomePage() {
   // show ui
   const show = !error && !none && !loading;
 
+
+
   return (
     <div className={`${styles.mainContainer} ${styles[`mainContainer_${theme}`]}`}>
       {show && (<HomeTitle onStateChange={(state) => handleStateChange('homeTitle', state)}/>)}

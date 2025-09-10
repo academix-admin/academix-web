@@ -221,6 +221,8 @@ export default function HomeQuizHistory({ onStateChange }: ComponentStateProps) 
 // ${stuck ? styles.historyTitlePinned : ''}
 
   if(!firstLoaded && quizHistoryData.length <= 0)return null;
+
+
   return (
     <div className={styles.historyContainer}>
       <h2 className={`${stuck ? styles.historyTitlePinned : styles.historyTitleHidden}`}>

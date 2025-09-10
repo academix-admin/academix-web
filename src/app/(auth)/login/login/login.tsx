@@ -302,10 +302,9 @@ const handleCreatedUser = async (type: string, value: string, userObj: UserData)
 
   await StateStack.core.clearScope('secondary_flow');
 
-
   // Clear only the login flow & secondary_flow
   await StateStack.core.clearScope('login_flow');
-  console.log('saved',await userData$.set(userObj));
+  await userData$.set(userObj);
 
 
   __meta.clear();

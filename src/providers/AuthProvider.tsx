@@ -9,8 +9,6 @@ import LoadingView from '@/components/LoadingView/LoadingView'
 import AuthBlocker from '@/components/AuthBlocker/AuthBlocker'
 import { UserData } from '@/models/user-data';
 import { useUserData } from '@/lib/stacks/user-stack';
-import { useTheme } from '@/context/ThemeContext';
-import { useLanguage } from '@/context/LanguageContext';
 import { StateStack } from '@/lib/state-stack';
 
 interface AuthContextType {
@@ -36,9 +34,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
   const [user, setUser] = useState<User | null>(null)
   const { userData, userData$, __meta } = useUserData();
-  const { replaceAndWait } = useAwaitableRouter()
-  const { theme } = useTheme();
-  const { t } = useLanguage();
+  const { replaceAndWait } = useAwaitableRouter();
+
+  const publicRoutes = ['/', '/login', '/signup','/welcome']
+  const protectedRoutes = ['/main']
+
 
   useEffect(() => {
     const initializeAuth = async () => {
@@ -49,24 +49,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(initialUser);
         setSession(initialSession);
 
+        if (initialUser && publicRoutes.includes(pathname) && userData) {
+              console.log('went to main');
+              await replaceAndWait("/main")
+        }
+
         const { data: { subscription } } = supabaseBrowser.auth.onAuthStateChange(
           async (event, newSession) => {
             setSession(newSession)
             setUser(newSession?.user ?? null)
 
-            const publicRoutes = ['/', '/login', '/signup','/welcome']
-            const protectedRoutes = ['/main']
-
-            if (!newSession && protectedRoutes.some(route => pathname.startsWith(route))) {
-              setInitialized(false)
-                        console.log('return to home');
-
-              await replaceAndWait("/")
-              await StateStack.core.clearScope('secondary_flow');
-            } else if (newSession && publicRoutes.includes(pathname) && userData ) {
-                                        console.log('went to main');
-
-              await replaceAndWait("/main")
+            if (!newSession) {
+              if(protectedRoutes.some(route => pathname.startsWith(route))){
+                  setInitialized(false)
+                  console.log('return to home');
+                  await replaceAndWait("/")
+              }
+              if(userData)await StateStack.core.clearScope('secondary_flow');
             }
 
             setInitialized(true)
