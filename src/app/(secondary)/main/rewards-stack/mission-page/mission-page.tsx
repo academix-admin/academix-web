@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import Image from 'next/image';
@@ -10,20 +10,364 @@ import { useNav } from "@/lib/NavigationStack";
 import { capitalize } from '@/utils/textUtils';
 import { checkLocation, checkFeatures, fetchUserPartialDetails, fetchUserDetails } from '@/utils/checkers';
 import TabMilestone from "@/models/tab-milestone";
+import { useDemandState } from '@/lib/state-stack';
+import { useUserData } from '@/lib/stacks/user-stack';
+import { UserData } from '@/models/user-data';
+import { BackendMissionModel } from '@/models/mission-model';
+import { MissionModel } from '@/models/mission-model';
+import { PaginateModel } from '@/models/paginate-model';
+import { getParamatical, ParamaticalData} from '@/utils/checkers';
+import LoadingView from '@/components/LoadingView/LoadingView';
+import NoResultsView from '@/components/NoResultsView/NoResultsView';
+import ErrorView from '@/components/ErrorView/ErrorView';
 
-// Define the Mission type
-interface Mission {
-  id: string;
-  title: string;
-  description: string;
-  points: number;
-  status: 'active' | 'pending' | 'completed';
-  icon?: string;
-  progress?: number;
-  totalSteps?: number;
-  completedSteps?: number;
-  expiresAt?: string;
+interface MissionContainerProps {
+  tab: string;
 }
+
+type Props = {
+  mission: MissionModel;
+};
+
+const MissionCard: React.FC<{ mission: MissionModel}> = ({ mission }) => {
+  const { t, lang } = useLanguage();
+  const { userData } = useUserData();
+  const [collecting, setCollecting] = useState(false);
+
+  const progressCount = mission.missionProgressDetails.missionProgressCount ?? 0;
+  const progressRequired = mission.missionProgressDetails.missionProgressRequired ?? 1;
+  const progressPercentage = Math.min(100, Math.round((progressCount / Math.max(1, progressRequired)) * 100));
+  const rewarded = mission.missionProgressDetails.missionProgressRewarded === true;
+  const redeem = mission.missionProgressDetails.rewardRedeemCodeModel;
+  const redeemCode = redeem?.value ?? null;
+  const expires = redeem?.expires ?? null;
+
+  const rewardText = useMemo(() => {
+    try {
+      // Format number
+      return new Intl.NumberFormat(lang || undefined, { maximumFractionDigits: 2 }).format(
+        mission.rewardDetails?.rewardValue ?? 0
+      );
+    } catch {
+      return String(mission.rewardDetails?.rewardValue ?? 0);
+    }
+  }, [mission.rewardDetails, lang]);
+
+  const handleCopy = async (text?: string) => {
+    if (!text) return;
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch (e) {
+    }
+  };
+
+  const handleCollect = async () => {
+    if (!userData) return [];
+
+    try {
+      setCollecting(true);
+
+            const paramatical = await getParamatical(
+              userData.usersId,
+              lang,
+              userData.usersSex,
+              userData.usersDob
+            );
+
+            if (!paramatical){
+                                setCollecting(false);
+
+                          return;
+            }
+
+            const { data, error } = await supabaseBrowser.rpc("claim_user_mission", {
+              p_user_id: paramatical.usersId,
+              p_locale: paramatical.locale,
+              p_country: paramatical.country,
+              p_gender: paramatical.gender,
+              p_age: paramatical.age,
+              p_mission_id: mission.missionId
+            });
+
+            if (error) {
+                    setCollecting(false);
+              return;
+            }
+
+
+
+
+    } catch (err) {
+    } finally {
+      setCollecting(false);
+    }
+  };
+
+  const formattedExpiry = expires ? new Date(expires) : null;
+  const expiryText = formattedExpiry
+    ? formattedExpiry.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric' })
+    : null;
+
+  return (
+    <div className={styles.missionCard} role="group" aria-labelledby={`mission-${mission.missionId}`}>
+      {/* TOP SECTION (lighter/green) */}
+      <div className={styles.missionCardTop}>
+        <div className={styles.missionHeader}>
+          <div className={styles.missionIcon}>
+            {mission.missionImage ? (
+              <Image src={mission.missionImage} alt={mission.missionTitle} width={56} height={56} className={styles.iconImg}/>
+            ) : (
+              <div className={styles.placeholderIcon}>🎯</div>
+            )}
+          </div>
+
+          <div className={styles.missionInfo}>
+            <h3 id={`mission-${mission.missionId}`} className={styles.missionTitle}>
+              {mission.missionTitle}
+            </h3>
+            <p className={styles.missionDescription}>
+              {mission.missionDescription}
+            </p>
+
+
+                      <div className={styles.pointsWrap}>
+                        <div className={styles.pointsRow}>
+                          <svg viewBox="0 0 24 24" width="20" height="20" className={styles.coinSvg} aria-hidden>
+                            <circle cx="12" cy="12" r="10" fill="white" stroke="none" />
+                          </svg>
+                          <span className={styles.pointsText}>{rewardText}</span>
+                        </div>
+
+                        <div className={styles.progressCount}>
+                          {progressCount}/{progressRequired}
+                        </div>
+                      </div>
+
+          </div>
+        </div>
+      </div>
+
+      {/* BOTTOM SECTION (darker) */}
+      <div className={styles.missionCardBottom}>
+        {/* If not yet rewarded: show Instructions heading (like Dart) */}
+        {!rewarded && (
+          <div className={styles.instructionsRow}>
+            <div className={styles.instructionsTitle}>{t('instructions_text')}</div>
+            <div className={styles.instructionsBody}>
+              {mission.rewardDetails?.rewardInstruction ?? mission.rewardDetails.rewardInstruction ?? t('no_instructions') ?? ''}
+            </div>
+          </div>
+        )}
+
+        {/* Expiry row (shown when there is an expiry — in Dart they show it when rewardRedeemCodeModel?.expires != null) */}
+        {expiryText && (
+          <div className={styles.expiresRow}>
+            <div className={styles.expiresText}>
+              {t('expires_text', { date: expiryText})}
+            </div>
+            {/* small copy icon next to expiry (like screenshot shows) - clicking should not copy code */}
+            {redeemCode && (
+              <button
+                className={styles.smallIconButton}
+                title={'copy'}
+                onClick={(e) => {
+                  handleCopy(redeemCode);
+                }}
+              >
+                {/* simple square icon */}
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
+                  <rect x="9" y="9" width="9" height="9" stroke="currentColor" strokeWidth="1.6" rx="1" />
+                  <rect x="4.5" y="4.5" width="9" height="9" stroke="currentColor" strokeWidth="1.2" rx="1" />
+                </svg>
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* If rewarded: show code (centered) OR fallback to rewarded text */}
+        {rewarded ? (
+          <div className={styles.redeemBlock}>
+            {redeemCode ? (
+              <>
+                <div className={styles.redeemCodeLarge}>{redeemCode}</div>
+              </>
+            ) : (
+              <div className={styles.redeemedText}>
+                {t('rewarded_text')}
+              </div>
+            )}
+          </div>
+        ) : (
+          // Not rewarded: show collect button if progress complete, otherwise nothing
+          <div className={styles.actionRow}>
+              <button
+                className={styles.collectButton}
+                onClick={handleCollect}
+                disabled={collecting}
+              >
+                {collecting ? <div className={styles.moreSpinnerContainer}><span className={styles.moreSpinner}></span></div> : t('collect_text') }
+              </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
+const MissionContainer: React.FC<MissionContainerProps> = ({ tab }) => {
+  const { theme } = useTheme();
+  const { t, lang } = useLanguage();
+  const { userData } = useUserData();
+
+  const loaderRef = useRef<HTMLDivElement | null>(null);
+  const [paginateModel, setPaginateModel] = useState<PaginateModel>(new PaginateModel());
+  const [firstLoaded, setFirstLoaded] = useState(false);
+  const [missionLoading, setMissionLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const [missionModel, demandMissionModel, setMissionModel] = useDemandState<MissionModel[]>(
+    [],
+    {
+      key: `missionModel_${tab}`,
+      persist: true,
+      ttl: 3600,
+      scope: "mission_flow",
+      deps: [lang],
+    }
+  );
+
+  useEffect(() => {
+    if (!loaderRef.current) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && missionModel.length > 0 && !missionLoading) {
+          callPaginate();
+        }
+      },
+      { threshold: 1.0 }
+    );
+
+    observer.observe(loaderRef.current);
+
+    return () => {
+      if (loaderRef.current) observer.unobserve(loaderRef.current);
+    };
+  }, [missionModel, paginateModel, missionLoading]);
+
+  const fetchMissionModel = useCallback(async (userData: UserData, limitBy: number, paginateModel: PaginateModel): Promise<MissionModel[]> => {
+    if (!userData) return [];
+
+    try {
+      const paramatical = await getParamatical(
+        userData.usersId,
+        lang,
+        userData.usersSex,
+        userData.usersDob
+      );
+
+      if (!paramatical) return [];
+
+      const { data, error } = await supabaseBrowser.rpc("fetch_user_missions", {
+        p_user_id: paramatical.usersId,
+        p_locale: paramatical.locale,
+        p_country: paramatical.country,
+        p_gender: paramatical.gender,
+        p_age: paramatical.age,
+        p_limit_by: limitBy,
+        p_mission_tab: tab,
+        p_after_missions: paginateModel.toJson(),
+      });
+
+      if (error) {
+        console.error("[MissionModel] error:", error);
+        setError(t('error_fetching_missions'));
+        return [];
+      }
+
+      setError('');
+      return (data || []).map((row: BackendMissionModel) => new MissionModel(row));
+    } catch (err) {
+      console.error("[MissionModel] error:", err);
+      setError(t('error_fetching_missions'));
+      setMissionLoading(false);
+      return [];
+    }
+  }, [lang, tab, t]);
+
+  const extractLatest = (userMissionModel: MissionModel[]) => {
+    if (userMissionModel.length > 0) {
+      const lastItem = userMissionModel[userMissionModel.length - 1];
+      setPaginateModel(new PaginateModel({ sortId: lastItem.sortCreatedId }));
+    }
+  };
+
+  const processMissionModelPaginate = (userMissionModel: MissionModel[]) => {
+    const oldMissionModelIds = missionModel.map((e) => e.missionId);
+    const newMissionModel = [...missionModel];
+
+    for (const mission of userMissionModel) {
+      if (!oldMissionModelIds.includes(mission.missionId)) {
+        newMissionModel.push(mission);
+      }
+    }
+
+    setMissionModel(newMissionModel);
+  };
+
+  useEffect(() => {
+    if (!userData || missionModel.length > 0) return;
+
+    demandMissionModel(async ({ get, set }) => {
+      setMissionLoading(true);
+      const missionModels = await fetchMissionModel(userData, 10, new PaginateModel());
+      extractLatest(missionModels);
+      set(missionModels);
+      setFirstLoaded(true);
+      setMissionLoading(false);
+    });
+  }, [demandMissionModel, userData]);
+
+  const callPaginate = async () => {
+    if (!userData || missionModel.length <= 0 || missionLoading) return;
+    setMissionLoading(true);
+    const missionModels = await fetchMissionModel(userData, 20, paginateModel);
+    setMissionLoading(false);
+    if (missionModels.length > 0) {
+      extractLatest(missionModels);
+      processMissionModelPaginate(missionModels);
+    }
+  };
+
+  const refreshData = async () => {
+    if (!userData) return;
+    setMissionLoading(true);
+    setMissionModel([]);
+    setPaginateModel(new PaginateModel());
+    const missionModels = await fetchMissionModel(userData, 10, new PaginateModel());
+    setMissionLoading(false);
+    if (missionModels.length > 0) {
+      extractLatest(missionModels);
+      setMissionModel(missionModels);
+    }
+  };
+
+  return (
+    <div className={styles.missionsList}>
+      {missionModel.map((mission) => (
+        <MissionCard key={mission.missionId} mission={mission} />
+      ))}
+
+       {missionModel.length > 10 && <div ref={loaderRef} className={styles.loadMoreSentinel}></div>}
+       {missionLoading && missionModel.length === 0 && <LoadingView />}
+       {!missionLoading && missionModel.length === 0 && (<NoResultsView text="No result" buttonText="Try Again" onButtonClick={refreshData} />)}
+       {error && (<ErrorView text="Error occurred." buttonText="Try Again" onButtonClick={()=> console.log('error')} />)}
+
+
+    </div>
+  );
+};
 
 export default function MissionPage() {
   const { theme } = useTheme();
@@ -31,20 +375,13 @@ export default function MissionPage() {
   const nav = useNav();
 
   const [activeTabs, setActiveTabs] = useState<TabMilestone[]>([
-    { id: 'active', label: t('active_text'), active: true },
-    { id: 'pending', label: t('pending_text'), active: false },
-    { id: 'completed', label: t('completed_text'), active: false }
+    { id: 'MissionTab.active', label: t('active_text'), active: true },
+    { id: 'MissionTab.pending', label: t('pending_text'), active: false },
+    { id: 'MissionTab.completed', label: t('completed_text'), active: false }
   ]);
 
-  const [missions, setMissions] = useState<Mission[]>([]);
-  const [filteredMissions, setFilteredMissions] = useState<Mission[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-
-  const tabsRef = useRef<HTMLDivElement>(null);
-
   // Get active tab
-  const activeTab = activeTabs.find(tab => tab.active)?.id || 'active';
+  const activeTab = activeTabs.find(tab => tab.active)?.id || 'MissionTab.active';
 
   // Set active tab
   const setActiveTab = (id: string) => {
@@ -52,154 +389,6 @@ export default function MissionPage() {
       ...tab,
       active: tab.id === id
     })));
-  };
-
-  // Fetch missions from Supabase or API
-  useEffect(() => {
-    const fetchMissions = async () => {
-      try {
-        setLoading(true);
-
-        // In a real app, you would fetch from your database/API
-        // const { data, error } = await supabaseBrowser
-        //   .from('missions')
-        //   .select('*')
-        //   .order('created_at', { ascending: false });
-
-        // For demo purposes, using mock data
-        const mockMissions: Mission[] = [
-          {
-            id: '1',
-            title: 'Complete Profile',
-            description: 'Fill out all sections of your profile',
-            points: 100,
-            status: 'active',
-            progress: 60,
-            totalSteps: 5,
-            completedSteps: 3
-          },
-          {
-            id: '2',
-            title: 'First Check-in',
-            description: 'Check in at any location for the first time',
-            points: 50,
-            status: 'active',
-            icon: '📍'
-          },
-          {
-            id: '3',
-            title: 'Refer a Friend',
-            description: 'Share the app with a friend who signs up',
-            points: 200,
-            status: 'pending',
-            expiresAt: '2023-12-31'
-          },
-          {
-            id: '4',
-            title: 'Weekly Challenge',
-            description: 'Complete 5 check-ins this week',
-            points: 150,
-            status: 'completed',
-            icon: '🏆'
-          },
-          {
-            id: '5',
-            title: 'Explore 10 Locations',
-            description: 'Discover 10 different places',
-            points: 300,
-            status: 'active',
-            progress: 30,
-            totalSteps: 10,
-            completedSteps: 3
-          }
-        ];
-
-        setMissions(mockMissions);
-      } catch (err) {
-        setError(t('mission_fetch_error') || 'Failed to load missions');
-        console.error('Error fetching missions:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchMissions();
-  }, [t]);
-
-  // Filter missions based on active tab
-  useEffect(() => {
-    if (missions.length > 0) {
-      const filtered = missions.filter(mission => mission.status === activeTab);
-      setFilteredMissions(filtered);
-    }
-  }, [activeTab, missions]);
-
-  const handleMissionClick = (mission: Mission) => {
-    // Navigate to mission details or perform action
-    console.log('Mission clicked:', mission);
-    // nav.push('/mission-details', { missionId: mission.id });
-  };
-
-  const renderMissionCard = (mission: Mission) => {
-    return (
-      <div
-        key={mission.id}
-        className={`${styles.missionCard} ${styles[`missionCard_${theme}`]}`}
-        onClick={() => handleMissionClick(mission)}
-      >
-        <div className={styles.missionHeader}>
-          <div className={styles.missionIcon}>
-            {mission.icon || '🎯'}
-          </div>
-          <div className={styles.missionInfo}>
-            <h3 className={styles.missionTitle}>{mission.title}</h3>
-            <p className={styles.missionDescription}>{mission.description}</p>
-          </div>
-          <div className={styles.missionPoints}>
-            <span className={styles.points}>{mission.points}</span>
-            <span className={styles.pointsLabel}>{t('points_text')}</span>
-          </div>
-        </div>
-
-        {mission.progress !== undefined && mission.totalSteps && (
-          <div className={styles.progressContainer}>
-            <div className={styles.progressBar}>
-              <div
-                className={styles.progressFill}
-                style={{ width: `${(mission.progress / mission.totalSteps) * 100}%` }}
-              ></div>
-            </div>
-            <div className={styles.progressText}>
-              {mission.completedSteps}/{mission.totalSteps} {t('completed_text')}
-            </div>
-          </div>
-        )}
-
-        {mission.expiresAt && (
-          <div className={styles.expiry}>
-            {t('expires_text')}: {new Date(mission.expiresAt).toLocaleDateString()}
-          </div>
-        )}
-
-        <div className={styles.missionStatus}>
-          <span className={`${styles.statusBadge} ${styles[`status_${mission.status}`]}`}>
-            {t(`${mission.status}_text`)}
-          </span>
-        </div>
-      </div>
-    );
-  };
-
-  const renderEmptyState = () => {
-    return (
-      <div className={styles.emptyState}>
-        <div className={styles.emptyIcon}>📋</div>
-        <h3 className={styles.emptyTitle}>{t('no_missions_title')}</h3>
-        <p className={styles.emptyDescription}>
-          {t(`no_missions_${activeTab}_description`)}
-        </p>
-      </div>
-    );
   };
 
   return (
@@ -223,7 +412,7 @@ export default function MissionPage() {
       </header>
 
       <div className={styles.innerBody}>
-        <div className={styles.tab_switcher} ref={tabsRef}>
+        <div className={styles.tab_switcher}>
           {activeTabs.map((tab) => (
             <button
               key={tab.id}
@@ -235,29 +424,7 @@ export default function MissionPage() {
           ))}
         </div>
 
-        {loading ? (
-          <div className={styles.loadingContainer}>
-            <div className={styles.spinner}></div>
-            <p>{t('loading_missions_text')}</p>
-          </div>
-        ) : error ? (
-          <div className={styles.errorContainer}>
-            <p className={styles.errorText}>{error}</p>
-            <button
-              className={styles.retryButton}
-              onClick={() => window.location.reload()}
-            >
-              {t('retry_text')}
-            </button>
-          </div>
-        ) : (
-          <div className={styles.missionsList}>
-            {filteredMissions.length > 0
-              ? filteredMissions.map(renderMissionCard)
-              : renderEmptyState()
-            }
-          </div>
-        )}
+        <MissionContainer tab={activeTab} />
       </div>
     </main>
   );

@@ -118,7 +118,7 @@ export default function PaymentTransactions({ onStateChange }: ComponentStatePro
     if (!userData || transactionModels.length > 0) return;
 
     demandTransactionModels(async ({ get, set }) => {
-      const models = await fetchTransactionModels(userData, 10, paginateModel);
+      const models = await fetchTransactionModels(userData, 10,  new PaginateModel());
       extractLatest(models);
       set(models);
       setFirstLoaded(true);

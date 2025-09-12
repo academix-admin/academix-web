@@ -47,7 +47,7 @@ export default function HomePage() {
 
 
   return (
-    <div className={`${styles.mainContainer} ${styles[`mainContainer_${theme}`]}`}>
+    <div  className={`${styles.mainContainer} ${styles[`mainContainer_${theme}`]}`}>
       {show && (<HomeTitle onStateChange={(state) => handleStateChange('homeTitle', state)}/>)}
       {show && (<HomeExperience onStateChange={(state) => handleStateChange('homeExperience', state)}/>)}
       {show && (<HomePerformance onStateChange={(state) => handleStateChange('homePerformance', state)}/>)}

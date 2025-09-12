@@ -4,6 +4,7 @@
   align-items: center;
   justify-content: center;
   text-align: center;
+  position: relative;
 }
 
 .header {
@@ -57,8 +58,7 @@
   border-radius: 50%;
   display: flex;
   align-items: center;
-    padding: 4px;
-
+  padding: 4px;
   justify-content: center;
   margin-left: -8px;
 }
@@ -218,238 +218,250 @@
   box-sizing: border-box;
 }
 
+
+/* Mission Card (two-tone like the Dart screenshot) */
 .missionCard {
-  border-radius: 12px;
-  padding: 1rem;
+  width: 100%;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.35);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  margin-bottom: 1rem;
 }
 
-.missionCard_light {
-  background-color: #ffffff;
-  border: 1px solid #e0e0e0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-}
-
-.missionCard_dark {
-  background-color: #2a2a2a;
-  border: 1px solid #444;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-}
-
-.missionCard:hover {
-  transform: translateY(-2px);
-}
-
-.missionCard_light:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.missionCard_dark:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+/* --- TOP (lighter / green) --- */
+.missionCardTop {
+  background: linear-gradient(90deg, #176b2d 0%, #1e7a36 100%); /* green gradient */
+  padding: 12px;
+  color: #fff;
 }
 
 .missionHeader {
   display: flex;
   align-items: flex-start;
-  gap: 0.75rem;
-  margin-bottom: 0.75rem;
+  gap: 12px;
+    align-items: center;
+
 }
 
 .missionIcon {
-  font-size: 1.5rem;
-  flex-shrink: 0;
+  width: 64px;
+  height: 64px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.iconImg {
+  object-fit: cover;
+}
+
+/* fallback emoji placeholder style */
+.placeholderIcon {
+  font-size: 26px;
+  line-height: 1;
 }
 
 .missionInfo {
-  flex-grow: 1;
-  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  flex: 1;
 }
 
 .missionTitle {
-  font-size: 1rem;
-  font-weight: 600;
-  margin: 0 0 0.25rem 0;
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0;
+  color: #fff;
+  line-height: 1.05;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.missionDescription {
+  margin: 4px 0 0 0;
+  color: rgba(255,255,255,0.92);
+  font-size: 14px;
+  max-height: 40px;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.missionDescription {
-  font-size: 0.875rem;
-  margin: 0;
-  opacity: 0.8;
-  line-height: 1.4;
+/* right column for points & progress count */
+.pointsWrap {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  width: 100%;
+  padding-top: 16px;
 }
 
-.missionPoints {
-  text-align: center;
-  flex-shrink: 0;
+.pointsRow {
+  display: flex;
+  gap: 6px;
 }
 
-.points {
-  font-size: 1.25rem;
+.coinSvg {
+  opacity: 0.9;
+  color: #fff;
+}
+
+.pointsText {
+  font-weight: 800;
+  color: #fff;
+  font-size: 18px;
+}
+
+/* progress count to match the top-right "0/1" or "1/1" */
+.progressCount {
+  color: #fff;
   font-weight: 700;
-  display: block;
-  color: #4CAF50;
+  font-size: 16px;
 }
 
-.pointsLabel {
-  font-size: 0.75rem;
-  opacity: 0.7;
+/* --- BOTTOM (darker) --- */
+.missionCardBottom {
+  background: #0f3918; /* darker green */
+  padding: 12px;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
-/* Progress Bar */
-.progressContainer {
-  margin: 0.75rem 0;
+/* instructions */
+.instructionsRow {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
 }
 
-.progressBar {
-  height: 6px;
-  border-radius: 3px;
-  overflow: hidden;
-  margin-bottom: 0.5rem;
+.instructionsTitle {
+  font-weight: 800;
+  font-size: 14px;
+  color: #fff;
 }
 
-.missionCard_light .progressBar {
-  background-color: #f0f0f0;
+.instructionsBody {
+  font-size: 13px;
+  color: rgba(255,255,255,0.9);
 }
 
-.missionCard_dark .progressBar {
-  background-color: #444;
+/* expiry line  */
+.expiresRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
 }
 
-.progressFill {
-  height: 100%;
-  background-color: #4CAF50;
-  border-radius: 3px;
-  transition: width 0.3s ease;
+.expiresText {
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
 }
 
-.progressText {
-  font-size: 0.75rem;
-  opacity: 0.7;
+/* small icon button that sits to the right of expiry */
+.smallIconButton {
+  background: transparent;
+  border: none;
+  color: #fff;
+  padding: 6px;
+  border-radius: 8px;
+  cursor: pointer;
 }
 
-/* Expiry */
-.expiry {
-  font-size: 0.75rem;
-  opacity: 0.7;
-  margin-bottom: 0.5rem;
-  font-style: italic;
-}
-
-/* Status Badge */
-.missionStatus {
-  margin-top: 0.5rem;
-}
-
-.statusBadge {
-  padding: 0.25rem 0.5rem;
-  border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-
-.status_active {
-  background-color: #e8f5e9;
-  color: #2e7d32;
-}
-
-.status_pending {
-  background-color: #fff3e0;
-  color: #f57c00;
-}
-
-.status_completed {
-  background-color: #e8eaf6;
-  color: #3949ab;
-}
-
-.missionCard_dark .status_active {
-  background-color: #1e3b1e;
-  color: #a5d6a7;
-}
-
-.missionCard_dark .status_pending {
-  background-color: #3a2c1a;
-  color: #ffb74d;
-}
-
-.missionCard_dark .status_completed {
-  background-color: #2a2c4a;
-  color: #9fa8da;
-}
-
-/* Empty State */
-.emptyState {
-  text-align: center;
-  padding: 2rem 1rem;
-  opacity: 0.7;
-}
-
-.emptyIcon {
-  font-size: 3rem;
-  margin-bottom: 1rem;
-  opacity: 0.5;
-}
-
-.emptyTitle {
-  font-size: 1.125rem;
-  font-weight: 600;
-  margin: 0 0 0.5rem 0;
-}
-
-.emptyDescription {
-  font-size: 0.875rem;
-  margin: 0;
-  line-height: 1.4;
-}
-
-/* Loading State */
-.loadingContainer {
+/* redeem / code block (center) */
+.redeemBlock {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 2rem;
-  gap: 1rem;
+  gap: 8px;
+  width: 100%;
 }
 
-.loadingContainer .spinner {
-  width: 24px;
-  height: 24px;
-  border-width: 3px;
-}
-
-/* Error State */
-.errorContainer {
+.redeemCodeLarge {
+  font-family: monospace;
+  font-size: 20px;
+  letter-spacing: 2px;
+  color: #fff;
+  padding: 8px 12px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 8px;
+  max-width: 100%;
   text-align: center;
-  padding: 2rem 1rem;
 }
 
-.errorText {
-  color: #f44336;
-  margin-bottom: 1rem;
-}
-
-.retryButton {
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  border: none;
-  background-color: #4CAF50;
-  color: white;
-  font-weight: 600;
+.copyButton {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.12);
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 8px;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  font-weight: 700;
 }
 
-.retryButton:hover {
-  background-color: #3d8b40;
+/* action row for not-yet-rewarded */
+.actionRow {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+}
+
+.collectButton {
+  background: #ff8a00;
+  color: #fff;
+  border: none;
+  padding: 10px 14px;
+  font-weight: 800;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* show in-progress label when not ready to collect */
+.statusPending {
+  color: rgba(255,255,255,0.9);
+  font-weight: 700;
+  align-self: flex-end;
+}
+
+/* small style for final "Rewarded" fallback */
+.redeemedText {
+  font-size: 15px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.95);
+}
+
+.moreSpinnerContainer {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.moreSpinner {
+  border: 3px solid #1D3D1E;
+  border-top: 3px solid white;
+  border-radius: 50%;
+  width: 10px;
+  height: 10px;
+  animation: spin 1s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 
 /* Tablet */
 @media screen and (min-width: 500px) and (max-width: 800px) {
+ .header {
+   position: fixed;
+  }
  .headerContent {
    padding: 1rem 0rem;
    margin: 0 1rem;
@@ -471,7 +483,9 @@
 
 /* Mobile */
 @media screen and (max-width: 500px) {
-
+.header {
+  position: fixed;
+ }
  .headerContent {
     margin: 0;
    padding: 1rem 1rem;
@@ -500,25 +514,20 @@
      }
 
        .missionHeader {
-         flex-direction: column;
-         align-items: flex-start;
-         gap: 0.5rem;
-       }
-
-       .missionPoints {
-         align-self: flex-end;
-       }
-
-       .missionIcon {
-         font-size: 1.25rem;
-       }
-
-       .missionTitle {
-         font-size: 0.9375rem;
-       }
-
-       .missionDescription {
-         font-size: 0.8125rem;
-       }
+           gap: 10px;
+         }
+         .missionIcon {
+           width: 56px;
+           height: 56px;
+         }
+         .pointsText {
+           font-size: 16px;
+         }
+         .missionTitle {
+           font-size: 16px;
+         }
+         .redeemCodeLarge {
+           font-size: 16px;
+         }
 
 }

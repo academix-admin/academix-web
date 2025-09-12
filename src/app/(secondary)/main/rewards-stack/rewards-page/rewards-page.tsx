@@ -52,8 +52,8 @@ export default function RewardsPage() {
 
 
       <div>
-      {error && (<ErrorView text="Error occurred." buttonText="Try Again" onButtonClick={()=> console.log('error')} />)}
             {loading && (<LoadingView />)}
+      {error && (<ErrorView text="Error occurred." buttonText="Try Again" onButtonClick={()=> console.log('error')} />)}
       </div>
 
     </div>

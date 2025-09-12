@@ -228,5 +228,11 @@
   "help_text": "Help",
   "about_us_text": "About us",
   "contacts_text": "Contacts",
-  "pending_text": "Pending"
+  "pending_text": "Pending",
+  "instructions_text": "Instructions",
+  "expires_text": "Expires on {date}",
+  "collect_text": "Collect",
+  "rewarded_text": "Rewarded",
+  "no_instructions": "No instructions available"
+
 }

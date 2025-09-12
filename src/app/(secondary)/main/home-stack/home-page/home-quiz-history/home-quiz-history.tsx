@@ -43,9 +43,9 @@ export default function HomeQuizHistory({ onStateChange }: ComponentStateProps) 
   );
 
 
-  useEffect(() => {
-    console.log('stuck',stuck);
-  }, [stuck]);
+//   useEffect(() => {
+//     console.log('stuck',stuck);
+//   }, [stuck]);
 
   useEffect(() => {
         if (!loaderRef.current) return;
@@ -127,7 +127,7 @@ export default function HomeQuizHistory({ onStateChange }: ComponentStateProps) 
     if (!userData || quizHistoryData.length > 0) return;
 
     demandQuizHistoryData(async ({ get, set }) => {
-      const quizHistories = await fetchQuizHistory(userData, 10, paginateModel);
+      const quizHistories = await fetchQuizHistory(userData, 10, new PaginateModel());
       extractLatest(quizHistories);
       set(quizHistories);
       setFirstLoaded(true);
@@ -222,12 +222,12 @@ export default function HomeQuizHistory({ onStateChange }: ComponentStateProps) 
 
   if(!firstLoaded && quizHistoryData.length <= 0)return null;
 
-
+//     <h2 className={`${stuck ? styles.historyTitlePinned : styles.historyTitleHidden}`}>
+//          {t('history_text')}
+//       </h2>
   return (
     <div className={styles.historyContainer}>
-      <h2 className={`${stuck ? styles.historyTitlePinned : styles.historyTitleHidden}`}>
-         {t('history_text')}
-      </h2>
+
       <h2 ref={pinnedRef} className={`${styles.historyTitle} ${styles[`historyTitle_${theme}`]}`}>
          {t('history_text')}
       </h2>
