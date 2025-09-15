@@ -15,24 +15,30 @@ import { useUserData } from '@/lib/stacks/user-stack';
 import { UserData } from '@/models/user-data';
 import { BackendMissionModel } from '@/models/mission-model';
 import { MissionModel } from '@/models/mission-model';
+import { RewardClaimModel } from '@/models/mission-model';
+import { MissionProgressDetails } from '@/models/mission-model';
+import { reviveMissionModel } from '@/models/mission-model';
+import { reviveProgressDetails } from '@/models/mission-model';
 import { PaginateModel } from '@/models/paginate-model';
 import { getParamatical, ParamaticalData} from '@/utils/checkers';
 import LoadingView from '@/components/LoadingView/LoadingView';
 import NoResultsView from '@/components/NoResultsView/NoResultsView';
 import ErrorView from '@/components/ErrorView/ErrorView';
+import { useMissionData } from '@/lib/stacks/milestone-stack';
+import { useMissionModel } from '@/lib/stacks/mission-stack';
+import { MissionData } from '@/models/mission-data';
 
 interface MissionContainerProps {
   tab: string;
 }
 
-type Props = {
-  mission: MissionModel;
-};
 
-const MissionCard: React.FC<{ mission: MissionModel}> = ({ mission }) => {
+const MissionCard: React.FC<{ mission: MissionModel, tab: string}> = ({ mission, tab }) => {
   const { t, lang } = useLanguage();
   const { userData } = useUserData();
   const [collecting, setCollecting] = useState(false);
+  const [missionModel, demandMissionModel, setMissionModel] = useMissionModel(lang, tab);
+  const [missionData, demandMissionData, setMissionData] = useMissionData(lang);
 
   const progressCount = mission.missionProgressDetails.missionProgressCount ?? 0;
   const progressRequired = mission.missionProgressDetails.missionProgressRequired ?? 1;
@@ -61,43 +67,80 @@ const MissionCard: React.FC<{ mission: MissionModel}> = ({ mission }) => {
     }
   };
 
+
   const handleCollect = async () => {
-    if (!userData) return [];
+    if (!userData) return;
 
     try {
       setCollecting(true);
 
-            const paramatical = await getParamatical(
-              userData.usersId,
-              lang,
-              userData.usersSex,
-              userData.usersDob
-            );
+      const paramatical = await getParamatical(
+        userData.usersId,
+        lang,
+        userData.usersSex,
+        userData.usersDob
+      );
 
-            if (!paramatical){
-                                setCollecting(false);
+      if (!paramatical) {
+        setCollecting(false);
+        return;
+      }
 
-                          return;
-            }
+      const { data, error } = await supabaseBrowser.rpc("claim_user_mission", {
+        p_user_id: paramatical.usersId,
+        p_locale: paramatical.locale,
+        p_country: paramatical.country,
+        p_gender: paramatical.gender,
+        p_age: paramatical.age,
+        p_mission_id: mission.missionId
+      });
 
-            const { data, error } = await supabaseBrowser.rpc("claim_user_mission", {
-              p_user_id: paramatical.usersId,
-              p_locale: paramatical.locale,
-              p_country: paramatical.country,
-              p_gender: paramatical.gender,
-              p_age: paramatical.age,
-              p_mission_id: mission.missionId
+      if (error) {
+        setCollecting(false);
+        return;
+      }
+
+      if (data.status === 'MissionReward.success') {
+        let changed = false;
+        const progressDetails = new RewardClaimModel(data.reward_claim_details);
+
+        setMissionModel(missionModel.map(item => {
+          // Revive the mission instance if it's a plain object
+          const missionInstance = reviveMissionModel(item);
+
+          if (missionInstance.missionId === mission.missionId) {
+            changed = true;
+
+            // Revive progress details if needed
+            const currentProgress = reviveProgressDetails(missionInstance.missionProgressDetails);
+
+            const updatedProgressDetails = new MissionProgressDetails({
+              mission_progress_id: currentProgress.missionProgressId,
+              mission_progress_count: currentProgress.missionProgressCount,
+              mission_progress_required: currentProgress.missionProgressRequired,
+              mission_progress_rewarded: true,
+              mission_progress_completed: currentProgress.missionProgressCompleted,
+              mission_progress_created_at: currentProgress.missionProgressCreatedAt,
+              mission_progress_updated_at: currentProgress.missionProgressUpdatedAt,
+              redeem_code_details: progressDetails.redeemCode
+                ? progressDetails.redeemCode.toBackend()
+                : null,
             });
 
-            if (error) {
-                    setCollecting(false);
-              return;
-            }
+            return missionInstance.copyWith({
+              missionProgressDetails: updatedProgressDetails
+            });
+          }
+          return missionInstance;
+        }));
 
-
-
-
+        if (changed) {
+          const missionCount = new MissionData(data.mission_count_details);
+          setMissionData(missionCount);
+        }
+      }
     } catch (err) {
+      console.log(err);
     } finally {
       setCollecting(false);
     }
@@ -205,7 +248,7 @@ const MissionCard: React.FC<{ mission: MissionModel}> = ({ mission }) => {
                 onClick={handleCollect}
                 disabled={collecting}
               >
-                {collecting ? <div className={styles.moreSpinnerContainer}><span className={styles.moreSpinner}></span></div> : t('collect_text') }
+                {collecting ? <span className={styles.moreSpinner}></span> : t('collect_text') }
               </button>
           </div>
         )}
@@ -226,16 +269,7 @@ const MissionContainer: React.FC<MissionContainerProps> = ({ tab }) => {
   const [missionLoading, setMissionLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const [missionModel, demandMissionModel, setMissionModel] = useDemandState<MissionModel[]>(
-    [],
-    {
-      key: `missionModel_${tab}`,
-      persist: true,
-      ttl: 3600,
-      scope: "mission_flow",
-      deps: [lang],
-    }
-  );
+  const [missionModel, demandMissionModel, setMissionModel] = useMissionModel(lang, tab);
 
   useEffect(() => {
     if (!loaderRef.current) return;
@@ -353,10 +387,12 @@ const MissionContainer: React.FC<MissionContainerProps> = ({ tab }) => {
     }
   };
 
+
+
   return (
     <div className={styles.missionsList}>
       {missionModel.map((mission) => (
-        <MissionCard key={mission.missionId} mission={mission} />
+        <MissionCard key={mission.missionId} mission={mission} tab={tab} />
       ))}
 
        {missionModel.length > 10 && <div ref={loaderRef} className={styles.loadMoreSentinel}></div>}

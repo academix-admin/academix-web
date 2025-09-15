@@ -36,6 +36,12 @@ export interface BackendRewardRedeemCodeModel {
   redeem_code_expires?: string | null;
 }
 
+export interface BackendRewardClaimModel {
+  reward_claim_amount: number;
+  reward_claim_redeem_code?: BackendRewardRedeemCodeModel | null;
+}
+
+
 // --- Frontend Models ---
 export class MissionModel {
   missionId: string;
@@ -146,6 +152,22 @@ export class MissionProgressDetails {
         : null,
     };
   }
+
+    copyWithRewarded(
+      missionProgressRewarded?: boolean,
+      rewardRedeemCodeModel?: RewardRedeemCodeModel | null
+    ): MissionProgressDetails {
+      return new MissionProgressDetails({
+        mission_progress_id: this.missionProgressId,
+        mission_progress_count: this.missionProgressCount,
+        mission_progress_required: this.missionProgressRequired,
+        mission_progress_rewarded: missionProgressRewarded ?? this.missionProgressRewarded,
+        mission_progress_completed: this.missionProgressCompleted,
+        mission_progress_created_at: this.missionProgressCreatedAt,
+        mission_progress_updated_at: this.missionProgressUpdatedAt,
+        redeem_code_details: rewardRedeemCodeModel ?? this.rewardRedeemCodeModel,
+      });
+    }
 }
 
 export class RewardRedeemCodeModel {
@@ -167,3 +189,61 @@ export class RewardRedeemCodeModel {
     };
   }
 }
+
+export class RewardClaimModel {
+  amount: number;
+  redeemCode?: RewardRedeemCodeModel | null;
+
+  constructor(data?: BackendRewardClaimModel | null) {
+    this.amount = data?.reward_claim_amount ?? 0;
+    this.redeemCode = data?.reward_claim_redeem_code
+      ? new RewardRedeemCodeModel(data.reward_claim_redeem_code)
+      : null;
+  }
+
+  copyWith(data: Partial<RewardClaimModel>): RewardClaimModel {
+    const backendData: BackendRewardClaimModel = {
+      reward_claim_amount: data.amount ?? this.amount,
+      reward_claim_redeem_code: data.redeemCode
+        ? data.redeemCode.toBackend()
+        : this.redeemCode?.toBackend() ?? null,
+    };
+
+    return new RewardClaimModel(backendData);
+  }
+}
+
+// Add this utility function
+export const reviveMissionModel = (data: any): MissionModel => {
+  if (data instanceof MissionModel) return data;
+
+  // Convert plain object back to MissionModel instance
+  const backendData: BackendMissionModel = {
+    mission_id: data.missionId,
+    mission_type: data.missionType,
+    reward_details: data.rewardDetails,
+    sort_created_id: data.sortCreatedId,
+    mission_requirement: { count: data.missionRequirement },
+    mission_title: data.missionTitle,
+    mission_image: data.missionImage,
+    mission_progress_details: data.missionProgressDetails,
+    mission_description: data.missionDescription,
+  };
+
+  return new MissionModel(backendData);
+};
+
+export const reviveProgressDetails = (data: any): MissionProgressDetails => {
+  if (data instanceof MissionProgressDetails) return data;
+
+  return new MissionProgressDetails({
+    mission_progress_id: data.missionProgressId,
+    mission_progress_count: data.missionProgressCount,
+    mission_progress_required: data.missionProgressRequired,
+    mission_progress_rewarded: data.missionProgressRewarded,
+    mission_progress_completed: data.missionProgressCompleted,
+    mission_progress_created_at: data.missionProgressCreatedAt,
+    mission_progress_updated_at: data.missionProgressUpdatedAt,
+    redeem_code_details: data.rewardRedeemCodeModel,
+  });
+};

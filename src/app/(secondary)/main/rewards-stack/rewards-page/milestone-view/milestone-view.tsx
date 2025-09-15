@@ -13,6 +13,8 @@ import { MissionData } from '@/models/mission-data';
 import { AchievementsData } from '@/models/achievements-data';
 import { ComponentStateProps } from '@/hooks/use-component-state';
 import { useNav } from "@/lib/NavigationStack";
+import { useMissionData } from '@/lib/stacks/milestone-stack';
+import { useAchievementsData } from '@/lib/stacks/milestone-stack';
 
 export default function MilestoneView({ onStateChange }: ComponentStateProps) {
   const { theme } = useTheme();
@@ -21,27 +23,9 @@ export default function MilestoneView({ onStateChange }: ComponentStateProps) {
   const nav = useNav();
   const isTop = nav.isTop();
 
-  const [missionData, demandMissionData, setMissionData] = useDemandState<MissionData | null>(
-    null,
-    {
-      key: "missionData",
-      persist: true,
-      ttl: 3600,
-      scope: "secondary_flow",
-      deps: [lang],
-    }
-  );
+  const [missionData, demandMissionData, setMissionData] = useMissionData(lang);
 
-  const [achievementsData, demandAchievementsData, setAchievementsData] = useDemandState<AchievementsData | null>(
-    null,
-    {
-      key: "achievementsData",
-      persist: true,
-      ttl: 3600,
-      scope: "secondary_flow",
-      deps: [lang],
-    }
-  );
+  const [achievementsData, demandAchievementsData, setAchievementsData] = useAchievementsData(lang);
 
   useEffect(() => {
     if(!userData)return;
