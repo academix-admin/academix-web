@@ -1,14 +1,14 @@
-// --- Backend Interfaces ---
+// Backend Interfaces
 export interface BackendMissionModel {
   mission_id: string;
   mission_type: string;
-  mission_image?: string | null;
-  mission_title: string;
-  mission_description: string;
+  reward_details: BackendRewardDetails | null;
   sort_created_id: number;
   mission_requirement: { count: number };
-  reward_details: BackendRewardDetails;
-  mission_progress_details: BackendMissionProgressDetails;
+  mission_title: string;
+  mission_image?: string | null;
+  mission_progress_details: BackendMissionProgressDetails | null;
+  mission_description: string;
 }
 
 export interface BackendRewardDetails {
@@ -41,8 +41,6 @@ export interface BackendRewardClaimModel {
   reward_claim_redeem_code?: BackendRewardRedeemCodeModel | null;
 }
 
-
-// --- Frontend Models ---
 export class MissionModel {
   missionId: string;
   missionType: string;
@@ -54,6 +52,7 @@ export class MissionModel {
   missionProgressDetails: MissionProgressDetails;
   missionDescription: string;
 
+  // Backend constructor
   constructor(data?: BackendMissionModel | null) {
     this.missionId = data?.mission_id ?? "";
     this.missionType = data?.mission_type ?? "";
@@ -62,30 +61,32 @@ export class MissionModel {
     this.missionRequirement = data?.mission_requirement?.count ?? 0;
     this.missionTitle = data?.mission_title ?? "";
     this.missionImage = data?.mission_image ?? null;
-    this.missionProgressDetails = new MissionProgressDetails(
-      data?.mission_progress_details ?? null
-    );
+    this.missionProgressDetails = new MissionProgressDetails(data?.mission_progress_details ?? null);
     this.missionDescription = data?.mission_description ?? "";
   }
 
-  copyWith(data: Partial<MissionModel>): MissionModel {
-    const backendData: BackendMissionModel = {
-      mission_id: data.missionId ?? this.missionId,
-      mission_type: data.missionType ?? this.missionType,
-      reward_details: data.rewardDetails
-        ? data.rewardDetails.toBackend()
-        : this.rewardDetails.toBackend(),
-      sort_created_id: data.sortCreatedId ?? this.sortCreatedId,
-      mission_requirement: { count: data.missionRequirement ?? this.missionRequirement },
-      mission_title: data.missionTitle ?? this.missionTitle,
-      mission_image: data.missionImage ?? this.missionImage,
-      mission_progress_details: data.missionProgressDetails
-        ? data.missionProgressDetails.toBackend()
-        : this.missionProgressDetails.toBackend(),
-      mission_description: data.missionDescription ?? this.missionDescription,
-    };
+  // Factory for frontend-plain objects
+  static from(data: any): MissionModel {
+    if (data instanceof MissionModel) return data;
 
-    return new MissionModel(backendData);
+    return new MissionModel({
+      mission_id: data.missionId,
+      mission_type: data.missionType,
+      reward_details: RewardDetails.from(data.rewardDetails).toBackend(),
+      sort_created_id: data.sortCreatedId,
+      mission_requirement: { count: data.missionRequirement },
+      mission_title: data.missionTitle,
+      mission_image: data.missionImage,
+      mission_progress_details: MissionProgressDetails.from(data.missionProgressDetails).toBackend(),
+      mission_description: data.missionDescription,
+    });
+  }
+
+  copyWith(data: Partial<MissionModel>): MissionModel {
+    return MissionModel.from({
+      ...this,
+      ...data,
+    });
   }
 }
 
@@ -102,6 +103,17 @@ export class RewardDetails {
     this.rewardLimit = data?.reward_limit ?? 0;
     this.rewardValue = data?.reward_value ?? 0;
     this.rewardInstruction = data?.reward_instruction ?? "";
+  }
+
+  static from(data: any): RewardDetails {
+    if (data instanceof RewardDetails) return data;
+    return new RewardDetails({
+      reward_id: data.rewardId,
+      reward_type: data.rewardType,
+      reward_limit: data.rewardLimit,
+      reward_value: data.rewardValue,
+      reward_instruction: data.rewardInstruction,
+    });
   }
 
   toBackend(): BackendRewardDetails {
@@ -138,6 +150,20 @@ export class MissionProgressDetails {
       : null;
   }
 
+  static from(data: any): MissionProgressDetails {
+    if (data instanceof MissionProgressDetails) return data;
+    return new MissionProgressDetails({
+      mission_progress_id: data.missionProgressId,
+      mission_progress_count: data.missionProgressCount,
+      mission_progress_required: data.missionProgressRequired,
+      mission_progress_rewarded: data.missionProgressRewarded,
+      mission_progress_completed: data.missionProgressCompleted,
+      mission_progress_created_at: data.missionProgressCreatedAt,
+      mission_progress_updated_at: data.missionProgressUpdatedAt,
+      redeem_code_details: RewardRedeemCodeModel.from(data.rewardRedeemCodeModel)?.toBackend(),
+    });
+  }
+
   toBackend(): BackendMissionProgressDetails {
     return {
       mission_progress_id: this.missionProgressId,
@@ -147,27 +173,21 @@ export class MissionProgressDetails {
       mission_progress_completed: this.missionProgressCompleted,
       mission_progress_created_at: this.missionProgressCreatedAt,
       mission_progress_updated_at: this.missionProgressUpdatedAt,
-      redeem_code_details: this.rewardRedeemCodeModel
-        ? this.rewardRedeemCodeModel.toBackend()
-        : null,
+      redeem_code_details: this.rewardRedeemCodeModel?.toBackend() ?? null,
     };
   }
 
-    copyWithRewarded(
-      missionProgressRewarded?: boolean,
-      rewardRedeemCodeModel?: RewardRedeemCodeModel | null
-    ): MissionProgressDetails {
-      return new MissionProgressDetails({
-        mission_progress_id: this.missionProgressId,
-        mission_progress_count: this.missionProgressCount,
-        mission_progress_required: this.missionProgressRequired,
-        mission_progress_rewarded: missionProgressRewarded ?? this.missionProgressRewarded,
-        mission_progress_completed: this.missionProgressCompleted,
-        mission_progress_created_at: this.missionProgressCreatedAt,
-        mission_progress_updated_at: this.missionProgressUpdatedAt,
-        redeem_code_details: rewardRedeemCodeModel ?? this.rewardRedeemCodeModel,
-      });
-    }
+   copyWithRewarded(
+     missionProgressRewarded?: boolean,
+     rewardRedeemCodeModel?: RewardRedeemCodeModel | null
+   ): MissionProgressDetails {
+     return MissionProgressDetails.from({
+       ...this,
+       missionProgressRewarded: missionProgressRewarded ?? this.missionProgressRewarded,
+       rewardRedeemCodeModel: rewardRedeemCodeModel ?? this.rewardRedeemCodeModel,
+     });
+   }
+
 }
 
 export class RewardRedeemCodeModel {
@@ -179,6 +199,16 @@ export class RewardRedeemCodeModel {
     this.id = data?.redeem_code_id ?? null;
     this.value = data?.redeem_code_value ?? null;
     this.expires = data?.redeem_code_expires ?? null;
+  }
+
+  static from(data: any): RewardRedeemCodeModel | null {
+    if (!data) return null;
+    if (data instanceof RewardRedeemCodeModel) return data;
+    return new RewardRedeemCodeModel({
+      redeem_code_id: data.id,
+      redeem_code_value: data.value,
+      redeem_code_expires: data.expires,
+    });
   }
 
   toBackend(): BackendRewardRedeemCodeModel {
@@ -201,49 +231,25 @@ export class RewardClaimModel {
       : null;
   }
 
-  copyWith(data: Partial<RewardClaimModel>): RewardClaimModel {
-    const backendData: BackendRewardClaimModel = {
-      reward_claim_amount: data.amount ?? this.amount,
-      reward_claim_redeem_code: data.redeemCode
-        ? data.redeemCode.toBackend()
-        : this.redeemCode?.toBackend() ?? null,
-    };
+  static from(data: any): RewardClaimModel {
+    if (data instanceof RewardClaimModel) return data;
+    return new RewardClaimModel({
+      reward_claim_amount: data.amount,
+      reward_claim_redeem_code: RewardRedeemCodeModel.from(data.redeemCode)?.toBackend(),
+    });
+  }
 
-    return new RewardClaimModel(backendData);
+  copyWith(data: Partial<RewardClaimModel>): RewardClaimModel {
+    return RewardClaimModel.from({
+      ...this,
+      ...data,
+    });
+  }
+
+  toBackend(): BackendRewardClaimModel {
+    return {
+      reward_claim_amount: this.amount,
+      reward_claim_redeem_code: this.redeemCode?.toBackend() ?? null,
+    };
   }
 }
-
-// Add this utility function
-export const reviveMissionModel = (data: any): MissionModel => {
-  if (data instanceof MissionModel) return data;
-
-  // Convert plain object back to MissionModel instance
-  const backendData: BackendMissionModel = {
-    mission_id: data.missionId,
-    mission_type: data.missionType,
-    reward_details: data.rewardDetails,
-    sort_created_id: data.sortCreatedId,
-    mission_requirement: { count: data.missionRequirement },
-    mission_title: data.missionTitle,
-    mission_image: data.missionImage,
-    mission_progress_details: data.missionProgressDetails,
-    mission_description: data.missionDescription,
-  };
-
-  return new MissionModel(backendData);
-};
-
-export const reviveProgressDetails = (data: any): MissionProgressDetails => {
-  if (data instanceof MissionProgressDetails) return data;
-
-  return new MissionProgressDetails({
-    mission_progress_id: data.missionProgressId,
-    mission_progress_count: data.missionProgressCount,
-    mission_progress_required: data.missionProgressRequired,
-    mission_progress_rewarded: data.missionProgressRewarded,
-    mission_progress_completed: data.missionProgressCompleted,
-    mission_progress_created_at: data.missionProgressCreatedAt,
-    mission_progress_updated_at: data.missionProgressUpdatedAt,
-    redeem_code_details: data.rewardRedeemCodeModel,
-  });
-};

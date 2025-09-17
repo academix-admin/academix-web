@@ -17,8 +17,6 @@ import { BackendMissionModel } from '@/models/mission-model';
 import { MissionModel } from '@/models/mission-model';
 import { RewardClaimModel } from '@/models/mission-model';
 import { MissionProgressDetails } from '@/models/mission-model';
-import { reviveMissionModel } from '@/models/mission-model';
-import { reviveProgressDetails } from '@/models/mission-model';
 import { PaginateModel } from '@/models/paginate-model';
 import { getParamatical, ParamaticalData} from '@/utils/checkers';
 import LoadingView from '@/components/LoadingView/LoadingView';
@@ -27,17 +25,20 @@ import ErrorView from '@/components/ErrorView/ErrorView';
 import { useMissionData } from '@/lib/stacks/milestone-stack';
 import { useMissionModel } from '@/lib/stacks/mission-stack';
 import { MissionData } from '@/models/mission-data';
+import { StateStack } from '@/lib/state-stack';
 
 interface MissionContainerProps {
   tab: string;
+  handleCollected: () => void
 }
 
 
-const MissionCard: React.FC<{ mission: MissionModel, tab: string}> = ({ mission, tab }) => {
+const MissionCard: React.FC<{ mission: MissionModel, tab: string, handleCollected: () => void }> = ({ mission, tab, handleCollected }) => {
   const { t, lang } = useLanguage();
   const { userData } = useUserData();
   const [collecting, setCollecting] = useState(false);
   const [missionModel, demandMissionModel, setMissionModel] = useMissionModel(lang, tab);
+  const [collectMissionModel, demandCollectMissionModel, setCollectMissionModel] = useMissionModel(lang, 'MissionTab.completed');
   const [missionData, demandMissionData, setMissionData] = useMissionData(lang);
 
   const progressCount = mission.missionProgressDetails.missionProgressCount ?? 0;
@@ -67,84 +68,89 @@ const MissionCard: React.FC<{ mission: MissionModel, tab: string}> = ({ mission,
     }
   };
 
+ const handleCollect = async () => {
+   if (!userData) {
+     console.warn("User data not available");
+     return;
+   }
 
-  const handleCollect = async () => {
-    if (!userData) return;
+   try {
+     setCollecting(true);
 
-    try {
-      setCollecting(true);
+     const paramatical = await getParamatical(
+       userData.usersId,
+       lang,
+       userData.usersSex,
+       userData.usersDob
+     );
 
-      const paramatical = await getParamatical(
-        userData.usersId,
-        lang,
-        userData.usersSex,
-        userData.usersDob
-      );
+     if (!paramatical) {
+       setCollecting(false);
+       console.error("Failed to get paramatical data");
+       return;
+     }
 
-      if (!paramatical) {
-        setCollecting(false);
-        return;
-      }
+     const { data, error } = await supabaseBrowser.rpc("claim_user_mission", {
+       p_user_id: paramatical.usersId,
+       p_locale: paramatical.locale,
+       p_country: paramatical.country,
+       p_gender: paramatical.gender,
+       p_age: paramatical.age,
+       p_mission_id: mission.missionId
+     });
 
-      const { data, error } = await supabaseBrowser.rpc("claim_user_mission", {
-        p_user_id: paramatical.usersId,
-        p_locale: paramatical.locale,
-        p_country: paramatical.country,
-        p_gender: paramatical.gender,
-        p_age: paramatical.age,
-        p_mission_id: mission.missionId
-      });
+     if (error) {
+       console.error("Failed to claim mission:", error);
+       setCollecting(false);
+       return;
+     }
 
-      if (error) {
-        setCollecting(false);
-        return;
-      }
+     if (data.status === 'MissionReward.success') {
+       const claimDetails = new RewardClaimModel(data.reward_claim_details);
 
-      if (data.status === 'MissionReward.success') {
-        let changed = false;
-        const progressDetails = new RewardClaimModel(data.reward_claim_details);
+       // 1. Find the mission in missionModel
+       const missionIndex = missionModel.findIndex(item => {
+         const missionInstance = MissionModel.from(item);
+         return missionInstance.missionId === mission.missionId;
+       });
 
-        setMissionModel(missionModel.map(item => {
-          // Revive the mission instance if it's a plain object
-          const missionInstance = reviveMissionModel(item);
+       if (missionIndex === -1) {
+         console.error("Mission not found in missionModel");
+         setCollecting(false);
+         return;
+       }
 
-          if (missionInstance.missionId === mission.missionId) {
-            changed = true;
+       // 2. Remove it from missionModel and create updated version
+       const updatedMissionModel = [...missionModel];
+       const missionToUpdate = updatedMissionModel.splice(missionIndex, 1)[0];
 
-            // Revive progress details if needed
-            const currentProgress = reviveProgressDetails(missionInstance.missionProgressDetails);
+       // 3. Update the mission with rewarded status
+       const missionInstance = MissionModel.from(missionToUpdate);
+       const updatedMission = missionInstance.copyWith({
+         missionProgressDetails: missionInstance.missionProgressDetails.copyWithRewarded(
+           true,
+           claimDetails.redeemCode
+         )
+       });
 
-            const updatedProgressDetails = new MissionProgressDetails({
-              mission_progress_id: currentProgress.missionProgressId,
-              mission_progress_count: currentProgress.missionProgressCount,
-              mission_progress_required: currentProgress.missionProgressRequired,
-              mission_progress_rewarded: true,
-              mission_progress_completed: currentProgress.missionProgressCompleted,
-              mission_progress_created_at: currentProgress.missionProgressCreatedAt,
-              mission_progress_updated_at: currentProgress.missionProgressUpdatedAt,
-              redeem_code_details: progressDetails.redeemCode
-                ? progressDetails.redeemCode.toBackend()
-                : null,
-            });
+       // 4. Add the updated mission to collectMissionModel
+       setCollectMissionModel([updatedMission,...collectMissionModel]);
 
-            return missionInstance.copyWith({
-              missionProgressDetails: updatedProgressDetails
-            });
-          }
-          return missionInstance;
-        }));
+       setMissionModel(updatedMissionModel);
 
-        if (changed) {
-          const missionCount = new MissionData(data.mission_count_details);
-          setMissionData(missionCount);
-        }
-      }
-    } catch (err) {
-      console.log(err);
-    } finally {
-      setCollecting(false);
-    }
-  };
+       // Update mission count data
+       if (data.mission_count_details) {
+         const missionCount = new MissionData(data.mission_count_details);
+         setMissionData(missionCount);
+         handleCollected();
+       }
+     }
+   } catch (err) {
+     console.error("Unexpected error in handleCollect:", err);
+   } finally {
+     setCollecting(false);
+   }
+ };
 
   const formattedExpiry = expires ? new Date(expires) : null;
   const expiryText = formattedExpiry
@@ -258,7 +264,7 @@ const MissionCard: React.FC<{ mission: MissionModel, tab: string}> = ({ mission,
 }
 
 
-const MissionContainer: React.FC<MissionContainerProps> = ({ tab }) => {
+const MissionContainer: React.FC<MissionContainerProps> = ({ tab, handleCollected }) => {
   const { theme } = useTheme();
   const { t, lang } = useLanguage();
   const { userData } = useUserData();
@@ -388,11 +394,10 @@ const MissionContainer: React.FC<MissionContainerProps> = ({ tab }) => {
   };
 
 
-
   return (
     <div className={styles.missionsList}>
       {missionModel.map((mission) => (
-        <MissionCard key={mission.missionId} mission={mission} tab={tab} />
+        <MissionCard key={mission.missionId} mission={mission} tab={tab} handleCollected={handleCollected}/>
       ))}
 
        {missionModel.length > 10 && <div ref={loaderRef} className={styles.loadMoreSentinel}></div>}
@@ -427,13 +432,23 @@ export default function MissionPage() {
     })));
   };
 
+
+  const handleCollected = () => {
+    setActiveTab('MissionTab.completed');
+  };
+
+  const goBack = () => {
+    nav.pop();
+     StateStack.core.clearScope('mission_flow');
+  };
+
   return (
     <main className={`${styles.container} ${styles[`container_${theme}`]}`}>
       <header className={`${styles.header} ${styles[`header_${theme}`]}`}>
         <div className={styles.headerContent}>
           <button
             className={styles.backButton}
-            onClick={() => nav.pop()}
+            onClick={goBack}
             aria-label="Go back"
           >
             <svg className={styles.backIcon} viewBox="0 0 16 22" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -460,7 +475,7 @@ export default function MissionPage() {
           ))}
         </div>
 
-        <MissionContainer tab={activeTab} />
+        <MissionContainer tab={activeTab} handleCollected={handleCollected} />
       </div>
     </main>
   );
