@@ -4,7 +4,7 @@ import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import Image from 'next/image';
-import styles from './mission-page.module.css';
+import styles from './achievements-page.module.css';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useNav } from "@/lib/NavigationStack";
 import { capitalize } from '@/utils/textUtils';
@@ -13,39 +13,39 @@ import TabMilestone from "@/models/tab-milestone";
 import { useDemandState } from '@/lib/state-stack';
 import { useUserData } from '@/lib/stacks/user-stack';
 import { UserData } from '@/models/user-data';
-import { BackendMissionModel } from '@/models/mission-model';
-import { MissionModel } from '@/models/mission-model';
-import { RewardClaimModel } from '@/models/mission-model';
-import { MissionProgressDetails } from '@/models/mission-model';
+import { BackendAchievementsModel } from '@/models/achievements-model';
+import { AchievementsModel } from '@/models/achievements-model';
+import { RewardClaimModel } from '@/models/achievements-model';
+import { AchievementsProgressDetails } from '@/models/achievements-model';
 import { PaginateModel } from '@/models/paginate-model';
 import { getParamatical, ParamaticalData} from '@/utils/checkers';
 import LoadingView from '@/components/LoadingView/LoadingView';
 import NoResultsView from '@/components/NoResultsView/NoResultsView';
 import ErrorView from '@/components/ErrorView/ErrorView';
-import { useMissionData } from '@/lib/stacks/milestone-stack';
-import { useMissionModel } from '@/lib/stacks/mission-stack';
-import { MissionData } from '@/models/mission-data';
+import { useAchievementsData } from '@/lib/stacks/milestone-stack';
+import { useAchievementsModel } from '@/lib/stacks/achievements-stack';
+import { AchievementsData } from '@/models/achievements-data';
 import { StateStack } from '@/lib/state-stack';
 
-interface MissionContainerProps {
+interface AchievementsContainerProps {
   tab: string;
   handleCollected: () => void
 }
 
 
-const MissionCard: React.FC<{ mission: MissionModel, tab: string, handleCollected: () => void }> = ({ mission, tab, handleCollected }) => {
+const AchievementsCard: React.FC<{ achievements: AchievementsModel, tab: string, handleCollected: () => void }> = ({ achievements, tab, handleCollected }) => {
   const { t, lang } = useLanguage();
   const { userData } = useUserData();
   const [collecting, setCollecting] = useState(false);
-  const [missionModel, demandMissionModel, setMissionModel] = useMissionModel(lang, tab);
-  const [collectMissionModel, demandCollectMissionModel, setCollectMissionModel] = useMissionModel(lang, 'MissionTab.completed');
-  const [missionData, demandMissionData, setMissionData] = useMissionData(lang);
+  const [achievementsModel, demandAchievementsModel, setAchievementsModel] = useAchievementsModel(lang, tab);
+  const [collectAchievementsModel, demandCollectAchievementsModel, setCollectAchievementsModel] = useAchievementsModel(lang, 'AchievementTab.completed');
+  const [achievementsData, demandAchievementsData, setAchievementsData] = useAchievementsData(lang);
 
-  const progressCount = mission.missionProgressDetails.missionProgressCount ?? 0;
-  const progressRequired = mission.missionProgressDetails.missionProgressRequired ?? 1;
+  const progressCount = achievements.achievementsProgressDetails.achievementsProgressCount ?? 0;
+  const progressRequired = achievements.achievementsProgressDetails.achievementsProgressRequired ?? 1;
   const progressPercentage = Math.min(100, Math.round((progressCount / Math.max(1, progressRequired)) * 100));
-  const rewarded = mission.missionProgressDetails.missionProgressRewarded === true;
-  const redeem = mission.missionProgressDetails.rewardRedeemCodeModel;
+  const rewarded = achievements.achievementsProgressDetails.achievementsProgressRewarded === true;
+  const redeem = achievements.achievementsProgressDetails.rewardRedeemCodeModel;
   const redeemCode = redeem?.value ?? null;
   const expires = redeem?.expires ?? null;
 
@@ -53,12 +53,12 @@ const MissionCard: React.FC<{ mission: MissionModel, tab: string, handleCollecte
     try {
       // Format number
       return new Intl.NumberFormat(lang || undefined, { maximumFractionDigits: 2 }).format(
-        mission.rewardDetails?.rewardValue ?? 0
+        achievements.rewardDetails?.rewardValue ?? 0
       );
     } catch {
-      return String(mission.rewardDetails?.rewardValue ?? 0);
+      return String(achievements.rewardDetails?.rewardValue ?? 0);
     }
-  }, [mission.rewardDetails, lang]);
+  }, [achievements.rewardDetails, lang]);
 
   const handleCopy = async (text?: string) => {
     if (!text) return;
@@ -90,58 +90,58 @@ const MissionCard: React.FC<{ mission: MissionModel, tab: string, handleCollecte
        return;
      }
 
-     const { data, error } = await supabaseBrowser.rpc("claim_user_mission", {
+     const { data, error } = await supabaseBrowser.rpc("claim_user_achievements", {
        p_user_id: paramatical.usersId,
        p_locale: paramatical.locale,
        p_country: paramatical.country,
        p_gender: paramatical.gender,
        p_age: paramatical.age,
-       p_mission_id: mission.missionId
+       p_achievements_id: achievements.achievementsId
      });
 
      if (error) {
-       console.error("Failed to claim mission:", error);
+       console.error("Failed to claim achievements:", error);
        setCollecting(false);
        return;
      }
 
-     if (data.status === 'MissionReward.success') {
+     if (data.status === 'AchievementReward.success') {
        const claimDetails = new RewardClaimModel(data.reward_claim_details);
 
-       // 1. Find the mission in missionModel
-       const missionIndex = missionModel.findIndex(item => {
-         const missionInstance = MissionModel.from(item);
-         return missionInstance.missionId === mission.missionId;
+       // 1. Find the achievements in achievementsModel
+       const achievementsIndex = achievementsModel.findIndex(item => {
+         const achievementsInstance = AchievementsModel.from(item);
+         return achievementsInstance.achievementsId === achievements.achievementsId;
        });
 
-       if (missionIndex === -1) {
-         console.error("Mission not found in missionModel");
+       if (achievementsIndex === -1) {
+         console.error("Achievements not found in achievementsModel");
          setCollecting(false);
          return;
        }
 
-       // 2. Remove it from missionModel and create updated version
-       const updatedMissionModel = [...missionModel];
-       const missionToUpdate = updatedMissionModel.splice(missionIndex, 1)[0];
+       // 2. Remove it from achievementsModel and create updated version
+       const updatedAchievementsModel = [...achievementsModel];
+       const achievementsToUpdate = updatedAchievementsModel.splice(achievementsIndex, 1)[0];
 
-       // 3. Update the mission with rewarded status
-       const missionInstance = MissionModel.from(missionToUpdate);
-       const updatedMission = missionInstance.copyWith({
-         missionProgressDetails: missionInstance.missionProgressDetails.copyWithRewarded(
+       // 3. Update the achievements with rewarded status
+       const achievementsInstance = AchievementsModel.from(achievementsToUpdate);
+       const updatedAchievements = achievementsInstance.copyWith({
+         achievementsProgressDetails: achievementsInstance.achievementsProgressDetails.copyWithRewarded(
            true,
            claimDetails.redeemCode
          )
        });
 
-       // 4. Add the updated mission to collectMissionModel
-       setCollectMissionModel([updatedMission,...collectMissionModel]);
+       // 4. Add the updated achievements to collectAchievementsModel
+       setCollectAchievementsModel([updatedAchievements,...collectAchievementsModel]);
 
-       setMissionModel(updatedMissionModel);
+       setAchievementsModel(updatedAchievementsModel);
 
-       // Update mission count data
-       if (data.mission_count_details) {
-         const missionCount = new MissionData(data.mission_count_details);
-         setMissionData(missionCount);
+       // Update achievements count data
+       if (data.achievements_count_details) {
+         const achievementsCount = new AchievementsData(data.achievements_count_details);
+         setAchievementsData(achievementsCount);
          handleCollected();
        }
      }
@@ -158,24 +158,24 @@ const MissionCard: React.FC<{ mission: MissionModel, tab: string, handleCollecte
     : null;
 
   return (
-    <div className={styles.missionCard} role="group" aria-labelledby={`mission-${mission.missionId}`}>
+    <div className={styles.achievementsCard} role="group" aria-labelledby={`achievements-${achievements.achievementsId}`}>
       {/* TOP SECTION (lighter/green) */}
-      <div className={styles.missionCardTop}>
-        <div className={styles.missionHeader}>
-          <div className={styles.missionIcon}>
-            {mission.missionImage ? (
-              <Image src={mission.missionImage} alt={mission.missionTitle} width={56} height={56} className={styles.iconImg}/>
+      <div className={styles.achievementsCardTop}>
+        <div className={styles.achievementsHeader}>
+          <div className={styles.achievementsIcon}>
+            {achievements.achievementsImage ? (
+              <Image src={achievements.achievementsImage} alt={achievements.achievementsTitle} width={56} height={56} className={styles.iconImg}/>
             ) : (
               <div className={styles.placeholderIcon}>🎯</div>
             )}
           </div>
 
-          <div className={styles.missionInfo}>
-            <h3 id={`mission-${mission.missionId}`} className={styles.missionTitle}>
-              {mission.missionTitle}
+          <div className={styles.achievementsInfo}>
+            <h3 id={`achievements-${achievements.achievementsId}`} className={styles.achievementsTitle}>
+              {achievements.achievementsTitle}
             </h3>
-            <p className={styles.missionDescription}>
-              {mission.missionDescription}
+            <p className={styles.achievementsDescription}>
+              {achievements.achievementsDescription}
             </p>
 
 
@@ -197,13 +197,13 @@ const MissionCard: React.FC<{ mission: MissionModel, tab: string, handleCollecte
       </div>
 
       {/* BOTTOM SECTION (darker) */}
-      <div className={styles.missionCardBottom}>
+      <div className={styles.achievementsCardBottom}>
         {/* If not yet rewarded: show Instructions heading (like Dart) */}
         {!rewarded && (
           <div className={styles.instructionsRow}>
             <div className={styles.instructionsTitle}>{t('instructions_text')}</div>
             <div className={styles.instructionsBody}>
-              {mission.rewardDetails?.rewardInstruction ?? mission.rewardDetails.rewardInstruction ?? t('no_instructions') ?? ''}
+              {achievements.rewardDetails?.rewardInstruction ?? achievements.rewardDetails.rewardInstruction ?? t('no_instructions') ?? ''}
             </div>
           </div>
         )}
@@ -264,7 +264,7 @@ const MissionCard: React.FC<{ mission: MissionModel, tab: string, handleCollecte
 }
 
 
-const MissionContainer: React.FC<MissionContainerProps> = ({ tab, handleCollected }) => {
+const AchievementsContainer: React.FC<AchievementsContainerProps> = ({ tab, handleCollected }) => {
   const { theme } = useTheme();
   const { t, lang } = useLanguage();
   const { userData } = useUserData();
@@ -272,17 +272,17 @@ const MissionContainer: React.FC<MissionContainerProps> = ({ tab, handleCollecte
   const loaderRef = useRef<HTMLDivElement | null>(null);
   const [paginateModel, setPaginateModel] = useState<PaginateModel>(new PaginateModel());
   const [firstLoaded, setFirstLoaded] = useState(false);
-  const [missionLoading, setMissionLoading] = useState(false);
+  const [achievementsLoading, setAchievementsLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const [missionModel, demandMissionModel, setMissionModel] = useMissionModel(lang, tab);
+  const [achievementsModel, demandAchievementsModel, setAchievementsModel] = useAchievementsModel(lang, tab);
 
   useEffect(() => {
     if (!loaderRef.current) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && missionModel.length > 0 && !missionLoading) {
+        if (entries[0].isIntersecting && achievementsModel.length > 0 && !achievementsLoading) {
           callPaginate();
         }
       },
@@ -294,9 +294,9 @@ const MissionContainer: React.FC<MissionContainerProps> = ({ tab, handleCollecte
     return () => {
       if (loaderRef.current) observer.unobserve(loaderRef.current);
     };
-  }, [missionModel, paginateModel, missionLoading]);
+  }, [achievementsModel, paginateModel, achievementsLoading]);
 
-  const fetchMissionModel = useCallback(async (userData: UserData, limitBy: number, paginateModel: PaginateModel): Promise<MissionModel[]> => {
+  const fetchAchievementsModel = useCallback(async (userData: UserData, limitBy: number, paginateModel: PaginateModel): Promise<AchievementsModel[]> => {
     if (!userData) return [];
 
     try {
@@ -309,120 +309,120 @@ const MissionContainer: React.FC<MissionContainerProps> = ({ tab, handleCollecte
 
       if (!paramatical) return [];
 
-      const { data, error } = await supabaseBrowser.rpc("fetch_user_missions", {
+      const { data, error } = await supabaseBrowser.rpc("fetch_user_achievements", {
         p_user_id: paramatical.usersId,
         p_locale: paramatical.locale,
         p_country: paramatical.country,
         p_gender: paramatical.gender,
         p_age: paramatical.age,
         p_limit_by: limitBy,
-        p_mission_tab: tab,
-        p_after_missions: paginateModel.toJson(),
+        p_achievement_tab: tab,
+        p_after_achievements: paginateModel.toJson(),
       });
 
       if (error) {
-        console.error("[MissionModel] error:", error);
-        setError(t('error_fetching_missions'));
+        console.error("[AchievementsModel] error:", error);
+        setError(t('error_fetching_achievements'));
         return [];
       }
 
       setError('');
-      return (data || []).map((row: BackendMissionModel) => new MissionModel(row));
+      return (data || []).map((row: BackendAchievementsModel) => new AchievementsModel(row));
     } catch (err) {
-      console.error("[MissionModel] error:", err);
-      setError(t('error_fetching_missions'));
-      setMissionLoading(false);
+      console.error("[AchievementsModel] error:", err);
+      setError(t('error_fetching_achievements'));
+      setAchievementsLoading(false);
       return [];
     }
   }, [lang, tab, t]);
 
-  const extractLatest = (userMissionModel: MissionModel[]) => {
-    if (userMissionModel.length > 0) {
-      const lastItem = userMissionModel[userMissionModel.length - 1];
+  const extractLatest = (userAchievementsModel: AchievementsModel[]) => {
+    if (userAchievementsModel.length > 0) {
+      const lastItem = userAchievementsModel[userAchievementsModel.length - 1];
       setPaginateModel(new PaginateModel({ sortId: lastItem.sortCreatedId }));
     }
   };
 
-  const processMissionModelPaginate = (userMissionModel: MissionModel[]) => {
-    const oldMissionModelIds = missionModel.map((e) => e.missionId);
-    const newMissionModel = [...missionModel];
+  const processAchievementsModelPaginate = (userAchievementsModel: AchievementsModel[]) => {
+    const oldAchievementsModelIds = achievementsModel.map((e) => e.achievementsId);
+    const newAchievementsModel = [...achievementsModel];
 
-    for (const mission of userMissionModel) {
-      if (!oldMissionModelIds.includes(mission.missionId)) {
-        newMissionModel.push(mission);
+    for (const achievements of userAchievementsModel) {
+      if (!oldAchievementsModelIds.includes(achievements.achievementsId)) {
+        newAchievementsModel.push(achievements);
       }
     }
 
-    setMissionModel(newMissionModel);
+    setAchievementsModel(newAchievementsModel);
   };
 
   useEffect(() => {
-    if (!userData || missionModel.length > 0) return;
+    if (!userData || achievementsModel.length > 0) return;
 
-    demandMissionModel(async ({ get, set }) => {
-      setMissionLoading(true);
-      const missionModels = await fetchMissionModel(userData, 10, new PaginateModel());
-      extractLatest(missionModels);
-      set(missionModels);
+    demandAchievementsModel(async ({ get, set }) => {
+      setAchievementsLoading(true);
+      const achievementsModels = await fetchAchievementsModel(userData, 10, new PaginateModel());
+      extractLatest(achievementsModels);
+      set(achievementsModels);
       setFirstLoaded(true);
-      setMissionLoading(false);
+      setAchievementsLoading(false);
     });
-  }, [demandMissionModel, userData]);
+  }, [demandAchievementsModel, userData]);
 
   const callPaginate = async () => {
-    if (!userData || missionModel.length <= 0 || missionLoading) return;
-    setMissionLoading(true);
-    const missionModels = await fetchMissionModel(userData, 20, paginateModel);
-    setMissionLoading(false);
-    if (missionModels.length > 0) {
-      extractLatest(missionModels);
-      processMissionModelPaginate(missionModels);
+    if (!userData || achievementsModel.length <= 0 || achievementsLoading) return;
+    setAchievementsLoading(true);
+    const achievementsModels = await fetchAchievementsModel(userData, 20, paginateModel);
+    setAchievementsLoading(false);
+    if (achievementsModels.length > 0) {
+      extractLatest(achievementsModels);
+      processAchievementsModelPaginate(achievementsModels);
     }
   };
 
   const refreshData = async () => {
     if (!userData) return;
-    setMissionLoading(true);
-    setMissionModel([]);
+    setAchievementsLoading(true);
+    setAchievementsModel([]);
     setPaginateModel(new PaginateModel());
-    const missionModels = await fetchMissionModel(userData, 10, new PaginateModel());
-    setMissionLoading(false);
-    if (missionModels.length > 0) {
-      extractLatest(missionModels);
-      setMissionModel(missionModels);
+    const achievementsModels = await fetchAchievementsModel(userData, 10, new PaginateModel());
+    setAchievementsLoading(false);
+    if (achievementsModels.length > 0) {
+      extractLatest(achievementsModels);
+      setAchievementsModel(achievementsModels);
     }
   };
 
 
   return (
-    <div className={styles.missionsList}>
-      {missionModel.map((mission) => (
-        <MissionCard key={mission.missionId} mission={mission} tab={tab} handleCollected={handleCollected}/>
+    <div className={styles.achievementsList}>
+      {achievementsModel.map((achievements) => (
+        <AchievementsCard key={achievements.achievementsId} achievements={achievements} tab={tab} handleCollected={handleCollected}/>
       ))}
 
-       {missionModel.length > 10 && <div ref={loaderRef} className={styles.loadMoreSentinel}></div>}
-       {missionLoading && missionModel.length === 0 && <LoadingView />}
-       {!missionLoading && missionModel.length === 0 && !error && (<NoResultsView text="No result" buttonText="Try Again" onButtonClick={refreshData} />)}
-       {!missionLoading && missionModel.length === 0 && error && (<ErrorView text="Error occurred." buttonText="Try Again" onButtonClick={refreshData} />)}
+       {achievementsModel.length > 10 && <div ref={loaderRef} className={styles.loadMoreSentinel}></div>}
+       {achievementsLoading && achievementsModel.length === 0 && <LoadingView />}
+       {!achievementsLoading && achievementsModel.length === 0  && !error && (<NoResultsView text="No result" buttonText="Try Again" onButtonClick={refreshData} />)}
+       {!achievementsLoading && achievementsModel.length === 0 && error && (<ErrorView text="Error occurred." buttonText="Try Again" onButtonClick={refreshData} />)}
 
 
     </div>
   );
 };
 
-export default function MissionPage() {
+export default function AchievementsPage() {
   const { theme } = useTheme();
   const { t, lang } = useLanguage();
   const nav = useNav();
 
   const [activeTabs, setActiveTabs] = useState<TabMilestone[]>([
-    { id: 'MissionTab.active', label: t('active_text'), active: true },
-    { id: 'MissionTab.pending', label: t('pending_text'), active: false },
-    { id: 'MissionTab.completed', label: t('completed_text'), active: false }
+    { id: 'AchievementTab.active', label: t('active_text'), active: true },
+    { id: 'AchievementTab.pending', label: t('pending_text'), active: false },
+    { id: 'AchievementTab.completed', label: t('completed_text'), active: false }
   ]);
 
   // Get active tab
-  const activeTab = activeTabs.find(tab => tab.active)?.id || 'MissionTab.active';
+  const activeTab = activeTabs.find(tab => tab.active)?.id || 'AchievementsTab.active';
 
   // Set active tab
   const setActiveTab = (id: string) => {
@@ -434,18 +434,18 @@ export default function MissionPage() {
 
 
   const handleCollected = () => {
-    setActiveTab('MissionTab.completed');
+    setActiveTab('AchievementTab.completed');
   };
 
   const goBack = async () => {
     await nav.pop();
-    StateStack.core.clearScope('mission_flow');
+    StateStack.core.clearScope('achievements_flow');
   };
 
   return (
     <main className={`${styles.container} ${styles[`container_${theme}`]}`}>
 
-
+   
       <header className={`${styles.header} ${styles[`header_${theme}`]}`}>
         <div className={styles.headerContent}>
           <button
@@ -460,7 +460,7 @@ export default function MissionPage() {
               />
             </svg>
           </button>
-          <h1 className={styles.title}>{t('missions_text')}</h1>
+          <h1 className={styles.title}>{t('achievements_text')}</h1>
         </div>
       </header>
 
@@ -477,7 +477,7 @@ export default function MissionPage() {
           ))}
         </div>
 
-        <MissionContainer tab={activeTab} handleCollected={handleCollected} />
+        <AchievementsContainer tab={activeTab} handleCollected={handleCollected} />
       </div>
     </main>
   );

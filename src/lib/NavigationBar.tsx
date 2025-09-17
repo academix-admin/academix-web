@@ -275,7 +275,7 @@ export default function NavigationBar({
         style={{
           background: backgroundColor,
           padding: `${paddingY} ${paddingX}`,
-          transform: hidden ? 'translateY(100%)' : 'translateY(0)',
+          transform: hidden ? `translateY(calc(100% + ${currentHeight}))` : 'translateY(0)',
           flexDirection: direction === 'vertical' ? 'column' : 'row',
           borderTop: barBorderTop,
           borderRadius: barBorderRadius,

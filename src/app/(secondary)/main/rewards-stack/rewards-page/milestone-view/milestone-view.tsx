@@ -111,8 +111,8 @@ export default function MilestoneView({ onStateChange }: ComponentStateProps) {
   };
 
   const handleAchievementClick = () => {
-    // Navigate to achievement screen
-        nav.push('achievement_page');
+    // Navigate to achievements screen
+        nav.push('achievements_page');
 
   };
 

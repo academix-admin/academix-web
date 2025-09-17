@@ -1,0 +1,533 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  position: relative;
+}
+
+.header {
+  position: absolute;
+  top: 0;
+  left:0;
+  width: 100%;
+  z-index: 10;
+  display: flex;
+  backdrop-filter: blur(8px);
+  box-sizing: border-box;
+}
+
+.header_light {
+  background-color: rgba(255, 255, 255, 0.8);
+  border-bottom: 1px solid #C4C4C4;
+}
+
+.header_dark {
+  background-color: rgba(18, 18, 18, 0.8);
+  border-bottom: 1px solid #333;
+}
+
+.headerContent {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 1rem;
+  padding: 1.1rem 2rem;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.innerBody{
+  display: flex;
+  max-width: 1200px;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 6rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+
+.backButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-color);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  justify-content: center;
+  margin-left: -8px;
+}
+
+.backButton:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.backIcon {
+  width: 20px;
+  height: 20px;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+  flex-grow: 1;
+  text-align: start;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-sizing: border-box;
+}
+
+.logoContainer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  box-sizing: border-box;
+}
+
+.logo{
+  width: 35px;
+  height: 35px;
+}
+
+.container_light .input {
+  background-color: #ffffff;
+  color: #000;
+}
+
+.container_dark .input {
+  background-color: #1E1E1E;
+  color: #ffffff;
+  border-color: #333;
+}
+
+.errorText, .validText {
+  font-size: 0.75rem;
+  margin: 0px;
+  margin-top: 0.15rem;
+  text-align: left;
+  font-weight: 500;
+  line-height: 1.25;
+   word-break: break-word;   /* break long words */
+      white-space: normal;      /* allow wrapping */
+}
+
+.spinner {
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top: 3px solid white;
+  border-radius: 50%;
+  width: 10px;
+  height: 10px;
+  animation: spin 1s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loadingOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+}
+
+
+.errorSection {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
+}
+
+/* Tab Switcher */
+.tab_switcher {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: nowrap;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    padding: 0.25rem 2rem;
+    width: 100%; /* Add this */
+    max-width: 100%; /* Add this */
+    box-sizing: border-box;
+}
+
+
+.tab_switcher::-webkit-scrollbar {
+  display: none;
+}
+
+
+.tab {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+    white-space: nowrap;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.tab_light {
+  background-color: #f5f5f5;
+  color: #555555;
+  border-color: #dddddd;
+}
+
+.tab_dark {
+  background-color: #3a3a3a;
+  color: #cccccc;
+  border-color: #555555;
+}
+
+.tab_active {
+  border-color: #4CAF50;
+}
+
+.tab_light.tab_active {
+  background-color: #e8f5e9;
+  color: #2c3e50;
+}
+
+.tab_dark.tab_active {
+  background-color: #1e3b1e;
+  color: #f5f5f5;
+}
+
+
+/* Mission Cards */
+.achievementsList {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding: 0.25rem 2rem;
+  box-sizing: border-box;
+}
+
+
+/* Mission Card (two-tone like the Dart screenshot) */
+.achievementsCard {
+  width: 100%;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.35);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  cursor: pointer;
+  margin-bottom: 1rem;
+}
+
+/* --- TOP (lighter / green) --- */
+.achievementsCardTop {
+  background: linear-gradient(90deg, #176b2d 0%, #1e7a36 100%); /* green gradient */
+  padding: 12px;
+  color: #fff;
+}
+
+.achievementsHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+    align-items: center;
+
+}
+
+.achievementsIcon {
+  width: 64px;
+  height: 64px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.iconImg {
+  object-fit: cover;
+}
+
+/* fallback emoji placeholder style */
+.placeholderIcon {
+  font-size: 26px;
+  line-height: 1;
+}
+
+.achievementsInfo {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  flex: 1;
+}
+
+.achievementsTitle {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0;
+  color: #fff;
+  line-height: 1.05;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.achievementsDescription {
+  margin: 4px 0 0 0;
+  color: rgba(255,255,255,0.92);
+  font-size: 14px;
+  max-height: 40px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* right column for points & progress count */
+.pointsWrap {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  width: 100%;
+  padding-top: 16px;
+}
+
+.pointsRow {
+  display: flex;
+  gap: 6px;
+}
+
+.coinSvg {
+  opacity: 0.9;
+  color: #fff;
+}
+
+.pointsText {
+  font-weight: 800;
+  color: #fff;
+  font-size: 18px;
+}
+
+/* progress count to match the top-right "0/1" or "1/1" */
+.progressCount {
+  color: #fff;
+  font-weight: 700;
+  font-size: 16px;
+}
+
+/* --- BOTTOM (darker) --- */
+.achievementsCardBottom {
+  background: #0f3918; /* darker green */
+  padding: 12px;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* instructions */
+.instructionsRow {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+}
+
+.instructionsTitle {
+  font-weight: 800;
+  font-size: 14px;
+  color: #fff;
+}
+
+.instructionsBody {
+  font-size: 13px;
+  color: rgba(255,255,255,0.9);
+}
+
+/* expiry line  */
+.expiresRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.expiresText {
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+}
+
+/* small icon button that sits to the right of expiry */
+.smallIconButton {
+  background: transparent;
+  border: none;
+  color: #fff;
+  padding: 6px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* redeem / code block (center) */
+.redeemBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.redeemCodeLarge {
+  font-family: monospace;
+  font-size: 20px;
+  letter-spacing: 2px;
+  color: #fff;
+  padding: 8px 12px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 8px;
+  max-width: 100%;
+  text-align: center;
+}
+
+.copyButton {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.12);
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+/* action row for not-yet-rewarded */
+.actionRow {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+}
+
+.collectButton {
+  background: #ff8a00;
+  color: #fff;
+  border: none;
+  padding: 10px 14px;
+  font-weight: 800;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* show in-progress label when not ready to collect */
+.statusPending {
+  color: rgba(255,255,255,0.9);
+  font-weight: 700;
+  align-self: flex-end;
+}
+
+/* small style for final "Rewarded" fallback */
+.redeemedText {
+  font-size: 15px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.95);
+}
+
+.moreSpinnerContainer {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.moreSpinner {
+  border: 3px solid #1D3D1E;
+  border-top: 3px solid white;
+  border-radius: 50%;
+  width: 10px;
+  height: 10px;
+  animation: spin 1s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+
+/* Tablet */
+@media screen and (min-width: 500px) and (max-width: 800px) {
+ .header {
+   position: fixed;
+  }
+ .headerContent {
+   padding: 1rem 0rem;
+   margin: 0 1rem;
+ }
+  .logo {
+       width: 35px;
+       height: 35px;
+     }
+  .innerBody {
+    padding-top: 6rem;
+      max-width: 800px;
+  }
+      .tab_switcher,.achievementssList {
+             padding: 0.2rem 1.5rem;
+       }
+
+
+}
+
+/* Mobile */
+@media screen and (max-width: 500px) {
+.header {
+  position: fixed;
+ }
+ .headerContent {
+    margin: 0;
+   padding: 1rem 1rem;
+ }
+  .innerBody {
+    padding-top: 5rem;
+      max-width: 500px;
+  }
+
+  .backIcon {
+    width: 16px;
+    height: 16px;
+  }
+
+  .title {
+    font-size: 1.2rem;
+  }
+
+  .logo {
+      width: 28px;
+      height: 28px;
+    }
+
+    .tab_switcher,.achievementssList {
+           padding: 0.15rem 1rem;
+     }
+
+       .achievementsHeader {
+           gap: 10px;
+         }
+         .achievementsIcon {
+           width: 56px;
+           height: 56px;
+         }
+         .pointsText {
+           font-size: 16px;
+         }
+         .achievementsTitle {
+           font-size: 16px;
+         }
+         .redeemCodeLarge {
+           font-size: 16px;
+         }
+
+}
