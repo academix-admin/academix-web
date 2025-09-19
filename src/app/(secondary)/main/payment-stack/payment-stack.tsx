@@ -5,9 +5,12 @@ import styles from './payment-stack.module.css';
 import {useNav } from "@/lib/NavigationStack";
 import NavigationStack from "@/lib/NavigationStack";
 import PaymentPage from "./payment-page/payment-page";
+import TopUpPage from "./top-up-page/top-up-page";
 
 const paymentStackNavLink = {
-  payment_page: PaymentPage
+  payment_page: PaymentPage,
+  top_up_page: TopUpPage,
+//   withdraw_page: WithdrawPage
 };
 
 export const PaymentStack = () => (

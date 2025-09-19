@@ -21,11 +21,11 @@ export default function PaymentAction({ onStateChange }: ComponentStateProps) {
       switch(actionId) {
         case 'topup':
           // Handle top up action
-          nav.push('top_up');
+          nav.push('top_up_page');
           break;
         case 'withdraw':
           // Handle withdraw action
-          nav.push('withdraw');
+          nav.push('withdraw_page');
           break;
         case 'payments':
           // Handle payments action

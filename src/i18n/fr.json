@@ -233,5 +233,10 @@
   "expires_text": "Expire le {date}",
   "collect_text": "Collecter",
   "rewarded_text": "Récompensé",
-  "no_instructions": "Aucune instruction disponible"
+  "no_instructions": "Aucune instruction disponible",
+  "payment_wallet_text": "Portefeuille de Paiement",
+  "rate_text": "Taux",
+  "min_text": "MIN",
+  "fee_text": "Frais",
+  "select_wallet": "Sélectionner un Portefeuille"
 }

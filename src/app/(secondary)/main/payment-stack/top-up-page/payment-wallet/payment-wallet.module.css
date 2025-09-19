@@ -1,0 +1,313 @@
+.experienceContainer {
+  padding: 0 28px 0 28px;
+  box-sizing: border-box;
+  overflow: hidden;
+  max-width: 100%;
+}
+
+.experienceTitle {
+  font-size: 18px;
+  font-weight: bold;
+  margin: 0px;
+  margin-bottom: 20px;
+}
+
+.experienceTitle_light {
+  color: #000;
+}
+
+.experienceTitle_dark {
+  color: #fff;
+}
+
+.paymentWalletContainer {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  border-radius: 16px;
+  padding: 16px;
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+}
+
+.walletHeader {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.walletImageContainer {
+  width: 50px;
+  height: 50px;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.25),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.1),
+    0 2px 4px rgba(0, 0, 0, 0.25);
+}
+
+.swapIcon {
+  width: 24px;
+  height: 24px;
+  color: #fff;
+}
+
+.walletImage {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.25),
+    0 2px 4px rgba(0, 0, 0, 0.25);
+}
+
+.walletImage img {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+}
+
+.walletInitials {
+  font-weight: bold;
+  font-size: 16px;
+  color: #fff;
+}
+
+.walletInfo {
+  flex: 1;
+  margin-left: 12px;
+  cursor: pointer;
+}
+
+.walletCurrency {
+  font-size: 16px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+}
+
+.walletCurrency svg {
+  width: 20px;
+  height: 20px;
+  margin-left: 4px;
+}
+
+.walletName {
+  font-size: 14px;
+  opacity: 0.8;
+  font-weight: 600;
+}
+
+.rateInfo {
+  text-align: right;
+}
+
+.rateLabel {
+  font-size: 14px;
+  opacity: 0.8;
+  font-weight: 600;
+}
+
+.rateValue {
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.amountInputContainer {
+  margin-bottom: 12px;
+}
+
+.amountInput {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 34px;
+  font-weight: bold;
+  outline: none;
+  min-width: 0;
+  margin: 0px;
+  padding: 0px;
+  box-sizing: border-box;
+  overflow-x: scroll;
+}
+
+.amountInput::placeholder {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.feeContainer {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  font-size: 14px;
+  opacity: 0.8;
+  font-weight: 600;
+}
+
+.feeInfo, .feeValue {
+  display: flex;
+  align-items: center;
+}
+
+.convertedAmount {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  width: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.currencySymbol {
+  margin-right: 8px;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.academixIconLarge {
+  width: 28px;
+  height: 28px;
+}
+
+.convertedValue {
+  font-size: 24px;
+  font-weight: bold;
+  white-space: nowrap;
+  overflow-x: scroll;
+  max-width: 100%;
+  flex-shrink: 1;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.convertedValue::-webkit-scrollbar {
+  display: none;
+}
+
+/* Wallet Item Styles */
+.walletItem {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+
+.walletItemImage {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.walletItemImage img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
+.walletItemInfo {
+  flex: 1;
+}
+
+.walletItemCurrency {
+  font-size: 16px;
+  font-weight: bold;
+  margin-bottom: 2px;
+}
+
+.walletItem_light .walletItemCurrency {
+  color: #000;
+}
+
+.walletItem_dark .walletItemCurrency {
+  color: #fff;
+}
+
+.walletItemName {
+  font-size: 14px;
+  opacity: 0.7;
+}
+
+.walletItemCheckmark {
+  color: #3b82f6;
+  margin-left: 8px;
+}
+
+.walletItemCheckmark svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* Responsive Styles */
+@media screen and (min-width: 801px) {
+  .experienceTitle {
+    font-size: 20px;
+  }
+
+  .paymentWalletContainer {
+    padding: 20px;
+  }
+}
+
+@media screen and (max-width: 800px) {
+  .experienceContainer {
+    padding: 0 24px 0 24px;
+  }
+
+  .amountInput {
+    font-size: 32px;
+  }
+}
+
+@media screen and (max-width: 500px) {
+  .experienceContainer {
+    padding: 0 16px 0 16px;
+  }
+
+  .experienceTitle {
+    font-size: 16px;
+  }
+
+  .walletImageContainer {
+    width: 44px;
+    height: 44px;
+  }
+
+  .amountInput {
+    font-size: 28px;
+  }
+
+  .convertedValue {
+    font-size: 20px;
+  }
+
+  .walletItem {
+    padding: 10px 12px;
+  }
+
+  .walletItemImage {
+    width: 36px;
+    height: 36px;
+    margin-right: 10px;
+  }
+}

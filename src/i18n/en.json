@@ -233,6 +233,10 @@
   "expires_text": "Expires on {date}",
   "collect_text": "Collect",
   "rewarded_text": "Rewarded",
-  "no_instructions": "No instructions available"
-
+  "no_instructions": "No instructions available",
+  "payment_wallet_text": "Payment Wallet",
+  "rate_text": "Rate",
+  "min_text": "MIN",
+  "fee_text": "Fee",
+  "select_wallet": "Select Wallet"
 }
