@@ -238,5 +238,19 @@
   "rate_text": "Rate",
   "min_text": "MIN",
   "fee_text": "Fee",
-  "select_wallet": "Select Wallet"
+  "select_wallet": "Select Wallet",
+  "payment_method_text": "Payment method",
+  "select_payment_method": "Select payment method",
+  "select_method": "Select Method",
+  "payment_profile_text": "Payment profile",
+  "select_payment_profile": "Select payment profile",
+  "no_results": "No results found",
+  "try_again": "Try Again",
+  "error_text": "Error",
+  "private_account": "Private Account",
+  "direct_debit_text": "Direct Debit",
+  "phone_number": "Phone number",
+  "account_number": "Account number",
+  "bank_name": "Bank name",
+  "new_profile": "New profile"
 }

@@ -1,0 +1,213 @@
+.experienceContainer {
+  padding: 24px 28px 0 28px;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.experienceTitle {
+  font-size: 18px;
+  font-weight: bold;
+  margin: 0px;
+  margin-bottom: 20px;
+}
+
+.experienceTitle_light {
+  color: #000;
+}
+
+.experienceTitle_dark {
+  color: #fff;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.selectButton {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.selectButton_light {
+  border-color: #e0e0e0;
+  background: #fff;
+}
+
+.selectButton_dark {
+  border-color: #444;
+  background: #1a1a1a;
+}
+
+.selectButton:hover {
+  border-color: #3b82f6;
+}
+
+.selectedProfile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.profileInfo {
+  text-align: left;
+  flex: 1;
+}
+
+.profileMainText {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.selectButton_light .profileMainText {
+  color: #000;
+}
+
+.selectButton_dark .profileMainText {
+  color: #fff;
+}
+
+.profileSubText {
+  font-size: 14px;
+  opacity: 0.7;
+}
+
+.placeholder {
+  flex: 1;
+  text-align: left;
+  font-size: 16px;
+  opacity: 0.7;
+}
+
+.selectButton_light .placeholder {
+  color: #666;
+}
+
+.selectButton_dark .placeholder {
+  color: #999;
+}
+
+.chevron {
+  width: 20px;
+  height: 20px;
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+/* Profile Item Styles */
+.profileItemContainer {
+  padding: 8px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.profileItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.profileItemLeft {
+  flex: 1;
+}
+
+.profileLabel {
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+.profileItemContainer_light .profileLabel {
+  color: #000;
+}
+
+.profileItemContainer_dark .profileLabel {
+  color: #fff;
+}
+
+.profileItemRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.profileValue {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.profileItemContainer_light .profileValue {
+  color: #000;
+}
+
+.profileItemContainer_dark .profileValue {
+  color: #fff;
+}
+
+
+.bankDetailRow {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.profileItemContainer_light .bankDetailRow {
+  color: #000;
+}
+
+.profileItemContainer_dark .bankDetailRow {
+  color: #fff;
+}
+
+.infoIcon {
+  width: 18px;
+  height: 18px;
+  opacity: 0.7;
+}
+
+/* Responsive Styles */
+@media screen and (min-width: 801px) {
+  .experienceTitle {
+    font-size: 20px;
+  }
+}
+
+@media screen and (max-width: 800px) {
+  .experienceContainer {
+    padding: 28px 24px 0 24px;
+  }
+}
+
+@media screen and (max-width: 500px) {
+  .experienceContainer {
+    padding: 20px 16px 0 16px;
+  }
+
+  .experienceTitle {
+    font-size: 16px;
+  }
+
+  .selectButton {
+    padding: 12px;
+  }
+
+  .profileMainText {
+    font-size: 14px;
+  }
+
+  .profileSubText {
+    font-size: 12px;
+  }
+}

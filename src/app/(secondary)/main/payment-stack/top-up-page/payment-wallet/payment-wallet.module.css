@@ -200,7 +200,7 @@
 .walletItem {
   display: flex;
   align-items: center;
-  padding: 12px 16px;
+  padding: 8px 16px;
   border-radius: 12px;
   cursor: pointer;
   transition: background-color 0.2s ease;

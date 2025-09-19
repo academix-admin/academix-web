@@ -238,5 +238,19 @@
   "rate_text": "Taux",
   "min_text": "MIN",
   "fee_text": "Frais",
-  "select_wallet": "Sélectionner un Portefeuille"
+  "select_wallet": "Sélectionner un Portefeuille",
+  "payment_method_text": "Méthode de paiement",
+  "select_payment_method": "Sélectionner une méthode de paiement",
+  "select_method": "Sélectionner une méthode",
+  "payment_profile_text": "Profil de paiement",
+  "select_payment_profile": "Sélectionner un profil de paiement",
+  "no_results": "Aucun résultat trouvé",
+  "try_again": "Réessayer",
+  "error_text": "Erreur",
+  "private_account": "Compte Privé",
+  "direct_debit_text": "Prélèvement Automatique",
+  "phone_number": "Numéro de téléphone",
+  "account_number": "Numéro de compte",
+  "bank_name": "Nom de la banque",
+  "new_profile": "Nouveau profil"
 }

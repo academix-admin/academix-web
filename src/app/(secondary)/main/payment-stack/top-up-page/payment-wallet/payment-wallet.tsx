@@ -18,6 +18,12 @@ import LoadingView from '@/components/LoadingView/LoadingView';
 import NoResultsView from '@/components/NoResultsView/NoResultsView';
 import ErrorView from '@/components/ErrorView/ErrorView';
 import DialogCancel from '@/components/DialogCancel';
+import { usePaymentWalletModel } from '@/lib/stacks/payment-wallet-stack';
+
+interface PaymentWalletProps {
+  onWalletData: (walletModel: PaymentWalletModel) => void;
+  onWalletAmount: (walletAmount: number) => void;
+}
 
 interface WalletItemProps {
   onClick: () => void;
@@ -64,7 +70,7 @@ const WalletItem = ({ onClick, wallet, isSelected }: WalletItemProps) => {
   );
 };
 
-export default function PaymentWallet() {
+export default function PaymentWallet({ onWalletData, onWalletAmount }: PaymentWalletProps) {
   const { theme } = useTheme();
   const { t, lang } = useLanguage();
   const nav = useNav();
@@ -100,16 +106,13 @@ export default function PaymentWallet() {
   const [walletSelectId, walletSelectController, walletSelectIsOpen, walletSelectionState] = useSelectionController();
   const [searchWalletQuery, setWalletQuery] = useState('');
 
-  const [walletsModel, demandPaymentWalletModel, setPaymentWalletModel] = useDemandState<PaymentWalletModel[]>(
-    [],
-    {
-      key: "walletsModel",
-      persist: true,
-      ttl: 3600,
-      scope: "payment_flow",
-      deps: [lang],
-    }
-  );
+  const [walletsModel, demandPaymentWalletModel, setPaymentWalletModel] = usePaymentWalletModel(lang);
+
+  useEffect(() => {
+    if(!walletData)return;
+     onWalletData(walletData);
+     onWalletAmount(Number(walletAmount) || 0);
+  }, [walletAmount, walletData]);
 
   const handleUserTopUpWallet = useCallback(async () => {
     if (!userData || userWalletState === 'loading' || !!walletData) return;
@@ -159,6 +162,7 @@ export default function PaymentWallet() {
   useEffect(() => {
     handleUserTopUpWallet();
   }, [handleUserTopUpWallet]);
+
 
   const fetchPaymentWalletModel = useCallback(async (
     userData: UserData,
