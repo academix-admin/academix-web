@@ -10,7 +10,8 @@ import { useUserData } from '@/lib/stacks/user-stack';
 import { useDemandState } from '@/lib/state-stack';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { UserData } from '@/models/user-data';
-import { BackendPaymentWalletModel } from '@/models/payment-wallet-model';
+import { BackendBuyPaymentWalletModel } from '@/models/payment-wallet-model';
+import { BackendSellPaymentWalletModel } from '@/models/payment-wallet-model';
 import { PaymentWalletModel } from '@/models/payment-wallet-model';
 import { PaginateModel } from '@/models/paginate-model';
 import { SelectionViewer, useSelectionController } from "@/lib/SelectionViewer";
@@ -195,8 +196,7 @@ export default function PaymentWallet({ onWalletData, onWalletAmount }: PaymentW
         console.error("[PaymentWalletModel] error:", error);
         return [];
       }
-
-      return (data || []).map((row: BackendPaymentWalletModel) => new PaymentWalletModel('PaymentType.BUY',row));
+      return (data || []).map((row: BackendBuyPaymentWalletModel | BackendSellPaymentWalletModel) => new PaymentWalletModel('PaymentType.BUY',row));
     } catch (err) {
       console.error("[PaymentWalletModel] error:", err);
       return [];
@@ -253,7 +253,7 @@ export default function PaymentWallet({ onWalletData, onWalletAmount }: PaymentW
       if (paymentSwitch === 'wallet' && walletData) {
         const numValue = parseFloat(value) || 0;
         setPaymentAmount(numValue);
-        setAcademixAmount((numValue * walletData.paymentWalletRate).toFixed(2));
+        setAcademixAmount((numValue * walletData.paymentWalletRate).toFixed(2).replace('.00',''));
       }
     }
   }, [paymentSwitch, walletData]);
@@ -266,7 +266,7 @@ export default function PaymentWallet({ onWalletData, onWalletAmount }: PaymentW
       if (paymentSwitch === 'academix' && walletData) {
         const numValue = parseFloat(value) || 0;
         setPaymentAmount(numValue);
-        setWalletAmount((numValue / walletData.paymentWalletRate).toFixed(2));
+        setWalletAmount((numValue / walletData.paymentWalletRate).toFixed(2).replace('.00',''));
       }
     }
   }, [paymentSwitch, walletData]);
@@ -277,9 +277,26 @@ export default function PaymentWallet({ onWalletData, onWalletAmount }: PaymentW
     setPaymentSwitch(prev => prev === 'wallet' ? 'academix' : 'wallet');
   }, [isFocused]);
 
+  // Calculate fee
+  const calculateFee = useCallback((type:string, value: number) => {
+      let feeValue = 0;
+      if(walletData?.paymentWalletRateType === 'RateType.PERCENT'){
+          feeValue = (walletData.paymentWalletFee / 100) * value;
+      }
+      if(walletData?.paymentWalletRateType === 'RateType.FEE'){
+          feeValue = walletData.paymentWalletFee;
+      }
+
+     if(type === 'PaymentType.SELL'){
+         feeValue = ((walletData?.paymentWalletRate || 0)* feeValue);
+     }
+
+    return feeValue.toFixed(2).replace('.00','');
+  }, [walletData]);
+
   // Format number with commas
   const formatNumber = useCallback((num: number) => {
-    return num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    return num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",").replace('.00','');
   }, []);
 
   useEffect(() => {
@@ -413,13 +430,30 @@ export default function PaymentWallet({ onWalletData, onWalletAmount }: PaymentW
           />
         </div>
 
-        <div className={styles.feeContainer}>
+        <div className={styles.infoContainer}>
           <div className={styles.feeInfo}>
             <div className={styles.feeLabel}>
               {paymentSwitch === 'wallet' ? (
                 `${t('min_text')}: ${walletData.paymentWalletCurrency}${walletData.paymentWalletMin} `
               ) : (
-                `${t('fee_text')}: ${walletData.paymentWalletCurrency}${walletData.paymentWalletFee}`
+                <div className={styles.feeContainer}>
+                  {t('fee_text')}:{' '}
+                  {walletData.paymentWalletType === 'PaymentType.BUY' ? (
+                    walletData.paymentWalletCurrency
+                  ) : (
+                    <svg
+                      className={styles.academixIconLarge}
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                    >
+                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" />
+                    </svg>
+                  )}
+                  {calculateFee(
+                    walletData.paymentWalletType, paymentAmount
+                  )}
+                </div>
               )}
             </div>
           </div>
@@ -427,7 +461,24 @@ export default function PaymentWallet({ onWalletData, onWalletAmount }: PaymentW
             {paymentSwitch === 'academix' ? (
               `${t('min_text')}: ${walletData.paymentWalletCurrency}${walletData.paymentWalletMin} `
             ) : (
-              `${t('fee_text')}: ${walletData.paymentWalletCurrency}${walletData.paymentWalletFee}`
+              <div className={styles.valueContainer}>
+                {t('fee_text')}:{' '}
+                {walletData.paymentWalletType === 'PaymentType.BUY' ? (
+                  walletData.paymentWalletCurrency
+                ) : (
+                  <svg
+                    className={styles.academixIconLarge}
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" />
+                  </svg>
+                )}
+                {calculateFee(
+                  walletData.paymentWalletType, paymentAmount
+                )}
+              </div>
             )}
           </div>
         </div>

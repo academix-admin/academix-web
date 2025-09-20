@@ -1,0 +1,567 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  box-sizing: border-box;
+}
+
+.header {
+  position: absolute;
+  top: 0;
+  left:0;
+  width: 100%;
+  z-index: 10;
+  display: flex;
+  backdrop-filter: blur(8px);
+  box-sizing: border-box;
+}
+
+.header_light {
+  background-color: rgba(255, 255, 255, 0.8);
+  border-bottom: 1px solid #C4C4C4;
+}
+
+.header_dark {
+  background-color: rgba(18, 18, 18, 0.8);
+  border-bottom: 1px solid #333;
+}
+
+.headerContent {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 1rem;
+  padding: 1.1rem 2rem;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.innerBody{
+  display: flex;
+  max-width: 1200px;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 8rem;
+  box-sizing: border-box;
+}
+
+
+.backButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-color);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  justify-content: center;
+  margin-left: -8px;
+}
+
+.backButton:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.backIcon {
+  width: 20px;
+  height: 20px;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+  flex-grow: 1;
+  text-align: start;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-sizing: border-box;
+}
+
+/* Transaction Card */
+.transactionCard {
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 24px;
+  padding-top: 50px;
+  position: relative;
+  box-sizing: border-box;
+}
+
+.transactionCard_light {
+  border: 1px solid #CECECE;
+  background-color: #F7F6F6;
+}
+
+.transactionCard_dark {
+  border: 1px solid #424242;
+  background-color: #1c1c1c;
+}
+
+
+.transactionHeader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.transactionTypeIcon {
+  top: 0;
+  left: 50%;
+  width: 50px;
+  height: 50px;
+  transform: translateX(-50%) translateY(-50%);
+  position: absolute;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.transactionTypeIcon_light{
+  border: 1px solid #CECECE;
+  background-color: #F7F6F6;
+}
+
+.transactionTypeIcon_dark{
+  background-color: #1c1c1c;
+  border: 1px solid #424242;
+}
+
+.transactionTitle {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0;
+  text-align: center;
+}
+
+.amountSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.primaryAmount {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-color);
+}
+
+.secondaryAmount {
+  font-size: 1.2rem;
+  font-weight: 600;
+  opacity: 0.8;
+}
+
+.statusSection {
+  width: 100%;
+}
+
+.statusRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  gap: 1rem;
+}
+
+.statusItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  z-index: 1;
+  flex: 1;
+}
+
+.statusLabel {
+  font-size: 0.9rem;
+}
+
+.statusIndicator {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.statusText {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.statusCompleted {
+  color: #16a34a;
+}
+
+.statusFailed {
+  color: #dc2626;
+}
+
+.statusPending {
+  color: #d97706;
+}
+
+.statusCancelled {
+  color: #6b7280;
+}
+
+.statusUnknown {
+  color: #9ca3af;
+}
+
+.statusIcon {
+  width: 24px;
+  height: 24px;
+}
+
+.iconCompleted {
+  background-color: #16a34a;
+}
+
+.iconFailed {
+  background-color: #dc2626;
+}
+
+.iconPending {
+  background-color: #d97706;
+}
+
+.iconCancelled {
+  background-color: #6b7280;
+}
+
+.iconUnknown {
+  background-color: #9ca3af;
+}
+
+.statusConnectorContainer{
+ display: flex;
+ width: 100%;
+}
+
+.statusConnector {
+  height: 2px;
+  transform: translateY(-50%);
+  width: 100%;
+}
+
+.detailsSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+
+.detailRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.detailLabel {
+  font-size: 1rem;
+}
+
+.detailValue {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+/* Details Card */
+.detailsCard {
+  width: 100%;
+  border-radius: 16px;
+  margin-top: 24px;
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+.detailsCard_light {
+  border: 1px solid #CECECE;
+  background-color: #F7F6F6;
+}
+
+.detailsCard_dark {
+  border: 1px solid #424242;
+  background-color: #1c1c1c;
+}
+
+.detailsTitle {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0 0 1rem 0;
+}
+
+.detailsGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.detailItem {
+  display: flex;
+  gap: 0.25rem;
+  justify-content: space-between;
+}
+
+.detailItemLabel {
+  font-size: 0.9rem;
+}
+
+.detailItemValue {
+  font-size: 1rem;
+  font-weight: 600;
+  word-break: break-all;
+  text-align: right;
+}
+
+
+
+.selectButton {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.selectButton_light {
+  border-color: #e0e0e0;
+  background: #fff;
+}
+
+.selectButton_dark {
+  border-color: #444;
+  background: #1a1a1a;
+}
+
+.selectButton:hover {
+  border-color: #3b82f6;
+}
+
+.selectedProfile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.profileInfo {
+  text-align: left;
+  flex: 1;
+}
+
+.profileMainText {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.selectButton_light .profileMainText {
+  color: #000;
+}
+
+.selectButton_dark .profileMainText {
+  color: #fff;
+}
+
+.profileSubText {
+  font-size: 14px;
+  opacity: 0.7;
+}
+
+.placeholder {
+  flex: 1;
+  text-align: left;
+  font-size: 16px;
+  opacity: 0.7;
+}
+
+.selectButton_light .placeholder {
+  color: #666;
+}
+
+.selectButton_dark .placeholder {
+  color: #999;
+}
+
+.chevron {
+  width: 20px;
+  height: 20px;
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+
+.profileItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.profileItemLeft {
+  flex: 1;
+}
+
+.profileLabel {
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+.profileItemContainer_light  {
+  color: #000;
+}
+
+.profileItemContainer_dark {
+  color: #fff;
+}
+
+.profileItemRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.profileValue {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.bankDetails {
+  text-align: right;
+}
+
+.bankDetailRow {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.profileItemContainer_light  {
+  color: #000;
+}
+
+.profileItemContainer_dark  {
+  color: #fff;
+}
+
+.infoIcon {
+  width: 18px;
+  height: 18px;
+  opacity: 0.7;
+}
+
+
+
+@media screen and (min-width: 800px) {
+  .transactionCard{
+      width: 80vw;
+      max-width: 60%;
+  }
+  .detailsCard{
+      width: 80vw;
+      max-width: 60%;
+  }
+}
+
+/* Tablet */
+@media screen and (min-width: 500px) and (max-width: 800px) {
+ .header {
+   position: fixed;
+  }
+ .headerContent {
+   padding: 1rem 0rem;
+   margin: 0 1rem;
+ }
+
+  .innerBody {
+    padding-top: 8rem;
+      max-width: 800px;
+  }
+
+  .primaryAmount {
+    font-size: 1.8rem;
+  }
+
+  .secondaryAmount {
+    font-size: 1.1rem;
+  }
+
+      .transactionCard{
+          width: 80vw;
+      }
+
+      .detailsCard{
+          width: 80vw;
+      }
+.statusRow {
+  gap: 10px;
+}
+}
+
+/* Mobile */
+@media screen and (max-width: 500px) {
+.header {
+  position: fixed;
+ }
+ .headerContent {
+    margin: 0;
+   padding: 1rem 1rem;
+ }
+  .innerBody {
+    padding-top: 6rem;
+      max-width: 500px;
+  }
+
+  .backIcon {
+    width: 16px;
+    height: 16px;
+  }
+
+  .title {
+    font-size: 1.2rem;
+  }
+
+  .transactionCard {
+      padding-top: 50px;
+  }
+
+  .detailsCard {
+    padding: 1rem;
+  }
+
+  .primaryAmount {
+    font-size: 1.5rem;
+  }
+
+    .transactionCard{
+        width: 85vw;
+    }
+    .detailsCard{
+        width: 85vw;
+    }
+.statusRow {
+  gap: 8px;
+}
+
+
+}
+
+

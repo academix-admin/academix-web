@@ -11,6 +11,7 @@ import { useDemandState } from '@/lib/state-stack';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { UserBalanceModel } from '@/models/user-balance';
 import { ComponentStateProps } from '@/hooks/use-component-state';
+import { useUserBalance } from '@/lib/stacks//user-balance-stack';
 
 export default function UserBalance({ onStateChange }: ComponentStateProps) {
   const { theme } = useTheme();
@@ -18,16 +19,7 @@ export default function UserBalance({ onStateChange }: ComponentStateProps) {
   const { userData, userData$ } = useUserData();
   const [balanceVisible, setBalanceVisible] = useState(false);
 
-  const [userBalance, demandUserBalance, setUserBalance] = useDemandState<UserBalanceModel | null>(
-    null,
-    {
-      key: "userBalance",
-      persist: true,
-      ttl: 3600,
-      scope: "secondary_flow",
-      deps: [lang],
-    }
-  );
+  const [userBalance, demandUserBalance, setUserBalance] = useUserBalance(lang);
 
   useEffect(() => {
     if(!userData)return;

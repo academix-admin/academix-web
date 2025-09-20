@@ -70,11 +70,11 @@
   margin-bottom: 2px;
 }
 
-.selectButton_light .profileMainText {
+.selectButton_light {
   color: #000;
 }
 
-.selectButton_dark .profileMainText {
+.selectButton_dark {
   color: #fff;
 }
 

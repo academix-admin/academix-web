@@ -6,8 +6,8 @@ export default function DialogCancel( ) {
 
   return <svg
                                            xmlns="http://www.w3.org/2000/svg"
-                                           width={16}
-                                           height={16}
+                                           width={24}
+                                           height={24}
                                            viewBox="0 0 122.88 122.88"
                                          >
                                            <circle cx="61.44" cy="61.44" r="61.44" fill="#333333" />

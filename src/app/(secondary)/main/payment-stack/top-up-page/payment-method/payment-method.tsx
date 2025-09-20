@@ -247,7 +247,7 @@ export default function PaymentMethod({ walletId, onMethodSelect }: PaymentMetho
                   <div className={styles.methodInitials}>{getInitials(methodData.paymentMethodIdentity)}</div>
                 )}
               </div>
-              <div className={styles.methodInfo}>
+              <div className={`${styles.methodInfo} ${styles[`methodInfo_${theme}`]}`}>
                 <div className={styles.methodName}>{methodData.paymentMethodIdentity}</div>
                 <div className={styles.methodCountry}>{methodData.countryIdentity}</div>
               </div>

@@ -84,6 +84,7 @@ type LayoutProps = {
 type SelectionViewerProps = {
   id: string;
   isOpen: boolean;
+  backDrop?: boolean;
   onClose: () => void;
   titleProp: TitleProps;
   searchProp?: SearchProps;
@@ -236,12 +237,14 @@ const styles = `
 
 .react-modal-sheet-backdrop {
   background-color: rgba(0, 0, 0, 0.5) !important;
+  pointer-events: auto !important;
 }
 
 .react-modal-sheet-content {
   padding: 0 0px 0px 0px;
   height: 100%;
 }
+
 
 /* Mobile full-width behavior */
 @media (max-width: 500px) {
@@ -275,6 +278,7 @@ const useInjectStyles = () => {
 const SelectionViewer: React.FC<SelectionViewerProps> = ({
   id,
   isOpen,
+  backDrop = true,
   onClose,
   titleProp,
   searchProp,

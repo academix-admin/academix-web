@@ -19,6 +19,7 @@ type CancelButtonProps = {
 type BottomViewerProps = {
   id: string;
   isOpen: boolean;
+  backDrop?: boolean;
   onClose: () => void;
   cancelButton?: CancelButtonProps;
   layoutProp?: LayoutProps;
@@ -65,6 +66,7 @@ const styles = `
 
 .react-modal-sheet-backdrop {
   background-color: rgba(0, 0, 0, 0.5) !important;
+  pointer-events: auto !important;
 }
 
 .react-modal-sheet-content {
@@ -97,6 +99,7 @@ const useInjectStyles = () => {
 const BottomViewer: React.FC<BottomViewerProps> = ({
   id,
   isOpen,
+  backDrop = true,
   onClose,
   cancelButton,
   layoutProp,
@@ -185,7 +188,7 @@ const BottomViewer: React.FC<BottomViewerProps> = ({
           </div>
         </Sheet.Content>
       </Sheet.Container>
-      <Sheet.Backdrop onTap={onClose} />
+      <Sheet.Backdrop onTap={backDrop ? onClose : undefined} />
     </Sheet>
   );
 };

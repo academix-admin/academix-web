@@ -17,27 +17,21 @@ import { PaginateModel } from '@/models/paginate-model';
 import Image from 'next/image';
 import { ComponentStateProps } from '@/hooks/use-component-state';
 import { usePinnedState } from '@/hooks/pinned-state-hook';
+import { useTransactionModel } from '@/lib/stacks/transactions-stack';
+import { useNav } from "@/lib/NavigationStack";
 
 export default function PaymentTransactions({ onStateChange }: ComponentStateProps) {
   const { theme } = useTheme();
   const { t, lang, tNode } = useLanguage();
   const { userData, userData$ } = useUserData();
   const loaderRef = useRef<HTMLDivElement | null>(null);
+  const nav = useNav();
 
   const [paginateModel, setPaginateModel] = useState<PaginateModel>(new PaginateModel());
   const [firstLoaded, setFirstLoaded] = useState(false);
   const [transactionsLoading, setTransactionsLoading] = useState(false);
 
-  const [transactionModels, demandTransactionModels, setTransactionModels] = useDemandState<TransactionModel[]>(
-    [],
-    {
-      key: "transactionModels",
-      persist: true,
-      ttl: 3600,
-      scope: "secondary_flow",
-      deps: [lang],
-    }
-  );
+  const [transactionModels, demandTransactionModels, setTransactionModels] = useTransactionModel(lang);
 
   useEffect(() => {
     if (!loaderRef.current) return;
@@ -274,7 +268,7 @@ export default function PaymentTransactions({ onStateChange }: ComponentStatePro
   };
 
   const handleTransactionClick = (transaction: TransactionModel) => {
-    console.log(transaction);
+    nav.push('view_transaction',{transactionId: transaction.transactionId});
   };
 
   if (!firstLoaded && transactionModels.length <= 0) return null;
@@ -312,7 +306,7 @@ export default function PaymentTransactions({ onStateChange }: ComponentStatePro
                       <rect fill="currentColor" height="55" width="4" x="14" y="23.6075" />
                     </svg>
                     <span className={`${styles.amount} ${getStatusClass(transaction.transactionSenderStatus)}`}>
-                      {getTransactionAmount(transaction).toFixed(2).replace('-','').replace('.00','').replace('.0','')}
+                      {getTransactionAmount(transaction).toFixed(2).replace('-','').replace('.00','')}
                     </span>
                   </div>
                 </div>
@@ -345,7 +339,7 @@ export default function PaymentTransactions({ onStateChange }: ComponentStatePro
         ))}
       </div>
 
-      {!transactionsLoading && transactionModels.length >= 0 &&
+      {!transactionsLoading && transactionModels.length === 0 &&
         <span className={`${styles.refreshContainer} ${styles[`refreshContainer_${theme}`]}`}>
           {t('transaction_empty')}
           <span role="button" onClick={refreshData} className={`${styles.refreshButton} ${styles[`refreshButton_${theme}`]}`}>

@@ -252,5 +252,18 @@
   "phone_number": "Phone number",
   "account_number": "Account number",
   "bank_name": "Bank name",
-  "new_profile": "New profile"
+  "new_profile": "New Profile",
+  "method_text": "Method",
+  "payment_method": "Payment Method",
+  "wallet_text": "Wallet",
+  "pay_text": "Pay",
+  "bank_transfer_text": "Bank Transfer",
+  "account_text": "Account",
+  "unknown_status_text": "Unknown",
+  "paid_text": "Paid",
+  "received_text": "Received",
+  "details_text": "Details",
+  "profile__text": "Profile",
+  "reference_text": "Reference",
+  "date_text": "Date"
 }

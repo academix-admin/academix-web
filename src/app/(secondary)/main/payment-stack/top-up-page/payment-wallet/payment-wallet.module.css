@@ -147,18 +147,35 @@
   color: rgba(255, 255, 255, 0.7);
 }
 
-.feeContainer {
+.infoContainer {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
+  align-items: flex-start;
   margin-bottom: 12px;
   font-size: 14px;
   opacity: 0.8;
   font-weight: 600;
 }
 
-.feeInfo, .feeValue {
+.feeInfo{
   display: flex;
   align-items: center;
+}
+
+.feeValue {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+}
+
+.feeContainer{
+  display: flex;
+  align-items: center;
+}
+
+.valueContainer{
+ display: flex;
+ align-items: center;
 }
 
 .convertedAmount {

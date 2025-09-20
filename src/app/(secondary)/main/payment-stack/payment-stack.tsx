@@ -6,11 +6,13 @@ import {useNav } from "@/lib/NavigationStack";
 import NavigationStack from "@/lib/NavigationStack";
 import PaymentPage from "./payment-page/payment-page";
 import TopUpPage from "./top-up-page/top-up-page";
+import ViewTransactionPage from "./view-transaction-page/view-transaction-page";
 
 const paymentStackNavLink = {
   payment_page: PaymentPage,
   top_up_page: TopUpPage,
 //   withdraw_page: WithdrawPage
+  view_transaction: ViewTransactionPage
 };
 
 export const PaymentStack = () => (

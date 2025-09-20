@@ -1,3 +1,6 @@
+import { PaymentDetails } from '@/models/payment-details';
+import { BackendPaymentDetails } from '@/models/payment-details';
+
 // --- Backend Interfaces ---
 export interface BackendTransactionModel {
   pools_id: string | null;
@@ -41,49 +44,7 @@ export interface BackendUserDetails {
   payment_details: BackendPaymentDetails | null;
 }
 
-export interface BackendPaymentDetails {
-  email?: string | null;
-  phone?: string | null;
-  country?: string | null;
-  network?: string | null;
-  fullname?: string | null;
-  private_account?: boolean | null;
-  e_naira?: boolean | null;
-  direct_debit?: boolean | null;
-  opay?: boolean | null;
-  bank_name?: string | null;
-  account_number?: string | null;
-}
-
 // --- Frontend Models ---
-export class PaymentDetails {
-  email?: string;
-  phone?: string;
-  country?: string;
-  network?: string;
-  fullname?: string;
-  privateAccount?: boolean;
-  eNaira?: boolean;
-  directDebit?: boolean;
-  opay?: boolean;
-  bankName?: string;
-  accountNumber?: string;
-
-  constructor(data?: BackendPaymentDetails | null) {
-    this.email = data?.email ?? undefined;
-    this.phone = data?.phone ?? undefined;
-    this.country = data?.country ?? undefined;
-    this.network = data?.network ?? undefined;
-    this.fullname = data?.fullname ?? undefined;
-    this.privateAccount = data?.private_account ?? undefined;
-    this.eNaira = data?.e_naira ?? undefined;
-    this.directDebit = data?.direct_debit ?? undefined;
-    this.opay = data?.opay ?? undefined;
-    this.bankName = data?.bank_name ?? undefined;
-    this.accountNumber = data?.account_number ?? undefined;
-  }
-}
-
 export class UserDetails {
   usersId?: string;
   usersNames: string;

@@ -87,17 +87,25 @@
   flex: 1;
 }
 
+.methodInfo_light{
+  color: #000;
+}
+
+.methodInfo_dark{
+  color: #fff;
+}
+
 .methodName {
   font-size: 16px;
   font-weight: 600;
   margin-bottom: 2px;
 }
 
-.selectButton_light .methodName {
+.selectButton_light  {
   color: #000;
 }
 
-.selectButton_dark .methodName {
+.selectButton_dark  {
   color: #fff;
 }
 
