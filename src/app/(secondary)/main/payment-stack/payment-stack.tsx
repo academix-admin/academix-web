@@ -11,8 +11,8 @@ import ViewTransactionPage from "./view-transaction-page/view-transaction-page";
 const paymentStackNavLink = {
   payment_page: PaymentPage,
   top_up_page: TopUpPage,
-//   withdraw_page: WithdrawPage
   view_transaction: ViewTransactionPage
+//   withdraw_page: WithdrawPage
 };
 
 export const PaymentStack = () => (

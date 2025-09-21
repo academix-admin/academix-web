@@ -20,9 +20,10 @@ export default function ViewTransactionPage(props: ViewTransactionProps) {
   const { transactionId } = props;
 
   const [currentTransaction, setCurrentTransaction] = useState<TransactionModel | null>(null);
-  const [transactionModels] = useTransactionModel(lang);
+  const [transactionModels,,, { isHydrated }] = useTransactionModel(lang);
 
   useEffect(() => {
+      if(!isHydrated)return;
     const getTransaction = transactionModels.find((e) => e.transactionId === transactionId);
 
     if (getTransaction) {
@@ -30,7 +31,7 @@ export default function ViewTransactionPage(props: ViewTransactionProps) {
     } else {
       goBack();
     }
-  }, [transactionModels, transactionId]);
+  }, [transactionModels, transactionId, isHydrated]);
 
   /** back nav */
   const goBack = async () => {
