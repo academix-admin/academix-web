@@ -228,7 +228,7 @@ export default function NewProfilePage(props: NewProfileProps) {
 
         if (profilesModel.length <= 0) {
           const profiles = await fetchPaymentProfileModel(selectedMethodData.paymentMethodId);
-          setPaymentProfileModel([paymentProfile, ...profiles]);
+          setPaymentProfileModel(profiles);
         } else {
           setPaymentProfileModel([paymentProfile, ...profilesModel]);
         }
