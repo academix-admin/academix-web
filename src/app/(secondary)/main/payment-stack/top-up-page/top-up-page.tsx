@@ -10,9 +10,9 @@ import { getParamatical } from '@/utils/checkers';
 import { checkLocation, checkFeatures } from '@/utils/checkers';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useUserData } from '@/lib/stacks/user-stack';
-import PaymentWallet from './payment-wallet/payment-wallet';
-import PaymentMethod from './payment-method/payment-method';
-import PaymentProfile from './payment-profile/payment-profile';
+import PaymentWallet from '../payment-wallet/payment-wallet';
+import PaymentMethod from '../payment-method/payment-method';
+import PaymentProfile from '../payment-profile/payment-profile';
 import { PaymentWalletModel } from '@/models/payment-wallet-model';
 import { PaymentMethodModel } from '@/models/payment-method-model';
 import { PaymentProfileModel } from '@/models/payment-profile-model';
@@ -41,6 +41,7 @@ export default function TopUpPage() {
   const { t, lang } = useLanguage();
   const nav = useNav();
   const { userData } = useUserData();
+  const isTop = nav.isTop();
 
   const [, , , { clear: clearWallet }] = usePaymentWalletModel(lang);
   const [, , , { clear: clearMethod }] = usePaymentMethodModel(lang);
@@ -64,20 +65,21 @@ export default function TopUpPage() {
   const handleAmount = useCallback((newAmount: number) => {
     setAmount(newAmount);
     if (
-      !selectedWalletData ||
+      (!selectedWalletData ||
       newAmount <= 0 ||
-      newAmount < selectedWalletData.paymentWalletMin
+      newAmount < selectedWalletData.paymentWalletMin)
+      && isTop
     ) {
       // reset if amount is invalid for current wallet
       setSelectedMethodData(null);
       setSelectedWalletProfileData(null);
       setError('');
     }
-  }, [selectedWalletData]);
+  }, [selectedWalletData, isTop]);
 
   /** wallet handler */
   const handleWalletData = useCallback((wallet: PaymentWalletModel) => {
-    if (selectedWalletData?.paymentWalletId !== wallet.paymentWalletId) {
+    if (wallet && selectedWalletData?.paymentWalletId !== wallet.paymentWalletId && isTop) {
       clearMethod();
       clearProfile();
       setSelectedMethodData(null);
@@ -86,22 +88,22 @@ export default function TopUpPage() {
       setSelectedWalletData(wallet);
       setError('');
     }
-  }, [selectedWalletData, clearMethod, clearProfile]);
+  }, [selectedWalletData, clearMethod, clearProfile, isTop]);
 
   /** method handler */
   const handleMethodData = useCallback((method: PaymentMethodModel) => {
-    if (selectedMethodData?.paymentMethodId !== method.paymentMethodId) {
+    if (method && selectedMethodData?.paymentMethodId !== method.paymentMethodId && isTop) {
       clearProfile();
       setSelectedWalletProfileData(null);
       setError('');
       topUpBottomController.close();
       setSelectedMethodData(method);
     }
-  }, [selectedMethodData, clearProfile]);
+  }, [selectedMethodData, clearProfile, isTop]);
 
   /** profile handler */
   const handleProfileData = useCallback((profile: PaymentProfileModel) => {
-    if (selectedWalletProfileData?.paymentProfileId !== profile.paymentProfileId) {
+    if (profile && selectedWalletProfileData?.paymentProfileId !== profile.paymentProfileId) {
       setError('');
       topUpBottomController.close();
       setSelectedWalletProfileData(profile);
@@ -116,7 +118,8 @@ export default function TopUpPage() {
 
   /** New profile */
   const createProfile = async () => {
-    nav.push('new_profile');
+    if(!selectedWalletData || !selectedMethodData)return;
+    nav.push('new_profile', {  walletId: selectedWalletData.paymentWalletId, methodId: selectedMethodData.paymentMethodId, profileType: 'ProfileType.buy'});
   };
 
   const handleSubmit = async () => {
@@ -231,7 +234,7 @@ Expires: ${expire}`);
 
       if (!paramatical) {
         setTopUpLoading(false);
-        setError(t('error_occurred') || 'An error occurred');
+        setError(t('error_occurred'));
         return;
       }
 
@@ -405,12 +408,15 @@ Expires: ${expire}`);
       <div className={styles.innerBody}>
 
         <PaymentWallet
+          profileType={'ProfileType.buy'}
           onWalletData={handleWalletData}
           onWalletAmount={handleAmount}
+          entryMode
         />
 
         {showMethods && (
           <PaymentMethod
+            profileType={'ProfileType.buy'}
             walletId={selectedWalletData.paymentWalletId}
             onMethodSelect={handleMethodData}
           />
@@ -419,6 +425,7 @@ Expires: ${expire}`);
         {showProfile && (
           <>
             <PaymentProfile
+              profileType={'ProfileType.buy'}
               methodId={selectedMethodData.paymentMethodId}
               methodType={selectedMethodData.paymentMethodChecker}
               onProfileSelect={handleProfileData}

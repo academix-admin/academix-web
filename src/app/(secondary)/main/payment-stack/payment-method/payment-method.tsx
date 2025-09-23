@@ -21,8 +21,11 @@ import DialogCancel from '@/components/DialogCancel';
 import { usePaymentMethodModel } from '@/lib/stacks/payment-method-stack';
 
 interface PaymentMethodProps {
+  profileType: string;
   walletId: string;
   onMethodSelect: (method: PaymentMethodModel) => void;
+  paymentMethodId?: string | null;
+  modify?: boolean;
 }
 
 interface MethodItemProps {
@@ -69,7 +72,7 @@ const MethodItem = ({ onClick, method, isSelected }: MethodItemProps) => {
   );
 };
 
-export default function PaymentMethod({ walletId, onMethodSelect }: PaymentMethodProps) {
+export default function PaymentMethod({ profileType, walletId, onMethodSelect, paymentMethodId, modify = true }: PaymentMethodProps) {
   const { theme } = useTheme();
   const { t, lang } = useLanguage();
   const { userData } = useUserData();
@@ -81,12 +84,22 @@ export default function PaymentMethod({ walletId, onMethodSelect }: PaymentMetho
   const [methodSelectId, methodSelectController, methodSelectIsOpen, methodSelectionState] = useSelectionController();
   const [searchMethodQuery, setMethodQuery] = useState('');
 
-  const [methodsModel, demandPaymentMethodModel, setPaymentMethodModel] = usePaymentMethodModel(lang);
+  const [methodsModel, demandPaymentMethodModel, setPaymentMethodModel, { isHydrated }] = usePaymentMethodModel(lang);
 
   useEffect(() => {
     if(!methodData)return;
      onMethodSelect(methodData);
   }, [methodData]);
+
+  useEffect(() => {
+    if(!isHydrated)return;
+    const getMethod = methodsModel.find((e) => e.paymentMethodId === paymentMethodId);
+
+    if (getMethod) {
+      setMethodData(getMethod);
+    }
+
+  }, [methodsModel, paymentMethodId ,isHydrated]);
 
    useEffect(() => {
       if (methodsModel.length <= 0)setMethodData(null);
@@ -109,7 +122,7 @@ export default function PaymentMethod({ walletId, onMethodSelect }: PaymentMetho
 
       if (!paramatical) return [];
 
-      const { data, error } = await supabaseBrowser.rpc("fetch_top_up_methods", {
+      const { data, error } = await supabaseBrowser.rpc(profileType === 'ProfileType.buy' ? "fetch_top_up_methods" : "fetch_withdraw_methods", {
         p_user_id: paramatical.usersId,
         p_locale: paramatical.locale,
         p_country: paramatical.country,
@@ -195,7 +208,7 @@ export default function PaymentMethod({ walletId, onMethodSelect }: PaymentMetho
   }, [demandPaymentMethodModel, fetchPaymentMethodModel, userData, extractLatest, methodSelectController]);
 
   const openMethod = useCallback(() => {
-    if (!userData) return;
+    if (!userData || !modify) return;
     methodSelectController.toggle();
     loadMethods();
   }, [userData, methodSelectController, loadMethods]);

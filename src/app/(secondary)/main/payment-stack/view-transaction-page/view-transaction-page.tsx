@@ -23,7 +23,7 @@ export default function ViewTransactionPage(props: ViewTransactionProps) {
   const [transactionModels,,, { isHydrated }] = useTransactionModel(lang);
 
   useEffect(() => {
-      if(!isHydrated)return;
+    if(!isHydrated)return;
     const getTransaction = transactionModels.find((e) => e.transactionId === transactionId);
 
     if (getTransaction) {

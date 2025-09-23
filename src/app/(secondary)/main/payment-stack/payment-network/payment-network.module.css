@@ -1,0 +1,234 @@
+.experienceContainer {
+  padding: 32px 28px 0 28px;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.experienceTitle {
+  font-size: 18px;
+  font-weight: bold;
+  margin: 0px;
+  margin-bottom: 20px;
+}
+
+.experienceTitle_light {
+  color: #000;
+}
+
+.experienceTitle_dark {
+  color: #fff;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.selectButton {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.selectButton_light {
+  border-color: #e0e0e0;
+  background: #fff;
+}
+
+.selectButton_dark {
+  border-color: #444;
+  background: #1a1a1a;
+}
+
+.selectButton:hover {
+  border-color: #3b82f6;
+}
+
+.selectedNetwork {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.networkImage {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  flex-shrink: 0;
+}
+
+.networkImage img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
+.networkInitials {
+  color: white;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.networkInfo {
+  text-align: left;
+  flex: 1;
+}
+
+.networkInfo_light{
+  color: #000;
+}
+
+.networkInfo_dark{
+  color: #fff;
+}
+
+.networkName {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.selectButton_light  {
+  color: #000;
+}
+
+.selectButton_dark  {
+  color: #fff;
+}
+
+.networkCountry {
+  font-size: 14px;
+  opacity: 0.7;
+}
+
+.placeholder {
+  flex: 1;
+  text-align: left;
+  font-size: 16px;
+  opacity: 0.7;
+}
+
+.selectButton_light .placeholder {
+  color: #666;
+}
+
+.selectButton_dark .placeholder {
+  color: #999;
+}
+
+.chevron {
+  width: 20px;
+  height: 20px;
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+/* Network Item Styles */
+.networkItem {
+  display: flex;
+  align-items: center;
+  padding: 8px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.networkItemImage {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.networkItemImage img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
+.networkItemInfo {
+  flex: 1;
+}
+
+.networkItemName {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.networkItem_light .networkItemName {
+  color: #000;
+}
+
+.networkItem_dark .networkItemName {
+  color: #fff;
+}
+
+.networkItemCountry {
+  font-size: 14px;
+  opacity: 0.7;
+}
+
+.networkItemCheckmark {
+  color: #3b82f6;
+  margin-left: 8px;
+}
+
+.networkItemCheckmark svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* Responsive Styles */
+@media screen and (min-width: 801px) {
+  .experienceTitle {
+    font-size: 20px;
+  }
+}
+
+@media screen and (max-width: 800px) {
+  .experienceContainer {
+    padding: 28px 24px 0 24px;
+  }
+}
+
+@media screen and (max-width: 500px) {
+  .experienceContainer {
+    padding: 20px 16px 0 16px;
+  }
+
+  .experienceTitle {
+    font-size: 16px;
+  }
+
+  .selectButton {
+    padding: 12px;
+  }
+
+  .networkImage {
+    width: 36px;
+    height: 36px;
+  }
+
+  .networkName {
+    font-size: 14px;
+  }
+}

@@ -265,5 +265,9 @@
   "details_text": "Details",
   "profile__text": "Profile",
   "reference_text": "Reference",
-  "date_text": "Date"
+  "date_text": "Date",
+  "payment_type_text": "Payment Type",
+  "new_profile_text": "New Profile",
+  "payment_network_text": "Payment Network",
+  "select_payment_network": "Select payment network"
 }

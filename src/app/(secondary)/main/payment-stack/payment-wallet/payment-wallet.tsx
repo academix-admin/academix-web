@@ -22,8 +22,12 @@ import DialogCancel from '@/components/DialogCancel';
 import { usePaymentWalletModel } from '@/lib/stacks/payment-wallet-stack';
 
 interface PaymentWalletProps {
+  profileType: string;
   onWalletData: (walletModel: PaymentWalletModel) => void;
-  onWalletAmount: (walletAmount: number) => void;
+  onWalletAmount?: (walletAmount: number) => void;
+  entryMode?: boolean;
+  paymentWalletId?: string | null;
+  modify?: boolean;
 }
 
 interface WalletItemProps {
@@ -71,7 +75,7 @@ const WalletItem = ({ onClick, wallet, isSelected }: WalletItemProps) => {
   );
 };
 
-export default function PaymentWallet({ onWalletData, onWalletAmount }: PaymentWalletProps) {
+export default function PaymentWallet({ profileType, onWalletData, onWalletAmount, entryMode = false, paymentWalletId, modify = true }: PaymentWalletProps) {
   const { theme } = useTheme();
   const { t, lang } = useLanguage();
   const nav = useNav();
@@ -107,13 +111,24 @@ export default function PaymentWallet({ onWalletData, onWalletAmount }: PaymentW
   const [walletSelectId, walletSelectController, walletSelectIsOpen, walletSelectionState] = useSelectionController();
   const [searchWalletQuery, setWalletQuery] = useState('');
 
-  const [walletsModel, demandPaymentWalletModel, setPaymentWalletModel] = usePaymentWalletModel(lang);
+  const [walletsModel, demandPaymentWalletModel, setPaymentWalletModel, { isHydrated }] = usePaymentWalletModel(lang);
 
   useEffect(() => {
     if(!walletData)return;
      onWalletData(walletData);
-     onWalletAmount(Number(walletAmount) || 0);
+     if(onWalletAmount)onWalletAmount(Number(walletAmount) || 0);
   }, [walletAmount, walletData]);
+
+  useEffect(() => {
+    if(!isHydrated)return;
+    const getWallet = walletsModel.find((e) => e.paymentWalletId === paymentWalletId);
+    if (getWallet) {
+      setWalletData(getWallet);
+      setUserWalletState('data');
+    }else{
+      setUserWalletState('error');
+    }
+  }, [walletsModel, paymentWalletId, isHydrated]);
 
   const handleUserTopUpWallet = useCallback(async () => {
     if (!userData || userWalletState === 'loading' || !!walletData) return;
@@ -132,7 +147,7 @@ export default function PaymentWallet({ onWalletData, onWalletAmount }: PaymentW
         return;
       }
 
-      const { data, error } = await supabaseBrowser.rpc("fetch_user_top_up_wallet", {
+      const { data, error } = await supabaseBrowser.rpc(profileType === 'ProfileType.buy' ? "fetch_user_top_up_wallet" : "fetch_user_withdraw_wallet", {
         p_user_id: paramatical.usersId,
         p_locale: paramatical.locale,
         p_country: paramatical.country,
@@ -161,8 +176,8 @@ export default function PaymentWallet({ onWalletData, onWalletAmount }: PaymentW
   }, [userData, lang, walletData, userWalletState]);
 
   useEffect(() => {
-    handleUserTopUpWallet();
-  }, [handleUserTopUpWallet]);
+    if(!paymentWalletId)handleUserTopUpWallet();
+  }, [handleUserTopUpWallet, paymentWalletId]);
 
 
   const fetchPaymentWalletModel = useCallback(async (
@@ -182,7 +197,7 @@ export default function PaymentWallet({ onWalletData, onWalletAmount }: PaymentW
 
       if (!paramatical) return [];
 
-      const { data, error } = await supabaseBrowser.rpc("fetch_top_up_wallets", {
+      const { data, error } = await supabaseBrowser.rpc(profileType === 'ProfileType.buy' ? "fetch_top_up_wallets" : "fetch_withdraw_wallets", {
         p_user_id: paramatical.usersId,
         p_locale: paramatical.locale,
         p_country: paramatical.country,
@@ -324,7 +339,7 @@ export default function PaymentWallet({ onWalletData, onWalletAmount }: PaymentW
   }, [demandPaymentWalletModel, fetchPaymentWalletModel, userData, extractLatest, walletSelectController]);
 
   const openWallet = useCallback(() => {
-    if (isFocused || !userData) return;
+    if (isFocused || !userData || !modify) return;
     walletSelectController.toggle();
     loadWallets();
   }, [isFocused, userData, walletSelectController, loadWallets]);
@@ -377,7 +392,9 @@ export default function PaymentWallet({ onWalletData, onWalletAmount }: PaymentW
         {t('payment_wallet_text')}
       </h2>
 
-      <div className={`${styles.paymentWalletContainer} ${styles[`paymentWalletContainer_${theme}`]}`}>
+      {
+       entryMode
+      ?<div className={`${styles.paymentWalletContainer} ${styles[`paymentWalletContainer_${theme}`]}`}>
         <div className={styles.walletHeader}>
           <div className={styles.walletImageContainer} onClick={switchPaymentMode}>
             {isFocused ? (
@@ -502,6 +519,31 @@ export default function PaymentWallet({ onWalletData, onWalletAmount }: PaymentW
           </div>
         </div>
       </div>
+       : <button onClick={openWallet} className={`${styles.selectButton} ${styles[`selectButton_${theme}`]}`}>
+          {walletData ? (
+            <div className={styles.selectedMethod}>
+              <div className={styles.methodImage}>
+                {walletData.paymentWalletImage ? (
+                  <img src={walletData.paymentWalletImage} alt={walletData.paymentWalletIdentity} />
+                ) : (
+                  <div className={styles.methodInitials}>{getInitials(walletData.paymentWalletIdentity)}</div>
+                )}
+              </div>
+              <div className={`${styles.methodInfo} ${styles[`methodInfo_${theme}`]}`}>
+                <div className={styles.methodName}>{walletData.paymentWalletIdentity}</div>
+                <div className={styles.methodCountry}>{walletData.paymentWalletCurrency}</div>
+              </div>
+            </div>
+          ) : (
+            <div className={styles.placeholder}>
+              {t('select_payment_wallet')}
+            </div>
+          )}
+          <svg className={styles.chevron} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M7 10l5 5 5-5z"/>
+          </svg>
+        </button>
+      }
 
       <SelectionViewer
         id={walletSelectId}

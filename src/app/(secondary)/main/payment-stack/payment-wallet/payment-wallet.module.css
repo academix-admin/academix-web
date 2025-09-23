@@ -2,7 +2,7 @@
   padding: 0 28px 0 28px;
   box-sizing: border-box;
   overflow: hidden;
-  max-width: 100%;
+    width: 100%;
 }
 
 .experienceTitle {
@@ -275,6 +275,121 @@
   height: 20px;
 }
 
+
+.selectButton {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;       /* Always full width */
+  padding: 16px;
+  min-width: 0;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+
+.selectButton_light {
+  border-color: #e0e0e0;
+  background: #fff;
+}
+
+.selectButton_dark {
+  border-color: #444;
+  background: #1a1a1a;
+}
+
+.selectButton:hover {
+  border-color: #3b82f6;
+}
+
+.selectedMethod {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.methodImage {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  flex-shrink: 0;
+}
+
+.methodImage img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
+.methodInitials {
+  color: white;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.methodInfo {
+  text-align: left;
+  flex: 1;
+}
+
+.methodInfo_light{
+  color: #000;
+}
+
+.methodInfo_dark{
+  color: #fff;
+}
+
+.methodName {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.selectButton_light  {
+  color: #000;
+}
+
+.selectButton_dark  {
+  color: #fff;
+}
+
+.methodCountry {
+  font-size: 14px;
+  opacity: 0.7;
+}
+
+.placeholder {
+  flex: 1;
+  text-align: left;
+  font-size: 16px;
+  opacity: 0.7;
+}
+
+.selectButton_light .placeholder {
+  color: #666;
+}
+
+.selectButton_dark .placeholder {
+  color: #999;
+}
+
+.chevron {
+  width: 20px;
+  height: 20px;
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
 /* Responsive Styles */
 @media screen and (min-width: 801px) {
   .experienceTitle {
@@ -327,4 +442,18 @@
     height: 36px;
     margin-right: 10px;
   }
+
+  .methodImage {
+    width: 36px;
+    height: 36px;
+  }
+
+  .methodName {
+    font-size: 14px;
+  }
+
+  .methodCountry {
+    font-size: 12px;
+  }
+
 }

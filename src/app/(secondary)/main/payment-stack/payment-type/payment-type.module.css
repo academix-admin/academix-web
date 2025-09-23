@@ -1,0 +1,167 @@
+.experienceContainer {
+  padding: 32px 28px 0 28px;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.experienceTitle {
+  font-size: 18px;
+  font-weight: bold;
+  margin: 0px;
+  margin-bottom: 20px;
+}
+
+.experienceTitle_light {
+  color: #000;
+}
+
+.experienceTitle_dark {
+  color: #fff;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.selectButton {
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 16px;
+  gap: 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.selectButton_light {
+  border-color: #e0e0e0;
+  background: #fff;
+}
+
+.selectButton_dark {
+  border-color: #444;
+  background: #1a1a1a;
+}
+
+.selectButton:hover {
+  border-color: #3b82f6;
+}
+
+/* Option Text Styles */
+.optionText {
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.optionText_light {
+  color: #000;
+}
+
+.optionText_dark {
+  color: #fff;
+}
+
+/* Switch Container */
+.switch {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.switch_light {
+  background: #e0e0e0;
+  border: 1px solid #d0d0d0;
+}
+
+.switch_dark {
+  background: #444;
+  border: 1px solid #555;
+}
+
+.switch_active {
+  background: #3b82f6;
+  border-color: #3b82f6;
+}
+
+/* Switch Handle */
+.switchHandle {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.switchHandle_light {
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.switchHandle_dark {
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.switchHandle_active {
+  transform: translateX(20px);
+}
+
+
+
+
+/* Responsive Styles */
+@media screen and (min-width: 801px) {
+  .experienceTitle {
+    font-size: 20px;
+  }
+}
+
+@media screen and (max-width: 800px) {
+  .experienceContainer {
+    padding: 28px 24px 0 24px;
+  }
+}
+
+@media screen and (max-width: 500px) {
+  .experienceContainer {
+    padding: 20px 16px 0 16px;
+  }
+
+  .experienceTitle {
+    font-size: 16px;
+  }
+
+  .selectButton {
+    padding: 12px;
+  }
+
+    .optionText {
+      font-size: 14px;
+    }
+
+    .switch {
+      width: 40px;
+      height: 22px;
+    }
+
+    .switchHandle {
+      width: 16px;
+      height: 16px;
+      top: 2px;
+      left: 2px;
+    }
+
+    .switchHandle_active {
+      transform: translateX(18px);
+    }
+}

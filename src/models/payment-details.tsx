@@ -74,6 +74,22 @@ export class PaymentDetails {
     };
   }
 
+  toJson(): Record<any, any> {
+    return {
+      email: this.email ?? null,
+      phone: this.phone ?? null,
+      country: this.country ?? null,
+      network: this.network ?? null,
+      fullname: this.fullname ?? null,
+      private_account: this.privateAccount ?? null,
+      eNaira: this.eNaira ?? null,
+      directDebit: this.directDebit ?? null,
+      opay: this.opay ?? null,
+      bankName: this.bankName ?? null,
+      accountNumber: this.accountNumber ?? null,
+    };
+  }
+
   copyWith(data: Partial<PaymentDetails>): PaymentDetails {
     return PaymentDetails.from({
       ...this,

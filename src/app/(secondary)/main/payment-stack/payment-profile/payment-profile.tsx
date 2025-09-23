@@ -21,6 +21,7 @@ import DialogCancel from '@/components/DialogCancel';
 import { usePaymentProfileModel } from '@/lib/stacks/payment-profile-stack';
 
 interface PaymentProfileProps {
+  profileType: string;
   methodId: string;
   methodType: string;
   onProfileSelect: (profile: PaymentProfileModel) => void;
@@ -136,7 +137,7 @@ const ProfileItem = ({ onClick, profile, methodType, isSelected }: ProfileItemPr
   );
 };
 
-export default function PaymentProfile({ methodId, methodType, onProfileSelect, onCreateProfile }: PaymentProfileProps) {
+export default function PaymentProfile({ profileType, methodId, methodType, onProfileSelect, onCreateProfile }: PaymentProfileProps) {
   const { theme } = useTheme();
   const { t, lang } = useLanguage();
   const { userData } = useUserData();
@@ -176,7 +177,7 @@ export default function PaymentProfile({ methodId, methodType, onProfileSelect, 
 
       if (!paramatical) return [];
 
-      const { data, error } = await supabaseBrowser.rpc("fetch_top_up_profiles", {
+      const { data, error } = await supabaseBrowser.rpc(profileType === 'ProfileType.buy' ? "fetch_top_up_profiles" : "fetch_withdraw_profiles", {
         p_user_id: paramatical.usersId,
         p_locale: paramatical.locale,
         p_country: paramatical.country,
