@@ -30,7 +30,7 @@ import { PaymentCompletionData } from '@/models/completion-data';
 
 
 interface PaymentResponse {
-  statusCode: number;
+  status: number;
   transaction_details: any;
   payment_completion_mode?: string;
   payment_completion_data?: PaymentCompletionData;
@@ -249,7 +249,7 @@ Expires: ${expire}`);
       if (!feature) {
         setTopUpLoading(false);
         console.log('feature not available');
-        setError(t('feature_unavailable') || 'Feature unavailable');
+        setError(t('feature_unavailable'));
         return;
       }
 
@@ -259,7 +259,7 @@ Expires: ${expire}`);
       if (!jwt) {
         console.log('no JWT token');
         setTopUpLoading(false);
-        setError(t('error_occurred') || 'An error occurred');
+        setError(t('error_occurred') );
         return;
       }
 
@@ -277,7 +277,7 @@ Expires: ${expire}`);
       };
 
       const payment = await makePayment(jwt, requestData);
-      const statusCode = payment.statusCode;
+      const status = payment.status;
 
       const transaction = new TransactionModel(payment.transaction_details);
       const completionMode = payment.payment_completion_mode;
@@ -296,7 +296,7 @@ Expires: ${expire}`);
 
     } catch (error: any) {
       console.error("Top up error:", error);
-                                setTopUpLoading(false);
+      setTopUpLoading(false);
       setError(t('error_occurred') || 'An error occurred');
     }
   };

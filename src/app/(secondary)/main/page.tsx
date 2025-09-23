@@ -33,6 +33,7 @@ useEffect(() => {
         await StateStack.core.clearScope('secondary_flow');
         await StateStack.core.clearScope('mission_flow');
         await StateStack.core.clearScope('achievements_flow');
+        await StateStack.core.clearScope('payment_flow');
       } catch (error) {
         console.error('Sign out error:', error);
       }

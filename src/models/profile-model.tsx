@@ -44,13 +44,13 @@ export class ProfileModel {
       phone: this.phone ?? null,
       network: this.network ?? null,
       fullname: this.fullname ?? null,
-      privateAccount: this.privateAccount ?? null,
-      eNaira: this.eNaira ?? null,
-      directDebit: this.directDebit ?? null,
+      private_account: this.privateAccount ?? null,
+      e_naira: this.eNaira ?? null,
+      direct_debit: this.directDebit ?? null,
       opay: this.opay ?? null,
-      bankCode: this.bankCode ?? null,
-      bankName: this.bankName ?? null,
-      accountNumber: this.accountNumber ?? null,
+      bank_code: this.bankCode ?? null,
+      bank_name: this.bankName ?? null,
+      account_number: this.accountNumber ?? null,
     };
   }
 

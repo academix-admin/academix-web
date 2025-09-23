@@ -269,5 +269,8 @@
   "payment_type_text": "Payment Type",
   "new_profile_text": "New Profile",
   "payment_network_text": "Payment Network",
-  "select_payment_network": "Select payment network"
+  "select_payment_network": "Select payment network",
+  "activate_label": "Activate",
+  "bank_label": "Bank",
+  "select_banks": "Select banks"
 }

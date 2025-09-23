@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import styles from './new-profile-page.module.css';
@@ -28,6 +28,21 @@ import { usePaymentProfileModel } from '@/lib/stacks/payment-profile-stack';
 import DialogCancel from '@/components/DialogCancel';
 import LoadingView from '@/components/LoadingView/LoadingView';
 import ErrorView from '@/components/ErrorView/ErrorView';
+import NoResultsView from '@/components/NoResultsView/NoResultsView';
+import { SelectionViewer, useSelectionController } from "@/lib/SelectionViewer";
+import { useDemandState } from '@/lib/state-stack';
+
+
+interface BankModel {
+  id: number;
+  code: string;
+  name: string;
+}
+
+interface BankResponse {
+  status: string;
+  banks: BankModel[];
+}
 
 interface NewProfileProps {
   walletId: string;
@@ -41,7 +56,295 @@ interface MobileMoneyProps {
   length: number;
 }
 
+interface AccountActivateProps {
+  onSubmit: (value: boolean) => void;
+  purpose: string;
+}
+
+interface BankViewProps {
+  onSubmit: (bank: BankModel) => void;
+  methodId: string;
+}
+
+interface BankItemProps {
+  onClick: () => void;
+  bank: BankModel;
+  isSelected?: boolean;
+}
+
+const BankItem = ({ onClick, bank, isSelected }: BankItemProps) => {
+  const { theme } = useTheme();
+  const getInitials = (text: string): string => {
+    const words = text.trim().split(' ');
+    if (words.length === 1) return words[0][0].toUpperCase();
+    return (words[0][0] + words[1][0]).toUpperCase();
+  };
+  return (
+    <div
+      className={`${styles.bankItem} ${styles[`bankItem_${theme}`]} ${isSelected ? styles.selected : ''}`}
+      onClick={onClick}
+      aria-label={`Select ${bank.name}`}
+      role="button"
+      tabIndex={0}
+    >
+      <div className={styles.bankItemInfo}>
+        <div className={styles.bankItemName}>{bank.name}</div>
+        <div className={styles.bankItemCode}>{bank.code}</div>
+      </div>
+      {isSelected && (
+        <div className={styles.bankItemCheckmark}>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+          </svg>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const BankView = ({ onSubmit, methodId }: BankViewProps) => {
+  const { theme } = useTheme();
+  const { t, lang } = useLanguage();
+
+  const [bankData, setBankData] = useState<BankModel | null>(null);
+  const [error, setError] = useState('');
+
+  const [bankSelectId, bankSelectController, bankSelectIsOpen, bankSelectionState] = useSelectionController();
+  const [searchBankQuery, setBankQuery] = useState('');
+
+  const [banksModel, demandBankModel, setBankModel, { isHydrated }] = useDemandState<BankModel[]>(
+                                                                                                       [],
+                                                                                                       {
+                                                                                                         key: "banksModel",
+                                                                                                         persist: true,
+                                                                                                         ttl: 3600,
+                                                                                                         scope: "payment_flow",
+                                                                                                         deps: [lang],
+                                                                                                       }
+                                                                                                     );
+  useEffect(() => {
+    if(!bankData)return;
+     onSubmit(bankData);
+  }, [bankData]);
+
+  // Function to fetch banks API call
+  const fetchBanks = async (jwt: string, data: any): Promise<BankResponse> => {
+    // Use the App Router API endpoint
+    const proxyUrl = '/api/banks';
+
+    try {
+      const response = await fetch(proxyUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${jwt}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+      return await response.json();
+    } catch (error) {
+      console.error("Fetch bank error:", error);
+      throw error;
+    }
+  };
+
+  const callFetchBanks = async () => {
+    try {
+      const session = await supabaseBrowser.auth.getSession();
+      const jwt = session.data.session?.access_token;
+
+      if (!jwt) {
+        console.log('no JWT token');
+        return [];
+      }
+
+      const requestData = {
+        methodId: methodId
+      };
+
+      const banksModel = await fetchBanks(jwt, requestData);
+      const status = banksModel.status;
+
+      if(status === 'BankStatus.success'){
+        return (banksModel.banks || []) as BankModel[];
+      }else{
+          return [];
+      }
+
+    } catch (error: any) {
+      console.error("Fetch bank error:", error);
+      return [];
+    }
+  };
+
+  const loadBanks = useCallback(() => {
+    demandBankModel(async ({ get, set }) => {
+      bankSelectController.setSelectionState("loading");
+      const banks = await callFetchBanks();
+
+      if (!banks) {
+        bankSelectController.setSelectionState("error");
+        return;
+      }
+      if (banks.length > 0) {
+        set(banks);
+        bankSelectController.setSelectionState("data");
+      } else {
+        bankSelectController.setSelectionState("empty");
+      }
+    });
+  }, [demandBankModel, callFetchBanks, bankSelectController]);
+
+  const openBank = useCallback(() => {
+    bankSelectController.toggle();
+    loadBanks();
+  }, [ bankSelectController, loadBanks]);
+
+  const handleBankSearch = useCallback((query: string) => {
+    setBankQuery(query);
+  }, []);
+
+  const filteredBanks = useMemo(() => {
+    if (!searchBankQuery) return banksModel;
+
+    const filters = banksModel.filter(item =>
+      item.name.toLowerCase().includes(searchBankQuery.toLowerCase()) ||
+      item.code?.toLowerCase().includes(searchBankQuery.toLowerCase())
+    );
+
+    if (filters.length <= 0 && banksModel.length > 0) {
+      bankSelectController.setSelectionState("empty");
+    }
+
+    return filters;
+  }, [banksModel, searchBankQuery]);
+
+  const handleBankSelect = useCallback((bank: BankModel) => {
+    setBankData(bank);
+    bankSelectController.close();
+  }, [bankSelectController]);
+
+  const getInitials = useCallback((text: string): string => {
+    const words = text.trim().split(' ');
+    if (words.length === 1) return words[0][0].toUpperCase();
+    return (words[0][0] + words[1][0]).toUpperCase();
+  }, []);
+
+  return (
+    <div className={styles.formGroup}>
+        <label htmlFor="activate" className={styles.label}>{t('bank_label')}</label>
+        <button onClick={openBank} className={`${styles.selectButton} ${styles[`selectButton_${theme}`]}`}>
+          {bankData ? (
+            <div className={styles.selectedBank}>
+              <div className={`${styles.bankInfo} ${styles[`methodInfo_${theme}`]}`}>
+                <div className={styles.bankName}>{bankData.name}</div>
+                <div className={styles.bankCode}>{bankData.code}</div>
+              </div>
+            </div>
+          ) : (
+            <div className={styles.placeholder}>
+              {t('select_banks')}
+            </div>
+          )}
+          <svg className={styles.chevron} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M7 10l5 5 5-5z"/>
+          </svg>
+        </button>
+
+      <SelectionViewer
+        id={bankSelectId}
+        isOpen={bankSelectIsOpen}
+        onClose={bankSelectController.close}
+        titleProp={{
+          text: t('select_banks'),
+          textColor: theme === 'light' ? "#000" : "#fff"
+        }}
+        cancelButton={{
+          position: "right",
+          onClick: bankSelectController.close,
+          view: <DialogCancel />
+        }}
+        searchProp={{
+          text: t('search'),
+          onChange: handleBankSearch,
+          background: theme === 'light' ? "#f5f5f5" : "#272727",
+          textColor: theme === 'light' ? "#000" : "#fff",
+          padding: { l: "4px", r: "4px", t: "0px", b: "0px" },
+          autoFocus: false,
+        }}
+        loadingProp={{
+          view: <LoadingView text={t('loading')} />,
+        }}
+        noResultProp={{
+          view: <NoResultsView text={t('no_results')} buttonText={t('try_again')} onButtonClick={loadBanks} />,
+        }}
+        errorProp={{
+          view: <ErrorView text={t('error_occurred')} buttonText={t('try_again')} onButtonClick={loadBanks} />,
+        }}
+        layoutProp={{
+          gapBetweenHandleAndTitle: "16px",
+          gapBetweenTitleAndSearch: "8px",
+          gapBetweenSearchAndContent: "16px",
+          backgroundColor: theme === 'light' ? "#fff" : "#121212",
+          handleColor: "#888",
+          handleWidth: "48px",
+        }}
+        childrenDirection="vertical"
+        snapPoints={[1]}
+        initialSnap={1}
+        minHeight="65vh"
+        maxHeight="90vh"
+        closeThreshold={0.2}
+        selectionState={bankSelectionState}
+        zIndex={1000}
+      >
+        {filteredBanks.map((item) => (
+          <BankItem
+            key={item.id}
+            onClick={() => handleBankSelect(item)}
+            bank={item}
+            isSelected={bankData?.id === item.id}
+          />
+        ))}
+      </SelectionViewer>
+
+    </div>
+  );
+};
+
+
+const AccountActivate = ({ onSubmit, purpose }: AccountActivateProps) => {
+  const { theme } = useTheme();
+  const { t, lang } = useLanguage();
+
+  const [ value , setValue ] = useState(false);
+
+  const changeValue = () =>{
+      setValue(prev => { return !prev;});
+      onSubmit(!value);
+  }
+
+  return (
+    <div className={styles.formGroup}>
+        <label htmlFor="activate" className={styles.label}>{t('activate_label')}</label>
+        <div
+          className={`${styles.selectButton} ${styles[`selectButton_${theme}`]} ${value ? styles.selectButton_active : ''}`}
+          onClick={changeValue}
+        >
+          <div className={`${styles.switch} ${value ? styles.switch_active : ''} ${styles[`switch_${theme}`]}`}>
+             <div className={`${styles.switchHandle} ${value ? styles.switchHandle_active : ''} ${styles[`switchHandle_${theme}`]}`} />
+          </div>
+          <span className={`${styles.optionText} ${styles[`optionText_${theme}`]}`}>
+            {purpose}
+          </span>
+
+        </div>
+    </div>
+  );
+};
+
 const MobileMoney = ({ onSubmit, prefix, length }: MobileMoneyProps) => {
+
   const { theme } = useTheme();
   const { t, lang } = useLanguage();
   const [phoneInputValue, setPhoneInputValue] = useState('');
@@ -109,7 +412,7 @@ export default function NewProfilePage(props: NewProfileProps) {
   const { walletId, methodId, profileType } = props;
 
   const [walletsModel, , , { clear: clearWallet, isHydrated: walletHydrated }] = usePaymentWalletModel(lang);
-  const [methodsModel, , , { clear: clearMethod, isHydrated: methodHydrated  }] = usePaymentMethodModel(lang);
+  const [banksModel, , , { clear: clearMethod, isHydrated: methodHydrated  }] = usePaymentMethodModel(lang);
   const [profilesModel, demandPaymentProfileModel, setPaymentProfileModel] = usePaymentProfileModel(lang);
 
   const [selectedWalletData, setSelectedWalletData] = useState<PaymentWalletModel | null>(null);
@@ -133,10 +436,6 @@ export default function NewProfilePage(props: NewProfileProps) {
 
   const [error, setError] = useState('');
   const [continueState, setContinueState] = useState('initial');
-
-//   useEffect(() => {
-//     console.log(selectedPaymentData);
-//   }, [selectedPaymentData]);
 
   useEffect(() => {
     setWalletModify(selectedWalletData === null);
@@ -286,20 +585,22 @@ export default function NewProfilePage(props: NewProfileProps) {
   }, [lang, profileType, userData]);
 
   const getPaymentMethodView = (paymentMethod: PaymentMethodModel | null): React.JSX.Element => {
-    if(!paymentMethod)return (<></>);
+    if(!paymentMethod || !userData)return (<></>);
     switch (paymentMethod.paymentMethodChecker) {
       case 'PaymentMethod.mobile_money':
         return (<MobileMoney onSubmit={(phoneNumber) => setSelectedPaymentData(selectedPaymentData.copyWith({phone: phoneNumber, network: selectedNetworkData?.identity}))} prefix={paymentMethod.countryPhoneCode} length={paymentMethod.countryPhoneDigits} />);
       case 'PaymentMethod.e_naira':
-        return (<></>);
+        return (<AccountActivate onSubmit={(value)=> setSelectedPaymentData(selectedPaymentData.copyWith({phone: userData.usersPhone, eNaira: value}))} purpose={t('e_naira_text')} />);
       case 'PaymentMethod.private_account':
-        return (<></>);
+        return (<AccountActivate onSubmit={(value)=> setSelectedPaymentData(selectedPaymentData.copyWith({phone: userData.usersPhone, privateAccount: value}))} purpose={t('private_account_text')} />);
       case 'PaymentMethod.opay':
-        return (<></>);
+        return (<AccountActivate onSubmit={(value)=> setSelectedPaymentData(selectedPaymentData.copyWith({phone: userData.usersPhone, opay: value}))} purpose={t('opay_text')} />);
+      case 'PaymentMethod.direct_debit':
+        return (<AccountActivate onSubmit={(value)=> setSelectedPaymentData(selectedPaymentData.copyWith({phone: userData.usersPhone, directDebit: value}))} purpose={t('direct_debit_text')} />);
       case 'PaymentMethod.bank_transfer':
         return (<></>);
       case 'PaymentMethod.ussd':
-        return (<></>);
+        return (<BankView onSubmit={(bank)=> setSelectedPaymentData(selectedPaymentData.copyWith({phone: userData.usersPhone, bankCode: bank.code, bankName: bank.name}))} methodId={paymentMethod.paymentMethodId}/>);
       default:
         return (<></>);
     }
@@ -316,6 +617,8 @@ export default function NewProfilePage(props: NewProfileProps) {
         return !!selectedPaymentData.privateAccount;
       case 'PaymentMethod.opay':
         return !!selectedPaymentData.opay;
+      case 'PaymentMethod.direct_debit':
+        return !!selectedPaymentData.directDebit;
       case 'PaymentMethod.bank_transfer':
         return !!selectedPaymentData.bankCode && !!selectedPaymentData.bankName && !!selectedPaymentData.accountNumber && !!selectedPaymentData.fullname ;
       case 'PaymentMethod.ussd':

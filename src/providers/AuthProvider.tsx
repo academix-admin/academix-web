@@ -68,6 +68,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               await StateStack.core.clearScope('secondary_flow');
               await StateStack.core.clearScope('mission_flow');
               await StateStack.core.clearScope('achievements_flow');
+              await StateStack.core.clearScope('payment_flow');
             }
 
             setInitialized(true)
