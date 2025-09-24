@@ -39,6 +39,16 @@ interface BankModel {
   name: string;
 }
 
+interface Account {
+  account_number: string;
+  account_name: string;
+}
+
+interface AccountSearchResponse {
+  status: string;
+  details?: Account;
+}
+
 interface BankResponse {
   status: string;
   banks: BankModel[];
@@ -71,6 +81,160 @@ interface BankItemProps {
   bank: BankModel;
   isSelected?: boolean;
 }
+
+interface BankTransferProps {
+  onSubmit: (bank: BankModel | null, account: Account | null) => void;
+  methodId: string;
+}
+
+const BankTransfer = ({ onSubmit, methodId }: BankTransferProps) => {
+  const { theme } = useTheme();
+  const { t, lang } = useLanguage();
+
+  const [bankData, setBankData] = useState<BankModel | null>(null);
+  const [accountNumberInputValue, setAccountNumberInputValue] = useState('');
+  const [accountNumberState, setAccountNumberState] = useState('initial');
+  const [accountData, setAccountData] = useState<Account | null>(null);
+
+  const [error, setError] = useState('');
+  const [searchLoading, setSearchingLoading] = useState(false);
+
+  useEffect(() => {
+    if(!bankData || !accountData){
+        onSubmit(null, null);
+        return;
+    }
+     onSubmit(bankData, accountData);
+  }, [bankData, accountData]);
+
+  const handleAccountNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { value } = e.target;
+    setAccountData(null);
+    setError('');
+    if (value.length === 0) {
+      setAccountNumberInputValue('');
+      onSubmit(null, null);
+      setAccountNumberState('initial');
+      return;
+    }
+
+    const regex = /^\d+$/;
+    const valid = regex.test(value);
+      setAccountNumberInputValue(value);
+      setAccountNumberState(valid ? 'valid' : 'invalid');
+  };
+
+  // Function to find account API call
+  const findAccount = async (jwt: string, data: any): Promise<AccountSearchResponse> => {
+    // Use the App Router API endpoint
+    const proxyUrl = '/api/account-verification';
+
+    try {
+      const response = await fetch(proxyUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${jwt}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+      return await response.json();
+    } catch (error) {
+      console.error("Account search error:", error);
+      throw error;
+    }
+  };
+
+  
+  const handleSearch = async () => {
+    if (!bankData || !accountNumberInputValue) return;
+
+    try {
+        setSearchingLoading(true);
+        setError('');
+      const session = await supabaseBrowser.auth.getSession();
+      const jwt = session.data.session?.access_token;
+
+      if (!jwt) {
+        console.log('no JWT token');
+        setSearchingLoading(false);
+        setError(t('error_occurred') );
+        return;
+      }
+
+      const requestData = {
+        accountNumber: accountNumberInputValue,
+        bankCode: bankData.code,
+      };
+
+      const search = await findAccount(jwt, requestData);
+      const status = search.status;
+
+      const account = search.details as Account | null;
+
+      if (account && status === 'AccountStatus.success') {
+        setAccountData(account);
+      }
+  
+     setSearchingLoading(false);
+
+    } catch (error: any) {
+      console.error("Account Search error:", error);
+      setSearchingLoading(false);
+      setError(t('error_occurred'));
+    }
+  };  
+
+  return (
+    <div className={styles.container}>
+       <BankView onSubmit={(bank) => {setAccountData(null); setError(''); setBankData(bank);}} methodId={methodId}/>
+          {bankData && <div className={styles.accountNumberGroup}>
+                       <label htmlFor="accountNumber" className={styles.label}>{t('account_number_label')}</label>
+                       <div className={styles.accountNumberContainer}>
+                         <input
+                           type="text"
+                           id="accountNumber"
+                           name="accountNumber"
+                           value={accountNumberInputValue}
+                           onChange={handleAccountNumberChange}
+                           placeholder={t('account_number_placeholder')}
+                           className={styles.input}
+                           inputMode="numeric"
+                           pattern="[0-9]*"
+                           required
+                         />
+                       </div>
+                                   {accountNumberState === 'invalid' && !accountData && (
+                                     <p className={styles.errorText}>{t('number_invalid')}</p>
+                                   )}
+                                   {accountNumberState === 'valid' && !accountData && (
+                                     <p className={styles.validText}>{t('number_valid')}</p>
+                                   )}
+                                   {accountData && (
+                                     <p className={styles.validText}>{accountData.account_name}</p>
+                                   )}
+                                   {error && !accountData && (
+                                     <p className={styles.errorText}>{error}</p>
+                                   )}
+
+                     </div>}
+
+                             {bankData && accountNumberState === 'valid' && !accountData  && <button
+                               onClick={handleSearch}
+                               type="button"
+                               className={styles.continueButton}
+                               disabled={searchLoading}
+                               aria-disabled={searchLoading}
+                             >
+                               { searchLoading ?  <span className={styles.spinner}></span> : t('search_text')}
+                             </button>  }
+
+
+    </div>
+  );
+};
+
+
 
 const BankItem = ({ onClick, bank, isSelected }: BankItemProps) => {
   const { theme } = useTheme();
@@ -598,7 +762,7 @@ export default function NewProfilePage(props: NewProfileProps) {
       case 'PaymentMethod.direct_debit':
         return (<AccountActivate onSubmit={(value)=> setSelectedPaymentData(selectedPaymentData.copyWith({phone: userData.usersPhone, directDebit: value}))} purpose={t('direct_debit_text')} />);
       case 'PaymentMethod.bank_transfer':
-        return (<></>);
+        return (<BankTransfer onSubmit={(bank, account) => setSelectedPaymentData(selectedPaymentData.copyWith({phone: userData.usersPhone, bankCode: bank?.code, bankName: bank?.name, accountNumber: account?.account_number, fullname: account?.account_name}))} methodId={paymentMethod.paymentMethodId}/>);
       case 'PaymentMethod.ussd':
         return (<BankView onSubmit={(bank)=> setSelectedPaymentData(selectedPaymentData.copyWith({phone: userData.usersPhone, bankCode: bank.code, bankName: bank.name}))} methodId={paymentMethod.paymentMethodId}/>);
       default:

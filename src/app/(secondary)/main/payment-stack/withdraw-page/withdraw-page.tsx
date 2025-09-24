@@ -3,7 +3,7 @@
 import { useState, useCallback } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
-import styles from './top-up-page.module.css';
+import styles from './withdraw-page.module.css';
 import { useNav } from "@/lib/NavigationStack";
 import { StateStack } from '@/lib/state-stack';
 import { getParamatical } from '@/utils/checkers';
@@ -36,7 +36,7 @@ interface PaymentResponse {
   payment_completion_data?: PaymentCompletionData;
 }
 
-export default function TopUpPage() {
+export default function WithdrawPage() {
   const { theme } = useTheme();
   const { t, lang } = useLanguage();
   const nav = useNav();
@@ -55,11 +55,11 @@ export default function TopUpPage() {
   const [selectedWalletProfileData, setSelectedWalletProfileData] = useState<PaymentProfileModel | null>(null);
   const [academixProfileData, setAcademixProfileData] = useState<PaymentProfileModel | null>(null);
 
-  const [topUpBottomViewerId, topUpBottomController, topUpBottomIsOpen] = useBottomController();
+  const [withdrawBottomViewerId, withdrawBottomController, withdrawBottomIsOpen] = useBottomController();
 
   const [error, setError] = useState('');
   const [continueState, setContinueState] = useState('initial');
-  const [topUpLoading, setTopUpLoading] = useState(false);
+  const [withdrawLoading, setWithdrawLoading] = useState(false);
 
   /** amount handler */
   const handleAmount = useCallback((newAmount: number) => {
@@ -84,7 +84,7 @@ export default function TopUpPage() {
       clearProfile();
       setSelectedMethodData(null);
       setSelectedWalletProfileData(null);
-      topUpBottomController.close();
+      withdrawBottomController.close();
       setSelectedWalletData(wallet);
       setError('');
     }
@@ -96,7 +96,7 @@ export default function TopUpPage() {
       clearProfile();
       setSelectedWalletProfileData(null);
       setError('');
-      topUpBottomController.close();
+      withdrawBottomController.close();
       setSelectedMethodData(method);
     }
   }, [selectedMethodData, clearProfile, isTop]);
@@ -105,7 +105,7 @@ export default function TopUpPage() {
   const handleProfileData = useCallback((profile: PaymentProfileModel) => {
     if (profile && selectedWalletProfileData?.paymentProfileId !== profile.paymentProfileId) {
       setError('');
-      topUpBottomController.close();
+      withdrawBottomController.close();
       setSelectedWalletProfileData(profile);
     }
   }, [selectedWalletProfileData]);
@@ -119,7 +119,7 @@ export default function TopUpPage() {
   /** New profile */
   const createProfile = async () => {
     if(!selectedWalletData || !selectedMethodData)return;
-    nav.push('new_profile', {  walletId: selectedWalletData.paymentWalletId, methodId: selectedMethodData.paymentMethodId, profileType: 'ProfileType.buy'});
+    nav.push('new_profile', {  walletId: selectedWalletData.paymentWalletId, methodId: selectedMethodData.paymentMethodId, profileType: 'ProfileType.sell'});
   };
 
   const handleSubmit = async () => {
@@ -127,7 +127,7 @@ export default function TopUpPage() {
 
     try {
       setContinueState('loading');
-      topUpBottomController.open();
+      withdrawBottomController.open();
 
       const paramatical = await getParamatical(
         userData.usersId,
@@ -218,11 +218,11 @@ Expires: ${expire}`);
     }
   };
 
-  const handleTopUp = async () => {
+  const handleWithdraw = async () => {
     if (!userData || !selectedWalletProfileData || !academixProfileData) return;
 
     try {
-        setTopUpLoading(true);
+        setWithdrawLoading(true);
         setError('');
       const location = await checkLocation();
       const paramatical = await getParamatical(
@@ -233,13 +233,13 @@ Expires: ${expire}`);
       );
 
       if (!paramatical) {
-        setTopUpLoading(false);
+        setWithdrawLoading(false);
         setError(t('error_occurred'));
         return;
       }
 
       const feature = await checkFeatures(
-        'Features.top_up',
+        'Features.withdraw',
         lang,
         paramatical.country,
         userData.usersSex,
@@ -247,7 +247,7 @@ Expires: ${expire}`);
       );
 
       if (!feature) {
-        setTopUpLoading(false);
+        setWithdrawLoading(false);
         console.log('feature not available');
         setError(t('feature_unavailable'));
         return;
@@ -258,7 +258,7 @@ Expires: ${expire}`);
 
       if (!jwt) {
         console.log('no JWT token');
-        setTopUpLoading(false);
+        setWithdrawLoading(false);
         setError(t('error_occurred') );
         return;
       }
@@ -268,7 +268,7 @@ Expires: ${expire}`);
         senderProfileId: selectedWalletProfileData.paymentProfileId,
         receiverProfileId: academixProfileData.paymentProfileId,
         amount: amount,
-        type: 'TransactionType.top_up',
+        type: 'TransactionType.withdraw',
         paymentSessionId: 'sessionId',
         locale: paramatical.locale,
         country: paramatical.country,
@@ -282,7 +282,7 @@ Expires: ${expire}`);
       const transaction = new TransactionModel(payment.transaction_details);
       const completionMode = payment.payment_completion_mode;
       const completionData = new PaymentCompletionData(payment.payment_completion_data);
-
+      console.log(payment);
       if (transaction && status === 'Payment.success') {
         setTransactionModels([transaction,...transactionModels]);
 
@@ -292,11 +292,11 @@ Expires: ${expire}`);
           await handlePaymentCompletion(completionMode, completionData, transaction);
         }
       }
-     setTopUpLoading(false);
+     setWithdrawLoading(false);
 
     } catch (error: any) {
-      console.error("Top up error:", error);
-      setTopUpLoading(false);
+      console.error("Withdraw error:", error);
+      setWithdrawLoading(false);
       setError(t('error_occurred') || 'An error occurred');
     }
   };
@@ -320,7 +320,15 @@ Expires: ${expire}`);
       case 'PaymentMethod.bank_transfer':
         return (
           <span className={styles.infoValue}>
-            {t('error_text')}
+            <div>
+            {selectedWalletProfileData?.paymentDetails?.fullname || t('error_text')}
+            </div>
+            <div>
+                        {selectedWalletProfileData?.paymentDetails?.accountNumber || t('error_text')}
+            </div>
+            <div>
+                        {selectedWalletProfileData?.paymentDetails?.bankName || t('error_text')}
+            </div>
           </span>
         );
 
@@ -371,18 +379,19 @@ Expires: ${expire}`);
   // derived booleans
   const showMethods = !!selectedWalletData && amount > 0 && amount >= (selectedWalletData.paymentWalletMin || 0);
   const showProfile = !!selectedMethodData && showMethods;
-  const showTopUp = !!selectedWalletProfileData && showProfile;
+  const showWithdraw = !!selectedWalletProfileData && showProfile;
   const showConfirm = !!selectedWalletProfileData && !!selectedMethodData && !!academixProfileData;
 
   const rate = selectedWalletData?.paymentWalletRate ?? 0;
-  const fee = selectedWalletData ?
+  const fee = (selectedWalletData ?
     (selectedWalletData.paymentWalletRateType === 'RateType.PERCENT'
       ? amount * (selectedWalletData.paymentWalletFee ?? 0) / 100
       : selectedWalletData.paymentWalletFee ?? 0
-    ) : 0;
+    ) : 0) * (selectedWalletData?.paymentWalletRate || 0);
 
   const currency = selectedWalletData?.paymentWalletCurrency ?? "!";
   const balance = userBalance?.usersBalanceAmount ?? 0;
+  const balanceCheck = balance >= (amount  * rate) + fee;
 
   return (
     <main className={`${styles.container} ${styles[`container_${theme}`]}`}>
@@ -401,14 +410,14 @@ Expires: ${expire}`);
               />
             </svg>
           </button>
-          <h1 className={styles.title}>{t('top_up_text')}</h1>
+          <h1 className={styles.title}>{t('withdraw_text')}</h1>
         </div>
       </header>
 
       <div className={styles.innerBody}>
 
         <PaymentWallet
-          profileType={'ProfileType.buy'}
+          profileType={'ProfileType.sell'}
           onWalletData={handleWalletData}
           onWalletAmount={handleAmount}
           entryMode
@@ -416,7 +425,7 @@ Expires: ${expire}`);
 
         {showMethods && (
           <PaymentMethod
-            profileType={'ProfileType.buy'}
+            profileType={'ProfileType.sell'}
             walletId={selectedWalletData.paymentWalletId}
             onMethodSelect={handleMethodData}
           />
@@ -425,14 +434,14 @@ Expires: ${expire}`);
         {showProfile && (
           <>
             <PaymentProfile
-              profileType={'ProfileType.buy'}
+              profileType={'ProfileType.sell'}
               methodId={selectedMethodData.paymentMethodId}
               methodType={selectedMethodData.paymentMethodChecker}
               onProfileSelect={handleProfileData}
               onCreateProfile={createProfile}
             />
 
-            {selectedMethodData.paymentMethodBuyMultiple && (
+            {selectedMethodData.paymentMethodSellMultiple && (
               <div className={styles.profileContainer}>
                 <button
                   className={styles.newProfileButton}
@@ -445,7 +454,7 @@ Expires: ${expire}`);
           </>
         )}
 
-        {showTopUp && (
+        {showWithdraw && (
           <button
             type="button"
             className={styles.continueButton}
@@ -458,13 +467,13 @@ Expires: ${expire}`);
       </div>
 
       <BottomViewer
-        id={topUpBottomViewerId}
-        isOpen={topUpBottomIsOpen}
-        onClose={topUpBottomController.close}
+        id={withdrawBottomViewerId}
+        isOpen={withdrawBottomIsOpen}
+        onClose={withdrawBottomController.close}
         backDrop={false}
         cancelButton={{
           position: "right",
-          onClick: topUpBottomController.close,
+          onClick: withdrawBottomController.close,
           view: <DialogCancel />
         }}
         layoutProp={{
@@ -489,12 +498,12 @@ Expires: ${expire}`);
             <div className={styles.paymentConfirmation}>
               {/* Amounts */}
               <div className={styles.amountSection}>
-                <div className={styles.currencyAmount}>
-                  {currency} {formatNumber(amount)}
-                </div>
                 <div className={styles.academixAmount}>
                   <span className={styles.academixIcon}>A</span>
                   {formatNumber(amount * rate)}
+                </div>
+                <div className={styles.currencyAmount}>
+                  {currency} {formatNumber(amount)}
                 </div>
               </div>
 
@@ -522,7 +531,7 @@ Expires: ${expire}`);
               <div className={styles.infoRow}>
                 <span className={styles.infoLabel}>{t('fee_text')}:</span>
                 <span className={styles.infoValue}>
-                  {currency} {fee.toFixed(2)}
+                  A {fee.toFixed(2)}
                 </span>
               </div>
 
@@ -555,19 +564,20 @@ Expires: ${expire}`);
                       </span>
                       )
                     </div>
+                    {!balanceCheck && <span> {t('insufficient_balance')} </span>}
                   </div>
                 </div>
               </div>
 
               {/* Pay Button */}
               <button
-                onClick={handleTopUp}
+                onClick={handleWithdraw}
                 type="button"
                 className={styles.continueButton}
-                disabled={topUpLoading}
-                aria-disabled={topUpLoading}
+                disabled={withdrawLoading || !balanceCheck}
+                aria-disabled={withdrawLoading}
               >
-                { topUpLoading ?  <span className={styles.spinner}></span> : t('pay_text')}
+                { withdrawLoading ?  <span className={styles.spinner}></span> : t('pay_text')}
               </button>
             </div>
           )}

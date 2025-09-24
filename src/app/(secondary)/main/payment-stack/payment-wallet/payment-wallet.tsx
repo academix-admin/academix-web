@@ -94,7 +94,7 @@ export default function PaymentWallet({ profileType, onWalletData, onWalletAmoun
   const [userWalletState, setUserWalletState] = useState<'initial' | 'loading' | 'data' | 'error'>('initial');
 
   const academixPaymentWallet = new PaymentWalletModel(
-    'PaymentType.BUY',
+    'PaymentType.buy',
     {
       payment_wallet_id: "",
       sort_created_id: "",
@@ -121,6 +121,7 @@ export default function PaymentWallet({ profileType, onWalletData, onWalletAmoun
 
   useEffect(() => {
     if(!isHydrated)return;
+    if(walletsModel.length === 0 && paymentWalletId){loadWallets(); return;}
     const getWallet = walletsModel.find((e) => e.paymentWalletId === paymentWalletId);
     if (getWallet) {
       setWalletData(getWallet);
@@ -147,7 +148,7 @@ export default function PaymentWallet({ profileType, onWalletData, onWalletAmoun
         return;
       }
 
-      const { data, error } = await supabaseBrowser.rpc(profileType === 'ProfileType.buy' ? "fetch_user_top_up_wallet" : "fetch_user_withdraw_wallet", {
+      const { data, error } = await supabaseBrowser.rpc(profileType === 'ProfileType.buy' ? "fetch_user_top_up_wallet" : "fetch_user_withdraw_wallets", {
         p_user_id: paramatical.usersId,
         p_locale: paramatical.locale,
         p_country: paramatical.country,
@@ -163,8 +164,8 @@ export default function PaymentWallet({ profileType, onWalletData, onWalletAmoun
       }
 
       if (data) {
-        const wallet = new PaymentWalletModel('PaymentType.BUY', data);
-        setWalletData(wallet);
+        const wallet = new PaymentWalletModel(profileType === 'ProfileType.buy' ? 'PaymentType.buy' : 'PaymentType.sell', data);
+        if((paymentWalletId && paymentWalletId === wallet.paymentWalletId) || !paymentWalletId)setWalletData(wallet);
         setUserWalletState('data');
       } else {
         setUserWalletState('error');
@@ -176,7 +177,7 @@ export default function PaymentWallet({ profileType, onWalletData, onWalletAmoun
   }, [userData, lang, walletData, userWalletState]);
 
   useEffect(() => {
-    if(!paymentWalletId)handleUserTopUpWallet();
+    handleUserTopUpWallet();
   }, [handleUserTopUpWallet, paymentWalletId]);
 
 
@@ -211,7 +212,7 @@ export default function PaymentWallet({ profileType, onWalletData, onWalletAmoun
         console.error("[PaymentWalletModel] error:", error);
         return [];
       }
-      return (data || []).map((row: BackendBuyPaymentWalletModel | BackendSellPaymentWalletModel) => new PaymentWalletModel('PaymentType.BUY',row));
+      return (data || []).map((row: BackendBuyPaymentWalletModel | BackendSellPaymentWalletModel) => new PaymentWalletModel(profileType === 'ProfileType.buy' ? 'PaymentType.buy' : 'PaymentType.sell',row));
     } catch (err) {
       console.error("[PaymentWalletModel] error:", err);
       return [];
@@ -302,8 +303,8 @@ export default function PaymentWallet({ profileType, onWalletData, onWalletAmoun
           feeValue = walletData.paymentWalletFee;
       }
 
-     if(type === 'PaymentType.SELL'){
-         feeValue = ((walletData?.paymentWalletRate || 0)* feeValue);
+     if(type === 'PaymentType.sell'){
+         feeValue = ((walletData?.paymentWalletRate || 0) * feeValue);
      }
 
     return feeValue.toFixed(2).replace('.00','');
@@ -455,7 +456,7 @@ export default function PaymentWallet({ profileType, onWalletData, onWalletAmoun
               ) : (
                 <div className={styles.feeContainer}>
                   {t('fee_text')}:{' '}
-                  {walletData.paymentWalletType === 'PaymentType.BUY' ? (
+                  {walletData.paymentWalletType === 'PaymentType.buy' ? (
                     walletData.paymentWalletCurrency
                   ) : (
                     <svg
@@ -480,7 +481,7 @@ export default function PaymentWallet({ profileType, onWalletData, onWalletAmoun
             ) : (
               <div className={styles.valueContainer}>
                 {t('fee_text')}:{' '}
-                {walletData.paymentWalletType === 'PaymentType.BUY' ? (
+                {walletData.paymentWalletType === 'PaymentType.buy' ? (
                   walletData.paymentWalletCurrency
                 ) : (
                   <svg

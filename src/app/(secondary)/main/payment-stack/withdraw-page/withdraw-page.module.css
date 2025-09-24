@@ -1,0 +1,445 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+      box-sizing: border-box;
+}
+
+.header {
+  position: absolute;
+  top: 0;
+  left:0;
+  width: 100%;
+  z-index: 10;
+  display: flex;
+  backdrop-filter: blur(8px);
+  box-sizing: border-box;
+}
+
+.header_light {
+  background-color: rgba(255, 255, 255, 0.8);
+  border-bottom: 1px solid #C4C4C4;
+}
+
+.header_dark {
+  background-color: rgba(18, 18, 18, 0.8);
+  border-bottom: 1px solid #333;
+}
+
+.headerContent {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 1rem;
+  padding: 1.1rem 2rem;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.innerBody{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 6rem;
+  box-sizing: border-box;
+  max-width: 700px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+
+.backButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-color);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  justify-content: center;
+  margin-left: -8px;
+}
+
+.backButton:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.backIcon {
+  width: 20px;
+  height: 20px;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+  flex-grow: 1;
+  text-align: start;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-sizing: border-box;
+}
+
+.logoContainer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  box-sizing: border-box;
+}
+
+.logo{
+  width: 35px;
+  height: 35px;
+}
+
+.container_light .input {
+  background-color: #ffffff;
+  color: #000;
+}
+
+.container_dark .input {
+  background-color: #1E1E1E;
+  color: #ffffff;
+  border-color: #333;
+}
+
+.errorText, .validText {
+  font-size: 0.75rem;
+  margin: 0px;
+  margin-top: 0.15rem;
+  text-align: left;
+  font-weight: 500;
+  line-height: 1.25;
+   word-break: break-word;   /* break long words */
+      white-space: normal;      /* allow wrapping */
+}
+
+.spinner {
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top: 3px solid white;
+  border-radius: 50%;
+  width: 10px;
+  height: 10px;
+  animation: spin 1s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loadingOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+}
+
+
+.errorSection {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
+}
+
+
+.moreSpinner {
+  border: 3px solid #1D3D1E;
+  border-top: 3px solid white;
+  border-radius: 50%;
+  width: 10px;
+  height: 10px;
+  animation: spin 1s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.continueButton {
+  padding: 0.75rem 3rem;
+  border-radius: 8px;
+  background-color: #1C6B1E;
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin-top: 3rem;
+}
+
+.continueButton:hover {
+  background-color: #1D3D1E;
+}
+
+.continueButton:disabled {
+  background-color: #9CA3AF;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.profileContainer{
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1rem;
+  width: 100%;
+}
+
+.newProfileButton {
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  color: #1C6B1E;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  background-color: transparent;
+}
+
+
+/* Dialog Container */
+.dialogContainer {
+  padding: 20px;
+  min-height: 300px;
+}
+
+.dialogContainer_light {
+  background-color: #ffffff;
+  color: #000000;
+}
+
+.dialogContainer_dark {
+  background-color: #121212;
+  color: #ffffff;
+}
+
+/* Payment Confirmation Styles */
+.paymentConfirmation {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.confirmationHeader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.confirmationTitle {
+  font-size: 18px;
+  font-weight: bold;
+  margin: 0;
+  text-align: center;
+}
+
+.divider {
+  height: 1px;
+  width: 100%;
+  margin: 12px 0;
+}
+
+.dialogContainer_light .divider {
+  background-color: #e5e7eb;
+}
+
+.dialogContainer_dark .divider {
+  background-color: #374151;
+}
+
+.amountSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.currencyAmount {
+  font-size: 32px;
+  font-weight: bold;
+}
+
+.academixAmount {
+  font-size: 32px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.academixIcon {
+  font-size: 24px;
+  font-weight: bold;
+  color: #1C6B1E;
+}
+
+.infoRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.infoLabel {
+  color: inherit;
+  opacity: 0.8;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.infoValue {
+  font-size: 16px;
+  font-weight: bold;
+  text-align: right;
+  word-break: break-word;
+}
+
+.paymentMethodSection {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.paymentMethodTitle {
+  font-size: 15px;
+  font-weight: bold;
+  margin: 0;
+}
+
+.walletCard {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 12px;
+}
+
+.dialogContainer_light .walletCard {
+  background-color: #f9fafb;
+}
+
+.dialogContainer_dark .walletCard {
+  background-color: #1f2937;
+}
+
+.walletIcon {
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(28, 107, 30, 0.2);
+  color: #1C6B1E;
+}
+
+.walletInfo {
+  flex: 1;
+}
+
+.walletName {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.academixBalance {
+  color: #1C6B1E;
+}
+
+.payButton {
+  padding: 16px;
+  border-radius: 12px;
+  background-color: #1C6B1E;
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin-top: 24px;
+}
+
+.payButton:hover {
+  background-color: #1D3D1E;
+}
+
+.payButton:disabled {
+  background-color: #9CA3AF;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+
+/* Tablet */
+@media screen and (min-width: 500px) and (max-width: 800px) {
+ .header {
+   position: fixed;
+  }
+ .headerContent {
+   padding: 1rem 0rem;
+   margin: 0 1rem;
+ }
+  .logo {
+       width: 35px;
+       height: 35px;
+     }
+  .innerBody {
+    padding-top: 6rem;
+      max-width: 800px;
+  }
+
+
+}
+
+/* Mobile */
+@media screen and (max-width: 500px) {
+.header {
+  position: fixed;
+ }
+ .headerContent {
+    margin: 0;
+   padding: 1rem 1rem;
+ }
+  .innerBody {
+    padding-top: 5rem;
+      max-width: 500px;
+  }
+
+  .backIcon {
+    width: 16px;
+    height: 16px;
+  }
+
+  .title {
+    font-size: 1.2rem;
+  }
+
+  .dialogContainer {
+      padding: 16px;
+    }
+
+    .currencyAmount,
+    .academixAmount {
+      font-size: 28px;
+    }
+
+    .infoLabel,
+    .infoValue {
+      font-size: 14px;
+    }
+
+    .confirmationTitle {
+      font-size: 16px;
+    }
+
+}
