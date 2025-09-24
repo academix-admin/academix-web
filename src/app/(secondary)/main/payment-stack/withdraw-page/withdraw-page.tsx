@@ -265,8 +265,8 @@ Expires: ${expire}`);
 
       const requestData = {
         userId: userData.usersId,
-        senderProfileId: selectedWalletProfileData.paymentProfileId,
-        receiverProfileId: academixProfileData.paymentProfileId,
+        senderProfileId: academixProfileData.paymentProfileId,
+        receiverProfileId: selectedWalletProfileData.paymentProfileId,
         amount: amount,
         type: 'TransactionType.withdraw',
         paymentSessionId: 'sessionId',
