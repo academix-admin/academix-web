@@ -248,7 +248,7 @@ const AchievementsCard: React.FC<{ achievements: AchievementsModel, tab: string,
           </div>
         ) : (
           // Not rewarded: show collect button if progress complete, otherwise nothing
-          <div className={styles.actionRow}>
+          progressRequired === progressCount ? <div className={styles.actionRow}>
               <button
                 className={styles.collectButton}
                 onClick={handleCollect}
@@ -256,7 +256,7 @@ const AchievementsCard: React.FC<{ achievements: AchievementsModel, tab: string,
               >
                 {collecting ? <span className={styles.moreSpinner}></span> : t('collect_text') }
               </button>
-          </div>
+          </div> : <></>
         )}
       </div>
     </div>
