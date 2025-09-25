@@ -283,7 +283,7 @@ Expires: ${expire}`);
       const completionMode = payment.payment_completion_mode;
       const completionData = new PaymentCompletionData(payment.payment_completion_data);
       console.log(payment);
-      if (transaction && status === 'Payment.success') {
+      if (transaction && (status === 'Payment.success' || status === 'Payment.failed')) {
         setTransactionModels([transaction,...transactionModels]);
 
         await nav.pushAndPopUntil('view_transaction',(entry) => entry.key === 'payment_page', {transactionId: transaction.transactionId})
