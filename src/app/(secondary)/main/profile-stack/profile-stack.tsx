@@ -5,11 +5,12 @@ import {useNav } from "@/lib/NavigationStack";
 import NavigationStack from "@/lib/NavigationStack";
 import ProfilePage from "./profile-page/profile-page";
 import EditProfile from "./edit-profile/edit-profile";
+import RedeemCodes from "./redeem-codes/redeem-codes";
 
 const profileStackNavLink = {
   profile_page: ProfilePage,
   edit_profile: EditProfile,
-//   redeem_codes: RedeemCodes
+  redeem_codes: RedeemCodes
 };
 
 export const ProfileStack = () => (
