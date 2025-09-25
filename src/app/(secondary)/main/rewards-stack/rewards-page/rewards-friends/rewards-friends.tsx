@@ -314,7 +314,7 @@ export default function RewardsFriends({ onStateChange }: ComponentStateProps) {
                                                          </div>
                                                        </div>}
       {friendsModel.length > 0 && <div ref={loaderRef} className={styles.loadMoreSentinel}></div>}
-            {friendsLoading && <div className={styles.moreSpinnerContainer}><span className={styles.moreSpinner}></span></div>}
+      {friendsLoading && <div className={styles.moreSpinnerContainer}><span className={styles.moreSpinner}></span></div>}
 
     </div>
   );

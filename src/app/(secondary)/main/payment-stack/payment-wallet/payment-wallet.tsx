@@ -282,7 +282,8 @@ export default function PaymentWallet({ profileType, onWalletData, onWalletAmoun
       if (paymentSwitch === 'academix' && walletData) {
         const numValue = parseFloat(value) || 0;
         setPaymentAmount(numValue);
-        setWalletAmount((numValue / walletData.paymentWalletRate).toFixed(2).replace('.00',''));
+        if(numValue > 0)setWalletAmount((numValue / walletData.paymentWalletRate).toFixed(2).replace('.00',''));
+        if(numValue <= 0)setWalletAmount('');
       }
     }
   }, [paymentSwitch, walletData]);
@@ -340,7 +341,7 @@ export default function PaymentWallet({ profileType, onWalletData, onWalletAmoun
   }, [demandPaymentWalletModel, fetchPaymentWalletModel, userData, extractLatest, walletSelectController]);
 
   const openWallet = useCallback(() => {
-    if (isFocused || !userData || !modify) return;
+    if (!userData || !modify) return;
     walletSelectController.toggle();
     loadWallets();
   }, [isFocused, userData, walletSelectController, loadWallets]);
@@ -418,11 +419,9 @@ export default function PaymentWallet({ profileType, onWalletData, onWalletAmoun
           <div role='button' onClick={openWallet} className={styles.walletInfo}>
             <div className={styles.walletCurrency}>
               {paymentSwitch === 'academix' && isFocused ? academixPaymentWallet.paymentWalletCurrency : walletData.paymentWalletCurrency}
-              {!isFocused && (
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M7 10l5 5 5-5z"/>
                 </svg>
-              )}
             </div>
             <div className={styles.walletName}>
               {paymentSwitch === 'academix' && isFocused ? academixPaymentWallet.paymentWalletIdentity : walletData.paymentWalletIdentity}
@@ -469,7 +468,7 @@ export default function PaymentWallet({ profileType, onWalletData, onWalletAmoun
                     </svg>
                   )}
                   {calculateFee(
-                    walletData.paymentWalletType, walletAmount
+                    walletData.paymentWalletType, (Number(walletAmount) || 0)
                   )}
                 </div>
               )}
@@ -494,7 +493,7 @@ export default function PaymentWallet({ profileType, onWalletData, onWalletAmoun
                   </svg>
                 )}
                 {calculateFee(
-                  walletData.paymentWalletType, walletAmount
+                  walletData.paymentWalletType, (Number(walletAmount) || 0)
                 )}
               </div>
             )}
