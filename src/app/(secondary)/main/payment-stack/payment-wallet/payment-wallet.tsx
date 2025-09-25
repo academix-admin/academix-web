@@ -469,7 +469,7 @@ export default function PaymentWallet({ profileType, onWalletData, onWalletAmoun
                     </svg>
                   )}
                   {calculateFee(
-                    walletData.paymentWalletType, paymentAmount
+                    walletData.paymentWalletType, walletAmount
                   )}
                 </div>
               )}
@@ -494,7 +494,7 @@ export default function PaymentWallet({ profileType, onWalletData, onWalletAmoun
                   </svg>
                 )}
                 {calculateFee(
-                  walletData.paymentWalletType, paymentAmount
+                  walletData.paymentWalletType, walletAmount
                 )}
               </div>
             )}

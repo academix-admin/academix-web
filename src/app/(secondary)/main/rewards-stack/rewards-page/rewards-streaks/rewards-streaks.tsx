@@ -264,9 +264,8 @@ export default function RewardsStreaks({ onStateChange }: ComponentStateProps) {
   }, [dailyStreaks, findInitialIndex]);
 
   useEffect(() => {
-    if (!userData) return;
-
     demandDailyStreaks(async ({ get, set }) => {
+      if (!userData) return;
       onStateChange?.('loading');
       try {
         const paramatical = await getParamatical(

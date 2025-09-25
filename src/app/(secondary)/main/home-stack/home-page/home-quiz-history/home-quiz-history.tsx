@@ -123,9 +123,8 @@ export default function HomeQuizHistory({ onStateChange }: ComponentStateProps) 
 
 
   useEffect(() => {
-    if (!userData || quizHistoryData.length > 0) return;
-
     demandQuizHistoryData(async ({ get, set }) => {
+      if (!userData || quizHistoryData.length > 0) return;
       const quizHistories = await fetchQuizHistory(userData, 10, new PaginateModel());
       extractLatest(quizHistories);
       set(quizHistories);

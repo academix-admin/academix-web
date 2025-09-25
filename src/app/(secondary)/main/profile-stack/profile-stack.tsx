@@ -6,7 +6,9 @@ import NavigationStack from "@/lib/NavigationStack";
 import ProfilePage from "./profile-page/profile-page";
 
 const profileStackNavLink = {
-  profile_page: ProfilePage
+  profile_page: ProfilePage,
+//   edit_profile: EditProfile,
+//   redeem_codes: RedeemCodes
 };
 
 export const ProfileStack = () => (

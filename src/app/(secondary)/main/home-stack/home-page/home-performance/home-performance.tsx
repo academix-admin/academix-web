@@ -29,8 +29,8 @@ export default function HomePerformance({ onStateChange }: ComponentStateProps) 
   );
 
   useEffect(() => {
-    if(!userData)return;
     demandPerformanceData(async ({ get, set }) => {
+      if(!userData)return;
       try {
         onStateChange?.('loading');
         const paramatical = await getParamatical(

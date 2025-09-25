@@ -119,9 +119,8 @@ export default function RewardsFriends({ onStateChange }: ComponentStateProps) {
 
 
   useEffect(() => {
-    if (!userData || friendsModel.length > 0) return;
-
     demandFriendsModel(async ({ get, set }) => {
+      if (!userData || friendsModel.length > 0) return;
       const friendHistories = await fetchFriendsModel(userData, 10,  new PaginateModel());
       extractLatest(friendHistories);
       set(friendHistories);

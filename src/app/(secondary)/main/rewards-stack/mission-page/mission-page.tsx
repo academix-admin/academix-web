@@ -357,9 +357,8 @@ const MissionContainer: React.FC<MissionContainerProps> = ({ tab, handleCollecte
   };
 
   useEffect(() => {
-    if (!userData || missionModel.length > 0) return;
-
     demandMissionModel(async ({ get, set }) => {
+      if (!userData || missionModel.length > 0) return;
       setMissionLoading(true);
       const missionModels = await fetchMissionModel(userData, 10, new PaginateModel());
       extractLatest(missionModels);

@@ -28,8 +28,8 @@ export default function MilestoneView({ onStateChange }: ComponentStateProps) {
   const [achievementsData, demandAchievementsData, setAchievementsData] = useAchievementsData(lang);
 
   useEffect(() => {
-    if(!userData)return;
     demandMissionData(async ({ get, set }) => {
+      if(!userData)return;
       try {
         onStateChange?.('loading');
         const paramatical = await getParamatical(

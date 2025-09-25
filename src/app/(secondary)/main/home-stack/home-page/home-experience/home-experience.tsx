@@ -29,8 +29,8 @@ export default function HomeExperience({ onStateChange }: ComponentStateProps) {
   );
 
   useEffect(() => {
-    if(!userData)return;
     demandUserEngagement(async ({ get, set }) => {
+      if(!userData)return;
       onStateChange?.('loading');
       try {
         const paramatical = await getParamatical(

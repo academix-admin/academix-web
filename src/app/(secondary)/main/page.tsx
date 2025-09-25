@@ -30,10 +30,11 @@ useEffect(() => {
     if (!userData && __meta.isHydrated) {
       try {
         await supabaseBrowser.auth.signOut();
-        await StateStack.core.clearScope('secondary_flow');
         await StateStack.core.clearScope('mission_flow');
         await StateStack.core.clearScope('achievements_flow');
         await StateStack.core.clearScope('payment_flow');
+        await StateStack.core.clearScope('secondary_flow');
+        sessionStorage.clear();
       } catch (error) {
         console.error('Sign out error:', error);
       }
