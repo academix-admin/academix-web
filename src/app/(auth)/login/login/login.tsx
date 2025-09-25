@@ -306,7 +306,6 @@ const handleCreatedUser = async (type: string, value: string, userObj: UserData)
   await StateStack.core.clearScope('login_flow');
   await userData$.set(userObj);
 
-
   __meta.clear();
   nav.dispose();
   setLoginInputValue('');

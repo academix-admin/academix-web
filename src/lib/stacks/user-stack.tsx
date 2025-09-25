@@ -5,7 +5,11 @@ const methods = {
   userData: {
     set: (state: UserData | null, userData: Partial<UserData> | null) => {
       if (!userData) return null;
-      return state ? state.copyWith(userData) : new UserData(userData as any);
+      return state ? UserData.from(state).copyWith(userData) : new UserData(userData as any);
+    },
+    changeImage: (state: UserData | null, image: string | null) => {
+      if (!state) return null;
+      return UserData.from(state).changeImage(image);
     },
     get: (state: UserData | null) => state,
   },

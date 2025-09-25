@@ -99,6 +99,60 @@ export class UserData {
     return new UserData(backendLike);
   }
 
+  changeImage(newUsersImage: string | null): UserData {
+    const backendLike: BackendUserData = {
+      users_id: this.usersId,
+      users_username: this.usersUsername,
+      users_names: this.usersNames,
+      users_email: this.usersEmail,
+      users_phone: this.usersPhone,
+      users_dob: this.usersDob,
+      users_sex: this.usersSex,
+      users_image: newUsersImage,
+      users_referred_id: this.usersReferredId,
+      users_verified: this.usersVerified,
+      country_id: this.countryId,
+      language_id: this.languageId,
+      users_created_at: this.usersCreatedAt,
+      roles_table: this.usersRole ? {
+                                              roles_id: this.usersRole.rolesId,
+                                              roles_level: this.usersRole.rolesLevel,
+                                              roles_checker: this.usersRole.rolesType,
+                                            }
+                                          : null
+    };
+
+    return new UserData(backendLike);
+  }
+
+  static from(data: any): UserData {
+      if (data instanceof UserData) return data;
+
+      // Frontend style (camelCase)
+      return new UserData({
+        users_id: data.usersId,
+        users_username: data.usersUsername,
+        users_names: data.usersNames,
+        users_email: data.usersEmail,
+        users_phone: data.usersPhone,
+        users_dob: data.usersDob,
+        users_sex: data.usersSex,
+        users_image: data.usersImage,
+        users_referred_id: data.usersReferredId,
+        users_verified: data.usersVerified,
+        country_id: data.countryId,
+        language_id: data.languageId,
+        users_created_at: data.usersCreatedAt,
+        roles_table: data.usersRole
+          ? {
+              roles_id: data.usersRole.rolesId,
+              roles_level: data.usersRole.rolesLevel,
+              roles_checker: data.usersRole.rolesType,
+            }
+          : null,
+      });
+    }
+
 }
 
 

@@ -12,11 +12,13 @@ import { useDemandState } from '@/lib/state-stack';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { ComponentStateProps } from '@/hooks/use-component-state';
 import Image from 'next/image';
+import { useNav } from "@/lib/NavigationStack";
 
 export default function ProfileOverview({ onStateChange }: ComponentStateProps) {
   const { theme } = useTheme();
   const { t, lang, tNode } = useLanguage();
   const { userData, userData$ } = useUserData();
+  const nav = useNav();
 
   useEffect(() => {
     if(userData){
@@ -91,7 +93,7 @@ export default function ProfileOverview({ onStateChange }: ComponentStateProps) 
 
       <div className={`${styles.card} ${styles[`card_${theme}`]}`}>
         {/* Top Section - Lighter Gradient */}
-        <div className={styles.topSection}>
+        <div role="button" onClick={()=> nav.push('edit_profile')} className={styles.topSection}>
           <div className={styles.profileInfo}>
             <div className={styles.avatarContainer}>
               {userData.usersImage ? (
