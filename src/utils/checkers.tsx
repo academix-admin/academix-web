@@ -53,7 +53,8 @@ export type ParamaticalData = {
 
 const checkLocation = async (): Promise<LocationData | null> => {
   try {
-    const res = await fetch("/api/ipwho");
+//     const res = await fetch("/api/ipwho");
+    const res = await fetch("https://ipwho.is/");
     if (!res.ok) throw new Error("Failed to fetch location");
 
     const data: LocationData = await res.json();
