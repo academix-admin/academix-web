@@ -1,0 +1,192 @@
+/* Title Section Styles */
+.mainSection {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 24px 28px 32px 28px;
+}
+
+.titleSection {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0; /* Prevents text overflow issues */
+}
+
+.titleTop {
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  font-weight: 700;
+  margin: 0;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.titleTop_light {
+  color: #1a1a1a;
+}
+
+.titleTop_dark {
+  color: #ffffff;
+}
+
+.titleBot {
+  font-size: clamp(0.875rem, 2.5vw, 1rem);
+  margin: 0.25rem 0 0;
+  line-height: 1.4;
+}
+
+.titleBot_light {
+  color: #666;
+}
+
+.titleBot_dark {
+  color: #c4c4c4;
+}
+
+.infoIcon {
+  display: flex;
+  flex-shrink: 0;
+  gap: 16px;
+  margin-top: 0.25rem;
+}
+
+/* Icon button styles */
+.iconButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.iconButton:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.iconButton:active {
+  transform: scale(0.95);
+}
+
+/* Base SVG size for web (default) */
+.svgSection {
+  transition: all 0.3s ease;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.svgSection_light {
+  color: #1a1a1a;
+}
+
+.svgSection_dark {
+  color: #ffffff;
+}
+
+/* Responsive Styles */
+@media screen and (min-width: 801px) {
+  /* Web styles */
+  .svgSection {
+    width: 32px;
+    height: 32px;
+  }
+
+  .iconButton {
+    padding: 6px;
+  }
+}
+
+@media screen and (min-width: 500px) and (max-width: 800px) {
+  /* Tablet styles */
+  .svgSection {
+    width: 28px;
+    height: 28px;
+  }
+
+  .infoIcon {
+    gap: 14px;
+  }
+
+  .iconButton {
+    padding: 5px;
+  }
+
+  .mainSection {
+    gap: 0.875rem;
+    padding: 18px 20px 24px 20px;
+  }
+}
+
+@media screen and (max-width: 500px) {
+  /* Mobile styles */
+  .svgSection {
+    width: 24px;
+    height: 24px;
+  }
+
+  .infoIcon {
+    gap: 12px;
+  }
+
+  .iconButton {
+    padding: 4px;
+  }
+
+  .mainSection {
+    gap: 0.75rem;
+    padding: 16px 16px 18px 16px;
+  }
+
+  .titleTop {
+    font-size: 1.375rem;
+  }
+
+  .titleBot {
+    font-size: 0.8125rem;
+  }
+}
+
+/* Reduced motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .svgSection,
+  .iconButton {
+    transition: none;
+  }
+
+  .iconButton:active {
+    transform: none;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .titleTop_light {
+    color: #000000;
+  }
+
+  .titleBot_light {
+    color: #333333;
+  }
+
+  .titleTop_dark {
+    color: #ffffff;
+  }
+
+  .titleBot_dark {
+    color: #e0e0e0;
+  }
+
+  .iconButton:hover {
+    background-color: rgba(0, 0, 0, 0.2);
+    outline: 2px solid currentColor;
+  }
+}

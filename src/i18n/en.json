@@ -279,5 +279,7 @@
   "first_rank": "1st",
   "second_rank": "2nd",
   "third_rank": "3rd",
-  "rules_text": "Rules"
+  "rules_text": "Rules",
+  "explore_text": "Explore",
+  "curated_quizzes": "Curated quizzes"
 }
