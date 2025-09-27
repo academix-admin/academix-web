@@ -272,5 +272,12 @@
   "select_payment_network": "Select payment network",
   "activate_label": "Activate",
   "bank_label": "Bank",
-  "select_banks": "Select banks"
+  "select_banks": "Select banks",
+  "top_text": "Top",
+  "mid_text": "Mid",
+  "bot_text": "Bot",
+  "first_rank": "1st",
+  "second_rank": "2nd",
+  "third_rank": "3rd",
+  "rules_text": "Rules"
 }

@@ -2,7 +2,6 @@
 .container {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
   position: relative;
 }
 
@@ -82,260 +81,146 @@
   box-sizing: border-box;
 }
 
-.profileContent {
-  display: flex;
-  flex-direction: column;
-  gap: 2.5rem;
-}
-
-.profileImageSection {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
-  padding: 2rem 0;
-}
-
-.profileImageContainer {
-  position: relative;
-}
-
-.profileImage {
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-.profileInitials {
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 600;
-  font-size: 2rem;
-  background: linear-gradient(135deg, #1C6B1E, #1D3D1E);
-  color: white;
-}
-
-
-.profileFields {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.profileField {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  transition: all 0.2s;
-  padding-bottom: 1rem;
-}
-
-.profileField:hover {
-  border-color: #1C6B1E;
-}
-
-.fieldContent {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  flex: 1;
-}
-
-.fieldIcon {
-  font-size: 1.5rem;
-  width: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.fieldInfo {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.fieldLabel {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--text-secondary);
-    box-sizing: border-box;
-   word-break: break-word;   /* break long words */
-      white-space: normal;      /* allow wrapping */
-}
-
-.fieldValue {
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--text-color);
-  min-width: 0;
-    box-sizing: border-box;
-       word-break: break-word;   /* break long words */
-          white-space: normal;      /* allow wrapping */
-}
-
-.editButton {
-  cursor: pointer;
-  transition: transform 0.2s;
-  flex-shrink: 0;
-}
-
-.editButton:hover {
-  transform: scale(1.1);
-}
-
-.editSection {
-  margin: 1rem 0;
-}
-
-.formGroup {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.label {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--text-color);
-}
-
-.input {
-  padding: 0.875rem 1rem;
-  border-radius: 8px;
-  border: 1px solid var(--border-color);
-  font-size: 1rem;
+/* Mission Cards */
+.redeemCodesList {
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding: 0.25rem 2rem;
   box-sizing: border-box;
-  transition: border-color 0.2s;
 }
 
-.input:focus {
-  outline: none;
-  border-color: #1C6B1E;
+
+/* Redeem Code Card Styles */
+.redeemCodeCard {
+  background: linear-gradient(90deg, #176b2d 0%, #1e7a36 100%);
+  border-radius: 12px;
+  margin: 8px 16px 16px 16px;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+  overflow: hidden;
+  color: white;
 }
 
-.container_light .input {
-  background-color: #FFFFFF;
-  color: #000000;
+.cardContent {
+  display: flex;
+  flex-direction: column;
 }
 
-.container_dark .input {
-  background-color: #1E1E1E;
-  color: #FFFFFF;
+/* Header Section */
+.cardHeader {
+  padding: 12px 12px 8px 12px;
 }
 
-.phoneInputContainer,
-.usernameInputContainer {
-  position: relative;
+.codeSection {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.redeemCodeValue {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0;
+  color: white;
+  line-height: 1.2;
+  flex: 1;
+}
+
+.copyButton {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 6px;
+  padding: 6px;
+  cursor: pointer;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+  margin-left: 8px;
+}
+
+.copyButton:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Amount Section */
+.amountSection {
+  padding: 0 12px 12px 12px;
+}
+
+.amountContent {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.currencyIcon {
+  opacity: 0.9;
+}
+
+.amountText {
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* Footer Section */
+.cardFooter {
+  background: rgba(0, 0, 0, 0.2);
+  padding: 8px 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.rulesRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  font-size: 14px;
+  line-height: 1.3;
+}
+
+.rulesLabel {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.rulesValue {
+  opacity: 0.95;
+}
+
+.separator {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.2);
+  margin: 6px 0;
+}
+
+.expiryRow {
   display: flex;
   align-items: center;
 }
 
-.prefix {
-  position: absolute;
-  left: 1rem;
-  z-index: 1;
-  font-size: 1rem;
-  color: var(--text-secondary);
-  pointer-events: none;
+.expiryText {
+  font-size: 14px;
+  font-weight: 700;
+  opacity: 0.95;
 }
 
-.phoneInputContainer .input,
-.usernameInputContainer .input {
-  padding-left: 2.5rem;
-}
-
-.validText,
-.errorText {
-  font-size: 0.75rem;
-  font-weight: 500;
-  line-height: 1.4;
-}
-
-.container_light .errorText {
-  color: #DC2626;
-}
-
-.container_dark .errorText {
-  color: #F87171;
-}
-
-.container_light .validText {
-  color: #059669;
-}
-
-.container_dark .validText {
-  color: #34D399;
-}
-
-.actionsRow {
+.moreSpinnerContainer {
   display: flex;
-  gap: 1rem;
-  margin-top: 1.5rem;
+  justify-content: center;
+  margin-top: 16px;
 }
 
-.cancelButton {
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
-  background-color: transparent;
-  color: var(--text-color);
-  border: 1px solid var(--border-color);
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  flex: 1;
-}
-
-.cancelButton:hover {
-  background-color: var(--hover-bg);
-}
-
-.saveButton {
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
-  background-color: #1C6B1E;
-  color: white;
-  font-size: 1rem;
-  font-weight: 600;
-  border: none;
-  cursor: pointer;
-  transition: background-color 0.2s;
-  flex: 1;
-}
-
-.saveButton:hover:not(:disabled) {
-  background-color: #1D3D1E;
-}
-
-.saveButton:disabled {
-  background-color: #9CA3AF;
-  cursor: not-allowed;
-  opacity: 0.7;
-}
-
-.spinner {
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top: 2px solid white;
+.moreSpinner {
+  border: 3px solid #1D3D1E;
+  border-top: 3px solid white;
   border-radius: 50%;
-  width: 16px;
-  height: 16px;
-  animation: spin 1s linear infinite;
-  display: inline-block;
-}
-
-.usernameSpinner {
-  border: 2px solid #1C6B1E;
-  border-top: 2px solid transparent;
-  border-radius: 50%;
-  width: 16px;
-  height: 16px;
+  width: 10px;
+  height: 10px;
   animation: spin 1s linear infinite;
   display: inline-block;
 }
@@ -345,145 +230,6 @@
 }
 
 
-.imageUploadContainer {
-  border: 2px dashed var(--border-color);
-  border-radius: 8px;
-  padding: 2rem;
-  text-align: center;
-  cursor: pointer;
-  transition: border-color 0.2s;
-}
-
-.imageUploadContainer:hover {
-  border-color: #1C6B1E;
-}
-
-.fileInput {
-  display: none;
-}
-
-.imageUploadContainer {
-  border: 2px dashed var(--border-color);
-  border-radius: 12px;
-  padding: 2rem;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.2s;
-  margin-top: 0.5rem;
-}
-
-.imageUploadContainer:hover {
-  border-color: #1C6B1E;
-  background-color: var(--hover-bg);
-}
-
-.uploadPlaceholder {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.75rem;
-  color: var(--text-secondary);
-  padding: 1rem;
-}
-
-.uploadPlaceholder svg {
-  color: var(--text-secondary);
-}
-
-.uploadHint {
-  font-size: 0.875rem;
-  opacity: 0.7;
-}
-
-.imagePreview {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
-}
-
-.previewImage {
-  max-width: 200px;
-  max-height: 200px;
-  border-radius: 8px;
-  object-fit: cover;
-  border: 2px solid var(--border-color);
-}
-
-.profileImageSection {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
-  padding: 2rem 0;
-}
-
-.profileImageContainer {
-  position: relative;
-}
-
-.profileImage {
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 3px solid var(--border-color);
-}
-
-.profileInitials {
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 600;
-  font-size: 2rem;
-  background: linear-gradient(135deg, #1C6B1E, #1D3D1E);
-  color: white;
-  border: 3px solid var(--border-color);
-}
-
-.imageActionRow{
- display: flex;
- gap: 16px;
- align-items: center;
- justify-content: center;
-}
-
-.changeImageButton {
-  background: none;
-  border: 1px solid #1C6B1E;
-  color: #1C6B1E;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  transition: all 0.2s;
-  font-weight: 500;
-}
-
-.changeImageButton:hover {
-  background-color: #1C6B1E;
-  color: white;
-}
-
-.removeImageButton {
-  background: none;
-  border: 1px solid red;
-  color: red;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  transition: all 0.2s;
-  font-weight: 500;
-}
-
-.removeImageButton:hover {
-  background-color: red;
-  color: white;
-}
 
 /* Responsive Design */
 @media screen and (max-width: 800px) {
@@ -502,46 +248,6 @@
         padding-top: 6rem;
           max-width: 800px;
   }
-
-  .profileImageSection {
-    padding: 1.5rem 0;
-  }
-
-  .profileField {
-    padding: 1rem;
-      padding-bottom: 0rem;
-
-  }
-
-  .editSection {
-    padding: 1.25rem;
-    margin: 0.75rem 0;
-  }
-
-  .fieldContent {
-    gap: 0.75rem;
-  }
-
-  .fieldIcon {
-    font-size: 1.25rem;
-    width: 32px;
-  }
-
-    .imageUploadContainer {
-      padding: 1.5rem;
-    }
-
-    .previewImage {
-      max-width: 150px;
-      max-height: 150px;
-    }
-
-    .profileImage,
-    .profileInitials {
-      width: 80px;
-      height: 80px;
-      font-size: 1.5rem;
-    }
 }
 
 @media screen and (max-width: 500px) {
@@ -566,35 +272,22 @@
     padding-top: 5rem;
     max-width: 500px;
   }
+    .redeemCodeCard {
+      margin: 8px 12px 12px 12px;
+      border-radius: 10px;
+    }
 
-  .actionsRow {
-    gap: 0.75rem;
-  }
+    .amountText {
+      font-size: 28px;
+    }
 
-  .profileField {
-    align-items: flex-start;
-    gap: 1rem;
-    padding-bottom: 0rem;
-  }
+    .redeemCodeValue {
+      font-size: 14px;
+    }
 
-  .fieldContent {
-    width: 100%;
-  }
-}
+    .rulesRow,
+    .expiryText {
+      font-size: 13px;
+    }
 
-/* Theme Variables */
-.container_light {
-  --text-color: #000000;
-  --text-secondary: #666666;
-  --card-bg: #FFFFFF;
-  --border-color: #E5E5E5;
-  --hover-bg: #F8F8F8;
-}
-
-.container_dark {
-  --text-color: #FFFFFF;
-  --text-secondary: #A0A0A0;
-  --card-bg: #1E1E1E;
-  --border-color: #333333;
-  --hover-bg: #2A2A2A;
 }
