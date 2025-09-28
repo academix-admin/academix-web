@@ -1,0 +1,388 @@
+// ========================
+// Backend Interfaces
+// ========================
+export interface BackendChallengeModel {
+  challenge_id: string;
+  challenge_development_charge: number;
+  challenge_price: number;
+  challenge_top_share: number;
+  challenge_mid_share: number;
+  challenge_bot_share: number;
+  challenge_waiting_time?: number | null;
+  challenge_min_participants: number;
+  challenge_max_participants: number;
+  challenge_identity: string;
+  challenge_question_count: number;
+}
+
+export interface BackendQuizPool {
+  sort_created_id: string;
+  sort_updated_id: string;
+  pools_id: string;
+  pools_visible: boolean;
+  pools_allow_submission?: boolean;
+  pools_status: string;
+  pools_auth: string;
+  pools_code?: string | null;
+  pools_job?: string | null;
+  pools_duration?: number | null;
+  challenge_details?: BackendChallengeModel | null;
+  pools_starting_at?: string | null;
+  pools_job_end_at?: string | null;
+  pools_graded_at?: string | null;
+  pools_ranked_at?: string | null;
+  pools_rewarded_at?: string | null;
+  pools_completed_at?: string | null;
+  pools_members_count: number;
+  question_tracker_count: number;
+}
+
+export interface BackendUserDisplayQuizTopicModel {
+  sort_created_id: string;
+  sort_updated_id: string;
+  topics_id: string;
+  topics_identity: string;
+  topics_created_at: string;
+  topics_updated_at: string;
+  topics_image?: string | null;
+  topics_description?: string;
+  creator_details: {
+    users_id: string;
+    users_image?: string | null;
+    users_names: string;
+    users_username: string;
+  };
+  pools_details?: BackendQuizPool | null;
+  topics_sponsorship?: string;
+}
+
+// ========================
+// Frontend Models
+// ========================
+export class ChallengeModel {
+  challengeId: string;
+  challengeDevelopmentCharge: number;
+  challengePrice: number;
+  challengeTopShare: number;
+  challengeMidShare: number;
+  challengeBotShare: number;
+  challengeWaitingTime?: number | null;
+  challengeMinParticipant: number;
+  challengeMaxParticipant: number;
+  challengeIdentity: string;
+  challengeQuestionCount: number;
+
+  constructor(data?: BackendChallengeModel | null) {
+    this.challengeId = data?.challenge_id ?? "";
+    this.challengeDevelopmentCharge = data?.challenge_development_charge ?? 0;
+    this.challengePrice = data?.challenge_price ?? 0;
+    this.challengeTopShare = data?.challenge_top_share ?? 0;
+    this.challengeMidShare = data?.challenge_mid_share ?? 0;
+    this.challengeBotShare = data?.challenge_bot_share ?? 0;
+    this.challengeWaitingTime = data?.challenge_waiting_time ?? null;
+    this.challengeMinParticipant = data?.challenge_min_participants ?? 0;
+    this.challengeMaxParticipant = data?.challenge_max_participants ?? 0;
+    this.challengeIdentity = data?.challenge_identity ?? "";
+    this.challengeQuestionCount = data?.challenge_question_count ?? 0;
+  }
+
+  static from(data: any): ChallengeModel {
+    if (data instanceof ChallengeModel) return data;
+    return new ChallengeModel({
+      challenge_id: data.challengeId,
+      challenge_development_charge: data.challengeDevelopmentCharge,
+      challenge_price: data.challengePrice,
+      challenge_top_share: data.challengeTopShare,
+      challenge_mid_share: data.challengeMidShare,
+      challenge_bot_share: data.challengeBotShare,
+      challenge_waiting_time: data.challengeWaitingTime,
+      challenge_min_participants: data.challengeMinParticipant,
+      challenge_max_participants: data.challengeMaxParticipant,
+      challenge_identity: data.challengeIdentity,
+      challenge_question_count: data.challengeQuestionCount,
+    });
+  }
+
+  toBackend(): BackendChallengeModel {
+    return {
+      challenge_id: this.challengeId,
+      challenge_development_charge: this.challengeDevelopmentCharge,
+      challenge_price: this.challengePrice,
+      challenge_top_share: this.challengeTopShare,
+      challenge_mid_share: this.challengeMidShare,
+      challenge_bot_share: this.challengeBotShare,
+      challenge_waiting_time: this.challengeWaitingTime ?? null,
+      challenge_min_participants: this.challengeMinParticipant,
+      challenge_max_participants: this.challengeMaxParticipant,
+      challenge_identity: this.challengeIdentity,
+      challenge_question_count: this.challengeQuestionCount,
+    };
+  }
+}
+
+export class QuizPool {
+  sortCreatedId: string;
+  sortUpdatedId: string;
+  poolsId: string;
+  poolsVisible: boolean;
+  poolsAllowSubmission: boolean;
+  poolsStatus: string;
+  poolsAuth: string;
+  poolsCode?: string | null;
+  poolsJob?: string | null;
+  poolsDuration?: number | null;
+  challengeModel?: ChallengeModel | null;
+  poolsStartingAt?: string | null;
+  poolsJobEndAt?: string | null;
+  poolsGradedAt?: string | null;
+  poolsRankedAt?: string | null;
+  poolsRewardedAt?: string | null;
+  poolsCompletedAt?: string | null;
+  poolsMembersCount: number;
+  questionTrackerCount: number;
+
+  constructor(data?: BackendQuizPool | null) {
+    this.sortCreatedId = data?.sort_created_id ?? "";
+    this.sortUpdatedId = data?.sort_updated_id ?? "";
+    this.poolsId = data?.pools_id ?? "";
+    this.poolsVisible = data?.pools_visible ?? false;
+    this.poolsAllowSubmission = data?.pools_allow_submission ?? false;
+    this.poolsStatus = data?.pools_status ?? "";
+    this.poolsAuth = data?.pools_auth ?? "";
+    this.poolsCode = data?.pools_code ?? null;
+    this.poolsJob = data?.pools_job ?? null;
+    this.poolsDuration = data?.pools_duration ?? null;
+    this.challengeModel = data?.challenge_details ? new ChallengeModel(data.challenge_details) : null;
+    this.poolsStartingAt = data?.pools_starting_at ?? null;
+    this.poolsJobEndAt = data?.pools_job_end_at ?? null;
+    this.poolsGradedAt = data?.pools_graded_at ?? null;
+    this.poolsRankedAt = data?.pools_ranked_at ?? null;
+    this.poolsRewardedAt = data?.pools_rewarded_at ?? null;
+    this.poolsCompletedAt = data?.pools_completed_at ?? null;
+    this.poolsMembersCount = data?.pools_members_count ?? 0;
+    this.questionTrackerCount = data?.question_tracker_count ?? 0;
+  }
+
+  static from(data: any): QuizPool {
+    if (data instanceof QuizPool) return data;
+    return new QuizPool({
+      sort_created_id: data.sortCreatedId,
+      sort_updated_id: data.sortUpdatedId,
+      pools_id: data.poolsId,
+      pools_visible: data.poolsVisible,
+      pools_allow_submission: data.poolsAllowSubmission,
+      pools_status: data.poolsStatus,
+      pools_auth: data.poolsAuth,
+      pools_code: data.poolsCode,
+      pools_job: data.poolsJob,
+      pools_duration: data.poolsDuration,
+      challenge_details: ChallengeModel.from(data.challengeModel)?.toBackend(),
+      pools_starting_at: data.poolsStartingAt,
+      pools_job_end_at: data.poolsJobEndAt,
+      pools_graded_at: data.poolsGradedAt,
+      pools_ranked_at: data.poolsRankedAt,
+      pools_rewarded_at: data.poolsRewardedAt,
+      pools_completed_at: data.poolsCompletedAt,
+      pools_members_count: data.poolsMembersCount,
+      question_tracker_count: data.questionTrackerCount,
+    });
+  }
+
+  toBackend(): BackendQuizPool {
+    return {
+      sort_created_id: this.sortCreatedId,
+      sort_updated_id: this.sortUpdatedId,
+      pools_id: this.poolsId,
+      pools_visible: this.poolsVisible,
+      pools_allow_submission: this.poolsAllowSubmission,
+      pools_status: this.poolsStatus,
+      pools_auth: this.poolsAuth,
+      pools_code: this.poolsCode ?? null,
+      pools_job: this.poolsJob ?? null,
+      pools_duration: this.poolsDuration ?? null,
+      challenge_details: this.challengeModel?.toBackend() ?? null,
+      pools_starting_at: this.poolsStartingAt ?? null,
+      pools_job_end_at: this.poolsJobEndAt ?? null,
+      pools_graded_at: this.poolsGradedAt ?? null,
+      pools_ranked_at: this.poolsRankedAt ?? null,
+      pools_rewarded_at: this.poolsRewardedAt ?? null,
+      pools_completed_at: this.poolsCompletedAt ?? null,
+      pools_members_count: this.poolsMembersCount,
+      question_tracker_count: this.questionTrackerCount,
+    };
+  }
+}
+
+export class UserDisplayQuizTopicModel {
+  sortCreatedId: string;
+  sortUpdatedId: string;
+  topicsId: string;
+  topicsIdentity: string;
+  topicsCreatedAt: string;
+  topicsUpdatedAt: string;
+  topicsImageUrl?: string | null;
+  topicsDescription: string;
+  userImageUrl?: string | null;
+  usernameText: string;
+  creatorId: string;
+  fullNameText: string;
+  quizPool?: QuizPool | null;
+  topicsSponsorship?: string;
+
+  constructor(data?: BackendUserDisplayQuizTopicModel | null) {
+    this.sortCreatedId = data?.sort_created_id ?? "";
+    this.sortUpdatedId = data?.sort_updated_id ?? "";
+    this.topicsId = data?.topics_id ?? "";
+    this.topicsIdentity = data?.topics_identity ?? "";
+    this.topicsCreatedAt = data?.topics_created_at ?? "";
+    this.topicsUpdatedAt = data?.topics_updated_at ?? "";
+    this.topicsImageUrl = data?.topics_image ?? null;
+    this.topicsDescription = data?.topics_description ?? "";
+    this.userImageUrl = data?.creator_details?.users_image ?? null;
+    this.usernameText = data?.creator_details?.users_username ?? "";
+    this.creatorId = data?.creator_details?.users_id ?? "";
+    this.fullNameText = data?.creator_details?.users_names ?? "";
+    this.quizPool = data?.pools_details ? new QuizPool(data.pools_details) : null;
+    this.topicsSponsorship = data?.topics_sponsorship ?? "";
+  }
+
+  static from(data: any): UserDisplayQuizTopicModel {
+    if (data instanceof UserDisplayQuizTopicModel) return data;
+    return new UserDisplayQuizTopicModel({
+      sort_created_id: data.sortCreatedId,
+      sort_updated_id: data.sortUpdatedId,
+      topics_id: data.topicsId,
+      topics_identity: data.topicsIdentity,
+      topics_created_at: data.topicsCreatedAt,
+      topics_updated_at: data.topicsUpdatedAt,
+      topics_image: data.topicsImageUrl,
+      topics_description: data.topicsDescription,
+      creator_details: {
+        users_id: data.creatorId,
+        users_image: data.userImageUrl,
+        users_names: data.fullNameText,
+        users_username: data.usernameText,
+      },
+      pools_details: QuizPool.from(data.quizPool)?.toBackend(),
+      topics_sponsorship: data.topicsSponsorship,
+    });
+  }
+
+  toBackend(): BackendUserDisplayQuizTopicModel {
+    return {
+      sort_created_id: this.sortCreatedId,
+      sort_updated_id: this.sortUpdatedId,
+      topics_id: this.topicsId,
+      topics_identity: this.topicsIdentity,
+      topics_created_at: this.topicsCreatedAt,
+      topics_updated_at: this.topicsUpdatedAt,
+      topics_image: this.topicsImageUrl ?? null,
+      topics_description: this.topicsDescription,
+      creator_details: {
+        users_id: this.creatorId,
+        users_image: this.userImageUrl ?? null,
+        users_names: this.fullNameText,
+        users_username: this.usernameText,
+      },
+      pools_details: this.quizPool?.toBackend() ?? null,
+      topics_sponsorship: this.topicsSponsorship ?? "",
+    };
+  }
+}
+
+// {
+//        "sortCreatedId": "000635dea2419ceb8W2wbei5lcm",
+//        "sortUpdatedId": "000635ded1348f4e00000000000",
+//        "topicsId": "b092f17b-230f-4c84-866f-7cc50548a3ff",
+//        "topicsIdentity": "Ekiti State",
+//        "topicsCreatedAt": "2025-05-24 09:49:41.480383+00",
+//        "topicsUpdatedAt": "2025-05-24 10:02:49.158478+00",
+//        "topicsImageUrl": null,
+//        "topicsDescription": "",
+//        "userImageUrl": "https://iewqfmkngcgayxbbnpiz.supabase.co/storage/v1/object/public/users-profile-bucket/10cd0903-adaf-455f-b82b-0261130dace0/5f3355de-b303-452d-9591-0a6d764b175b",
+//        "usernameText": "@sacuisine",
+//        "creatorId": "5f3355de-b303-452d-9591-0a6d764b175b",
+//        "fullNameText": "Sacuisine Restaurant",
+//        "quizPool": {
+//            "sortCreatedId": "00063fcfdcbdb4c05puduqllOZM",
+//            "sortUpdatedId": "00063fcfdcbdeec100000000000",
+//            "poolsId": "ca6fffa9-8b25-4e16-b383-a599d11871f2",
+//            "poolsVisible": true,
+//            "poolsAllowSubmission": false,
+//            "poolsStatus": "Pools.open",
+//            "poolsAuth": "PoolAuth.public",
+//            "poolsCode": "9ESD12VIY",
+//            "poolsJob": "PoolJob.waiting",
+//            "poolsDuration": null,
+//            "challengeModel": {
+//                "challengeId": "7832bc4f-7b50-46e5-9ec3-ef5684232e90",
+//                "challengeDevelopmentCharge": 20,
+//                "challengePrice": 700,
+//                "challengeTopShare": 1400,
+//                "challengeMidShare": 1200,
+//                "challengeBotShare": 1000,
+//                "challengeWaitingTime": null,
+//                "challengeMinParticipant": 2,
+//                "challengeMaxParticipant": 1000,
+//                "challengeIdentity": "MINI",
+//                "challengeQuestionCount": 10
+//            },
+//            "poolsStartingAt": null,
+//            "poolsJobEndAt": "2025-09-27 22:25:14.495109+00",
+//            "poolsGradedAt": null,
+//            "poolsRankedAt": null,
+//            "poolsRewardedAt": null,
+//            "poolsCompletedAt": null,
+//            "poolsMembersCount": 1,
+//            "questionTrackerCount": 0
+//        },
+//        "topicsSponsorship": ""
+//    }
+// {
+//     "sortCreatedId": "000635dea2419ceb8W2wbei5lcm",
+//     "sortUpdatedId": "000635ded1348f4e00000000000",
+//     "topicsId": "b092f17b-230f-4c84-866f-7cc50548a3ff",
+//     "topicsIdentity": "État d'Ekiti",
+//     "topicsCreatedAt": "2025-05-24 09:49:41.480383+00",
+//     "topicsUpdatedAt": "2025-05-24 10:02:49.158478+00",
+//     "topicsImageUrl": null,
+//     "topicsDescription": "",
+//     "userImageUrl": "https://iewqfmkngcgayxbbnpiz.supabase.co/storage/v1/object/public/users-profile-bucket/10cd0903-adaf-455f-b82b-0261130dace0/5f3355de-b303-452d-9591-0a6d764b175b",
+//     "usernameText": "@sacuisine",
+//     "creatorId": "5f3355de-b303-452d-9591-0a6d764b175b",
+//     "fullNameText": "Sacuisine Restaurant",
+//     "quizPool": {
+//         "sortCreatedId": "00063fcfdcbdb4c05puduqllOZM",
+//         "sortUpdatedId": "00063fcfdcbdeec100000000000",
+//         "poolsId": "ca6fffa9-8b25-4e16-b383-a599d11871f2",
+//         "poolsVisible": true,
+//         "poolsAllowSubmission": false,
+//         "poolsStatus": "Pools.open",
+//         "poolsAuth": "PoolAuth.public",
+//         "poolsCode": "9ESD12VIY",
+//         "poolsJob": "PoolJob.extended_waiting",
+//         "poolsDuration": null,
+//         "challengeModel": {
+//             "challengeId": "7832bc4f-7b50-46e5-9ec3-ef5684232e90",
+//             "challengeDevelopmentCharge": 20,
+//             "challengePrice": 700,
+//             "challengeTopShare": 1400,
+//             "challengeMidShare": 1200,
+//             "challengeBotShare": 1000,
+//             "challengeWaitingTime": null,
+//             "challengeMinParticipant": 2,
+//             "challengeMaxParticipant": 1000,
+//             "challengeIdentity": "MINI",
+//             "challengeQuestionCount": 10
+//         },
+//         "poolsStartingAt": null,
+//         "poolsJobEndAt": "2025-09-27 22:26:41.126891+00",
+//         "poolsGradedAt": null,
+//         "poolsRankedAt": null,
+//         "poolsRewardedAt": null,
+//         "poolsCompletedAt": null,
+//         "poolsMembersCount": 1,
+//         "questionTrackerCount": 0
+//     },
+//     "topicsSponsorship": ""
+// }

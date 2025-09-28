@@ -12,6 +12,7 @@ import { supabaseBrowser } from '@/lib/supabase/client';
 import { useNav } from "@/lib/NavigationStack";
 import { useComponentState, ComponentStateProps, getComponentStatus } from '@/hooks/use-component-state';
 import QuizPageTitle from "./quiz-page-title/quiz-page-title";
+import AvailableQuizTopics from "./available-quiz-topics/available-quiz-topics";
 
 
 export default function QuizPage() {
@@ -38,7 +39,15 @@ export default function QuizPage() {
 
   return (
     <div className={styles.mainContainer}>
-      <QuizPageTitle onStateChange={(state) => handleStateChange('rewardsTitle', state)} />
+      <QuizPageTitle onStateChange={(state) => handleStateChange('quizPageTitle', state)} />
+
+
+
+      <AvailableQuizTopics onStateChange={(state) => handleStateChange('creatorAvailableQuizTopics', state)} pType={'creator'} />
+
+      <AvailableQuizTopics onStateChange={(state) => handleStateChange('personalizedAvailableQuizTopics', state)} pType={'personalized'} />
+
+      <AvailableQuizTopics onStateChange={(state) => handleStateChange('publicAvailableQuizTopics', state)} pType={'public'} />
 
     </div>
   );

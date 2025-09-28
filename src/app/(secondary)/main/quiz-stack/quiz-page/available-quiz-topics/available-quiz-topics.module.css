@@ -1,0 +1,310 @@
+.container {
+}
+
+.title {
+  font-size: 18px;
+  font-weight: bold;
+  margin: 0 0 20px 0;
+  padding: 0 28px;
+}
+
+.title_light {
+  color: #000;
+}
+
+.title_dark {
+  color: #fff;
+}
+
+.scrollContainer {
+  position: relative;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+   margin: 0 28px;
+}
+
+.scrollContainer::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
+}
+
+.gridContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: max-content;
+  min-width: 100%;
+
+}
+
+.row {
+  display: flex;
+  gap: 16px;
+  width: max-content;
+}
+
+.column{
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.topicCard {
+  flex: 0 0 auto;
+  width: 350px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-radius: 12px;
+  padding: 12px 12px 12px 0px;
+}
+
+.topicCard_light {
+  background: transparent;
+}
+
+.topicCard_dark {
+  background: transparent;
+}
+
+.topicCard:hover {
+  transform: translateY(-2px);
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.topicCard_dark:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.cardContent {
+  display: flex;
+  align-items: stretch; /* instead of flex-start */
+  gap: 12px;
+  height: 100%;
+}
+
+.topicImageContainer {
+  flex-shrink: 0;
+    display: flex;          /* allow child to stretch */
+    align-items: stretch;
+}
+
+.topicImage, .topicInitials {
+  height: 100% !important;
+  width: auto !important;
+  aspect-ratio: 1/1; /* keep square for tiny cards */
+  border-radius: 12px;
+  object-fit: cover;
+}
+
+.topicInitials {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 20px;
+  background: #244424;
+  color: #fff;
+}
+
+.topicInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.topicHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.topicTitle {
+  font-size: 16px;
+  font-weight: bold;
+  margin: 0;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.topicTitle_light {
+  color: #000;
+}
+
+.topicTitle_dark {
+  color: #fff;
+}
+
+.topicDate {
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.topicDate_light {
+  color: #666;
+}
+
+.topicDate_dark {
+  color: #ccc;
+}
+
+.creatorInfo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: auto;
+}
+
+.creatorImageContainer {
+  flex-shrink: 0;
+}
+
+.creatorImage, .creatorInitials {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.creatorInitials {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 14px;
+  background: #244424;
+  color: #fff;
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.3),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.5),
+    inset 0 0 8px rgba(102, 126, 234, 0.3);
+}
+
+.creatorDetails {
+  flex: 1;
+  min-width: 0;
+}
+
+.creatorName {
+  font-size: 14px;
+  font-weight: bold;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.creatorName_light {
+  color: #000;
+}
+
+.creatorName_dark {
+  color: #fff;
+}
+
+.loaderTrigger {
+  width: 1px;
+  height: 1px;
+  margin-left: 20px;
+}
+
+.loadingOverlay {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8));
+}
+
+.topicCard_dark + .loadingOverlay {
+  background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.3));
+}
+
+.loadingSpinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #ccc;
+  border-top: 2px solid #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Tablet Responsive */
+@media screen and (max-width: 800px) {
+  .container {
+  }
+
+  .title {
+    font-size: 17px;
+    margin-bottom: 18px;
+    padding: 0 24px;
+  }
+
+  .scrollContainer {
+     margin: 0px;
+     padding: 0 24px;
+  }
+
+  .topicCard {
+    width: 400px;
+  }
+
+}
+
+/* Mobile Responsive */
+@media screen and (max-width: 500px) {
+  .container {
+  }
+
+  .title {
+    font-size: 16px;
+    margin-bottom: 16px;
+    padding: 0 16px;
+  }
+
+   .scrollContainer {
+       margin: 0px;
+       padding: 0 16px;
+    }
+
+  .topicCard {
+    width: 70vw;
+    padding: 10px 10px 10px 0px;
+  }
+
+  .topicTitle {
+    font-size: 14px;
+  }
+
+  .creatorImage, .creatorInitials {
+    width: 30px;
+    height: 30px;
+  }
+
+  .creatorName {
+    font-size: 13px;
+  }
+
+  .gridContainer {
+    gap: 12px;
+  }
+
+  .row {
+    gap: 12px;
+  }
+}
