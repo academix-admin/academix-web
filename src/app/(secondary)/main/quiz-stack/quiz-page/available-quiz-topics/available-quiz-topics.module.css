@@ -68,35 +68,31 @@
   background: transparent;
 }
 
-.topicCard:hover {
-  transform: translateY(-2px);
-  background: rgba(0, 0, 0, 0.03);
-}
-
-.topicCard_dark:hover {
-  background: rgba(255, 255, 255, 0.05);
-}
 
 .cardContent {
   display: flex;
-  align-items: stretch; /* instead of flex-start */
+  align-items: stretch; /* image + text same height */
   gap: 12px;
   height: 100%;
 }
 
 .topicImageContainer {
-  flex-shrink: 0;
-    display: flex;          /* allow child to stretch */
-    align-items: stretch;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1 / 1;   /* keep it square */
+  height: 100%;          /* match card height */
 }
 
-.topicImage, .topicInitials {
-  height: 100% !important;
-  width: auto !important;
-  aspect-ratio: 1/1; /* keep square for tiny cards */
-  border-radius: 12px;
+.topicImage,
+.topicInitials {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
+  border-radius: 12px;
 }
+
 
 .topicInitials {
   display: flex;
@@ -283,7 +279,7 @@
     }
 
   .topicCard {
-    width: 70vw;
+    width: 80vw;
     padding: 10px 10px 10px 0px;
   }
 
