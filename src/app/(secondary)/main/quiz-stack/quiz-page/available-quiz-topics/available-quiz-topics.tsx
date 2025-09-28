@@ -16,6 +16,8 @@ import { PaginateModel } from '@/models/paginate-model';
 import Image from 'next/image';
 import { ComponentStateProps } from '@/hooks/use-component-state';
 import { usePinnedState } from '@/hooks/pinned-state-hook';
+import { useNav } from "@/lib/NavigationStack";
+import { useAvailableQuiz } from "@/lib/stacks/available-quiz-stack";
 
 type AvailableQuizTopicsProps = ComponentStateProps & {
   pType: string;
@@ -24,6 +26,7 @@ type AvailableQuizTopicsProps = ComponentStateProps & {
 export default function AvailableQuizTopics({ onStateChange, pType }: AvailableQuizTopicsProps) {
   const { theme } = useTheme();
   const { t, lang, tNode } = useLanguage();
+  const nav = useNav();
   const { userData, userData$ } = useUserData();
   const loaderRef = useRef<HTMLDivElement | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -34,16 +37,7 @@ export default function AvailableQuizTopics({ onStateChange, pType }: AvailableQ
   const [quizLoading, setQuizLoading] = useState(false);
 
 
-  const [quizModels, demandUserDisplayQuizTopicModel, setUserDisplayQuizTopicModel] = useDemandState<UserDisplayQuizTopicModel[]>(
-    [],
-    {
-      key: `${pType}_quizModels`,
-      persist: true,
-      ttl: 3600,
-      scope: "secondary_flow",
-      deps: [lang],
-    }
-  );
+  const [quizModels, demandUserDisplayQuizTopicModel, setUserDisplayQuizTopicModel] = useAvailableQuiz(lang, pType);
 
 
   useEffect(() => {
@@ -218,9 +212,10 @@ export default function AvailableQuizTopics({ onStateChange, pType }: AvailableQ
   }
 
 
-  // Split items into two rows for the grid
-  const row1 = quizModels.filter((_, index) => index % 2 === 0);
-  const row2 = quizModels.filter((_, index) => index % 2 === 1);
+  const handleTopicClick = (topic: UserDisplayQuizTopicModel) => {
+    nav.push('quiz_mode',{topicsId: topic.topicsId, pType: pType});
+  };
+
 
   return (
     <div className={styles.container}>
@@ -240,7 +235,7 @@ export default function AvailableQuizTopics({ onStateChange, pType }: AvailableQ
                     theme={theme}
                     getInitials={getInitials}
                     formatDate={formatDate}
-                    onClick={() => console.log(topic)}
+                    onClick={()=> handleTopicClick(topic)}
                   />
                 ))}
               </div>
@@ -269,13 +264,6 @@ function TopicCard({ topic, theme, getInitials, formatDate, onClick }: TopicCard
       className={`${styles.topicCard} ${styles[`topicCard_${theme}`]}`}
       onClick={onClick}
       role="button"
-      tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          onClick();
-        }
-      }}
     >
       <div className={styles.cardContent}>
         {/* Topic Image/Initials */}
