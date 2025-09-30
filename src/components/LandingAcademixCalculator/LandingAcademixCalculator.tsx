@@ -10,11 +10,13 @@ import styles from './LandingAcademixCalculator.module.css';
 
 // Types
 interface RoleRevenue {
-  creator: number;
-  reviewer: number;
-  organization: number;
-  [key: string]: number;
+  'Roles.creator'?: number;
+  'Roles.reviewer'?: number;
+  'Roles.celebrity'?: number;
+  'Roles.organization'?: number;
+  [key: string]: number | undefined;
 }
+
 
 interface QuestionOption {
   count: number;
@@ -23,6 +25,8 @@ interface QuestionOption {
   roleRevenue: RoleRevenue;
   winnerPayout: number;
   loserPayout: number;
+  creatorShare: number;
+  reviewerShare: number;
 }
 
 interface ChallengeOption {
@@ -36,6 +40,8 @@ interface ChallengeOption {
   entryFee: number;
   developmentCharge: number;
   roleRevenue: RoleRevenue;
+  creatorShare: number;
+  reviewerShare: number;
 }
 
 interface CalculatorMode {
@@ -65,27 +71,27 @@ const calculatorData: CalculatorMode = {
   '1v1': {
     title: '1v1',
     questionOptions: [
-      { count: 3, entryFees: 300, developmentCharge: 20, roleRevenue: { creator: 30, reviewer: 30, organization: 20 }, winnerPayout: 450,  loserPayout: 100 },
-      { count: 5, entryFees: 500, developmentCharge: 20, roleRevenue: { creator: 50, reviewer: 50, organization: 20 }, winnerPayout: 750, loserPayout: 200 },
-      { count: 8, entryFees: 800, developmentCharge: 20, roleRevenue: { creator: 80, reviewer: 80, organization: 20 },  winnerPayout: 1200,loserPayout: 300 },
-      { count: 10, entryFees: 1000, developmentCharge: 20, roleRevenue: { creator: 100, reviewer: 100, organization: 20 }, winnerPayout: 1500, loserPayout: 500 },
-      { count: 15, entryFees: 1200, developmentCharge: 20, roleRevenue: { creator: 150, reviewer: 150, organization: 20 }, winnerPayout: 1800, loserPayout: 800 },
+      { count: 3, entryFees: 300, developmentCharge: 20, creatorShare: 20, reviewerShare: 20, roleRevenue: { 'Roles.creator': 0, 'Roles.reviewer': 0, 'Roles.celebrity': 5 }, winnerPayout: 450,  loserPayout: 100 },
+      { count: 5, entryFees: 500, developmentCharge: 40, creatorShare: 40, reviewerShare: 20,  roleRevenue: { 'Roles.creator': 0, 'Roles.reviewer': 0, 'Roles.celebrity': 5 }, winnerPayout: 750, loserPayout: 150 },
+      { count: 8, entryFees: 800, developmentCharge: 20, creatorShare: 80, reviewerShare: 80,  roleRevenue: { 'Roles.creator': 0, 'Roles.reviewer': 0,' Roles.celebrity': 5 },  winnerPayout: 1200,loserPayout: 200 },
     ],
   },
   'multiplayer': {
     title: 'Multiplayer',
     challengeOptions: [
-      { name: 'Mini Challenge', min: 6, max: 1000, top: 1400, mid: 1200, bot: 1000, questions: 10, entryFee: 700, developmentCharge: 20, roleRevenue: { creator: 100, reviewer: 100, organization: 20 } },
-      { name: 'Standard Challenge', min: 20, max: 500, top: 3920, mid: 3360, bot: 2800, questions: 15, entryFee: 980, developmentCharge: 20, roleRevenue: { creator: 150, reviewer: 150, organization: 20 } },
-      { name: 'Extended Challenge', min: 10, max: 300, top: 1960, mid: 1680, bot: 1400, questions: 20, entryFee: 980, developmentCharge: 20, roleRevenue: { creator: 200, reviewer: 200, organization: 20 } },
-      { name: 'Advanced Challenge', min: 20, max: 200, top: 4800, mid: 4114, bot: 3429, questions: 20, entryFee: 1200, developmentCharge: 20, roleRevenue: { creator: 200, reviewer: 200, organization: 20 } },
-      { name: 'Pro Challenge', min: 30, max: 100, top: 7200, mid: 6171, bot: 5143, questions: 20, entryFee: 1200, developmentCharge: 20, roleRevenue: { creator: 200, reviewer: 200, organization: 20 } },
-      { name: 'Premium Challenge', min: 30, max: 50, top: 8400, mid: 7200, bot: 6000, questions: 20, entryFee: 1400, developmentCharge: 20, roleRevenue: { creator: 200, reviewer: 200, organization: 20 } },
+      { name: 'Mini Challenge', min: 6, max: 1000, top: 1400, mid: 1200, bot: 1000, questions: 10, entryFee: 700, developmentCharge: 20, creatorShare: 5, reviewerShare: 5, roleRevenue: { 'Roles.creator': 2, 'Roles.reviewer': 2, 'Roles.celebrity': 5 },},
+      { name: 'Extended Challenge', min: 10, max: 300, top: 1960, mid: 1680, bot: 1400, questions: 20, entryFee: 980, developmentCharge: 20, creatorShare: 10, reviewerShare: 10, roleRevenue: { 'Roles.creator': 3, 'Roles.reviewer': 3, 'Roles.celebrity': 7 }, },
+      { name: 'Standard Challenge', min: 20, max: 500, top: 3920, mid: 3360, bot: 2800, questions: 15, entryFee: 980, developmentCharge: 20, creatorShare: 20, reviewerShare: 20, roleRevenue: { 'Roles.creator': 0, 'Roles.reviewer': 0, 'Roles.organization': 10 }, },
+      { name: 'Advanced Challenge', min: 20, max: 200, top: 4800, mid: 4114, bot: 3429, questions: 20, entryFee: 1200, developmentCharge: 20, creatorShare: 20, reviewerShare: 20, roleRevenue: { 'Roles.creator': 0, 'Roles.reviewer': 0, 'Roles.organization': 10 }, },
+      { name: 'Pro Challenge', min: 30, max: 100, top: 7200, mid: 6171, bot: 5143, questions: 20, entryFee: 1200, developmentCharge: 20, creatorShare: 20, reviewerShare: 20, roleRevenue: { 'Roles.creator': 0, 'Roles.reviewer': 0, 'Roles.organization': 10 }, },
+      { name: 'Premium Challenge', min: 30, max: 50, top: 8400, mid: 7200, bot: 6000, questions: 20, entryFee: 1400, developmentCharge: 20, creatorShare: 20, reviewerShare: 20, roleRevenue: { 'Roles.creator': 0, 'Roles.reviewer': 0, 'Roles.organization': 10 }, },
     ]
   },
 };
 
-const allRoles = ['Creator', 'Reviewer', 'Organization', 'Teacher', 'Celebrity', 'Parent', 'Institution'];
+const allRoles = ['Roles.creator', 'Roles.reviewer', 'Roles.organization', 'Roles.teacher', 'Roles.celebrity', 'Roles.parent', 'Roles.institution'];
+
+
 
 // Utility Functions
 const calculateMoreRewards = (
@@ -231,7 +237,16 @@ const RoleSelector = ({
 const OneVsOneView = ({ data, roles }: { data: CalculatorMode['1v1']; roles: string[] }) => {
   const { theme } = useTheme();
   const [selectedQuestion, setSelectedQuestion] = useState(data.questionOptions[0]);
-  const [selectedRole, setSelectedRole] = useState('Creator');
+  const [selectedRole, setSelectedRole] = useState('Roles.creator');
+
+  const calculateCharge = (entryFee: number, winnerPayout: number, loserPayout: number, questionsCount: number, roleWeight: number, devChargePct: number, share: number) => {
+      const totalPool = entryFee * 2;
+      const payout = (winnerPayout + loserPayout);
+      const remainder = totalPool - payout;
+      const devCharge = remainder * (devChargePct/100);
+      const roleExtra = devCharge * (roleWeight/ 100);
+      return ((share + roleExtra)/questionsCount).toFixed(2);
+  }
 
   return (
     <div className={`${styles.card} ${styles[`card_${theme}`]}`}>
@@ -303,13 +318,20 @@ const OneVsOneView = ({ data, roles }: { data: CalculatorMode['1v1']; roles: str
           <span>Loser:</span>
           <span>{selectedQuestion.loserPayout}</span>
         </div>
-        <div className={styles.payout_row}>
+        { selectedRole != 'Roles.Reviewer' && (<div className={styles.payout_row}>
           <span>{selectedRole}:</span>
-          <span>{selectedQuestion.roleRevenue[selectedRole.toLowerCase()] || 0}</span>
-        </div>
+          <span>{calculateCharge(selectedQuestion.entryFees, selectedQuestion.winnerPayout, selectedQuestion.loserPayout,
+              selectedQuestion.count, (selectedQuestion.roleRevenue[selectedRole] || 0), selectedQuestion.developmentCharge, selectedQuestion.creatorShare)} /question</span>
+        </div>)}
+        { selectedRole == 'Roles.Reviewer' && (<div className={styles.payout_row}>
+          <span>Creator:</span>
+          <span>{calculateCharge(selectedQuestion.entryFees, selectedQuestion.winnerPayout, selectedQuestion.loserPayout,
+              selectedQuestion.count, (selectedQuestion.roleRevenue['Roles.creator'] || 0), selectedQuestion.developmentCharge, selectedQuestion.creatorShare)} /question</span>
+        </div>)}
         <div className={styles.payout_row}>
-          <span>Development Charge:</span>
-          <span>{selectedQuestion.developmentCharge}</span>
+          <span>Reviewer:</span>
+          <span>{calculateCharge(selectedQuestion.entryFees, selectedQuestion.winnerPayout, selectedQuestion.loserPayout,
+              selectedQuestion.count, (selectedQuestion.roleRevenue['Roles.reviewer'] || 0), selectedQuestion.developmentCharge, selectedQuestion.reviewerShare)} /question</span>
         </div>
       </div>
     </div>
@@ -320,7 +342,7 @@ const MultiplayerView = ({ data, roles }: { data: CalculatorMode['multiplayer'];
   const { theme } = useTheme();
   const [selectedChallenge, setSelectedChallenge] = useState(data.challengeOptions[0]);
   const [minPlayers, setMinPlayers] = useState(selectedChallenge.min);
-  const [selectedRole, setSelectedRole] = useState('Creator');
+  const [selectedRole, setSelectedRole] = useState('Roles.creator');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
@@ -346,6 +368,34 @@ const MultiplayerView = ({ data, roles }: { data: CalculatorMode['multiplayer'];
     setMinPlayers(Number(challenge.min));
     setCurrentPage(1);
   };
+
+  const devChargeList: Record<number, number> = {
+    6: 2.38,
+    7: 4.76,
+    8: 9.52,
+    9: 14.28
+  };
+
+
+
+  const calculateCharge = (entryFee: number, minPlayers: number, questionsCount: number, roleWeight: number, devChargePct: number, share: number) => {
+        const totalPool = minPlayers * entryFee;
+        let devCharge: number;
+        let rolePool: number;
+        let roleExtra: number;
+
+        if (minPlayers > 9) {
+          devCharge = totalPool * (devChargePct / 100);
+          rolePool = devCharge * 0.5;
+          roleExtra = rolePool * (roleWeight/ 100);
+        } else {
+          const chargePct = devChargeList[minPlayers] || devChargePct;
+          devCharge = totalPool * (chargePct / 100);
+          rolePool = devCharge - ((minPlayers/6) - 1);
+          roleExtra = (devCharge - rolePool) * (roleWeight/ 100);
+        }
+        return ((share + roleExtra)).toFixed(2);
+  }
 
   return (
     <div className={`${styles.card} ${styles[`card_${theme}`]}`}>
@@ -482,13 +532,17 @@ const MultiplayerView = ({ data, roles }: { data: CalculatorMode['multiplayer'];
       )}
 
       <div className={`${styles.creator_info} ${styles[`creator_info_${theme}`]}`}>
+        {selectedRole != 'Roles.Reviewer' && <div className={styles.payout_row}>
+          <span>{selectedRole}:</span>
+          <span>{calculateCharge(selectedChallenge.entryFee,minPlayers, selectedChallenge.questions, selectedChallenge.roleRevenue[selectedRole] || 0, selectedChallenge.developmentCharge, selectedChallenge.creatorShare)} /question</span>
+        </div>}
+        {selectedRole == 'Roles.Reviewer' && <div className={styles.payout_row}>
+          <span>Creator:</span>
+          <span>{calculateCharge(selectedChallenge.entryFee,minPlayers, selectedChallenge.questions, selectedChallenge.roleRevenue['Roles.creator'] || 0, selectedChallenge.developmentCharge, selectedChallenge.creatorShare)} /question</span>
+        </div>}
         <div className={styles.payout_row}>
-          <span>{selectedRole}({selectedChallenge.questions}):</span>
-          <span>{selectedChallenge.roleRevenue[selectedRole.toLowerCase()] || 0}</span>
-        </div>
-        <div className={styles.payout_row}>
-          <span>Development Charge:</span>
-          <span>{moreRewards.devCharge}</span>
+          <span>Reviewer:</span>
+          <span>{calculateCharge(selectedChallenge.entryFee,minPlayers, selectedChallenge.questions, selectedChallenge.roleRevenue['Roles.reviewer'] || 0, selectedChallenge.developmentCharge, selectedChallenge.reviewerShare)} /question</span>
         </div>
       </div>
     </div>
