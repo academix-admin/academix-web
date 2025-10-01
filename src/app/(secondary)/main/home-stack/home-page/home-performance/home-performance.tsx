@@ -75,16 +75,31 @@ export default function HomePerformance({ onStateChange }: ComponentStateProps) 
   if (!performanceData) return null;
 
 
-  const formatValue = (value: number) => {
-    if (value >= 1000000000) {
-      return (value / 1000000000).toFixed(1) + 'B';
-    } else if (value >= 1000000) {
-      return (value / 1000000).toFixed(1) + 'M';
-    } else if (value >= 1000) {
-      return (value / 1000).toFixed(1) + 'K';
+  const formatValue = (value: number): string => {
+    const formatNumberWithSuffix = (num: number, suffix: string): string => {
+      // If whole number, no decimal (e.g. 1K not 1.0K)
+      if (Number.isInteger(num)) {
+        return `${num}${suffix}`;
+      } else {
+        return `${num.toFixed(1)}${suffix}`;
+      }
+    };
+  
+    if (value < 1000000) {
+      // Thousands
+      return formatNumberWithSuffix(value / 1000, "K");
+    } else if (value < 1000000000) {
+      // Millions
+      return formatNumberWithSuffix(value / 1000000, "M");
+    } else if (value < 1000000000000) {
+      // Billions
+      return formatNumberWithSuffix(value / 1000000000, "B");
+    } else {
+      // Trillions
+      return formatNumberWithSuffix(value / 1000000000000, "T");
     }
-    return value.toString() + 'K';
   };
+
 
   return (
     <div className={styles.performanceContainer}>

@@ -72,7 +72,7 @@ const calculatorData: CalculatorMode = {
     title: '1v1',
     questionOptions: [
       { count: 3, entryFees: 300, developmentCharge: 20, creatorShare: 20, reviewerShare: 20, roleRevenue: { 'Roles.creator': 0, 'Roles.reviewer': 0, 'Roles.celebrity': 5 }, winnerPayout: 450,  loserPayout: 100 },
-      { count: 5, entryFees: 500, developmentCharge: 40, creatorShare: 40, reviewerShare: 20,  roleRevenue: { 'Roles.creator': 0, 'Roles.reviewer': 0, 'Roles.celebrity': 5 }, winnerPayout: 750, loserPayout: 150 },
+      { count: 5, entryFees: 500, developmentCharge: 40, creatorShare: 40, reviewerShare: 40,  roleRevenue: { 'Roles.creator': 0, 'Roles.reviewer': 0, 'Roles.celebrity': 5 }, winnerPayout: 750, loserPayout: 150 },
       { count: 8, entryFees: 800, developmentCharge: 20, creatorShare: 80, reviewerShare: 80,  roleRevenue: { 'Roles.creator': 0, 'Roles.reviewer': 0,' Roles.celebrity': 5 },  winnerPayout: 1200,loserPayout: 200 },
     ],
   },
@@ -312,25 +312,25 @@ const OneVsOneView = ({ data, roles }: { data: CalculatorMode['1v1']; roles: str
       <div className={`${styles.payout_breakdown} ${styles[`payout_breakdown_${theme}`]}`}>
         <div className={styles.payout_row}>
           <span>Winner:</span>
-          <span>{selectedQuestion.winnerPayout}</span>
+          <span className={styles.payout_value}>{selectedQuestion.winnerPayout}</span>
         </div>
         <div className={styles.payout_row}>
           <span>Loser:</span>
-          <span>{selectedQuestion.loserPayout}</span>
+          <span className={styles.payout_value}>{selectedQuestion.loserPayout}</span>
         </div>
         { selectedRole != 'Roles.Reviewer' && (<div className={styles.payout_row}>
           <span>{selectedRole}:</span>
-          <span>{calculateCharge(selectedQuestion.entryFees, selectedQuestion.winnerPayout, selectedQuestion.loserPayout,
+          <span className={styles.payout_value}>{calculateCharge(selectedQuestion.entryFees, selectedQuestion.winnerPayout, selectedQuestion.loserPayout,
               selectedQuestion.count, (selectedQuestion.roleRevenue[selectedRole] || 0), selectedQuestion.developmentCharge, selectedQuestion.creatorShare)} /question</span>
         </div>)}
         { selectedRole == 'Roles.Reviewer' && (<div className={styles.payout_row}>
           <span>Creator:</span>
-          <span>{calculateCharge(selectedQuestion.entryFees, selectedQuestion.winnerPayout, selectedQuestion.loserPayout,
+          <span className={styles.payout_value}>{calculateCharge(selectedQuestion.entryFees, selectedQuestion.winnerPayout, selectedQuestion.loserPayout,
               selectedQuestion.count, (selectedQuestion.roleRevenue['Roles.creator'] || 0), selectedQuestion.developmentCharge, selectedQuestion.creatorShare)} /question</span>
         </div>)}
         <div className={styles.payout_row}>
           <span>Reviewer:</span>
-          <span>{calculateCharge(selectedQuestion.entryFees, selectedQuestion.winnerPayout, selectedQuestion.loserPayout,
+          <span className={styles.payout_value}>{calculateCharge(selectedQuestion.entryFees, selectedQuestion.winnerPayout, selectedQuestion.loserPayout,
               selectedQuestion.count, (selectedQuestion.roleRevenue['Roles.reviewer'] || 0), selectedQuestion.developmentCharge, selectedQuestion.reviewerShare)} /question</span>
         </div>
       </div>
@@ -534,15 +534,15 @@ const MultiplayerView = ({ data, roles }: { data: CalculatorMode['multiplayer'];
       <div className={`${styles.creator_info} ${styles[`creator_info_${theme}`]}`}>
         {selectedRole != 'Roles.Reviewer' && <div className={styles.payout_row}>
           <span>{selectedRole}:</span>
-          <span>{calculateCharge(selectedChallenge.entryFee,minPlayers, selectedChallenge.questions, selectedChallenge.roleRevenue[selectedRole] || 0, selectedChallenge.developmentCharge, selectedChallenge.creatorShare)} /question</span>
+          <span className={styles.payout_value}>{calculateCharge(selectedChallenge.entryFee,minPlayers, selectedChallenge.questions, selectedChallenge.roleRevenue[selectedRole] || 0, selectedChallenge.developmentCharge, selectedChallenge.creatorShare)} /question</span>
         </div>}
         {selectedRole == 'Roles.Reviewer' && <div className={styles.payout_row}>
           <span>Creator:</span>
-          <span>{calculateCharge(selectedChallenge.entryFee,minPlayers, selectedChallenge.questions, selectedChallenge.roleRevenue['Roles.creator'] || 0, selectedChallenge.developmentCharge, selectedChallenge.creatorShare)} /question</span>
+          <span className={styles.payout_value}>{calculateCharge(selectedChallenge.entryFee,minPlayers, selectedChallenge.questions, selectedChallenge.roleRevenue['Roles.creator'] || 0, selectedChallenge.developmentCharge, selectedChallenge.creatorShare)} /question</span>
         </div>}
         <div className={styles.payout_row}>
           <span>Reviewer:</span>
-          <span>{calculateCharge(selectedChallenge.entryFee,minPlayers, selectedChallenge.questions, selectedChallenge.roleRevenue['Roles.reviewer'] || 0, selectedChallenge.developmentCharge, selectedChallenge.reviewerShare)} /question</span>
+          <span className={styles.payout_value}>{calculateCharge(selectedChallenge.entryFee,minPlayers, selectedChallenge.questions, selectedChallenge.roleRevenue['Roles.reviewer'] || 0, selectedChallenge.developmentCharge, selectedChallenge.reviewerShare)} /question</span>
         </div>
       </div>
     </div>

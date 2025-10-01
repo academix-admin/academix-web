@@ -314,8 +314,8 @@ export default function SignUpStep6() {
           <div className={`${styles.rewardSection} ${styles[`rewardSection_${theme}`]}`}>
           <div className={`${styles.rewardInfo} ${styles[`rewardInfo_${theme}`]}`}>
                 {tNode('referral_reward_info', {
-                  amount: <strong>500</strong>,
-                  threshold: <strong>700</strong>,
+                  amount: <strong>300</strong>,
+                  threshold: <strong>1000</strong>,
                   hours: <strong>24</strong>
                 })}
           </div>
@@ -333,3 +333,4 @@ export default function SignUpStep6() {
     </main>
   );
 }
+//  "referral_reward_info": "Reward your inviter with {amount} when your first top-up meets the required threshold {threshold}, provided your balance stays above that threshold for {hours} hours. Withdrawals below threshold will be temporarily restricted.",

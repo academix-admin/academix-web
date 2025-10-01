@@ -67,7 +67,7 @@
   "date_less": "La date de naissance remonte à moins de 5 ans.",
   "choose_role": "Choisissez votre rôle",
   "referral_optional": "Parrainage (optionnel)",
-  "referral_reward_info": "Récompensez votre inviteur avec {amount} lorsque votre premier recharge atteint le seuil requis de {threshold}, à condition que votre solde reste au-dessus de ce seuil pendant {hours} heures. Les retraits en dessous du seuil seront temporairement restreints.",
+  "referral_reward_info": "Récompensez votre parrain avec {amount} lorsque votre premier dépôt est de {threshold} ou plus. Les retraits seront possibles une fois que vous aurez joué votre premier quiz ou après {hours} heures.",
   "reward": "Récompense",
   "search": "Rechercher",
   "remove": "Supprimer",
@@ -187,7 +187,7 @@
   "milestone_text": "Jalons",
   "missions_text": "Missions",
   "achievements_text": "Réalisations",
-  "referral_reward_info_username": "Gagnez {amount} lorsque vos amis utilisent {username} et atteignent le seuil requis de {threshold}, à condition que leur solde reste au-dessus de ce seuil pendant {hours} heures. Les retraits en dessous du seuil seront temporairement restreints.",
+  "referral_reward_info_username": "Lorsque vos amis s’inscrivent avec {username} et effectuent leur premier dépôt de {threshold} ou plus, vous recevez immédiatement {amount}. Vos amis ne peuvent retirer qu’après avoir joué au moins un quiz ou attendre {hours} heures.",
   "click_to_refresh": "Cliquez pour refresh",
   "refresh": "Actualiser",
   "friends_text": "Amis",
@@ -284,5 +284,6 @@
   "curated_quizzes": "Quiz sélectionnés",
   "favourite_contributors": "Contributeurs Favoris",
   "just_for_you": "Juste Pour Vous",
-  "might_interest_you": "Pourrait Vous Intéresser"
+  "might_interest_you": "Pourrait Vous Intéresser",
+  "quiz_challenges": "Défis Quiz"
 }

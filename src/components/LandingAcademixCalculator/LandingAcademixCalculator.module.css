@@ -465,6 +465,10 @@
   border-bottom: none;
 }
 
+.payout_value{
+  text-align: end;
+}
+
 /* Multiplayer Specific Styles */
 .entry_fee {
   font-size: 1.2rem;

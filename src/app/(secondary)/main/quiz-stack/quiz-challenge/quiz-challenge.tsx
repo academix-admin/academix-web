@@ -4,7 +4,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import Image from 'next/image';
-import styles from './quiz-mode.module.css';
+import styles from './quiz-challenge.module.css';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useNav } from "@/lib/NavigationStack";
 import { capitalizeWords } from '@/utils/textUtils';
@@ -23,16 +23,17 @@ import { StateStack } from '@/lib/state-stack';
 import { useAvailableQuiz } from "@/lib/stacks/available-quiz-stack";
 import { UserDisplayQuizTopicModel } from '@/models/user-display-quiz-topic-model';
 
-interface QuizModeProps {
+interface QuizChallengeProps {
   topicsId: string;
   pType: string;
 }
 
-export default function QuizMode(props: QuizModeProps) {
+export default function QuizChallenge(props: QuizChallengeProps) {
   const { theme } = useTheme();
   const { t, lang } = useLanguage();
   const nav = useNav();
   const { topicsId, pType } = props;
+  const isTop = nav.isTop();
 
   const { userData, userData$ } = useUserData();
 
@@ -45,10 +46,10 @@ export default function QuizMode(props: QuizModeProps) {
 
     if (getQuiz) {
       setCurrentQuiz(getQuiz);
-    } else {
-      goBack();
+    } else if(isTop) {
+      nav.popToRoot();
     }
-  }, [quizModels, topicsId, isHydrated]);
+  }, [quizModels, topicsId, isHydrated, isTop]);
 
     const goBack = async () => {
       await nav.pop();
@@ -70,12 +71,12 @@ export default function QuizMode(props: QuizModeProps) {
               />
             </svg>
           </button>
-          <h1 className={styles.title}>{t('quiz_mode')}</h1>
+          <h1 className={styles.title}>{t('quiz_challenges')}</h1>
           <div className={styles.headerSpacer} />
         </div>
       </header>
 
-      <div className={styles.content}>
+      <div className={styles.innerBody}>
          { currentQuiz && currentQuiz.topicsIdentity}
       </div>
     </main>

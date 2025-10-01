@@ -297,10 +297,10 @@ export default function RewardsFriends({ onStateChange }: ComponentStateProps) {
 
       {!friendsLoading && friendsModel.length === 0 && <div className={`${styles.rewardInfo} ${styles[`rewardInfo_${theme}`]}`}>
                                                          {t('referral_reward_info_username', {
-                                                           amount: '500',
-                                                           threshold: '700',
+                                                           amount: '300',
+                                                           threshold: '1000',
                                                            hours: '24',
-                                                           username: userData?.usersUsername || '@yda'
+                                                           username: userData?.usersUsername || '@username'
                                                          })}
                                                          <div className={styles.refreshHint}>
                                                            <span
@@ -319,3 +319,4 @@ export default function RewardsFriends({ onStateChange }: ComponentStateProps) {
     </div>
   );
 }
+//  "referral_reward_info_username": "Earn {amount} when your friends use {username} and meets the required threshold {threshold}, provided their balances stays above that threshold for {hours} hours. Withdrawals below threshold will be temporarily restricted.",

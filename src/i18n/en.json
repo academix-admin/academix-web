@@ -67,7 +67,7 @@
   "date_less": "Birthday is less than 5 years",
   "choose_role": "Choose your role",
   "referral_optional": "Referral(Optional)",
-  "referral_reward_info": "Reward your inviter with {amount} when your first top-up meets the required threshold {threshold}, provided your balance stays above that threshold for {hours} hours. Withdrawals below threshold will be temporarily restricted.",
+  "referral_reward_info": "Reward your inviter with {amount} when your first top-up is {threshold} or more. Withdrawals will be enabled once you play your first quiz or after {hours} hours.",
   "reward": "Reward",
   "search": "Search",
   "remove": "Remove",
@@ -187,7 +187,7 @@
   "milestone_text": "Milestones",
   "missions_text": "Missions",
   "achievements_text": "Achievements",
-  "referral_reward_info_username": "Earn {amount} when your friends use {username} and meets the required threshold {threshold}, provided their balances stays above that threshold for {hours} hours. Withdrawals below threshold will be temporarily restricted.",
+  "referral_reward_info_username": "When your friends register with {username} and make their first deposit of {threshold} or more, you get {amount} right away. Your friends can only withdraw after playing at least one quiz or wait {hours} hours.",
   "click_to_refresh": "Click to refresh",
   "refresh": "Refresh",
   "friends_text": "Friends",
@@ -284,5 +284,8 @@
   "curated_quizzes": "Curated quizzes",
   "favourite_contributors": "Favourite Contributors",
   "just_for_you": "Just For You",
-  "might_interest_you": "Might Interest You"
+  "might_interest_you": "Might Interest You",
+  "quiz_challenges": "Quiz Challenges"
 }
+
+

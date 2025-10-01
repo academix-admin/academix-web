@@ -17,6 +17,7 @@ export default function ViewTransactionPage(props: ViewTransactionProps) {
   const { theme } = useTheme();
   const { t, lang } = useLanguage();
   const nav = useNav();
+  const isTop = nav.isTop();
   const { transactionId } = props;
 
   const [currentTransaction, setCurrentTransaction] = useState<TransactionModel | null>(null);
@@ -28,10 +29,10 @@ export default function ViewTransactionPage(props: ViewTransactionProps) {
 
     if (getTransaction) {
       setCurrentTransaction(getTransaction);
-    } else {
-      goBack();
+    } else if(isTop){
+      nav.popToRoot();
     }
-  }, [transactionModels, transactionId, isHydrated]);
+  }, [transactionModels, transactionId, isHydrated, isTop]);
 
   /** back nav */
   const goBack = async () => {

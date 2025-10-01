@@ -213,7 +213,7 @@ export default function AvailableQuizTopics({ onStateChange, pType }: AvailableQ
 
 
   const handleTopicClick = (topic: UserDisplayQuizTopicModel) => {
-    nav.push('quiz_mode',{topicsId: topic.topicsId, pType: pType});
+    nav.push('quiz_challenge',{topicsId: topic.topicsId, pType: pType});
   };
 
 
