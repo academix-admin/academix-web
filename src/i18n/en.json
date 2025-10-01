@@ -285,7 +285,14 @@
   "favourite_contributors": "Favourite Contributors",
   "just_for_you": "Just For You",
   "might_interest_you": "Might Interest You",
-  "quiz_challenges": "Quiz Challenges"
+  "quiz_challenges": "Quiz Challenges",
+  "quiz_challenge_allocation": "Academix uses ({dwa}) to fairly distribute higher prize winnings into {top}, {mid}, {bot}, and {rank} shares, rewarding all {participants} based on their ranking.",
+  "dwa_text": "DWA",
+  "rank_text": "Rank",
+  "participants_text": "participants",
+  "select_a_game_mode": "Select a Game Mode",
+  "click_to_select": "Click to select",
+  "error_fetching_game_modes": "Failed to load game modes"
 }
 
 

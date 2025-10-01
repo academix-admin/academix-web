@@ -8,10 +8,10 @@
 }
 
 .header {
-  position: absolute;
+  position: fixed;
   top: 0;
-  left:0;
-  width: 100%;
+  left: var(--sidebar-width);
+  right: 0;
   z-index: 10;
   display: flex;
   backdrop-filter: blur(8px);
@@ -483,9 +483,9 @@
 
 /* Tablet */
 @media screen and (min-width: 500px) and (max-width: 800px) {
- .header {
-   position: fixed;
-  }
+.header {
+     left: 0;
+ }
  .headerContent {
    padding: 1rem 0rem;
    margin: 0 1rem;
@@ -519,7 +519,7 @@
 /* Mobile */
 @media screen and (max-width: 500px) {
 .header {
-  position: fixed;
+     left: 0;
  }
  .headerContent {
     margin: 0;

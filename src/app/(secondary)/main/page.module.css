@@ -15,14 +15,18 @@
 
 
 .sidebarContainer {
-  height: 100%;
-  z-index: 10;
+  position: fixed; /* or fixed if you want it to float */
+  top: 0;
+  height: 100vh;
+  flex-shrink: 0;
 }
+
 
 .contentArea {
   flex: 1;
   overflow: auto;
   transition: padding 0.3s ease;
+  width: 100%;
 }
 
 .navigationContainer {

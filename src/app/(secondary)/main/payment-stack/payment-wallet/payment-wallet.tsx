@@ -126,8 +126,6 @@ export default function PaymentWallet({ profileType, onWalletData, onWalletAmoun
     if (getWallet) {
       setWalletData(getWallet);
       setUserWalletState('data');
-    }else{
-      setUserWalletState('error');
     }
   }, [walletsModel, paymentWalletId, isHydrated]);
 

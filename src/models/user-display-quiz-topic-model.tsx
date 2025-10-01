@@ -1,6 +1,12 @@
 // ========================
 // Backend Interfaces
 // ========================
+export interface BackendGameModeModel {
+  game_mode_id: string;
+  game_mode_identity: string;
+  game_mode_checker: string;
+}
+
 export interface BackendChallengeModel {
   challenge_id: string;
   challenge_development_charge: number;
@@ -13,6 +19,7 @@ export interface BackendChallengeModel {
   challenge_max_participants: number;
   challenge_identity: string;
   challenge_question_count: number;
+  game_mode_details?: BackendGameModeModel | null;
 }
 
 export interface BackendQuizPool {
@@ -59,6 +66,35 @@ export interface BackendUserDisplayQuizTopicModel {
 // ========================
 // Frontend Models
 // ========================
+export class GameModeModel {
+  gameModeId: string;
+  gameModeIdentity: string;
+  gameModeChecker: string;
+
+  constructor(data?: BackendGameModeModel | null) {
+    this.gameModeId = data?.game_mode_id ?? "";
+    this.gameModeIdentity = data?.game_mode_identity ?? "";
+    this.gameModeChecker = data?.game_mode_checker ?? "";
+  }
+
+  static from(data: any): GameModeModel {
+    if (data instanceof GameModeModel) return data;
+    return new GameModeModel({
+      game_mode_id: data.gameModeId,
+      game_mode_identity: data.gameModeIdentity,
+      game_mode_checker: data.gameModeChecker,
+    });
+  }
+
+  toBackend(): BackendGameModeModel {
+    return {
+      game_mode_id: this.gameModeId,
+      game_mode_identity: this.gameModeIdentity,
+      game_mode_checker: this.gameModeChecker,
+    };
+  }
+}
+
 export class ChallengeModel {
   challengeId: string;
   challengeDevelopmentCharge: number;
@@ -71,6 +107,7 @@ export class ChallengeModel {
   challengeMaxParticipant: number;
   challengeIdentity: string;
   challengeQuestionCount: number;
+  gameModeModel?: GameModeModel | null;
 
   constructor(data?: BackendChallengeModel | null) {
     this.challengeId = data?.challenge_id ?? "";
@@ -84,6 +121,9 @@ export class ChallengeModel {
     this.challengeMaxParticipant = data?.challenge_max_participants ?? 0;
     this.challengeIdentity = data?.challenge_identity ?? "";
     this.challengeQuestionCount = data?.challenge_question_count ?? 0;
+    this.gameModeModel = data?.game_mode_details
+      ? new GameModeModel(data.game_mode_details)
+      : null;
   }
 
   static from(data: any): ChallengeModel {
@@ -100,6 +140,7 @@ export class ChallengeModel {
       challenge_max_participants: data.challengeMaxParticipant,
       challenge_identity: data.challengeIdentity,
       challenge_question_count: data.challengeQuestionCount,
+      game_mode_details: data.gameModeModel?.toBackend(),
     });
   }
 
@@ -116,6 +157,7 @@ export class ChallengeModel {
       challenge_max_participants: this.challengeMaxParticipant,
       challenge_identity: this.challengeIdentity,
       challenge_question_count: this.challengeQuestionCount,
+      game_mode_details: this.gameModeModel?.toBackend() ?? null,
     };
   }
 }
@@ -289,100 +331,3 @@ export class UserDisplayQuizTopicModel {
     };
   }
 }
-
-// {
-//        "sortCreatedId": "000635dea2419ceb8W2wbei5lcm",
-//        "sortUpdatedId": "000635ded1348f4e00000000000",
-//        "topicsId": "b092f17b-230f-4c84-866f-7cc50548a3ff",
-//        "topicsIdentity": "Ekiti State",
-//        "topicsCreatedAt": "2025-05-24 09:49:41.480383+00",
-//        "topicsUpdatedAt": "2025-05-24 10:02:49.158478+00",
-//        "topicsImageUrl": null,
-//        "topicsDescription": "",
-//        "userImageUrl": "https://iewqfmkngcgayxbbnpiz.supabase.co/storage/v1/object/public/users-profile-bucket/10cd0903-adaf-455f-b82b-0261130dace0/5f3355de-b303-452d-9591-0a6d764b175b",
-//        "usernameText": "@sacuisine",
-//        "creatorId": "5f3355de-b303-452d-9591-0a6d764b175b",
-//        "fullNameText": "Sacuisine Restaurant",
-//        "quizPool": {
-//            "sortCreatedId": "00063fcfdcbdb4c05puduqllOZM",
-//            "sortUpdatedId": "00063fcfdcbdeec100000000000",
-//            "poolsId": "ca6fffa9-8b25-4e16-b383-a599d11871f2",
-//            "poolsVisible": true,
-//            "poolsAllowSubmission": false,
-//            "poolsStatus": "Pools.open",
-//            "poolsAuth": "PoolAuth.public",
-//            "poolsCode": "9ESD12VIY",
-//            "poolsJob": "PoolJob.waiting",
-//            "poolsDuration": null,
-//            "challengeModel": {
-//                "challengeId": "7832bc4f-7b50-46e5-9ec3-ef5684232e90",
-//                "challengeDevelopmentCharge": 20,
-//                "challengePrice": 700,
-//                "challengeTopShare": 1400,
-//                "challengeMidShare": 1200,
-//                "challengeBotShare": 1000,
-//                "challengeWaitingTime": null,
-//                "challengeMinParticipant": 2,
-//                "challengeMaxParticipant": 1000,
-//                "challengeIdentity": "MINI",
-//                "challengeQuestionCount": 10
-//            },
-//            "poolsStartingAt": null,
-//            "poolsJobEndAt": "2025-09-27 22:25:14.495109+00",
-//            "poolsGradedAt": null,
-//            "poolsRankedAt": null,
-//            "poolsRewardedAt": null,
-//            "poolsCompletedAt": null,
-//            "poolsMembersCount": 1,
-//            "questionTrackerCount": 0
-//        },
-//        "topicsSponsorship": ""
-//    }
-// {
-//     "sortCreatedId": "000635dea2419ceb8W2wbei5lcm",
-//     "sortUpdatedId": "000635ded1348f4e00000000000",
-//     "topicsId": "b092f17b-230f-4c84-866f-7cc50548a3ff",
-//     "topicsIdentity": "État d'Ekiti",
-//     "topicsCreatedAt": "2025-05-24 09:49:41.480383+00",
-//     "topicsUpdatedAt": "2025-05-24 10:02:49.158478+00",
-//     "topicsImageUrl": null,
-//     "topicsDescription": "",
-//     "userImageUrl": "https://iewqfmkngcgayxbbnpiz.supabase.co/storage/v1/object/public/users-profile-bucket/10cd0903-adaf-455f-b82b-0261130dace0/5f3355de-b303-452d-9591-0a6d764b175b",
-//     "usernameText": "@sacuisine",
-//     "creatorId": "5f3355de-b303-452d-9591-0a6d764b175b",
-//     "fullNameText": "Sacuisine Restaurant",
-//     "quizPool": {
-//         "sortCreatedId": "00063fcfdcbdb4c05puduqllOZM",
-//         "sortUpdatedId": "00063fcfdcbdeec100000000000",
-//         "poolsId": "ca6fffa9-8b25-4e16-b383-a599d11871f2",
-//         "poolsVisible": true,
-//         "poolsAllowSubmission": false,
-//         "poolsStatus": "Pools.open",
-//         "poolsAuth": "PoolAuth.public",
-//         "poolsCode": "9ESD12VIY",
-//         "poolsJob": "PoolJob.extended_waiting",
-//         "poolsDuration": null,
-//         "challengeModel": {
-//             "challengeId": "7832bc4f-7b50-46e5-9ec3-ef5684232e90",
-//             "challengeDevelopmentCharge": 20,
-//             "challengePrice": 700,
-//             "challengeTopShare": 1400,
-//             "challengeMidShare": 1200,
-//             "challengeBotShare": 1000,
-//             "challengeWaitingTime": null,
-//             "challengeMinParticipant": 2,
-//             "challengeMaxParticipant": 1000,
-//             "challengeIdentity": "MINI",
-//             "challengeQuestionCount": 10
-//         },
-//         "poolsStartingAt": null,
-//         "poolsJobEndAt": "2025-09-27 22:26:41.126891+00",
-//         "poolsGradedAt": null,
-//         "poolsRankedAt": null,
-//         "poolsRewardedAt": null,
-//         "poolsCompletedAt": null,
-//         "poolsMembersCount": 1,
-//         "questionTrackerCount": 0
-//     },
-//     "topicsSponsorship": ""
-// }

@@ -22,6 +22,9 @@ import { PaginateModel } from '@/models/paginate-model';
 import { StateStack } from '@/lib/state-stack';
 import { useAvailableQuiz } from "@/lib/stacks/available-quiz-stack";
 import { UserDisplayQuizTopicModel } from '@/models/user-display-quiz-topic-model';
+import QuizAllocation from "./quiz-allocation/quiz-allocation";
+import GameMode from "./game-mode/game-mode";
+import GameChallenge from "./game-challenge/game-challenge";
 
 interface QuizChallengeProps {
   topicsId: string;
@@ -39,6 +42,7 @@ export default function QuizChallenge(props: QuizChallengeProps) {
 
   const [currentQuiz, setCurrentQuiz] = useState<UserDisplayQuizTopicModel | null>(null);
   const [quizModels,,, { isHydrated }] = useAvailableQuiz(lang, pType);
+  const [selectedGameModeModel, setSelectedGameModeModel] = useState<GameModeModel | null>(null);
 
   useEffect(() => {
     if(!isHydrated)return;
@@ -77,7 +81,9 @@ export default function QuizChallenge(props: QuizChallengeProps) {
       </header>
 
       <div className={styles.innerBody}>
-         { currentQuiz && currentQuiz.topicsIdentity}
+         <QuizAllocation />
+         { currentQuiz && <GameMode onModeSelect={setSelectedGameModeModel} topicsId={currentQuiz.topicsId} /> }
+         { currentQuiz &&  selectedGameModeModel && <GameChallenge onChallengeSelect={(challenge)=> console.log(challenge)} topicsId={currentQuiz.topicsId} gameModeId={selectedGameModeModel.gameModeId} /> }
       </div>
     </main>
   );

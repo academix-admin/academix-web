@@ -285,5 +285,12 @@
   "favourite_contributors": "Contributeurs Favoris",
   "just_for_you": "Juste Pour Vous",
   "might_interest_you": "Pourrait Vous Intéresser",
-  "quiz_challenges": "Défis Quiz"
+  "quiz_challenges": "Défis Quiz",
+  "quiz_challenge_allocation": "Academix utilise ({dwa}) pour répartir équitablement les gains plus élevés en parts {top}, {mid}, {bot} et {rank}, en récompensant tous les {participants} selon leur classement.",
+  "dwa_text": "DWA",
+  "rank_text": "Classement",
+  "participants_text": "participants",
+  "select_a_game_mode": "Sélectionnez un mode de jeu",
+  "click_to_select": "Cliquez pour sélectionner",
+  "error_fetching_game_modes": "Échec du chargement des modes de jeu"
 }

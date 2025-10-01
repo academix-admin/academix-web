@@ -16,6 +16,12 @@ html, body {
   background-color: transparent;
 }
 
+html{
+  overflow-y: hidden; /* prevent horizontal scroll */
+  overscroll-behavior: none; /* prevent bounce effect on iOS */
+  -webkit-overflow-scrolling: touch; /* smooth scroll on iOS */
+}
+
 body.light {
   background: #fff;
   color: #121212;
@@ -26,7 +32,11 @@ body.dark {
   color: #fff;
 }
 
-
+@media screen and (max-width: 800px) {
+  html{
+    overflow-y: scroll;
+  }
+}
 
 
 

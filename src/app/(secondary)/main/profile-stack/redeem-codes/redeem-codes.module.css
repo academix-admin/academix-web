@@ -6,10 +6,10 @@
 }
 
 .header {
-  position: absolute;
+  position: fixed;
   top: 0;
-  left: 0;
-  width: 100%;
+  left: var(--sidebar-width);
+  right: 0;
   z-index: 10;
     display: flex;
   backdrop-filter: blur(8px);
@@ -233,9 +233,9 @@
 /* Responsive Design */
 @media screen and (max-width: 800px) {
 
-   .header {
-     position: fixed;
-    }
+    .header {
+      left: 0;
+     }
 
    .headerContent {
      padding: 1rem 0rem;
@@ -250,9 +250,9 @@
 }
 
 @media screen and (max-width: 500px) {
-   .header {
-     position: fixed;
-    }
+    .header {
+      left: 0;
+     }
      .headerContent {
         margin: 0;
        padding: 1rem 1rem;
