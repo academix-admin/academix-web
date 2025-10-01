@@ -55,7 +55,6 @@ export default function GameMode({ onModeSelect, topicsId }: GameModeProps) {
   const { userData } = useUserData();
 
   const loaderRef = useRef<HTMLDivElement | null>(null);
-  const [paginateModel, setPaginateModel] = useState<PaginateModel>(new PaginateModel());
   const [firstLoaded, setFirstLoaded] = useState(false);
   const [gameModeLoading, setGameModeLoading] = useState(false);
   const [error, setError] = useState('');
@@ -82,9 +81,9 @@ export default function GameMode({ onModeSelect, topicsId }: GameModeProps) {
     return () => {
       if (loaderRef.current) observer.unobserve(loaderRef.current);
     };
-  }, [gameModeModel, paginateModel, gameModeLoading]);
+  }, [gameModeModel, gameModeLoading]);
 
-  const fetchGameModeModel = useCallback(async (userData: UserData, limitBy: number, paginateModel: PaginateModel): Promise<GameModeModel[]> => {
+  const fetchGameModeModel = useCallback(async (userData: UserData): Promise<GameModeModel[]> => {
     if (!userData) return [];
 
     try {
@@ -124,20 +123,14 @@ export default function GameMode({ onModeSelect, topicsId }: GameModeProps) {
     }
   }, [lang, t]);
 
-  const extractLatest = (userGameModeModel: GameModeModel[]) => {
-    if (userGameModeModel.length > 0) {
-      const lastItem = userGameModeModel[userGameModeModel.length - 1];
-      setPaginateModel(new PaginateModel({ sortId: lastItem.sortCreatedId }));
-    }
-  };
 
   const processGameModeModelPaginate = (userGameModeModel: GameModeModel[]) => {
-    const oldGameModeModelIds = gameModeModel.map((e) => e.missionId);
+    const oldGameModeModelIds = gameModeModel.map((e) => e.gameModeId);
     const newGameModeModel = [...gameModeModel];
 
-    for (const mission of userGameModeModel) {
-      if (!oldGameModeModelIds.includes(mission.missionId)) {
-        newGameModeModel.push(mission);
+    for (const gameMode of userGameModeModel) {
+      if (!oldGameModeModelIds.includes(gameMode.gameModeId)) {
+        newGameModeModel.push(gameMode);
       }
     }
     setGameModeModel(newGameModeModel);
@@ -148,8 +141,7 @@ export default function GameMode({ onModeSelect, topicsId }: GameModeProps) {
 
     const loadGameModes = async () => {
       setGameModeLoading(true);
-      const gameModeModels = await fetchGameModeModel(userData, 10, new PaginateModel());
-      extractLatest(gameModeModels);
+      const gameModeModels = await fetchGameModeModel(userData);
       setGameModeModel(gameModeModels);
       setFirstLoaded(true);
       setGameModeLoading(false);
@@ -162,10 +154,9 @@ export default function GameMode({ onModeSelect, topicsId }: GameModeProps) {
   const callPaginate = async () => {
     if (!userData || gameModeModel.length <= 0 || gameModeLoading) return;
     setGameModeLoading(true);
-    const gameModeModels = await fetchGameModeModel(userData, 20, paginateModel);
+    const gameModeModels = await fetchGameModeModel(userData);
     setGameModeLoading(false);
     if (gameModeModels.length > 0) {
-      extractLatest(gameModeModels);
       processGameModeModelPaginate(gameModeModels);
     }
   };
@@ -174,11 +165,9 @@ export default function GameMode({ onModeSelect, topicsId }: GameModeProps) {
     if (!userData) return;
     setGameModeLoading(true);
     setGameModeModel([]);
-    setPaginateModel(new PaginateModel());
-    const gameModeModels = await fetchGameModeModel(userData, 10, new PaginateModel());
+    const gameModeModels = await fetchGameModeModel(userData);
     setGameModeLoading(false);
     if (gameModeModels.length > 0) {
-      extractLatest(gameModeModels);
       setGameModeModel(gameModeModels);
     }
   };

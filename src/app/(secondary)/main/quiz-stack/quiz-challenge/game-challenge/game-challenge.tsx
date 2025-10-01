@@ -1,252 +1,3 @@
-// 'use client';
-//
-// import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-// import { useTheme } from '@/context/ThemeContext';
-// import { useLanguage } from '@/context/LanguageContext';
-// import styles from './game-challenge.module.css';
-// import { useNav } from "@/lib/NavigationStack";
-// import { getParamatical, ParamaticalData } from '@/utils/checkers';
-// import { useUserData } from '@/lib/stacks/user-stack';
-// import { supabaseBrowser } from '@/lib/supabase/client';
-// import { UserData } from '@/models/user-data';
-// import { BackendChallengeModel } from '@/models/user-display-quiz-topic-model';
-// import { ChallengeModel } from '@/models/user-display-quiz-topic-model';
-// import { PaginateModel } from '@/models/paginate-model';
-// import LoadingView from '@/components/LoadingView/LoadingView';
-// import NoResultsView from '@/components/NoResultsView/NoResultsView';
-// import ErrorView from '@/components/ErrorView/ErrorView';
-// import { Swiper, SwiperSlide } from 'swiper/react';
-// import { Navigation, Autoplay } from 'swiper/modules';
-// import 'swiper/css';
-// import 'swiper/css/navigation';
-//
-// interface GameChallengeProps {
-//   topicsId: string,
-//   gameModeId: string,
-//   onChallengeSelect: (challenge: ChallengeModel) => void;
-// }
-//
-// interface GameChallengeItemProps {
-//   onClick: () => void;
-//   challenge: ChallengeModel;
-//   isSelected?: boolean;
-// }
-//
-// const ChallengeItem = ({ onClick, challenge, isSelected }: GameChallengeItemProps) => {
-//   const { theme } = useTheme();
-//   const getInitials = (text: string): string => {
-//     const words = text.trim().split(' ');
-//     if (words.length === 1) return words[0][0].toUpperCase();
-//     return (words[0][0] + words[1][0]).toUpperCase();
-//   };
-//
-//   return (
-//     <div
-//       className={`${styles.challengeItem} ${styles[`challengeItem_${theme}`]} ${isSelected ? styles.selected : ''}`}
-//       onClick={onClick}
-//       aria-label={`Select ${challenge.challengeIdentity}`}
-//       role="button"
-//       tabIndex={0}
-//     >
-//         <div className={styles.challengeItemName}>{challenge.challengeIdentity}</div>
-//     </div>
-//   );
-// };
-//
-//
-// export default function GameChallenge({ onChallengeSelect, topicsId, gameModeId }: GameChallengeProps) {
-//   const { theme } = useTheme();
-//   const { t, lang } = useLanguage();
-//   const { userData } = useUserData();
-//
-//   const loaderRef = useRef<HTMLDivElement | null>(null);
-//   const [paginateModel, setPaginateModel] = useState<PaginateModel>(new PaginateModel());
-//   const [firstLoaded, setFirstLoaded] = useState(false);
-//   const [challengeLoading, setChallengeLoading] = useState(false);
-//   const [error, setError] = useState('');
-//
-//   const [selectedChallengeModel, setSelectedChallengeModel] = useState<ChallengeModel | null>(null);
-//   const [challengeModel, setChallengeModel] = useState<ChallengeModel[]>([]);
-//
-//
-//
-//   useEffect(() => {
-//     if (!loaderRef.current) return;
-//
-//     const observer = new IntersectionObserver(
-//       (entries) => {
-//         if (entries[0].isIntersecting && challengeModel.length > 0 && !challengeLoading) {
-//           callPaginate();
-//         }
-//       },
-//       { threshold: 1.0 }
-//     );
-//
-//     observer.observe(loaderRef.current);
-//
-//     return () => {
-//       if (loaderRef.current) observer.unobserve(loaderRef.current);
-//     };
-//   }, [challengeModel, paginateModel, challengeLoading]);
-//
-//   const fetchChallengeModel = useCallback(async (userData: UserData, limitBy: number, paginateModel: PaginateModel): Promise<ChallengeModel[]> => {
-//     if (!userData) return [];
-//
-//     try {
-//       const paramatical = await getParamatical(
-//         userData.usersId,
-//         lang,
-//         userData.usersSex,
-//         userData.usersDob
-//       );
-//
-//       if (!paramatical) return [];
-//
-//       const { data, error } = await supabaseBrowser.rpc("fetch_quiz_challenges", {
-//               p_owner_id: paramatical.usersId,
-//               p_locale: paramatical.locale,
-//               p_country: paramatical.country,
-//               p_gender: paramatical.gender,
-//               p_age: paramatical.age,
-//               topic_id: topicsId,
-//               p_game_mode_id: gameModeId
-//             });
-//
-//       if (error) {
-//         console.error("[ChallengeModel] error:", error);
-//         setError(t('error_fetching_challenges'));
-//         return [];
-//       }
-//
-//       setError('');
-//       console.log(data);
-//       console.log((data || []).map((row: BackendChallengeModel) => new ChallengeModel(row)));
-//       return (data || []).map((row: BackendChallengeModel) => new ChallengeModel(row));
-//     } catch (err) {
-//       console.error("[ChallengeModel] error:", err);
-//       setError(t('error_fetching_challenges'));
-//       setChallengeLoading(false);
-//       return [];
-//     }
-//   }, [lang, t]);
-//
-//   const extractLatest = (userChallengeModel: ChallengeModel[]) => {
-//     if (userChallengeModel.length > 0) {
-//       const lastItem = userChallengeModel[userChallengeModel.length - 1];
-//       setPaginateModel(new PaginateModel({ sortId: lastItem.sortCreatedId }));
-//     }
-//   };
-//
-//   const processChallengeModelPaginate = (userChallengeModel: ChallengeModel[]) => {
-//     const oldChallengeModelIds = challengeModel.map((e) => e.missionId);
-//     const newChallengeModel = [...challengeModel];
-//
-//     for (const mission of userChallengeModel) {
-//       if (!oldChallengeModelIds.includes(mission.missionId)) {
-//         newChallengeModel.push(mission);
-//       }
-//     }
-//     setChallengeModel(newChallengeModel);
-//   };
-//
-//   useEffect(() => {
-//     if (!userData || challengeModel.length > 0 || challengeLoading) return;
-//
-//     const loadChallenges = async () => {
-//       setChallengeLoading(true);
-//       const challengeModels = await fetchChallengeModel(userData, 10, new PaginateModel());
-//       extractLatest(challengeModels);
-//       setChallengeModel(challengeModels);
-//       setFirstLoaded(true);
-//       setChallengeLoading(false);
-//     };
-//
-//     loadChallenges();
-//   }, [userData, challengeLoading, challengeModel.length]);
-//
-//
-//   const callPaginate = async () => {
-//     if (!userData || challengeModel.length <= 0 || challengeLoading) return;
-//     setChallengeLoading(true);
-//     const challengeModels = await fetchChallengeModel(userData, 20, paginateModel);
-//     setChallengeLoading(false);
-//     if (challengeModels.length > 0) {
-//       extractLatest(challengeModels);
-//       processChallengeModelPaginate(challengeModels);
-//     }
-//   };
-//
-//   const refreshData = async () => {
-//     if (!userData) return;
-//     setChallengeLoading(true);
-//     setChallengeModel([]);
-//     setPaginateModel(new PaginateModel());
-//     const challengeModels = await fetchChallengeModel(userData, 10, new PaginateModel());
-//     setChallengeLoading(false);
-//     if (challengeModels.length > 0) {
-//       extractLatest(challengeModels);
-//       setChallengeModel(challengeModels);
-//     }
-//   };
-//
-//   // Handle challenge selection
-//   const handleChallengeSelect = useCallback((challenge: ChallengeModel) => {
-//     setSelectedChallengeModel(challenge);
-//     onChallengeSelect(challenge);
-//   }, [onChallengeSelect]);
-//
-//   return (
-//     <div className={styles.experienceContainer}>
-//       <h2 className={`${styles.experienceTitle} ${styles[`experienceTitle_${theme}`]}`}>
-//         {t('select_a_challenge')}
-//       </h2>
-//       <h3 className={`${styles.experienceDesc} ${styles[`experienceDesc_${theme}`]}`}>
-//         {t('swipe_to_select')}
-//       </h3>
-//
-//     { challengeModel.length > 0 &&       <div className={styles.carouselContainer}>
-//                                            <div className={`${styles.navButton} ${styles.navPrev} ${styles[`navButton_${theme}`]}`}>
-//                                              <svg viewBox="0 0 24 24" width="24" height="24">
-//                                                <path fill="currentColor" d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6z"/>
-//                                              </svg>
-//                                            </div>
-//                                            <div className={`${styles.navButton} ${styles.navNext} ${styles[`navButton_${theme}`]}`}>
-//                                              <svg viewBox="0 0 24 24" width="24" height="24">
-//                                                <path fill="currentColor" d="M8.59 16.59L13.17 12l-4.58-4.59L10 6l6 6-6 6z"/>
-//                                              </svg>
-//                                            </div>
-//                                            <Swiper
-//                                              modules={[Navigation]}
-//                                              loop={challengeModel.length > 3}
-//                                              slidesPerView={1}
-//                                              spaceBetween={20}
-//                                              navigation={{
-//                                                nextEl: `.${styles.navNext}`,
-//                                                prevEl: `.${styles.navPrev}`,
-//                                              }}
-//                                              breakpoints={{
-//                                                640: { slidesPerView: 1, spaceBetween: 20 },
-//                                                700: { slidesPerView: 2, spaceBetween: 24 },
-//                                                1024: { slidesPerView: 3, spaceBetween: 32 },
-//                                              }}
-//                                              className={styles.swiper}
-//                                            >
-//                                              {challengeModel.map((challenge) => (
-//                                                <SwiperSlide key={challenge.name}>
-//                                                  <ChallengeItem key={challenge.challengeId} challenge={challenge} onClick={()=>handleChallengeSelect(challenge)} isSelected={selectedChallengeModel?.challengeId === challenge.challengeId}/>
-//                                                </SwiperSlide>
-//                                              ))}
-//                                            </Swiper>
-//                                          </div>}
-//
-//              {challengeLoading && challengeModel.length === 0 && <LoadingView />}
-//              {!challengeLoading && challengeModel.length === 0 && !error && (<NoResultsView text="No result" buttonText="Try Again" onButtonClick={refreshData} />)}
-//              {!challengeLoading && challengeModel.length === 0 && error && (<ErrorView text={error} buttonText="Try Again" onButtonClick={refreshData} />)}
-//
-//     </div>
-//   );
-// }
-
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -280,13 +31,13 @@ export default function GameChallenge({ onChallengeSelect, topicsId, gameModeId 
   const { userData } = useUserData();
 
   const loaderRef = useRef<HTMLDivElement | null>(null);
-  const [paginateModel, setPaginateModel] = useState<PaginateModel>(new PaginateModel());
   const [firstLoaded, setFirstLoaded] = useState(false);
   const [challengeLoading, setChallengeLoading] = useState(false);
   const [error, setError] = useState('');
 
   const [selectedChallengeModel, setSelectedChallengeModel] = useState<ChallengeModel | null>(null);
   const [challengeModel, setChallengeModel] = useState<ChallengeModel[]>([]);
+
 
   // Intersection Observer for infinite scroll
   useEffect(() => {
@@ -306,10 +57,10 @@ export default function GameChallenge({ onChallengeSelect, topicsId, gameModeId 
     return () => {
       if (loaderRef.current) observer.unobserve(loaderRef.current);
     };
-  }, [challengeModel, paginateModel, challengeLoading]);
+  }, [challengeModel, challengeLoading]);
 
   // Fetch challenges
-  const fetchChallengeModel = useCallback(async (userData: UserData, limitBy: number, paginateModel: PaginateModel): Promise<ChallengeModel[]> => {
+  const fetchChallengeModel = useCallback(async (userData: UserData): Promise<ChallengeModel[]> => {
     if (!userData) return [];
 
     try {
@@ -348,22 +99,15 @@ export default function GameChallenge({ onChallengeSelect, topicsId, gameModeId 
     }
   }, [lang, t, topicsId, gameModeId]);
 
-  // Extract latest for pagination
-  const extractLatest = (userChallengeModel: ChallengeModel[]) => {
-    if (userChallengeModel.length > 0) {
-      const lastItem = userChallengeModel[userChallengeModel.length - 1];
-      setPaginateModel(new PaginateModel({ sortId: lastItem.sortCreatedId }));
-    }
-  };
 
   // Process paginated challenges
   const processChallengeModelPaginate = (userChallengeModel: ChallengeModel[]) => {
-    const oldChallengeModelIds = challengeModel.map((e) => e.missionId);
+    const oldChallengeModelIds = challengeModel.map((e) => e.challengeId);
     const newChallengeModel = [...challengeModel];
 
-    for (const mission of userChallengeModel) {
-      if (!oldChallengeModelIds.includes(mission.missionId)) {
-        newChallengeModel.push(mission);
+    for (const challenge of userChallengeModel) {
+      if (!oldChallengeModelIds.includes(challenge.challengeId)) {
+        newChallengeModel.push(challenge);
       }
     }
     setChallengeModel(newChallengeModel);
@@ -375,8 +119,7 @@ export default function GameChallenge({ onChallengeSelect, topicsId, gameModeId 
 
     const loadChallenges = async () => {
       setChallengeLoading(true);
-      const challengeModels = await fetchChallengeModel(userData, 10, new PaginateModel());
-      extractLatest(challengeModels);
+      const challengeModels = await fetchChallengeModel(userData);
       setChallengeModel(challengeModels);
       setFirstLoaded(true);
       setChallengeLoading(false);
@@ -389,10 +132,9 @@ export default function GameChallenge({ onChallengeSelect, topicsId, gameModeId 
   const callPaginate = async () => {
     if (!userData || challengeModel.length <= 0 || challengeLoading) return;
     setChallengeLoading(true);
-    const challengeModels = await fetchChallengeModel(userData, 20, paginateModel);
+    const challengeModels = await fetchChallengeModel(userData);
     setChallengeLoading(false);
     if (challengeModels.length > 0) {
-      extractLatest(challengeModels);
       processChallengeModelPaginate(challengeModels);
     }
   };
@@ -402,11 +144,9 @@ export default function GameChallenge({ onChallengeSelect, topicsId, gameModeId 
     if (!userData) return;
     setChallengeLoading(true);
     setChallengeModel([]);
-    setPaginateModel(new PaginateModel());
-    const challengeModels = await fetchChallengeModel(userData, 10, new PaginateModel());
+    const challengeModels = await fetchChallengeModel(userData);
     setChallengeLoading(false);
     if (challengeModels.length > 0) {
-      extractLatest(challengeModels);
       setChallengeModel(challengeModels);
     }
   };
@@ -458,10 +198,6 @@ export default function GameChallenge({ onChallengeSelect, topicsId, gameModeId 
               800: {
                 slidesPerView: 2,
                 spaceBetween: 24
-              },
-              1024: {
-                slidesPerView: 3,
-                spaceBetween: 32
               },
             }}
             className={styles.swiper}

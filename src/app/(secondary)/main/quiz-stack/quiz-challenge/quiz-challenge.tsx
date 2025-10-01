@@ -22,6 +22,7 @@ import { PaginateModel } from '@/models/paginate-model';
 import { StateStack } from '@/lib/state-stack';
 import { useAvailableQuiz } from "@/lib/stacks/available-quiz-stack";
 import { UserDisplayQuizTopicModel } from '@/models/user-display-quiz-topic-model';
+import { GameModeModel } from '@/models/user-display-quiz-topic-model';
 import QuizAllocation from "./quiz-allocation/quiz-allocation";
 import GameMode from "./game-mode/game-mode";
 import GameChallenge from "./game-challenge/game-challenge";
@@ -83,7 +84,7 @@ export default function QuizChallenge(props: QuizChallengeProps) {
       <div className={styles.innerBody}>
          <QuizAllocation />
          { currentQuiz && <GameMode onModeSelect={setSelectedGameModeModel} topicsId={currentQuiz.topicsId} /> }
-         { currentQuiz &&  selectedGameModeModel && <GameChallenge onChallengeSelect={(challenge)=> console.log(challenge)} topicsId={currentQuiz.topicsId} gameModeId={selectedGameModeModel.gameModeId} /> }
+         { currentQuiz &&  selectedGameModeModel && <GameChallenge key={selectedGameModeModel.gameModeId} onChallengeSelect={(challenge)=> console.log(challenge)} topicsId={currentQuiz.topicsId} gameModeId={selectedGameModeModel.gameModeId} /> }
       </div>
     </main>
   );

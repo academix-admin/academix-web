@@ -17,9 +17,13 @@ html, body {
 }
 
 html{
-  overflow-y: hidden; /* prevent horizontal scroll */
+  overflow-y: scroll; /* prevent horizontal scroll */
   overscroll-behavior: none; /* prevent bounce effect on iOS */
   -webkit-overflow-scrolling: touch; /* smooth scroll on iOS */
+}
+
+body{
+  overflow-y: scroll;
 }
 
 body.light {
