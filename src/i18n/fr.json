@@ -292,5 +292,22 @@
   "participants_text": "participants",
   "select_a_game_mode": "Sélectionnez un mode de jeu",
   "click_to_select": "Cliquez pour sélectionner",
-  "error_fetching_game_modes": "Échec du chargement des modes de jeu"
+  "error_fetching_game_modes": "Échec du chargement des modes de jeu",
+  "select_a_challenge": "Sélectionner un Défi",
+  "swipe_to_select": "Glissez pour sélectionner",
+  "questions": "Questions",
+  "participants": "Participants",
+  "prize": "Prix",
+  "top_share": "Part supérieure",
+  "mid_share": "Part médiane",
+  "bot_share": "Part inférieure",
+  "rank_share": "Part du classement",
+  "received_percentage": "Pourcentage reçu selon votre position",
+  "waiting_time": "Temps d'attente",
+  "no_challenges_available": "Aucun défi disponible",
+  "error_fetching_challenges": "Erreur lors de la récupération des défis",
+  "review_rules_regulation": "Appuyez pour consulter les {rules} et {regulations} du défi",
+  "regulations_text": "règlements",
+  "review_expected_payout": "Appuyez pour consulter les {expected_payout}",
+  "expected_payout": "gains prévus"
 }

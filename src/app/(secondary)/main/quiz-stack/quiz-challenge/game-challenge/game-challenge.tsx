@@ -10,7 +10,6 @@ import { supabaseBrowser } from '@/lib/supabase/client';
 import { UserData } from '@/models/user-data';
 import { BackendChallengeModel } from '@/models/user-display-quiz-topic-model';
 import { ChallengeModel } from '@/models/user-display-quiz-topic-model';
-import { PaginateModel } from '@/models/paginate-model';
 import LoadingView from '@/components/LoadingView/LoadingView';
 import NoResultsView from '@/components/NoResultsView/NoResultsView';
 import ErrorView from '@/components/ErrorView/ErrorView';
@@ -223,9 +222,6 @@ export default function GameChallenge({ onChallengeSelect, topicsId, gameModeId 
       {!challengeLoading && challengeModel.length === 0 && error && (
         <ErrorView text={error} buttonText={t('try_again')} onButtonClick={refreshData} />
       )}
-
-      {/* Loader for infinite scroll */}
-      <div ref={loaderRef} className={styles.loaderTrigger} />
     </div>
   );
 }
@@ -262,12 +258,6 @@ function ChallengeCard({ challenge, isSelected, onClick }: ChallengeCardProps) {
       role="button"
       tabIndex={0}
       aria-label={`Select ${challenge.challengeIdentity} challenge`}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          onClick();
-        }
-      }}
     >
       {/* Header with selector and title */}
       <div className={styles.cardHeader}>
@@ -376,7 +366,7 @@ function PrizeRow({
       <span className={styles.prizeLabel}>{label}</span>
       <span className={styles.prizeValue}>
         {value !== undefined ? (
-          <>
+          < >
             <span className={styles.currencySymbol}>A</span>
             {formatNumber(value)}
           </>

@@ -292,7 +292,23 @@
   "participants_text": "participants",
   "select_a_game_mode": "Select a Game Mode",
   "click_to_select": "Click to select",
-  "error_fetching_game_modes": "Failed to load game modes"
+  "error_fetching_game_modes": "Failed to load game modes",
+  "select_a_challenge": "Select a Challenge",
+  "swipe_to_select": "Swipe to select",
+  "participants": "Participants",
+  "prize": "Prize",
+  "top_share": "Top share",
+  "mid_share": "Mid share",
+  "bot_share": "Bot share",
+  "rank_share": "Rank share",
+  "received_percentage": "Received percentage on your position",
+  "waiting_time": "Waiting time",
+  "no_challenges_available": "No challenges available",
+  "error_fetching_challenges": "Error fetching challenges",
+  "review_rules_regulation": "Tap to review {rules} & {regulations} for the challenge",
+  "regulations_text": "regulations",
+  "review_expected_payout": "Tap to review {expected_payout}",
+  "expected_payout": "expected payout"
 }
 
 

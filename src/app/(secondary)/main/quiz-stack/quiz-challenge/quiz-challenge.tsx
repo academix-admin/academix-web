@@ -23,9 +23,12 @@ import { StateStack } from '@/lib/state-stack';
 import { useAvailableQuiz } from "@/lib/stacks/available-quiz-stack";
 import { UserDisplayQuizTopicModel } from '@/models/user-display-quiz-topic-model';
 import { GameModeModel } from '@/models/user-display-quiz-topic-model';
+import { ChallengeModel } from '@/models/user-display-quiz-topic-model';
 import QuizAllocation from "./quiz-allocation/quiz-allocation";
 import GameMode from "./game-mode/game-mode";
 import GameChallenge from "./game-challenge/game-challenge";
+import QuizRuleAcceptance from "./quiz_rule-acceptance/quiz_rule-acceptance";
+import QuizPayoutAcceptance from "./quiz_payout-acceptance/quiz_payout-acceptance";
 
 interface QuizChallengeProps {
   topicsId: string;
@@ -44,6 +47,7 @@ export default function QuizChallenge(props: QuizChallengeProps) {
   const [currentQuiz, setCurrentQuiz] = useState<UserDisplayQuizTopicModel | null>(null);
   const [quizModels,,, { isHydrated }] = useAvailableQuiz(lang, pType);
   const [selectedGameModeModel, setSelectedGameModeModel] = useState<GameModeModel | null>(null);
+  const [selectedChallengeModel, setSelectedChallengeModel] = useState<ChallengeModel | null>(null);
 
   useEffect(() => {
     if(!isHydrated)return;
@@ -84,7 +88,9 @@ export default function QuizChallenge(props: QuizChallengeProps) {
       <div className={styles.innerBody}>
          <QuizAllocation />
          { currentQuiz && <GameMode onModeSelect={setSelectedGameModeModel} topicsId={currentQuiz.topicsId} /> }
-         { currentQuiz &&  selectedGameModeModel && <GameChallenge key={selectedGameModeModel.gameModeId} onChallengeSelect={(challenge)=> console.log(challenge)} topicsId={currentQuiz.topicsId} gameModeId={selectedGameModeModel.gameModeId} /> }
+         { currentQuiz && selectedGameModeModel && <GameChallenge key={selectedGameModeModel.gameModeId} onChallengeSelect={setSelectedChallengeModel} topicsId={currentQuiz.topicsId} gameModeId={selectedGameModeModel.gameModeId} /> }
+         { selectedChallengeModel && <QuizRuleAcceptance  onAcceptanceChange={(acceptance) => console.log(acceptance)}/> }
+         { selectedChallengeModel && <QuizPayoutAcceptance  onAcceptanceChange={(acceptance) => console.log(acceptance)}/> }
       </div>
     </main>
   );

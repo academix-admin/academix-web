@@ -255,7 +255,7 @@
 .prizeRow {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   font-size: 12px;
 }
 
@@ -268,6 +268,9 @@
   align-items: center;
   gap: 2px;
   font-weight: 600;
+    word-break: break-word;   /* break long words */
+      white-space: normal;
+        text-align: end;
 }
 
 /* Waiting Time */
@@ -328,7 +331,7 @@
   }
 
   .carouselContainer {
-    padding: 0px 24px 0 24px;
+    padding: 0px
   }
 
   .swiper {
@@ -342,6 +345,7 @@
 
   .challengeCard {
     padding: 14px;
+    margin: 0px 24px 0 24px;
   }
 
   .challengeIdentity {
@@ -365,10 +369,6 @@
     padding: 0px 16px 0 16px;
   }
 
-  .carouselContainer {
-    padding: 0px 16px 0 16px;
-  }
-
   .swiper {
     padding: 0 2rem;
   }
@@ -387,8 +387,8 @@
   }
 
   .challengeCard {
-    min-height: 340px;
     padding: 12px;
+    margin: 0px 16px 0 16px;
   }
 
   .challengeIdentity {
