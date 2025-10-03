@@ -29,6 +29,7 @@ import GameMode from "./game-mode/game-mode";
 import GameChallenge from "./game-challenge/game-challenge";
 import QuizRuleAcceptance from "./quiz_rule-acceptance/quiz_rule-acceptance";
 import QuizPayoutAcceptance from "./quiz_payout-acceptance/quiz_payout-acceptance";
+import QuizRedeemCode from "./quiz-redeem-code/quiz-redeem-code";
 
 interface QuizChallengeProps {
   topicsId: string;
@@ -48,6 +49,8 @@ export default function QuizChallenge(props: QuizChallengeProps) {
   const [quizModels,,, { isHydrated }] = useAvailableQuiz(lang, pType);
   const [selectedGameModeModel, setSelectedGameModeModel] = useState<GameModeModel | null>(null);
   const [selectedChallengeModel, setSelectedChallengeModel] = useState<ChallengeModel | null>(null);
+  const [selectedRule, setSelectedRule] = useState(false);
+  const [selectedPayout, setSelectedPayout] = useState(false);
 
   useEffect(() => {
     if(!isHydrated)return;
@@ -89,8 +92,9 @@ export default function QuizChallenge(props: QuizChallengeProps) {
          <QuizAllocation />
          { currentQuiz && <GameMode onModeSelect={setSelectedGameModeModel} topicsId={currentQuiz.topicsId} /> }
          { currentQuiz && selectedGameModeModel && <GameChallenge key={selectedGameModeModel.gameModeId} onChallengeSelect={setSelectedChallengeModel} topicsId={currentQuiz.topicsId} gameModeId={selectedGameModeModel.gameModeId} /> }
-         { selectedChallengeModel && <QuizRuleAcceptance  onAcceptanceChange={(acceptance) => console.log(acceptance)}/> }
-         { selectedChallengeModel && <QuizPayoutAcceptance  onAcceptanceChange={(acceptance) => console.log(acceptance)}/> }
+         { selectedChallengeModel && <QuizRuleAcceptance  onAcceptanceChange={setSelectedRule}/> }
+         { selectedChallengeModel && <QuizPayoutAcceptance  onAcceptanceChange={setSelectedPayout}/> }
+         { selectedRule && selectedPayout && <QuizRedeemCode  onMethodSelect={(a)=> console.log(a)}/> }
       </div>
     </main>
   );
