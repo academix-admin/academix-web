@@ -11,8 +11,7 @@ import { useUserData } from '@/lib/stacks/user-stack';
 import { useDemandState } from '@/lib/state-stack';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { UserData } from '@/models/user-data';
-import { BackendPaymentMethodModel } from '@/models/payment-method-model';
-import { PaymentMethodModel } from '@/models/payment-method-model';
+import { BackendRedeemCodeModel } from '@/models/redeem-code-model';
 import { RedeemCodeModel } from '@/models/redeem-code-model';
 import { PaginateModel } from '@/models/paginate-model';
 import { SelectionViewer, useSelectionController } from "@/lib/SelectionViewer";
@@ -20,20 +19,143 @@ import LoadingView from '@/components/LoadingView/LoadingView';
 import NoResultsView from '@/components/NoResultsView/NoResultsView';
 import ErrorView from '@/components/ErrorView/ErrorView';
 import DialogCancel from '@/components/DialogCancel';
-import { usePaymentMethodModel } from '@/lib/stacks/payment-method-stack';
+import { useRedeemCodeModel } from '@/lib/stacks/redeem-code-stack';
 
-interface PaymentMethodProps {
-  onMethodSelect: (method: PaymentMethodModel) => void;
+
+interface QuizRedeemCodeProps {
+  onRedeemCodeSelect: (redeemCode: RedeemCodeModel | null) => void;
+  onSkip: (skip: boolean) => void;
 }
+
+const RedeemCodeCard: React.FC<{ redeemCode: RedeemCodeModel, onClick?: ()=> void, display?: boolean, onEdit?: ()=> void , onDelete?: ()=> void }> = ({ redeemCode, onClick, display = false, onEdit, onDelete }) => {
+  const { t, lang } = useLanguage();
+  const { theme } = useTheme();
+
+  const handleCopy = async (code: RedeemCodeModel) => {
+    try {
+      await navigator.clipboard.writeText(code.redeemCodeValue);
+      // You might want to add a toast notification here
+      console.log('Code copied to clipboard:', code.redeemCodeValue);
+    } catch (err) {
+      console.error('Failed to copy code:', err);
+    }
+  };
+
+  const formatExpiryDate = (expiry: string | null | undefined) => {
+    if (!expiry) return null;
+    try {
+      const date = new Date(expiry);
+      return date.toLocaleDateString(lang, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    } catch {
+      return expiry;
+    }
+  };
+
+  const expiryText = formatExpiryDate(redeemCode.redeemCodeExpires);
+
+  // Build rules text based on the conditions
+  const buildRulesText = () => {
+    const rules = [];
+
+    if (redeemCode.redeemCodeTop) rules.push(t('top_text'));
+    if (redeemCode.redeemCodeMid) rules.push(t('mid_text'));
+    if (redeemCode.redeemCodeBot) rules.push(t('bot_text'));
+    if (redeemCode.redeemCodeRank1) rules.push(t('first_rank'));
+    if (redeemCode.redeemCodeRank2) rules.push(t('second_rank'));
+    if (redeemCode.redeemCodeRank3) rules.push(t('third_rank'));
+
+    if (rules.length === 0) return null;
+
+    return (
+      <div className={styles.rulesRow}>
+        <span className={styles.rulesLabel}>{t('rules_text')}:</span>
+        <span className={styles.rulesValue}>{rules.join(', ')}</span>
+      </div>
+    );
+  };
+
+  const rulesElement = buildRulesText();
+  const hasRules = rulesElement !== null;
+
+  return (
+    <div role="button" onClick={onClick} className={`${styles.redeemCodeCard} ${display ?  styles.removeMargin : ''}`} aria-labelledby={`redeemCode-${redeemCode.redeemCodeId}`}>
+      {/* Main Card Content */}
+      <div className={styles.cardContent}>
+        {/* Header with code and copy button */}
+        <div className={styles.cardHeader}>
+          <div className={styles.codeSection}>
+            <h3 role="button" onClick={onEdit} id={`redeemCode-${redeemCode.redeemCodeId}`} className={styles.redeemCodeValue}>
+              {redeemCode.redeemCodeValue}
+
+              {display && (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" strokeWidth="2"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" strokeWidth="2"/>
+                </svg>
+              )}
+            </h3>
+            <button
+              className={styles.copyButton}
+              onClick={() => handleCopy(redeemCode)}
+              aria-label={`Copy code ${redeemCode.redeemCodeValue}`}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <rect x="9" y="9" width="9" height="9" stroke="currentColor" strokeWidth="1.6" rx="1" />
+                <rect x="4.5" y="4.5" width="9" height="9" stroke="currentColor" strokeWidth="1.2" rx="1" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        {/* Amount section with icon */}
+        <div className={styles.amountSection}>
+          <div className={styles.amountContent}>
+            <div className={styles.currencyIcon}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.31-8.86c-1.77-.45-2.34-.94-2.34-1.67 0-.84.79-1.43 2.1-1.43 1.38 0 1.9.66 1.94 1.64h1.71c-.05-1.34-.87-2.57-2.49-2.97V5H10.9v1.69c-1.51.32-2.72 1.3-2.72 2.81 0 1.79 1.49 2.69 3.66 3.21 1.95.46 2.34 1.15 2.34 1.87 0 .53-.39 1.39-2.1 1.39-1.6 0-2.23-.72-2.32-1.64H8.32c.1 1.7 1.36 2.66 2.86 2.97V19h2.34v-1.67c1.52-.29 2.72-1.16 2.72-2.82 0-1.47-1.09-2.49-3.93-3.16z"/>
+              </svg>
+            </div>
+            <span className={styles.amountText}>{redeemCode.redeemCodeAmount}</span>
+          </div>
+          {display && (
+            <div role="button" onClick={onDelete} className={styles.deleteIcon}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="red">
+                <path d="M3 6h18" strokeWidth="2" strokeLinecap="round"/>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" strokeWidth="2"/>
+                <path d="M10 11v6" strokeWidth="2" strokeLinecap="round"/>
+                <path d="M14 11v6" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+            </div>
+          )}
+        </div>
+
+        {/* Footer with rules and expiry */}
+        <div className={styles.cardFooter}>
+          {hasRules && rulesElement}
+          {hasRules && expiryText && <div className={styles.separator} />}
+          {expiryText && (
+            <div className={styles.expiryRow}>
+              <span className={styles.expiryText}>
+                {t('expires_text', { date: expiryText })}
+              </span>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const RedeemCodeView = ({
   onRemoveClick,
-  onContinueClick,
-  continueLoading
+  onRedeemCodeSelect
 }: {
       onRemoveClick: () => void;
-      onContinueClick: () => void;
-      continueLoading: boolean;
+      onRedeemCodeSelect: (redeemCode: RedeemCodeModel | null) => void;
 }) => {
   const { t, tNode, lang } = useLanguage();
   const { theme } = useTheme();
@@ -47,6 +169,8 @@ const RedeemCodeView = ({
   const onSearchClick = async () => {
        if (!userData) {
            console.warn("User data not available");
+                  setError(t('error_occurred'));
+
            return;
          }
     try {
@@ -61,6 +185,7 @@ const RedeemCodeView = ({
 
      if (!paramatical) {
        setCollecting(false);
+       setError(t('error_occurred'));
        console.error("Failed to get code data");
        return;
      }
@@ -92,28 +217,28 @@ const RedeemCodeView = ({
                                                                                             });
       if (error) throw error;
 
-      console.log(rpcResult);
-      const redeemCode = new RedeemCodeModel(rpcResult.code_data);
-      console.log(redeemCode);
       if (rpcResult.status === 'RedeemCode.found') {
-
-
-      }
-         setCollecting(false);
+       const redeemCode = new RedeemCodeModel(rpcResult.code_data);
+         setError('');
+         onRedeemCodeSelect(redeemCode);
+      }else{
+          setError(t('redeem_code_not_found'));
+       }
+      setCollecting(false);
     } catch (err) {
       console.error(err);
       setCollecting(false);
+                        setError(t('error_occurred'));
     }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = e.target;
-
      setIsFormValid(value.length > 0);
      setCodeText(value.toUpperCase());
   };
 
-  if(collecting)return <span className={styles.spinner}></span>;
+  if(collecting)return <div className={styles.loadingContainer}> <span className={styles.spinner}></span> </div>;
 
   return (
       <>
@@ -148,40 +273,35 @@ const RedeemCodeView = ({
                     {t('get_code')}
               </button>
          </div>
+
      </>
 
   );
 };
 
-export default function QuizRedeemCode({ onMethodSelect }: PaymentMethodProps) {
+export default function QuizRedeemCode({ onRedeemCodeSelect, onSkip }: QuizRedeemCodeProps) {
   const { theme } = useTheme();
   const { t, lang } = useLanguage();
   const { userData } = useUserData();
+  const [codeView, setCodeView] = useState(false);
 
   const [paginateModel, setPaginateModel] = useState<PaginateModel>(new PaginateModel());
-  const [methodData, setMethodData] = useState<PaymentMethodModel | null>(null);
-  const [userMethodState, setUserMethodState] = useState<'initial' | 'loading' | 'data' | 'error'>('initial');
+  const [redeemCodeData, setRedeemCodeData] = useState<RedeemCodeModel | null>(null);
+  const [userRedeemCodeState, setUserRedeemCodeState] = useState<'initial' | 'loading' | 'data' | 'error'>('initial');
 
-  const [methodSelectId, methodSelectController, methodSelectIsOpen, methodSelectionState] = useSelectionController();
-  const [searchMethodQuery, setMethodQuery] = useState('');
+  const [redeemCodeSelectId, redeemCodeSelectController, redeemCodeSelectIsOpen, redeemCodeSelectionState] = useSelectionController();
+  const [searchRedeemCodeQuery, setRedeemCodeQuery] = useState('');
 
-  const [methodsModel, demandPaymentMethodModel, setPaymentMethodModel, { isHydrated }] = usePaymentMethodModel(lang);
+  const [redeemCodes, demandRedeemCodes, setRedeemCodes] = useRedeemCodeModel(lang);
+
 
   useEffect(() => {
-    if(!methodData)return;
-     onMethodSelect(methodData);
-  }, [methodData]);
+     onRedeemCodeSelect(redeemCodeData);
+     onSkip(!codeView);
+  }, [redeemCodeData, codeView]);
 
 
-   useEffect(() => {
-      if (methodsModel.length <= 0)setMethodData(null);
-   }, [methodsModel]);
-
-  const fetchPaymentMethodModel = useCallback(async (
-    userData: UserData,
-    limitBy: number,
-    paginateModel: PaginateModel
-  ): Promise<PaymentMethodModel[]> => {
+  const fetchRedeemCodes = useCallback(async (userData: UserData, limitBy: number, paginateModel: PaginateModel): Promise<RedeemCodeModel[]> => {
     if (!userData) return [];
 
     try {
@@ -194,150 +314,195 @@ export default function QuizRedeemCode({ onMethodSelect }: PaymentMethodProps) {
 
       if (!paramatical) return [];
 
-      const { data, error } = await supabaseBrowser.rpc(profileType === 'ProfileType.buy' ? "fetch_top_up_methods" : "fetch_withdraw_methods", {
+      const { data, error } = await supabaseBrowser.rpc("get_users_redeem_code", {
         p_user_id: paramatical.usersId,
         p_locale: paramatical.locale,
         p_country: paramatical.country,
         p_gender: paramatical.gender,
         p_age: paramatical.age,
         p_limit_by: limitBy,
-        p_wallet_id: 'walletId',
-        p_after_methods: paginateModel.toJson(),
+        p_after_codes: paginateModel.toJson(),
       });
 
       if (error) {
-        console.error("[PaymentMethodModel] error:", error);
+        console.error("[RedeemCodes] error:", error);
         return [];
       }
-         
-      return (data || []).map((row: BackendPaymentMethodModel) => new PaymentMethodModel(row));
+      return (data || []).map((row: BackendRedeemCodeModel) => new RedeemCodeModel(row));
     } catch (err) {
-      console.error("[PaymentMethodModel] error:", err);
+      console.error("[RedeemCodes] error:", err);
       return [];
     }
   }, [lang]);
 
-  const extractLatest = useCallback((userPaymentMethodModel: PaymentMethodModel[]) => {
-    if (userPaymentMethodModel.length > 0) {
-      const lastItem = userPaymentMethodModel[userPaymentMethodModel.length - 1];
+  const extractLatest = (userRedeemCodes: RedeemCodeModel[]) => {
+    if (userRedeemCodes.length > 0) {
+      const lastItem = userRedeemCodes[userRedeemCodes.length - 1];
       setPaginateModel(new PaginateModel({ sortId: lastItem.sortCreatedId }));
     }
-  }, []);
+  };
 
-  const processPaymentMethodModelPaginate = useCallback((userPaymentMethodModel: PaymentMethodModel[]) => {
-    const oldPaymentMethodModelIds = methodsModel.map((e) => e.paymentMethodId);
-    const newPaymentMethodModel = [...methodsModel];
+  const processRedeemCodesPaginate = (userRedeemCodes: RedeemCodeModel[]) => {
+    const oldRedeemCodesIds = redeemCodes.map((e) => e.redeemCodeId);
+    const newRedeemCodes = [...redeemCodes];
 
-    for (const method of userPaymentMethodModel) {
-      if (!oldPaymentMethodModelIds.includes(method.paymentMethodId)) {
-        newPaymentMethodModel.push(method);
+    for (const friend of userRedeemCodes) {
+      if (!oldRedeemCodesIds.includes(friend.redeemCodeId)) {
+        newRedeemCodes.push(friend);
       }
     }
 
-    setPaymentMethodModel(newPaymentMethodModel);
-  }, [methodsModel, setPaymentMethodModel]);
+    setRedeemCodes(newRedeemCodes);
+  };
 
-  const callPaginate = useCallback(async (): Promise<boolean> => {
-    if (!userData || methodsModel.length <= 0) return false;
-
-    const methods = await fetchPaymentMethodModel(userData, 20, paginateModel);
-    if (methods.length > 0) {
-      extractLatest(methods);
-      processPaymentMethodModelPaginate(methods);
-      return true;
+  const callPaginate = async (): Promise<boolean>  => {
+    if (!userData || redeemCodes.length <= 0) return true;
+    const redeemCodesModel = await fetchRedeemCodes(userData, 20, paginateModel);
+    if (redeemCodesModel.length > 0) {
+      extractLatest(redeemCodesModel);
+      processRedeemCodesPaginate(redeemCodesModel);
     }
-    return false;
-  }, [userData, methodsModel, paginateModel, fetchPaymentMethodModel, extractLatest, processPaymentMethodModelPaginate]);
+   return true
+  };
 
   const refreshData = useCallback(async () => {
-    if (!userData || methodsModel.length > 0) return;
+    if (!userData || redeemCodes.length > 0) return;
 
-    const methods = await fetchPaymentMethodModel(userData, 100, paginateModel);
-    if (methods.length > 0) {
-      extractLatest(methods);
-      setPaymentMethodModel(methods);
+    const redeemCodesModel = await fetchRedeemCodes(userData, 100, paginateModel);
+    if (redeemCodesModel.length > 0) {
+      extractLatest(redeemCodesModel);
+      setRedeemCodes(redeemCodesModel);
     }
-  }, [userData, methodsModel, paginateModel, fetchPaymentMethodModel, extractLatest, setPaymentMethodModel]);
+  }, [userData, redeemCodes, paginateModel, fetchRedeemCodes, extractLatest, setRedeemCodes]);
 
-  const loadMethods = useCallback(() => {
-    demandPaymentMethodModel(async ({ get, set }) => {
-      methodSelectController.setSelectionState("loading");
-      const methods = await fetchPaymentMethodModel(userData!, 100, new PaginateModel());
+  const loadRedeemCodes = useCallback(() => {
 
-      if (!methods) {
-        methodSelectController.setSelectionState("error");
-        return;
-      }
+    demandRedeemCodes(async ({ get, set }) => {
+          if (!userData || redeemCodes.length > 0) return;
+                redeemCodeSelectController.setSelectionState("loading");
+          const redeemCodesModel = await fetchRedeemCodes(userData, 10,  new PaginateModel());
+                if (!redeemCodesModel) {
+                  redeemCodeSelectController.setSelectionState("error");
+                  return;
+                }
 
-      extractLatest(methods);
-      if (methods.length > 0) {
-        set(methods);
-        methodSelectController.setSelectionState("data");
-      } else {
-        methodSelectController.setSelectionState("empty");
-      }
+                extractLatest(redeemCodesModel);
+                if (redeemCodesModel.length > 0) {
+                  set(redeemCodesModel);
+                  redeemCodeSelectController.setSelectionState("data");
+                } else {
+                  redeemCodeSelectController.setSelectionState("empty");
+                }
     });
-  }, [demandPaymentMethodModel, fetchPaymentMethodModel, userData, extractLatest, methodSelectController]);
+  }, [demandRedeemCodes, fetchRedeemCodes, userData, extractLatest, redeemCodeSelectController]);
 
-  const openMethod = useCallback(() => {
-    if (!userData || !modify) return;
-    methodSelectController.toggle();
-    loadMethods();
-  }, [userData, methodSelectController, loadMethods]);
+  const openRedeemCode = useCallback(() => {
+    if (!userData) return;
+    redeemCodeSelectController.toggle();
+    loadRedeemCodes();
+  }, [userData, redeemCodeSelectController, loadRedeemCodes]);
 
-  const handleMethodSearch = useCallback((query: string) => {
-    setMethodQuery(query);
+  const handleRedeemCodeSearch = useCallback((query: string) => {
+    setRedeemCodeQuery(query);
   }, []);
 
-  const filteredMethods = useMemo(() => {
-    if (!searchMethodQuery) return methodsModel;
+  const filteredRedeemCodes = useMemo(() => {
+    if (!searchRedeemCodeQuery) return redeemCodes;
 
-    const filters = methodsModel.filter(item =>
-      item.paymentMethodIdentity.toLowerCase().includes(searchMethodQuery.toLowerCase()) ||
-      item.countryIdentity?.toLowerCase().includes(searchMethodQuery.toLowerCase())
+    const filters = redeemCodes.filter(item =>
+      item.redeemCodeValue.toLowerCase().includes(searchRedeemCodeQuery.toLowerCase()) ||
+      item.redeemCodeAmount.toString().toLowerCase().includes(searchRedeemCodeQuery.toLowerCase())
     );
 
-    if (filters.length <= 0 && methodsModel.length > 0) {
-      methodSelectController.setSelectionState("empty");
+    if (filters.length <= 0 && redeemCodes.length > 0) {
+      redeemCodeSelectController.setSelectionState("empty");
     }
 
     return filters;
-  }, [methodsModel, searchMethodQuery]);
+  }, [redeemCodes, searchRedeemCodeQuery]);
 
-  const handleMethodSelect = useCallback((method: PaymentMethodModel) => {
-    setMethodData(method);
-    methodSelectController.close();
-  }, [methodSelectController]);
+  const handleRedeemCodeSelect = useCallback((redeemCode: RedeemCodeModel) => {
+    setRedeemCodeData(redeemCode);
+    redeemCodeSelectController.close();
+  }, [redeemCodeSelectController]);
 
+  const toggleView = () => {
+    if(redeemCodeData)setCodeView(false);
+    if(!redeemCodeData)setCodeView(prev=> !prev);
+    setRedeemCodeData(null);
+  };
+
+  const editView = () => {
+    if(redeemCodeData)setRedeemCodeData(null);
+    if(redeemCodeData)setCodeView(true);
+  };
+
+  const removeView = () => {
+    if(redeemCodeData)setRedeemCodeData(null);
+    if(redeemCodeData)setCodeView(false);
+  };
 
   return (
     <div className={styles.experienceContainer}>
-      <h2 className={`${styles.experienceTitle} ${styles[`experienceTitle_${theme}`]}`}>
-        {t('redeem_code_text')}
-      </h2>
-      <h3 className={`${styles.experienceDesc} ${styles[`experienceDesc_${theme}`]}`}>
-        {t('option_to_redeem_code')}
-      </h3>
+      <div className={styles.titleRowContainer}>
+           <div role="button" onClick={toggleView} className={styles.titleContainer}>
+               <h2 className={`${styles.experienceTitle} ${styles[`experienceTitle_${theme}`]}`}>
+                 {t('redeem_code_text')}
+               </h2>
+               <h3 className={`${styles.experienceDesc} ${styles[`experienceDesc_${theme}`]}`}>
+                 {t('option_to_redeem_code')}
+               </h3>
+           </div>
+           {codeView && (
+             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+               <path d="m18 15-6-6-6 6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+             </svg>
+           )}
+           {!codeView && (
+             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+               <path d="m9 18 6-6-6-6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+             </svg>
+           )}
+      </div>
 
-      <RedeemCodeView onRemoveClick={()=> console.log('s')} onContinueClick={()=> console.log('s')} continueLoading={false}  />
+      {codeView && !redeemCodeData && <RedeemCodeView onRemoveClick={()=> setCodeView(false)} onRedeemCodeSelect={setRedeemCodeData} />}
+      {!codeView && !redeemCodeData && (
+                    <div className={styles.profileContainer}>
+                      <button
+                        className={styles.newProfileButton}
+                        onClick={openRedeemCode}
+                      >
+                        {t('personal_codes')}
+                      </button>
+                    </div>
+                  )}
+      {redeemCodeData && (
+                    <RedeemCodeCard
+                                key={redeemCodeData.redeemCodeId}
+                                redeemCode={redeemCodeData}
+                                display
+                                onEdit={editView}
+                                onDelete={removeView}
+                    />
+                  )}
 
       <SelectionViewer
-        id={methodSelectId}
-        isOpen={methodSelectIsOpen}
-        onClose={methodSelectController.close}
+        id={redeemCodeSelectId}
+        isOpen={redeemCodeSelectIsOpen}
+        onClose={redeemCodeSelectController.close}
         onPaginate={callPaginate}
         titleProp={{
-          text: t('select_payment_method'),
+          text: t('select_a_code'),
           textColor: theme === 'light' ? "#000" : "#fff"
         }}
         cancelButton={{
           position: "right",
-          onClick: methodSelectController.close,
+          onClick: redeemCodeSelectController.close,
           view: <DialogCancel />
         }}
         searchProp={{
           text: t('search'),
-          onChange: handleMethodSearch,
+          onChange: handleRedeemCodeSearch,
           background: theme === 'light' ? "#f5f5f5" : "#272727",
           textColor: theme === 'light' ? "#000" : "#fff",
           padding: { l: "4px", r: "4px", t: "0px", b: "0px" },
@@ -347,10 +512,10 @@ export default function QuizRedeemCode({ onMethodSelect }: PaymentMethodProps) {
           view: <LoadingView text={t('loading')} />,
         }}
         noResultProp={{
-          view: <NoResultsView text={t('no_results')} buttonText={t('try_again')} onButtonClick={loadMethods} />,
+          view: <NoResultsView text={t('no_results')} buttonText={t('try_again')} onButtonClick={loadRedeemCodes} />,
         }}
         errorProp={{
-          view: <ErrorView text={t('error_occurred')} buttonText={t('try_again')} onButtonClick={loadMethods} />,
+          view: <ErrorView text={t('error_occurred')} buttonText={t('try_again')} onButtonClick={loadRedeemCodes} />,
         }}
         layoutProp={{
           gapBetweenHandleAndTitle: "16px",
@@ -366,15 +531,14 @@ export default function QuizRedeemCode({ onMethodSelect }: PaymentMethodProps) {
         minHeight="65vh"
         maxHeight="90vh"
         closeThreshold={0.2}
-        selectionState={methodSelectionState}
+        selectionState={redeemCodeSelectionState}
         zIndex={1000}
       >
-        {filteredMethods.map((item) => (
-          <MethodItem
-            key={item.paymentMethodId}
-            onClick={() => handleMethodSelect(item)}
-            method={item}
-            isSelected={methodData?.paymentMethodId === item.paymentMethodId}
+        {filteredRedeemCodes.map((redeemCode) => (
+          <RedeemCodeCard
+            key={redeemCode.redeemCodeId}
+            onClick={() => handleRedeemCodeSelect(redeemCode)}
+            redeemCode={redeemCode}
           />
         ))}
       </SelectionViewer>

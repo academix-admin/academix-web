@@ -20,6 +20,7 @@ import { checkLocation, checkFeatures, fetchUserPartialDetails, fetchUserDetails
 import { useDemandState } from '@/lib/state-stack';
 import { PaginateModel } from '@/models/paginate-model';
 import { StateStack } from '@/lib/state-stack';
+import { useRedeemCodeModel } from '@/lib/stacks/redeem-code-stack';
 
 
 const RedeemCodeCard: React.FC<{ redeemCode: RedeemCodeModel }> = ({ redeemCode }) => {
@@ -141,16 +142,7 @@ export default function RedeemCodes() {
   const [empty, setEmpty] = useState(false);
 
 
-  const [redeemCodes, demandRedeemCodes, setRedeemCodes] = useDemandState<RedeemCodeModel[]>(
-    [],
-    {
-      key: "redeemCodes",
-      persist: true,
-      ttl: 3600,
-      scope: "profile_flow",
-      deps: [lang],
-    }
-  );
+  const [redeemCodes, demandRedeemCodes, setRedeemCodes] = useRedeemCodeModel(lang);
 
 
   useEffect(() => {
@@ -253,6 +245,7 @@ export default function RedeemCodes() {
       processRedeemCodesPaginate(redeemCodesModel);
     }
   };
+
   const refreshData = async () => {
     if (!userData || redeemCodes.length > 0) return;
     setFetchLoading(true);
@@ -267,7 +260,7 @@ export default function RedeemCodes() {
 
     const goBack = async () => {
       await nav.pop();
-      StateStack.core.clearScope('profile_flow');
+      StateStack.core.clearScope('redeem_code_flow');
     };
 
   return (

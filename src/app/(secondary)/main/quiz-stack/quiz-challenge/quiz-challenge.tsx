@@ -30,10 +30,20 @@ import GameChallenge from "./game-challenge/game-challenge";
 import QuizRuleAcceptance from "./quiz_rule-acceptance/quiz_rule-acceptance";
 import QuizPayoutAcceptance from "./quiz_payout-acceptance/quiz_payout-acceptance";
 import QuizRedeemCode from "./quiz-redeem-code/quiz-redeem-code";
+import { TransactionModel } from '@/models/transaction-model';
+import { BackendTransactionModel } from '@/models/transaction-model';
+import { useTransactionModel } from '@/lib/stacks/transactions-stack';
+
 
 interface QuizChallengeProps {
   topicsId: string;
   pType: string;
+}
+
+interface EngageQuizResponse {
+  status: string;
+  quiz_pool: any;
+  transaction_details?: BackendTransactionModel;
 }
 
 export default function QuizChallenge(props: QuizChallengeProps) {
@@ -44,6 +54,7 @@ export default function QuizChallenge(props: QuizChallengeProps) {
   const isTop = nav.isTop();
 
   const { userData, userData$ } = useUserData();
+  const [transactionModels, demandTransactionModels, setTransactionModels] = useTransactionModel(lang);
 
   const [currentQuiz, setCurrentQuiz] = useState<UserDisplayQuizTopicModel | null>(null);
   const [quizModels,,, { isHydrated }] = useAvailableQuiz(lang, pType);
@@ -51,6 +62,10 @@ export default function QuizChallenge(props: QuizChallengeProps) {
   const [selectedChallengeModel, setSelectedChallengeModel] = useState<ChallengeModel | null>(null);
   const [selectedRule, setSelectedRule] = useState(false);
   const [selectedPayout, setSelectedPayout] = useState(false);
+  const [selectedRedeemCodeModel, setSelectedRedeemCodeModel] = useState<RedeemCodeModel | null>(null);
+  const [selectedSkip, setSelectedSkip] = useState(false);
+  const [quizLoading, setQuizLoading] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     if(!isHydrated)return;
@@ -63,9 +78,112 @@ export default function QuizChallenge(props: QuizChallengeProps) {
     }
   }, [quizModels, topicsId, isHydrated, isTop]);
 
-    const goBack = async () => {
-      await nav.pop();
-    };
+  // Function to engage quiz API call
+  const engageQuiz = async (jwt: string, data: any): Promise<EngageQuizResponse> => {
+    // Use the App Router API endpoint
+    const proxyUrl = '/api/engage';
+
+    try {
+      const response = await fetch(proxyUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${jwt}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+      return await response.json();
+    } catch (error) {
+      console.error("Engage Quiz API error:", error);
+      throw error;
+    }
+  };
+
+  const handleEngage = async () => {
+    if (!userData || !selectedGameModeModel || !selectedChallengeModel || !selectedRule || !selectedPayout) return;
+
+    try {
+         setQuizLoading(true);
+        setError('');
+      const location = await checkLocation();
+      const paramatical = await getParamatical(
+        userData.usersId,
+        lang,
+        userData.usersSex,
+        userData.usersDob
+      );
+
+      if (!paramatical) {
+        setQuizLoading(false);
+        setError(t('error_occurred'));
+        return;
+      }
+
+      const feature = await checkFeatures(
+        'Features.quiz_taking',
+        lang,
+        paramatical.country,
+        userData.usersSex,
+        userData.usersDob
+      );
+
+      if (!feature) {
+        setQuizLoading(false);
+        console.log('feature not available');
+        setError(t('feature_unavailable'));
+        return;
+      }
+
+      const session = await supabaseBrowser.auth.getSession();
+      const jwt = session.data.session?.access_token;
+
+      if (!jwt) {
+        console.log('no JWT token');
+        setQuizLoading(false);
+        setError(t('error_occurred') );
+        return;
+      }
+
+      const requestData = {
+        userId: userData.usersId,
+        topicsId: topicsId,
+        challengeId: selectedChallengeModel.challengeId,
+        poolsId: null,
+        redeemCode: selectedRedeemCodeModel?.redeemCodeValue,
+        locale: paramatical.locale,
+        country: paramatical.country,
+        gender: paramatical.gender,
+        age: paramatical.age
+      };
+
+      const engagement = await engageQuiz(jwt, requestData);
+      const status = engagement.status;
+
+       console.log(engagement);
+
+      if (status === 'PoolStatus.engaged' || status === 'PoolStatus.this_active') {
+
+        const quizModel = new UserDisplayQuizTopicModel(engagement.quiz_pool);
+        const transaction = new TransactionModel(engagement.transaction_details);
+
+        if(engagement.transaction_details)setTransactionModels([transaction,...transactionModels]);
+        await nav.pushAndPopUntil('quiz_commitment',(entry) => entry.key === 'quiz_page', {poolsId: quizModel?.quizPool?.poolsId, action: 'active'})
+      }
+
+     setQuizLoading(false);
+
+    } catch (error: any) {
+      console.error("Top up error:", error);
+      setQuizLoading(false);
+      setError(t('error_occurred'));
+    }
+  };
+
+  const goBack = async () => {
+    await nav.pop();
+          StateStack.core.clearScope('redeem_code_flow');
+
+  };
 
   return (
     <main className={`${styles.container} ${styles[`container_${theme}`]}`}>
@@ -92,9 +210,18 @@ export default function QuizChallenge(props: QuizChallengeProps) {
          <QuizAllocation />
          { currentQuiz && <GameMode onModeSelect={setSelectedGameModeModel} topicsId={currentQuiz.topicsId} /> }
          { currentQuiz && selectedGameModeModel && <GameChallenge key={selectedGameModeModel.gameModeId} onChallengeSelect={setSelectedChallengeModel} topicsId={currentQuiz.topicsId} gameModeId={selectedGameModeModel.gameModeId} /> }
-         { selectedChallengeModel && <QuizRuleAcceptance  onAcceptanceChange={setSelectedRule}/> }
-         { selectedChallengeModel && <QuizPayoutAcceptance  onAcceptanceChange={setSelectedPayout}/> }
-         { selectedRule && selectedPayout && <QuizRedeemCode  onMethodSelect={(a)=> console.log(a)}/> }
+         { currentQuiz && selectedChallengeModel && <QuizRuleAcceptance  onAcceptanceChange={setSelectedRule}/> }
+         { currentQuiz && selectedChallengeModel && <QuizPayoutAcceptance  onAcceptanceChange={setSelectedPayout}/> }
+         { currentQuiz && selectedChallengeModel &&  selectedRule && selectedPayout && <QuizRedeemCode  onRedeemCodeSelect={setSelectedRedeemCodeModel} onSkip={setSelectedSkip}/> }
+         { currentQuiz && selectedChallengeModel && (selectedSkip || selectedRedeemCodeModel) && selectedRule && selectedPayout && <button
+                                                             onClick={handleEngage}
+                                                             type="button"
+                                                             className={styles.continueButton}
+                                                             disabled={quizLoading}
+                                                             aria-disabled={quizLoading}
+                                                           >
+                                                             { quizLoading ?  <span className={styles.spinner}></span> : t('engage_text')}
+                                                           </button> }
       </div>
     </main>
   );

@@ -131,7 +131,7 @@ export default function LoginUser() {
       try {
         const userLoginAccount: UserLoginAccount | null = await fetchUserDetails(login.login);
         if (!userLoginAccount) {
-          setError(t('user_not_found'));
+          setError(t('invalid_login_credentials'));
           return;
         }
 

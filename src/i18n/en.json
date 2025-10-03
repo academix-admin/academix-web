@@ -308,7 +308,15 @@
   "review_rules_regulation": "Tap to review {rules} & {regulations} for the challenge",
   "regulations_text": "regulations",
   "review_expected_payout": "Tap to review {expected_payout}",
-  "expected_payout": "expected payout"
+  "expected_payout": "expected payout",
+  "redeem_code_text": "Redeem Code",
+  "option_to_redeem_code": "Option to redeem valid code",
+  "personal_codes": "Personal Codes",
+  "code_text_label": "Code",
+  "get_code": "Get Code",
+  "redeem_code_not_found": "Redeem code not found",
+  "select_a_code": "Select a Code",
+  "engage_text": "Engage"
 }
 
 

@@ -297,7 +297,7 @@ Expires: ${expire}`);
     } catch (error: any) {
       console.error("Top up error:", error);
       setTopUpLoading(false);
-      setError(t('error_occurred') || 'An error occurred');
+      setError(t('error_occurred'));
     }
   };
 

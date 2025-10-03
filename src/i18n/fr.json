@@ -309,5 +309,13 @@
   "review_rules_regulation": "Appuyez pour consulter les {rules} et {regulations} du défi",
   "regulations_text": "règlements",
   "review_expected_payout": "Appuyez pour consulter les {expected_payout}",
-  "expected_payout": "gains prévus"
+  "expected_payout": "gains prévus",
+  "redeem_code_text": "Code de Récupération",
+  "option_to_redeem_code": "Option pour échanger un code valide",
+  "personal_codes": "Codes Personnels",
+  "code_text_label": "Code",
+  "get_code": "Obtenir le Code",
+  "redeem_code_not_found": "Code de récupération non trouvé",
+  "select_a_code": "Sélectionner un Code",
+  "engage_text": "Engager"
 }
