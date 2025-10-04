@@ -317,5 +317,9 @@
   "get_code": "Obtenir le Code",
   "redeem_code_not_found": "Code de récupération non trouvé",
   "select_a_code": "Sélectionner un Code",
-  "engage_text": "Engager"
+  "engage_text": "Engager",
+  "challenge_text": "Défi",
+  "topic_text": "Sujet",
+  "amount_text": "Montant",
+  "insufficient_balance": "Solde Insuffisant"
 }

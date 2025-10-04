@@ -316,7 +316,11 @@
   "get_code": "Get Code",
   "redeem_code_not_found": "Redeem code not found",
   "select_a_code": "Select a Code",
-  "engage_text": "Engage"
+  "engage_text": "Engage",
+  "challenge_text": "Challenge",
+  "topic_text": "Topic",
+  "amount_text": "Amount",
+  "insufficient_balance": "Insufficient Balance"
 }
 
 

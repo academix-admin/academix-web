@@ -187,6 +187,179 @@
 }
 
 
+/* Dialog Container */
+.dialogContainer {
+  padding: 20px;
+  min-height: 300px;
+}
+
+.dialogContainer_light {
+  background-color: #ffffff;
+  color: #000000;
+}
+
+.dialogContainer_dark {
+  background-color: #121212;
+  color: #ffffff;
+}
+
+/* Payment Confirmation Styles */
+.paymentConfirmation {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.confirmationHeader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.confirmationTitle {
+  font-size: 18px;
+  font-weight: bold;
+  margin: 0;
+  text-align: center;
+}
+
+.divider {
+  height: 1px;
+  width: 100%;
+  margin: 12px 0;
+}
+
+.dialogContainer_light .divider {
+  background-color: #e5e7eb;
+}
+
+.dialogContainer_dark .divider {
+  background-color: #374151;
+}
+
+.amountSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.currencyAmount {
+  font-size: 32px;
+  font-weight: bold;
+}
+
+.academixAmount {
+  font-size: 32px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.academixIcon {
+  font-size: 24px;
+  font-weight: bold;
+  color: #1C6B1E;
+}
+
+.infoRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.infoLabel {
+  color: inherit;
+  opacity: 0.8;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.infoValue {
+  font-size: 16px;
+  font-weight: bold;
+  text-align: right;
+  word-break: break-word;
+}
+
+.paymentMethodSection {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.paymentMethodTitle {
+  font-size: 15px;
+  font-weight: bold;
+  margin: 0;
+}
+
+.walletCard {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 12px;
+}
+
+.dialogContainer_light .walletCard {
+  background-color: #f9fafb;
+}
+
+.dialogContainer_dark .walletCard {
+  background-color: #1f2937;
+}
+
+.walletIcon {
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(28, 107, 30, 0.2);
+  color: #1C6B1E;
+}
+
+.walletInfo {
+  flex: 1;
+}
+
+.walletName {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.academixBalance {
+  color: #1C6B1E;
+}
+
+.payButton {
+  padding: 16px;
+  border-radius: 12px;
+  background-color: #1C6B1E;
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin-top: 24px;
+}
+
+.payButton:hover {
+  background-color: #1D3D1E;
+}
+
+.payButton:disabled {
+  background-color: #9CA3AF;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
 /* Tablet */
 @media screen and (min-width: 500px) and (max-width: 800px) {
  .header {
@@ -231,5 +404,22 @@
     font-size: 1.2rem;
   }
 
+    .dialogContainer {
+        padding: 16px;
+      }
+
+      .currencyAmount,
+      .academixAmount {
+        font-size: 28px;
+      }
+
+      .infoLabel,
+      .infoValue {
+        font-size: 14px;
+      }
+
+      .confirmationTitle {
+        font-size: 16px;
+      }
 
 }
