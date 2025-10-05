@@ -264,27 +264,27 @@ export default function PaymentWallet({ profileType, onWalletData, onWalletAmoun
     const value = e.target.value;
     if (/^\d*\.?\d*$/.test(value) || value === '') {
       setWalletAmount(value);
-      if (paymentSwitch === 'wallet' && walletData) {
+      if (paymentSwitch === 'wallet' && walletData?.paymentWalletRate) {
         const numValue = parseFloat(value) || 0;
         setPaymentAmount(numValue);
         setAcademixAmount((numValue * walletData.paymentWalletRate).toFixed(2).replace('.00',''));
       }
     }
-  }, [paymentSwitch, walletData]);
+  }, [paymentSwitch, walletData?.paymentWalletRate]);
 
   // Handle academix amount change
   const handleAcademixAmountChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     if (/^\d*\.?\d*$/.test(value) || value === '') {
       setAcademixAmount(value);
-      if (paymentSwitch === 'academix' && walletData) {
+      if (paymentSwitch === 'academix' && walletData?.paymentWalletRate) {
         const numValue = parseFloat(value) || 0;
         setPaymentAmount(numValue);
         if(numValue > 0)setWalletAmount((numValue / walletData.paymentWalletRate).toFixed(2).replace('.00',''));
         if(numValue <= 0)setWalletAmount('');
       }
     }
-  }, [paymentSwitch, walletData]);
+  }, [paymentSwitch, walletData?.paymentWalletRate]);
 
   // Switch between wallet and academix
   const switchPaymentMode = useCallback(() => {
@@ -307,7 +307,7 @@ export default function PaymentWallet({ profileType, onWalletData, onWalletAmoun
      }
 
     return feeValue.toFixed(2).replace('.00','');
-  }, [walletData]);
+  }, [walletData?.paymentWalletRateType, walletData?.paymentWalletFee, walletData?.paymentWalletRate]);
 
   // Format number with commas
   const formatNumber = useCallback((num: number) => {
@@ -315,7 +315,7 @@ export default function PaymentWallet({ profileType, onWalletData, onWalletAmoun
   }, []);
 
   useEffect(() => {
-    setIsFocused(!!walletAmount);
+    if(paymentSwitch === 'wallet')setIsFocused(!!walletAmount);
   }, [walletAmount]);
 
   const loadWallets = useCallback(() => {
@@ -347,6 +347,15 @@ export default function PaymentWallet({ profileType, onWalletData, onWalletAmoun
   const handleWalletSearch = useCallback((query: string) => {
     setWalletQuery(query);
   }, []);
+
+  // Reset amounts when wallet changes
+  useEffect(() => {
+    if (walletData) {
+      setWalletAmount('');
+      setAcademixAmount('');
+      setPaymentAmount(0);
+    }
+  }, [walletData?.paymentWalletId]);
 
   const filteredWallets = useMemo(() => {
     if (!searchWalletQuery) return walletsModel;
