@@ -374,7 +374,7 @@ export default function RewardsStreaks({ onStateChange }: ComponentStateProps) {
         if (error || data?.error) throw error || data.error;
 
         const streak = new DailyStreaksModel(data.daily_streaks_details);
-        if (data.status === "StreaksReward.success") {
+        if (data.status === "StreaksReward.success" || data.status === "StreaksReward.claimed") {
                    let changed = false;
                    setDailyStreaks(dailyStreaks.map(m => {
                      if (m.dailyStreaksDateNumber === dateNumber) {
