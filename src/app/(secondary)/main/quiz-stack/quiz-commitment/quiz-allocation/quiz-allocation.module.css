@@ -1,0 +1,55 @@
+.historyContainer {
+  padding: 0 24px;
+}
+
+.rewardInfo {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  text-align: left;
+    border-radius: 8px;
+        padding: 16px;
+
+}
+
+.rewardInfo_light {
+  color: #F7E7B7B;
+    background-color: #F0EFEF;
+
+}
+
+.rewardInfo_dark {
+  color: #fff;
+    background-color: #515151;
+
+}
+
+
+/* Tablet Responsive */
+@media screen and (max-width: 800px) {
+  .historyContainer {
+    padding: 0 20px;
+  }
+
+      .rewardInfo {
+        font-size: 0.8rem;
+        padding: 14px;
+      }
+
+      .refreshHint {
+        font-size: 0.75rem;
+      }
+
+}
+
+/* Mobile Responsive */
+@media screen and (max-width: 500px) {
+  .historyContainer {
+    padding: 0 16px;
+  }
+
+    .rewardInfo {
+        font-size: 0.75rem;
+        padding: 12px;
+        line-height: 1.4;
+      }
+}

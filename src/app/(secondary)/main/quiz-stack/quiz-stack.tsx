@@ -5,10 +5,12 @@ import {useNav } from "@/lib/NavigationStack";
 import NavigationStack from "@/lib/NavigationStack";
 import QuizPage from "./quiz-page/quiz-page";
 import QuizChallenge from "./quiz-challenge/quiz-challenge";
+import QuizCommitment from "./quiz-commitment/quiz-commitment";
 
 const quizStackNavLink = {
   quiz_page: QuizPage,
-  quiz_challenge: QuizChallenge
+  quiz_challenge: QuizChallenge,
+  quiz_commitment: QuizCommitment
 };
 
 export const QuizStack = () => (

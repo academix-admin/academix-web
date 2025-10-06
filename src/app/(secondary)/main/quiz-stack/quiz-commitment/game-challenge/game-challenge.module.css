@@ -1,0 +1,417 @@
+/* game-challenge.module.css */
+
+/* Main Container */
+.experienceContainer {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 24px 0px 0 0px;
+  margin: 0 auto;
+}
+
+/* Typography */
+.experienceTitle {
+  font-size: 18px;
+  font-weight: bold;
+  margin: 0px;
+  padding: 0px 28px 0 28px;
+  margin-bottom: 12px;
+}
+
+.experienceTitle_light {
+  color: #000;
+}
+
+.experienceTitle_dark {
+  color: #fff;
+}
+
+.experienceDesc {
+  font-size: 16px;
+  margin: 0px;
+  padding: 0px 28px 0 28px;
+  margin-bottom: 20px;
+  opacity: 0.8;
+}
+
+.experienceDesc_light {
+  color: #000;
+}
+
+.experienceDesc_dark {
+  color: #fff;
+}
+
+/* Carousel Container */
+.carouselContainer {
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  padding: 0px 28px 0 28px;
+}
+
+/* Swiper Styles */
+.swiper {
+  padding: 2rem 1.5rem;
+  box-sizing: border-box;
+  height: auto;
+  width: 100%;
+  margin: 0;
+}
+
+.swiper-slide {
+  height: auto;
+  display: flex;
+  box-sizing: border-box;
+  align-items: stretch;
+}
+
+/* Navigation Buttons */
+.navButton {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+}
+
+.navButton_light {
+  background: #000;
+}
+
+.navButton_dark {
+  background: rgba(60, 60, 60, 0.9);
+}
+
+.navButton:hover {
+  transform: translateY(-50%) scale(1.1);
+}
+
+.navButton svg {
+  color: #fff;
+}
+
+.navPrev {
+  left: 1rem;
+}
+
+.navNext {
+  right: 1rem;
+}
+
+/* Challenge Card Styles */
+.challengeCard {
+  border-radius: 12px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    box-sizing: border-box;
+
+}
+
+.challengeCard_light {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.challengeCard_dark {
+  background: linear-gradient(135deg, #4c669f 0%, #3b5998 100%);
+  color: white;
+}
+
+
+
+/* Card Header */
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.selectorContainer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.selector {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.selectorSelected {
+  background: #fff;
+}
+
+.challengeIdentity {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.2;
+  word-break: break-word;
+}
+
+.priceContainer {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: bold;
+}
+
+.currencySymbol {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.price {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+/* Dividers */
+.divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.3);
+  margin: 8px 0;
+}
+
+/* Info Tags */
+.infoTags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 8px 0;
+}
+
+.infoTag {
+  padding: 4px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* Prize Section */
+.prizeSection {
+  flex: 1;
+  margin: 8px 0;
+}
+
+.prizeHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.prizeTitle {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.infoIcon {
+  width: 16px;
+  height: 16px;
+  border: 1px solid #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: bold;
+  cursor: help;
+}
+
+.prizeList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.prizeRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  font-size: 12px;
+}
+
+.prizeLabel {
+  font-weight: 500;
+}
+
+.prizeValue {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-weight: 600;
+    word-break: break-word;   /* break long words */
+      white-space: normal;
+        text-align: end;
+}
+
+/* Waiting Time */
+.waitingTime {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  padding: 12px;
+  margin-top: auto;
+}
+
+.timeContent {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.timeIcon {
+  font-size: 16px;
+}
+
+.timeText {
+  display: flex;
+  flex-direction: column;
+}
+
+.timeLabel {
+  font-size: 12px;
+  opacity: 0.9;
+}
+
+.timeValue {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* Loader Trigger */
+.loaderTrigger {
+  height: 1px;
+  width: 100%;
+  margin: 20px 0;
+}
+
+/* Responsive Design */
+@media screen and (max-width: 800px) {
+  .experienceContainer {
+    padding: 16px 0px 0 0px;
+  }
+
+  .experienceTitle {
+    font-size: 20px;
+    margin-bottom: 8px;
+    padding: 0px 24px 0 24px;
+  }
+
+  .experienceDesc {
+    font-size: 18px;
+    padding: 0px 24px 0 24px;
+  }
+
+  .carouselContainer {
+    padding: 0px
+  }
+
+  .swiper {
+    padding: 1rem 2.5rem;
+  }
+
+  .navButton {
+    width: 40px;
+    height: 40px;
+  }
+
+  .challengeCard {
+    padding: 14px;
+    margin: 0px 24px 0 24px;
+  }
+
+  .challengeIdentity {
+    font-size: 15px;
+  }
+}
+
+@media screen and (max-width: 500px) {
+  .experienceContainer {
+    padding: 16px 0px 0 0px;
+  }
+
+  .experienceTitle {
+    font-size: 16px;
+    margin-bottom: 8px;
+    padding: 0px 16px 0 16px;
+  }
+
+  .experienceDesc {
+    font-size: 14px;
+    padding: 0px 16px 0 16px;
+  }
+
+  .swiper {
+    padding: 0 2rem;
+  }
+
+  .navButton {
+    width: 36px;
+    height: 36px;
+  }
+
+  .navPrev {
+    left: 0.5rem;
+  }
+
+  .navNext {
+    right: 0.5rem;
+  }
+
+  .challengeCard {
+    padding: 12px;
+    margin: 0px 16px 0 16px;
+  }
+
+  .challengeIdentity {
+    font-size: 14px;
+  }
+
+  .price {
+    font-size: 14px;
+  }
+
+  .infoTag {
+    font-size: 11px;
+    padding: 3px 6px;
+  }
+}
+
+/* Swiper navigation button states */
+.swiper-button-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: translateY(-50%) !important;
+}
+
+.swiper-button-disabled:hover {
+  transform: translateY(-50%) !important;
+}
