@@ -220,7 +220,6 @@ export default function NavigationBar({
 
           // 🚫 Ignore overscroll on iOS
           if (atTop || atBottom) {
-            setHidden(false);
             prevScroll.current = current;
             ticking = false;
             return;
