@@ -374,7 +374,7 @@ export default function RewardsStreaks({ onStateChange }: ComponentStateProps) {
         if (error || data?.error) throw error || data.error;
 
         const streak = new DailyStreaksModel(data.daily_streaks_details);
-        if (data.status === "StreaksReward.success" || data.status === "StreaksReward.claimed") {
+        if (data.daily_streaks_details) {
                    let changed = false;
                    setDailyStreaks(dailyStreaks.map(m => {
                      if (m.dailyStreaksDateNumber === dateNumber) {
@@ -384,7 +384,7 @@ export default function RewardsStreaks({ onStateChange }: ComponentStateProps) {
                      return m;
                    }));
 
-                   if (changed) {
+                   if (changed && data.status === "StreaksReward.success") {
                       //perform something
                       const { data, error } = await supabaseBrowser.rpc("get_user_academix_ratio", {
                                 p_user_id: paramatical.usersId,

@@ -180,7 +180,28 @@ export default function NavigationBar({
   const [fabClicked, setFabClicked] = useState(false); // NEW
   const prevScroll = useRef(0);
 
+  // Reset hidden state when component mounts or mode changes
+  useEffect(() => {
+    setHidden(false);
+    setShrinkRatio(0);
+  }, [mode]);
 
+  // Add visibility check based on content height
+  useEffect(() => {
+    const checkContentHeight = () => {
+      const content = document.documentElement;
+      const hasScrollableContent = content.scrollHeight > content.clientHeight;
+
+      // If content isn't scrollable, always show navigation
+      if (!hasScrollableContent && mode === 'autohide') {
+        setHidden(false);
+      }
+    };
+
+    checkContentHeight();
+    window.addEventListener('resize', checkContentHeight);
+    return () => window.removeEventListener('resize', checkContentHeight);
+  }, [mode]);
 
   /** Scroll handler */
   useEffect(() => {
@@ -199,6 +220,7 @@ export default function NavigationBar({
 
           // 🚫 Ignore overscroll on iOS
           if (atTop || atBottom) {
+            setHidden(false);
             prevScroll.current = current;
             ticking = false;
             return;

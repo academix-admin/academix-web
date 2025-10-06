@@ -288,9 +288,8 @@ export default function PaymentWallet({ profileType, onWalletData, onWalletAmoun
 
   // Switch between wallet and academix
   const switchPaymentMode = useCallback(() => {
-    if (!isFocused) return;
     setPaymentSwitch(prev => prev === 'wallet' ? 'academix' : 'wallet');
-  }, [isFocused]);
+  }, []);
 
   // Calculate fee
   const calculateFee = useCallback((type:string, value: number) => {
@@ -315,8 +314,8 @@ export default function PaymentWallet({ profileType, onWalletData, onWalletAmoun
   }, []);
 
   useEffect(() => {
-    if(paymentSwitch === 'wallet')setIsFocused(!!walletAmount);
-  }, [walletAmount]);
+    setIsFocused(paymentSwitch === 'academix');
+  }, [paymentSwitch]);
 
   const loadWallets = useCallback(() => {
     demandPaymentWalletModel(async ({ get, set }) => {

@@ -294,7 +294,7 @@ export default function PaymentProfile({ profileType, methodId, methodType, onPr
     }
 
     return filters;
-  }, [profilesModel, searchProfileQuery, profileSelectController]);
+  }, [profilesModel, searchProfileQuery]);
 
   const handleProfileSelect = useCallback((profile: PaymentProfileModel) => {
     setProfileData(profile);
