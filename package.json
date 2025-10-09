@@ -19,6 +19,7 @@
     "i": "^0.3.7",
     "lottie-react": "^2.4.1",
     "next": "15.3.5",
+    "qrcode.react": "^4.2.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-modal-sheet": "^4.4.0",

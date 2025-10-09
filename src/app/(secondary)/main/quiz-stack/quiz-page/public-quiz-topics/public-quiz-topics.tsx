@@ -21,6 +21,11 @@ import { useNav } from "@/lib/NavigationStack";
 import { usePublicQuiz } from "@/lib/stacks/public-quiz-stack";
 import { poolsSubscriptionManager } from '@/lib/managers/PoolsQuizTopicSubscriptionManager';
 import { PoolChangeEvent } from '@/lib/managers/PoolsQuizTopicSubscriptionManager';
+import { BottomViewer, useBottomController } from "@/lib/BottomViewer";
+import { TimelapseManager, useTimelapseManager, TimelapseType  } from '@/lib/managers/TimelapseManager';
+import DialogCancel from '@/components/DialogCancel';
+import { QRCodeSVG } from 'qrcode.react';
+
 
 type PublicQuizTopicsProps = ComponentStateProps & {
   pType: string;
@@ -175,7 +180,7 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
         p_user_id: paramatical.usersId,
         p_locale: paramatical.locale,
         p_country: paramatical.country,
-        p_gender: paramatical.gender,
+        p_code: paramatical.code,
         p_age: paramatical.age,
         p_limit_by: limitBy,
         p_type: pType,
@@ -320,23 +325,16 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
       <h2 className={`${styles.title} ${styles[`title_${theme}`]}`}>
         {getTitle(pType)}
       </h2>
-
       <div ref={scrollContainerRef} className={styles.scrollContainer}>
         <div className={styles.gridContainer}>
           <div className={styles.row}>
-            {createSubgroups(quizModels, 2).map((topics, rowIndex) => (
-              <div className={styles.column} key={rowIndex}>
-                {topics.map((topic) => (
-                  <TopicCard
+            {quizModels.map((topic, rowIndex) => (
+                  <OpenQuizCard
                     key={topic.topicsId}
                     topic={topic}
-                    theme={theme}
                     getInitials={getInitials}
-                    formatDate={formatDate}
                     onClick={()=> handleTopicClick(topic)}
                   />
-                ))}
-              </div>
             ))}
           </div>
         </div>
@@ -345,81 +343,202 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
   );
 }
 
-interface TopicCardProps {
+
+interface OpenQuizCardProps {
   topic: UserDisplayQuizTopicModel;
-  theme: string;
-  getInitials: (text: string) => string;
-  formatDate: (dateString: string) => string;
-  onClick: () => void;
+    getInitials: (text: string) => string;
+    onClick: () => void;
 }
 
-function TopicCard({ topic, theme, getInitials, formatDate, onClick }: TopicCardProps) {
+export default function OpenQuizCard({ topic, getInitials, formatDate, onClick  }: OpenQuizCardProps) {
+  const { theme } = useTheme();
+  const { t } = useLanguage();
+  const [remainingTime, setRemainingTime] = useState<number>(0);
   const [imageError, setImageError] = useState(false);
-  const [userImageError, setUserImageError] = useState(false);
+  const timelapseManager = useTimelapseManager();
+ const [codeBottomViewerId, codeBottomController, codeBottomIsOpen] = useBottomController();
+
+  const formatQuizPoolStatusTime = useCallback((status: string | null, seconds: number): string => {
+    if (!status) return '';
+
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+
+    const timeString = hours > 0
+      ? `${hours}h ${minutes}m`
+      : minutes > 0
+      ? `${minutes}m ${secs}s`
+      : `${secs}s`;
+
+    switch (status) {
+      case 'PoolJob.pool_starting':
+        return `Starts in ${timeString}`;
+      case 'PoolJob.pool_ended':
+        return 'Quiz ended';
+      case 'PoolJob.cancelled':
+        return 'Quiz cancelled';
+      default:
+        return `Ends in ${timeString}`;
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!timelapseManager.current || !topic.quizPool?.poolsJobEndAt) return;
+
+    const endTime = new Date(topic.quizPool.poolsJobEndAt);
+    const startTime = new Date();
+
+    try {
+      timelapseManager.current.setupLapse(startTime, endTime, TimelapseType.second);
+
+      const handleTimeUpdate = (remaining: number) => {
+        setRemainingTime(Math.floor(remaining / 1000)); // Convert to seconds
+      };
+
+      timelapseManager.current.addListener(handleTimeUpdate);
+      timelapseManager.current.start();
+
+      return () => {
+        timelapseManager.current?.removeListener(handleTimeUpdate);
+      };
+    } catch (error) {
+      console.error('Quiz timer error:', error);
+    }
+  }, [topic.quizPool?.poolsJobEndAt, topic.quizPool?.poolsJob, timelapseManager]);
+
+
+  const status = topic.quizPool?.poolsJob || '';
+  const displayTime = formatQuizPoolStatusTime(status, remainingTime);
+  const quizCode = topic.quizPool?.poolsCode || '';
 
   return (
-    <div
-      className={`${styles.topicCard} ${styles[`topicCard_${theme}`]}`}
-      onClick={onClick}
-      role="button"
-    >
-      <div className={styles.cardContent}>
-        {/* Topic Image/Initials */}
-        <div className={styles.topicImageContainer}>
+    <div className={`${styles.quizContainer} ${styles[`quizContainer_${theme}`]}`}>
+      <div className={styles.card}>
+        {/* Main Image with Overlay */}
+        <div className={styles.imageContainer}>
           {topic.topicsImageUrl && !imageError ? (
             <Image
               src={topic.topicsImageUrl}
               alt={topic.topicsIdentity}
-              width={60}
-              height={60}
-              className={styles.topicImage}
+              fill
+              className={styles.image}
               onError={() => setImageError(true)}
             />
           ) : (
-            <div className={styles.topicInitials}>
+            <div className={styles.imageFallback}>
               {getInitials(topic.topicsIdentity)}
             </div>
           )}
+
+          {/* Gradient Overlays */}
+          <div className={styles.gradientOverlay} />
+          <div className={styles.bottomGradient} />
+
+          {/* Content Overlay */}
+          <div className={styles.contentOverlay}>
+            {/* Status Badge */}
+            <div className={styles.statusBadge}>
+              {displayTime}
+            </div>
+
+            {/* Text Content */}
+            <div className={styles.textContent}>
+              <div className={styles.challengeIdentity}>
+                {topic.quizPool?.challengeModel?.challengeIdentity?.toUpperCase()}
+              </div>
+              <h3 className={styles.topicTitle}>
+                {topic.topicsIdentity}
+              </h3>
+            </div>
+          </div>
         </div>
 
-        {/* Topic Info */}
-        <div className={styles.topicInfo}>
-          <div className={styles.topicHeader}>
-            <h3 className={`${styles.topicTitle} ${styles[`topicTitle_${theme}`]}`}>
-              {capitalize(topic.topicsIdentity)}
-            </h3>
-            <span className={`${styles.topicDate} ${styles[`topicDate_${theme}`]}`}>
-              {formatDate(topic.topicsCreatedAt)}
+        {/* Bottom Section with Code and Join Button */}
+        <div className={styles.bottomSection}>
+          {/* Quiz Code */}
+          <div
+            className={styles.codeContainer}
+            onClick={()=> codeBottomController.open()}
+          >
+            <div className={styles.codeIcon}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V8l8 5 8-5v10zm-8-7L4 6h16l-8 5z"/>
+              </svg>
+            </div>
+            <span className={styles.codeText}>
+              {quizCode}
             </span>
           </div>
 
-          {/* Creator Info */}
-          <div className={styles.creatorInfo}>
-            <div className={styles.creatorImageContainer}>
-              {topic.userImageUrl && !userImageError ? (
-                <Image
-                  src={topic.userImageUrl}
-                  alt={topic.fullNameText}
-                  width={34}
-                  height={34}
-                  className={styles.creatorImage}
-                  onError={() => setUserImageError(true)}
-                />
-              ) : (
-                <div className={styles.creatorInitials}>
-                  {getInitials(topic.fullNameText || topic.usernameText)}
-                </div>
-              )}
-            </div>
+          {/* Join Button */}
+          <button
+            className={styles.joinButton}
+            onClick={onClick}
+          >
+            {t('joinText')}
+          </button>
+        </div>
+      </div>
 
-            <div className={styles.creatorDetails}>
-              <span className={`${styles.creatorName} ${styles[`creatorName_${theme}`]}`}>
-                {topic.usernameText}
-              </span>
+      {/* QR Code Bottom Sheet */}
+      <BottomViewer
+        id={codeBottomViewerId}
+        isOpen={codeBottomIsOpen}
+        onClose={codeBottomController.close}
+        cancelButton={{
+          position: "right",
+          onClick: codeBottomController.close,
+          view: <DialogCancel />
+        }}
+        layoutProp={{
+          backgroundColor: theme === 'light' ? "#fff" : "#121212",
+          handleColor: "#888",
+          handleWidth: "48px",
+        }}
+        closeThreshold={0.2}
+        zIndex={1000}
+      >
+        <div className={`${styles.dialogContainer} ${styles[`dialogContainer_${theme}`]}`}>
+          <h3 className={`${styles.dialogTitle} ${styles[`dialogTitle_${theme}`]}`}>
+            {t('scan_quiz_code') || 'Scan Quiz Code'}
+          </h3>
+
+          {/* QR Code Display */}
+          <div className={styles.qrContainer}>
+            <QRCodeSVG
+              value={quizCode}
+              size={200}
+              level="H"
+              includeMargin
+              fgColor={theme === 'light' ? '#000000' : '#ffffff'}
+              bgColor={theme === 'light' ? '#ffffff' : '#121212'}
+            />
+          </div>
+
+          {/* Code with Copy Functionality */}
+          <div
+            className={styles.codeCopyContainer}
+            onClick={handleCopyCode}
+            role="button"
+            tabIndex={0}
+          >
+            <div className={styles.codeCopyIcon}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V8l8 5 8-5v10zm-8-7L4 6h16l-8 5z"/>
+              </svg>
+            </div>
+            <span className={styles.codeCopyText}>
+              {quizCode}
+            </span>
+            <div className={styles.copyIcon}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+              </svg>
             </div>
           </div>
         </div>
-      </div>
+      </BottomViewer>
     </div>
   );
 }
