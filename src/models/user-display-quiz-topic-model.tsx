@@ -304,6 +304,26 @@ export class QuizPool {
       question_tracker_count: update.questionTrackerCount ?? this.questionTrackerCount,
     });
   }
+
+  getStreamedUpdate(newPool: QuizPool): QuizPool {
+    const backendData = this.toBackend();
+    return new QuizPool({
+      ...backendData,
+      sort_updated_id: newPool.sortUpdatedId,
+      pools_allow_submission: newPool.poolsAllowSubmission,
+      pools_status: newPool.poolsStatus,
+      pools_job: newPool.poolsJob,
+      pools_duration: newPool.poolsDuration,
+      pools_starting_at: newPool.poolsStartingAt,
+      pools_job_end_at: newPool.poolsJobEndAt,
+      pools_graded_at: newPool.poolsGradedAt,
+      pools_ranked_at: newPool.poolsRankedAt,
+      pools_rewarded_at: newPool.poolsRewardedAt,
+      pools_completed_at: newPool.poolsCompletedAt,
+    });
+  }
+
+
 }
 
 export class UserDisplayQuizTopicModel {

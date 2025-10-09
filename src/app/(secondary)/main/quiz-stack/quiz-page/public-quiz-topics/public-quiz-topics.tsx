@@ -73,7 +73,9 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
       // 🔹 Otherwise, update the pool normally
       const updatedModels = quizModels.map((m) => {
         if (m.quizPool?.poolsId === quizPool.poolsId) {
-          return UserDisplayQuizTopicModel.from(m).copyWith({ quizPool });
+          const topicModel = UserDisplayQuizTopicModel.from(m);
+          const renewedPool = topicModel?.quizPool?.getStreamedUpdate(quizPool);
+          return topicModel.copyWith({ quizPool: renewedPool });
         }
         return m;
       });
@@ -180,7 +182,7 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
         p_user_id: paramatical.usersId,
         p_locale: paramatical.locale,
         p_country: paramatical.country,
-        p_code: paramatical.code,
+        p_gender: paramatical.gender,
         p_age: paramatical.age,
         p_limit_by: limitBy,
         p_type: pType,
@@ -301,19 +303,6 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
 
   if(quizModels.length <= 0) return null;
 
-  function createSubgroups<T>(list: T[], subgroupLength: number): T[][] {
-  const result: T[][] = [];
-  const totalGroups = Math.ceil(list.length / subgroupLength);
-
-  for (let i = 0; i < totalGroups; i++) {
-    const start = i * subgroupLength;
-    const end = Math.min((i + 1) * subgroupLength, list.length);
-    result.push(list.slice(start, end));
-  }
-
-  return result;
-  }
-
 
   const handleTopicClick = (topic: UserDisplayQuizTopicModel) => {
     nav.push('quiz_challenge',{topicsId: topic.topicsId, pType: pType});
@@ -346,17 +335,17 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
 
 interface OpenQuizCardProps {
   topic: UserDisplayQuizTopicModel;
-    getInitials: (text: string) => string;
-    onClick: () => void;
+  getInitials: (text: string) => string;
+  onClick: () => void;
 }
 
-export default function OpenQuizCard({ topic, getInitials, formatDate, onClick  }: OpenQuizCardProps) {
+function OpenQuizCard({ topic, getInitials, onClick  }: OpenQuizCardProps) {
   const { theme } = useTheme();
   const { t } = useLanguage();
   const [remainingTime, setRemainingTime] = useState<number>(0);
   const [imageError, setImageError] = useState(false);
   const timelapseManager = useTimelapseManager();
- const [codeBottomViewerId, codeBottomController, codeBottomIsOpen] = useBottomController();
+  const [codeBottomViewerId, codeBottomController, codeBottomIsOpen] = useBottomController();
 
   const formatQuizPoolStatusTime = useCallback((status: string | null, seconds: number): string => {
     if (!status) return '';
@@ -407,6 +396,18 @@ export default function OpenQuizCard({ topic, getInitials, formatDate, onClick  
     }
   }, [topic.quizPool?.poolsJobEndAt, topic.quizPool?.poolsJob, timelapseManager]);
 
+  const handleCopyCode = async () => {
+    if (!topic.quizPool?.poolsCode) return;
+
+    try {
+      await navigator.clipboard.writeText(topic.quizPool.poolsCode);
+      // Show toast notification (you'll need to implement this)
+      console.log('Copied to clipboard');
+      codeBottomController.close();
+    } catch (err) {
+      console.error('Failed to copy code:', err);
+    }
+  };
 
   const status = topic.quizPool?.poolsJob || '';
   const displayTime = formatQuizPoolStatusTime(status, remainingTime);
@@ -414,7 +415,7 @@ export default function OpenQuizCard({ topic, getInitials, formatDate, onClick  
 
   return (
     <div className={`${styles.quizContainer} ${styles[`quizContainer_${theme}`]}`}>
-      <div className={styles.card}>
+      <div className={styles.topicCard}>
         {/* Main Image with Overlay */}
         <div className={styles.imageContainer}>
           {topic.topicsImageUrl && !imageError ? (
@@ -432,7 +433,6 @@ export default function OpenQuizCard({ topic, getInitials, formatDate, onClick  
           )}
 
           {/* Gradient Overlays */}
-          <div className={styles.gradientOverlay} />
           <div className={styles.bottomGradient} />
 
           {/* Content Overlay */}
@@ -476,7 +476,7 @@ export default function OpenQuizCard({ topic, getInitials, formatDate, onClick  
             className={styles.joinButton}
             onClick={onClick}
           >
-            {t('joinText')}
+            {t('join_text')}
           </button>
         </div>
       </div>
@@ -531,10 +531,12 @@ export default function OpenQuizCard({ topic, getInitials, formatDate, onClick  
             <span className={styles.codeCopyText}>
               {quizCode}
             </span>
-            <div className={styles.copyIcon}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
-              </svg>
+            <div className={styles.copyContainer}>
+              <div className={styles.copyIcon}>
+               <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                 <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+               </svg>
+              </div>
             </div>
           </div>
         </div>

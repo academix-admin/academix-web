@@ -45,10 +45,14 @@
 }
 
 
-.card {
+.topicCard {
   border-radius: 16px;
   overflow: hidden;
   background: transparent;
+  flex: 0 0 auto;
+  width: 350px;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 /* Image Container */
@@ -59,9 +63,6 @@
   padding-bottom: 60%; /* Aspect ratio */
   border-radius: 16px;
   overflow: hidden;
-  box-shadow:
-    0 4px 8px rgba(0, 0, 0, 0.25),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .image {
@@ -74,31 +75,20 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.1);
+  background: #214421;
   color: white;
   font-size: 2rem;
   font-weight: bold;
 }
 
 /* Gradient Overlays */
-.gradientOverlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    to bottom,
-    transparent 0%,
-    rgba(0, 0, 0, 0.7) 50%,
-    black 100%
-  );
-  pointer-events: none;
-}
 
 .bottomGradient {
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
-  height: 20%;
+  height: 25%;
   background: linear-gradient(
     to top,
     black 0%,
@@ -114,7 +104,7 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 12px;
+  padding: 0px;
 }
 
 .statusBadge {
@@ -122,15 +112,15 @@
   background: #4CAF50;
   color: white;
   padding: 8px 16px;
-  border-radius: 0 16px 16px 0;
+  border-radius: 0 0px 16px 0;
   font-size: 12px;
   font-weight: 500;
-  margin-left: -12px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .textContent {
   margin-bottom: 12px;
+  padding-left: 12px;
 }
 
 .challengeIdentity {
@@ -239,9 +229,9 @@
 /* Dialog/Bottom Sheet Styles */
 .dialogContainer {
   padding: 16px;
-  height: 80vh;
   display: flex;
   flex-direction: column;
+  padding-bottom: 40vh;
 }
 
 .dialogContainer_light {
@@ -338,8 +328,13 @@
   align-items: center;
 }
 
-.codeCopyText {
+.copyContainer {
   flex: 1;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.codeCopyText {
   color: white;
   font-size: 16px;
   font-weight: bold;
@@ -363,7 +358,7 @@
   }
 
   .topicCard {
-    width: 400px;
+    width: 500px;
   }
 
 }
@@ -385,7 +380,7 @@
     }
 
   .topicCard {
-    width: 80vw;
+    width: 85vw;
     padding: 10px 10px 10px 0px;
   }
 

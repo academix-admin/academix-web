@@ -85,6 +85,27 @@ export default function QuizChallenge(props: QuizChallengeProps) {
     }
   }, [quizModels, topicsId, isHydrated, isTop]);
 
+
+  useEffect(() => {
+      setSelectedChallengeModel(null);
+      setSelectedRule(false);
+      setSelectedPayout(false);
+      setSelectedRedeemCodeModel(null);
+      setSelectedSkip(false);
+  }, [selectedGameModeModel]);
+
+  useEffect(() => {
+      if(selectedRule)return;
+      setSelectedRedeemCodeModel(null);
+      setSelectedSkip(false);
+  }, [selectedRule]);
+
+  useEffect(() => {
+      if(selectedPayout)return;
+      setSelectedRedeemCodeModel(null);
+      setSelectedSkip(false);
+  }, [selectedPayout]);
+
   // Function to engage quiz API call
   const engageQuiz = async (jwt: string, data: any): Promise<EngageQuizResponse> => {
     const proxyUrl = '/api/engage';
