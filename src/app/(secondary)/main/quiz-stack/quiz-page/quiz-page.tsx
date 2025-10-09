@@ -13,6 +13,7 @@ import { useNav } from "@/lib/NavigationStack";
 import { useComponentState, ComponentStateProps, getComponentStatus } from '@/hooks/use-component-state';
 import QuizPageTitle from "./quiz-page-title/quiz-page-title";
 import AvailableQuizTopics from "./available-quiz-topics/available-quiz-topics";
+import PublicQuizTopics from "./public-quiz-topics/public-quiz-topics";
 
 
 export default function QuizPage() {
@@ -42,6 +43,12 @@ export default function QuizPage() {
       <QuizPageTitle onStateChange={(state) => handleStateChange('quizPageTitle', state)} />
 
 
+
+      <PublicQuizTopics onStateChange={(state) => handleStateChange('creatorPublicQuizTopics', state)} pType={'creator'} />
+
+      <PublicQuizTopics onStateChange={(state) => handleStateChange('personalizedPublicQuizTopics', state)} pType={'personalized'} />
+
+      <PublicQuizTopics onStateChange={(state) => handleStateChange('publicPublicQuizTopics', state)} pType={'public'} />
 
       <AvailableQuizTopics onStateChange={(state) => handleStateChange('creatorAvailableQuizTopics', state)} pType={'creator'} />
 

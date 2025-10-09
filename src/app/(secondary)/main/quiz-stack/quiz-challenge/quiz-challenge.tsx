@@ -36,6 +36,7 @@ import { BackendTransactionModel } from '@/models/transaction-model';
 import { useTransactionModel } from '@/lib/stacks/transactions-stack';
 import { BottomViewer, useBottomController } from "@/lib/BottomViewer";
 import { useUserBalance } from '@/lib/stacks/user-balance-stack';
+import { poolsSubscriptionManager } from '@/lib/managers/PoolsQuizTopicSubscriptionManager';
 
 interface QuizChallengeProps {
   topicsId: string;
@@ -171,8 +172,16 @@ export default function QuizChallenge(props: QuizChallengeProps) {
         const transaction = new TransactionModel(engagement.transaction_details);
 
         if(engagement.transaction_details) setTransactionModels([transaction,...transactionModels]);
+        const poolsId = quizModel?.quizPool?.poolsId;
+        // Add specific pools to monitor
+        if(poolsId)poolsSubscriptionManager.addQuizTopicPool({
+          poolsId: poolsId,
+          poolsSubscriptionType: 'active'
+        });
+
+
         await nav.pushAndPopUntil('quiz_commitment', (entry) => entry.key === 'quiz_page', {
-          poolsId: quizModel?.quizPool?.poolsId,
+          poolsId: poolsId,
           action: 'active'
         });
       }

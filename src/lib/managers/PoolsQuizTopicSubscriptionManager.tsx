@@ -5,16 +5,25 @@ import { QuizPool } from '@/models/user-display-quiz-topic-model';
 
 export interface PoolSubscriptionModel {
   poolsId: string;
-  poolsSubscriptionType: 'creator' | 'active' | 'personalized' | 'public' | 'code';
+  poolsSubscriptionType: 'creator' | 'active' | 'personalized' | 'public' | 'code' | string;
 }
+
+export interface PoolChangeEvent {
+  eventType: 'INSERT' | 'UPDATE' | 'DELETE';
+  newRecord: QuizPool | null;
+  oldRecordId?: string;
+}
+
+export type PoolChangeListener = (event: PoolChangeEvent) => void;
 
 class PoolsQuizTopicSubscriptionManager {
   private static instance: PoolsQuizTopicSubscriptionManager;
-  private activePoolsSubscriptions: Map<string, 'creator' | 'active' | 'personalized' | 'public' | 'code'> = new Map();
+  private activePoolsSubscriptions: Map<string, 'creator' | 'active' | 'personalized' | 'public' | 'code' | string> = new Map();
   private realtimeChannel: RealtimeChannel | null = null;
+  private listeners: Set<PoolChangeListener> = new Set();
 
   private get channel(): string {
-    return `public:Pools_table`;
+    return `public:pools_table`;
   }
 
   private constructor() {}
@@ -27,12 +36,28 @@ class PoolsQuizTopicSubscriptionManager {
     return PoolsQuizTopicSubscriptionManager.instance;
   }
 
+  // Add event listener
+  public attachListener(listener: PoolChangeListener): void {
+    this.listeners.add(listener);
+  }
+
+  // Remove event listener
+  public removeListener(listener: PoolChangeListener): void {
+    this.listeners.delete(listener);
+  }
+
+  // Remove all listeners
+  public removeAllListeners(): void {
+    this.listeners.clear();
+  }
+
   // Updates the subscription based on active pool IDs
   public updateSubscription(): void {
     this.cancelSubscription({ clear: false });
 
     if (this.activePoolsSubscriptions.size > 0) {
       const poolIds = Array.from(this.activePoolsSubscriptions.keys());
+      console.log('Subscribing to pool IDs:', poolIds);
 
       this.realtimeChannel = supabaseBrowser
         .channel(this.channel)
@@ -41,8 +66,8 @@ class PoolsQuizTopicSubscriptionManager {
           {
             event: '*',
             schema: 'public',
-            table: 'Pools_table',
-            filter: `id=in.(${poolIds.join(',')})`
+            table: 'pools_table',
+            filter: `pools_id=in.(${poolIds.join(',')})`
           },
           (payload: RealtimePostgresChangesPayload<BackendQuizPool>) => {
             const newRecord = payload.new
@@ -60,6 +85,8 @@ class PoolsQuizTopicSubscriptionManager {
             this.handleQuizTopicError(error);
           }
         });
+
+      console.log('Realtime channel status:', this.realtimeChannel);
     }
   }
 
@@ -68,6 +95,9 @@ class PoolsQuizTopicSubscriptionManager {
     poolSubscriptionModel: PoolSubscriptionModel,
     options: { override?: boolean; update?: boolean } = {}
   ): boolean {
+    const poolIds = Array.from(this.activePoolsSubscriptions.keys());
+    console.log('Current pool IDs:', poolIds);
+
     const { override = false, update = true } = options;
     const existingSubscription = this.activePoolsSubscriptions.get(poolSubscriptionModel.poolsId);
 
@@ -123,21 +153,31 @@ class PoolsQuizTopicSubscriptionManager {
     oldRecordId?: string
   ): void {
     console.log('Quiz topic data received:', { eventType, newRecord, oldRecordId });
-    
-    // Emit custom events or call callbacks that components can listen to
-    this.emitChangeEvent(eventType, newRecord, oldRecordId);
+
+    // Notify all listeners
+    this.notifyListeners(eventType, newRecord, oldRecordId);
+
+    // Clean up subscription if record was deleted
+    if (eventType === 'DELETE' && oldRecordId) {
+      this.activePoolsSubscriptions.delete(oldRecordId);
+    }
   }
 
-  // Emit custom events for components to listen to
-  private emitChangeEvent(
+  // Notify all registered listeners
+  private notifyListeners(
     eventType: 'INSERT' | 'UPDATE' | 'DELETE',
-    newRecord: any | null,
+    newRecord: QuizPool | null,
     oldRecordId?: string
   ): void {
-    const event = new CustomEvent('poolDataChanged', {
-      detail: { eventType, newRecord, oldRecordId }
+    const event: PoolChangeEvent = { eventType, newRecord, oldRecordId };
+
+    this.listeners.forEach(listener => {
+      try {
+        listener(event);
+      } catch (error) {
+        console.error('Error in pool change listener:', error);
+      }
     });
-    window.dispatchEvent(event);
   }
 
   // Handle quiz topic error
@@ -146,13 +186,24 @@ class PoolsQuizTopicSubscriptionManager {
   }
 
   // Utility method to get current subscriptions
-  public getActiveSubscriptions(): Map<string, 'creator' | 'active' | 'personalized' | 'public' | 'code'> {
+  public getActiveSubscriptions(): Map<string, 'creator' | 'active' | 'personalized' | 'public' | 'code' | string> {
     return new Map(this.activePoolsSubscriptions);
+  }
+
+  // Check if a specific pool is being subscribed to
+  public hasPoolSubscription(poolsId: string): boolean {
+    return this.activePoolsSubscriptions.has(poolsId);
+  }
+
+  // Get subscription type for a specific pool
+  public getPoolSubscriptionType(poolsId: string): 'creator' | 'active' | 'personalized' | 'public' | 'code' | undefined | string {
+    return this.activePoolsSubscriptions.get(poolsId);
   }
 
   // Clean up method
   public destroy(): void {
     this.cancelSubscription();
+    this.removeAllListeners();
   }
 }
 

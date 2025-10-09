@@ -93,6 +93,14 @@ export class GameModeModel {
       game_mode_checker: this.gameModeChecker,
     };
   }
+
+  copyWith(update: Partial<GameModeModel>): GameModeModel {
+    return new GameModeModel({
+      game_mode_id: update.gameModeId ?? this.gameModeId,
+      game_mode_identity: update.gameModeIdentity ?? this.gameModeIdentity,
+      game_mode_checker: update.gameModeChecker ?? this.gameModeChecker,
+    });
+  }
 }
 
 export class ChallengeModel {
@@ -159,6 +167,25 @@ export class ChallengeModel {
       challenge_question_count: this.challengeQuestionCount,
       game_mode_details: this.gameModeModel?.toBackend() ?? null,
     };
+  }
+
+  copyWith(update: Partial<ChallengeModel>): ChallengeModel {
+    return new ChallengeModel({
+      challenge_id: update.challengeId ?? this.challengeId,
+      challenge_development_charge: update.challengeDevelopmentCharge ?? this.challengeDevelopmentCharge,
+      challenge_price: update.challengePrice ?? this.challengePrice,
+      challenge_top_share: update.challengeTopShare ?? this.challengeTopShare,
+      challenge_mid_share: update.challengeMidShare ?? this.challengeMidShare,
+      challenge_bot_share: update.challengeBotShare ?? this.challengeBotShare,
+      challenge_waiting_time: update.challengeWaitingTime ?? this.challengeWaitingTime,
+      challenge_min_participants: update.challengeMinParticipant ?? this.challengeMinParticipant,
+      challenge_max_participants: update.challengeMaxParticipant ?? this.challengeMaxParticipant,
+      challenge_identity: update.challengeIdentity ?? this.challengeIdentity,
+      challenge_question_count: update.challengeQuestionCount ?? this.challengeQuestionCount,
+      game_mode_details: update.gameModeModel
+        ? update.gameModeModel.toBackend()
+        : this.gameModeModel?.toBackend() ?? null,
+    });
   }
 }
 
@@ -253,6 +280,30 @@ export class QuizPool {
       question_tracker_count: this.questionTrackerCount,
     };
   }
+
+  copyWith(update: Partial<QuizPool>): QuizPool {
+    return new QuizPool({
+      sort_created_id: update.sortCreatedId ?? this.sortCreatedId,
+      sort_updated_id: update.sortUpdatedId ?? this.sortUpdatedId,
+      pools_id: update.poolsId ?? this.poolsId,
+      pools_visible: update.poolsVisible ?? this.poolsVisible,
+      pools_allow_submission: update.poolsAllowSubmission ?? this.poolsAllowSubmission,
+      pools_status: update.poolsStatus ?? this.poolsStatus,
+      pools_auth: update.poolsAuth ?? this.poolsAuth,
+      pools_code: update.poolsCode ?? this.poolsCode,
+      pools_job: update.poolsJob ?? this.poolsJob,
+      pools_duration: update.poolsDuration ?? this.poolsDuration,
+      challenge_details: (update.challengeModel ?? this.challengeModel)?.toBackend() ?? null,
+      pools_starting_at: update.poolsStartingAt ?? this.poolsStartingAt,
+      pools_job_end_at: update.poolsJobEndAt ?? this.poolsJobEndAt,
+      pools_graded_at: update.poolsGradedAt ?? this.poolsGradedAt,
+      pools_ranked_at: update.poolsRankedAt ?? this.poolsRankedAt,
+      pools_rewarded_at: update.poolsRewardedAt ?? this.poolsRewardedAt,
+      pools_completed_at: update.poolsCompletedAt ?? this.poolsCompletedAt,
+      pools_members_count: update.poolsMembersCount ?? this.poolsMembersCount,
+      question_tracker_count: update.questionTrackerCount ?? this.questionTrackerCount,
+    });
+  }
 }
 
 export class UserDisplayQuizTopicModel {
@@ -329,5 +380,26 @@ export class UserDisplayQuizTopicModel {
       pools_details: this.quizPool?.toBackend() ?? null,
       topics_sponsorship: this.topicsSponsorship ?? "",
     };
+  }
+
+  copyWith(update: Partial<UserDisplayQuizTopicModel>): UserDisplayQuizTopicModel {
+    return new UserDisplayQuizTopicModel({
+      sort_created_id: update.sortCreatedId ?? this.sortCreatedId,
+      sort_updated_id: update.sortUpdatedId ?? this.sortUpdatedId,
+      topics_id: update.topicsId ?? this.topicsId,
+      topics_identity: update.topicsIdentity ?? this.topicsIdentity,
+      topics_created_at: update.topicsCreatedAt ?? this.topicsCreatedAt,
+      topics_updated_at: update.topicsUpdatedAt ?? this.topicsUpdatedAt,
+      topics_image: update.topicsImageUrl ?? this.topicsImageUrl,
+      topics_description: update.topicsDescription ?? this.topicsDescription,
+      creator_details: {
+        users_id: update.creatorId ?? this.creatorId,
+        users_image: update.userImageUrl ?? this.userImageUrl,
+        users_names: update.fullNameText ?? this.fullNameText,
+        users_username: update.usernameText ?? this.usernameText,
+      },
+      pools_details: (update.quizPool ?? this.quizPool)?.toBackend() ?? null,
+      topics_sponsorship: update.topicsSponsorship ?? this.topicsSponsorship,
+    });
   }
 }
