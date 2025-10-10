@@ -35,6 +35,7 @@ export class TimelapseManager {
   }
 
   setupLapse(startTime: Date, endTime: Date, timelapseType: TimelapseType): void {
+
     if (this.isInitialized) return;
 
     if (startTime > endTime) {
@@ -70,6 +71,7 @@ export class TimelapseManager {
     if (!this.isInitialized) {
       throw new Error("Must call setupLapse() before starting");
     }
+
     if (this.isRunning) return;
 
     const periodDuration = this.getUpdateInterval(this.timelapseType);
@@ -211,6 +213,7 @@ export function useTimelapseManager(config?: TimelapseManagerConfig) {
     managerRef.current = new TimelapseManager(config);
     return () => {
       managerRef.current?.dispose();
+      managerRef.current = null;
     };
   }, [config]);
 

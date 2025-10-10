@@ -41,7 +41,6 @@
 .row {
   display: flex;
   gap: 16px;
-  width: max-content;
 }
 
 
@@ -53,6 +52,11 @@
   width: 350px;
   cursor: pointer;
   transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.expanded{
+ width: 100%;
 }
 
 /* Image Container */
@@ -88,7 +92,7 @@
   bottom: 0;
   left: 0;
   right: 0;
-  height: 25%;
+  height: 50%;
   background: linear-gradient(
     to top,
     black 0%,
@@ -109,10 +113,10 @@
 
 .statusBadge {
   align-self: flex-start;
-  background: #4CAF50;
+  background: black;
   color: white;
   padding: 8px 16px;
-  border-radius: 0 0px 16px 0;
+  border-radius: 0 0px 8px 0;
   font-size: 12px;
   font-weight: 500;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
@@ -361,6 +365,9 @@
     width: 500px;
   }
 
+  .expanded{
+   width: 100%;
+  }
 }
 
 /* Mobile Responsive */
@@ -381,7 +388,10 @@
 
   .topicCard {
     width: 85vw;
-    padding: 10px 10px 10px 0px;
+  }
+
+  .expanded{
+   width: 100%;
   }
 
   .imageContainer {

@@ -38,7 +38,8 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
   const { userData, userData$ } = useUserData();
   const loaderRef = useRef<HTMLDivElement | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isMountedRef = useRef(true);
 
   const [paginateModel, setPaginateModel] = useState<PaginateModel>(new PaginateModel());
   const [firstLoaded, setFirstLoaded] = useState(false);
@@ -194,7 +195,6 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
         console.error("[UserDisplayQuizTopicModel] error:", error);
         return [];
       }
-      console.log((data || []).map((row: BackendUserDisplayQuizTopicModel) => new UserDisplayQuizTopicModel(row)));
       return (data || []).map((row: BackendUserDisplayQuizTopicModel) => new UserDisplayQuizTopicModel(row));
     } catch (err) {
       console.error("[UserDisplayQuizTopicModel] error:", err);
@@ -234,6 +234,8 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
       set(quizzesModel);
       setFirstLoaded(false);
       onStateChange?.('data');
+      // Start the first call
+      refreshData();
     });
   }, [demandUserDisplayQuizTopicModel]);
 
@@ -248,16 +250,38 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
       processUserDisplayQuizTopicModelPaginate(quizzesModel);
     }
   };
+
   const refreshData = async () => {
-    if (!userData || quizModels.length > 0) return;
-    setQuizLoading(true);
-    const quizzesModel = await fetchUserDisplayQuizTopicModel(userData, 10, paginateModel);
-    setQuizLoading(false);
-    if (quizzesModel.length > 0) {
-      extractLatest(quizzesModel);
-      setUserDisplayQuizTopicModel(quizzesModel);
+    if (!userData) return;
+    try {
+        const quizzesModel = await fetchUserDisplayQuizTopicModel(userData, 10, paginateModel);
+        if (quizzesModel.length > 0) {
+          extractLatest(quizzesModel);
+          setUserDisplayQuizTopicModel(quizzesModel);
+        }
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    } finally {
+      // Schedule next call only if component is still mounted
+      if (isMountedRef.current) {
+        timeoutRef.current = setTimeout(() => {
+          refreshData();
+        }, 10000);
+      }
     }
+
   };
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    // Cleanup function
+    return () => {
+      isMountedRef.current = false;
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
 
   const getTitle = (type: string | null): string => {
       switch (type) {
@@ -305,9 +329,8 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
 
 
   const handleTopicClick = (topic: UserDisplayQuizTopicModel) => {
-    nav.push('quiz_challenge',{topicsId: topic.topicsId, pType: pType});
+    nav.push('quiz_commitment',{poolsId: topic?.quizPool?.poolsId, action: pType});
   };
-
 
   return (
     <div className={styles.container}>
@@ -321,6 +344,7 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
                   <OpenQuizCard
                     key={topic.topicsId}
                     topic={topic}
+                    length={quizModels.length}
                     getInitials={getInitials}
                     onClick={()=> handleTopicClick(topic)}
                   />
@@ -335,11 +359,12 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
 
 interface OpenQuizCardProps {
   topic: UserDisplayQuizTopicModel;
+  length: number;
   getInitials: (text: string) => string;
   onClick: () => void;
 }
 
-function OpenQuizCard({ topic, getInitials, onClick  }: OpenQuizCardProps) {
+function OpenQuizCard({ topic, length, getInitials, onClick  }: OpenQuizCardProps) {
   const { theme } = useTheme();
   const { t } = useLanguage();
   const [remainingTime, setRemainingTime] = useState<number>(0);
@@ -347,12 +372,18 @@ function OpenQuizCard({ topic, getInitials, onClick  }: OpenQuizCardProps) {
   const timelapseManager = useTimelapseManager();
   const [codeBottomViewerId, codeBottomController, codeBottomIsOpen] = useBottomController();
 
+  // Track previous values to detect changes
+  const previousJobRef = useRef<string | null>(null);
+  const previousEndAtRef = useRef<string | null>(null);
+
   const formatQuizPoolStatusTime = useCallback((status: string | null, seconds: number): string => {
-    if (!status) return '';
+    if (!status) return t('open_quiz');
 
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
+
+   if(secs <= 0)return t('open_quiz');
 
     const timeString = hours > 0
       ? `${hours}h ${minutes}m`
@@ -361,16 +392,24 @@ function OpenQuizCard({ topic, getInitials, onClick  }: OpenQuizCardProps) {
       : `${secs}s`;
 
     switch (status) {
-      case 'PoolJob.pool_starting':
-        return `Starts in ${timeString}`;
-      case 'PoolJob.pool_ended':
-        return 'Quiz ended';
+      case 'PoolJob.waiting':
+        return `${t('waiting_time')} | ${timeString}`;
+      case 'PoolJob.extended_waiting':
+        return `${t('extended_time')} | ${timeString}`;
+      case 'PoolJob.pool_period':
+        return `${t('pool_time')} | ${timeString}`;
+      case 'PoolJob.start_pool':
+        return `${t('starting_time')} | ${timeString}`;
       case 'PoolJob.cancelled':
         return 'Quiz cancelled';
       default:
-        return `Ends in ${timeString}`;
+        return t('open_quiz');
     }
   }, []);
+
+  const handleTimeUpdate = (remaining: number) => {
+     setRemainingTime(Math.floor(remaining / 1000)); // Convert to seconds
+  };
 
   useEffect(() => {
     if (!timelapseManager.current || !topic.quizPool?.poolsJobEndAt) return;
@@ -379,14 +418,19 @@ function OpenQuizCard({ topic, getInitials, onClick  }: OpenQuizCardProps) {
     const startTime = new Date();
 
     try {
-      timelapseManager.current.setupLapse(startTime, endTime, TimelapseType.second);
 
-      const handleTimeUpdate = (remaining: number) => {
-        setRemainingTime(Math.floor(remaining / 1000)); // Convert to seconds
-      };
-
-      timelapseManager.current.addListener(handleTimeUpdate);
-      timelapseManager.current.start();
+      if (timelapseManager.current.isTimerInitialized) {
+        // Reset existing timer with new parameters
+        timelapseManager.current.reset();
+        timelapseManager.current.setupLapse(startTime, endTime, TimelapseType.second);
+        timelapseManager.current.addListener(handleTimeUpdate);
+        timelapseManager.current.start();
+      } else {
+        // Initialize new timer
+        timelapseManager.current.setupLapse(startTime, endTime, TimelapseType.second);
+        timelapseManager.current.addListener(handleTimeUpdate);
+        timelapseManager.current.start();
+      }
 
       return () => {
         timelapseManager.current?.removeListener(handleTimeUpdate);
@@ -414,8 +458,8 @@ function OpenQuizCard({ topic, getInitials, onClick  }: OpenQuizCardProps) {
   const quizCode = topic.quizPool?.poolsCode || '';
 
   return (
-    <div className={`${styles.quizContainer} ${styles[`quizContainer_${theme}`]}`}>
-      <div className={styles.topicCard}>
+    <div className={`${styles.quizContainer} ${styles[`quizContainer_${theme}`]} ${length > 1 ?  '' : styles.expanded}`}>
+      <div className={`${styles.topicCard} ${length > 1 ?  '' : styles.expanded}`}>
         {/* Main Image with Overlay */}
         <div className={styles.imageContainer}>
           {topic.topicsImageUrl && !imageError ? (
