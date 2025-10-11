@@ -234,7 +234,6 @@ export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) 
   const handleTopicClick = (topic: UserDisplayQuizTopicModel) => {
     nav.push('quiz_commitment',{poolsId: activeQuiz?.quizPool?.poolsId, action: 'action'});
   };
-
   return (
     <div className={styles.container}>
             {activeQuiz &&

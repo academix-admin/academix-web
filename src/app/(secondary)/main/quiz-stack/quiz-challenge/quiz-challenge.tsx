@@ -37,6 +37,7 @@ import { useTransactionModel } from '@/lib/stacks/transactions-stack';
 import { BottomViewer, useBottomController } from "@/lib/BottomViewer";
 import { useUserBalance } from '@/lib/stacks/user-balance-stack';
 import { poolsSubscriptionManager } from '@/lib/managers/PoolsQuizTopicSubscriptionManager';
+import { useActiveQuiz } from "@/lib/stacks/active-quiz-stack";
 
 interface QuizChallengeProps {
   topicsId: string;
@@ -73,6 +74,8 @@ export default function QuizChallenge(props: QuizChallengeProps) {
   const [error, setError] = useState('');
 
   const [withdrawBottomViewerId, withdrawBottomController, withdrawBottomIsOpen] = useBottomController();
+
+  const [activeQuiz, , setActiveQuizTopicModel] = useActiveQuiz(lang);
 
   useEffect(() => {
     if(!isHydrated) return;
@@ -200,7 +203,7 @@ export default function QuizChallenge(props: QuizChallengeProps) {
           poolsSubscriptionType: 'active'
         });
 
-
+        setActiveQuizTopicModel(quizModel);
         await nav.pushAndPopUntil('quiz_commitment', (entry) => entry.key === 'quiz_page', {
           poolsId: poolsId,
           action: 'active'
