@@ -36,6 +36,7 @@ import { BackendTransactionModel } from '@/models/transaction-model';
 import { useTransactionModel } from '@/lib/stacks/transactions-stack';
 import { BottomViewer, useBottomController } from "@/lib/BottomViewer";
 import { useUserBalance } from '@/lib/stacks/user-balance-stack';
+import { useActiveQuiz } from "@/lib/stacks/active-quiz-stack";
 
 interface QuizChallengeProps {
   poolsId: string;
@@ -61,7 +62,7 @@ export default function QuizCommitment(props: QuizChallengeProps) {
   const [transactionModels, demandTransactionModels, setTransactionModels] = useTransactionModel(lang);
 
   const [currentQuiz, setCurrentQuiz] = useState<UserDisplayQuizTopicModel | null>(null);
-  const [quizModels,,, { isHydrated }] = useAvailableQuiz(lang, action);
+  const [quizModels,,, { isHydrated }] = useAvailableQuiz(lang, action === 'active' ? 'public' : action);
   const [selectedGameModeModel, setSelectedGameModeModel] = useState<GameModeModel | null>(null);
   const [selectedChallengeModel, setSelectedChallengeModel] = useState<ChallengeModel | null>(null);
   const [selectedRule, setSelectedRule] = useState(false);
@@ -73,9 +74,11 @@ export default function QuizCommitment(props: QuizChallengeProps) {
 
   const [withdrawBottomViewerId, withdrawBottomController, withdrawBottomIsOpen] = useBottomController();
 
+  const [activeQuiz, , setActiveQuizTopicModel] = useActiveQuiz(lang);
+
   useEffect(() => {
     if(!isHydrated) return;
-    const getQuiz = quizModels.find((e) => e.topicsId === poolsId);
+    const getQuiz = action === 'active' ? activeQuiz : quizModels.find((e) => e.topicsId === poolsId);
 
     if (getQuiz) {
       setCurrentQuiz(getQuiz);
@@ -170,6 +173,7 @@ export default function QuizCommitment(props: QuizChallengeProps) {
         const transaction = new TransactionModel(engagement.transaction_details);
 
         if(engagement.transaction_details) setTransactionModels([transaction,...transactionModels]);
+        setActiveQuizTopicModel(quizModel);
         await nav.pushAndPopUntil('quiz_commitment', (entry) => entry.key === 'quiz_page', {
           poolsId: quizModel?.quizPool?.poolsId,
           action: 'active'

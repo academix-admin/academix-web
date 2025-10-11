@@ -1,7 +1,7 @@
 import { useDemandState } from '../state-stack';
 import { UserDisplayQuizTopicModel } from '@/models/user-display-quiz-topic-model';
 
-export const useAvailableQuiz = (lang: string) => {
+export const useActiveQuiz = (lang: string) => {
   return useDemandState<UserDisplayQuizTopicModel | null>(
              null,
              {

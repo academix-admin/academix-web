@@ -1,0 +1,405 @@
+.container {
+ box-sizing: border-box;
+    margin: 0 28px;
+}
+
+.title {
+  font-size: 18px;
+  font-weight: bold;
+  margin: 0 0 20px 0;
+  padding: 0 28px;
+}
+
+.title_light {
+  color: #000;
+}
+
+.title_dark {
+  color: #fff;
+}
+
+
+.topicCard {
+  border-radius: 16px;
+  overflow: hidden;
+  background: transparent;
+  flex: 0 0 auto;
+  width: 100%;
+   box-sizing:border-box;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+/* Image Container */
+.imageContainer {
+  position: relative;
+  width: 100%;
+  height: 0;
+  padding-bottom: 60%; /* Aspect ratio */
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.image {
+  object-fit: cover;
+}
+
+.imageFallback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #214421;
+  color: white;
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+/* Gradient Overlays */
+
+.bottomGradient {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  background: linear-gradient(
+    to top,
+    black 0%,
+    rgba(0, 0, 0, 0.1) 100%
+  );
+  pointer-events: none;
+}
+
+/* Content Overlay */
+.contentOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 0px;
+}
+
+.statusBadge {
+  align-self: flex-start;
+  background: black;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 0 0px 8px 0;
+  font-size: 12px;
+  font-weight: 500;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.textContent {
+  margin-bottom: 12px;
+  padding-left: 12px;
+}
+
+.challengeIdentity {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 11px;
+  margin-bottom: 4px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.topicTitle {
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  margin: 0;
+  line-height: 1.2;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Bottom Section */
+.bottomSection {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+  gap: 12px;
+}
+
+.codeContainer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  cursor: pointer;
+  padding: 4px 0;
+  transition: opacity 0.2s;
+}
+
+.codeContainer:hover {
+  opacity: 0.8;
+}
+
+.codeIcon {
+  color: #666;
+  display: flex;
+  align-items: center;
+}
+
+.codeText {
+  font-size: 16px;
+  font-weight: bold;
+  color: #333;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.container_dark .codeText {
+  color: #fff;
+}
+
+.joinButton {
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 16px;
+  padding: 6px 16px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  white-space: nowrap;
+}
+
+.joinButton:hover {
+  background: #5a6fd8;
+}
+
+.joinButton:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.quizContainer {
+  width: 100%;
+}
+
+
+/* Theme Variations */
+.quizContainer_light .codeIcon {
+  color: #666;
+}
+
+.quizContainer_dark .codeIcon {
+  color: #ccc;
+}
+
+.quizContainer_light .codeText {
+  color: #333;
+}
+
+.quizContainer_dark .codeText {
+  color: #fff;
+}
+
+/* Dialog/Bottom Sheet Styles */
+.dialogContainer {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 40vh;
+}
+
+.dialogContainer_light {
+  background: #fff;
+}
+
+.dialogContainer_dark {
+  background: #121212;
+}
+
+.dialogTitle {
+  font-size: 18px;
+  font-weight: bold;
+  margin: 0 0 20px 0;
+  padding: 0;
+}
+
+.dialogTitle_light {
+  color: #333;
+}
+
+.dialogTitle_dark {
+  color: #fff;
+}
+
+.dialogCancel {
+  padding: 8px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.dialogCancel_light {
+  color: #666;
+}
+
+.dialogCancel_dark {
+  color: #ccc;
+}
+
+.dialogCancel:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+/* QR Code Container */
+.qrContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex: 1;
+  margin: 20px 0;
+}
+
+.qrPlaceholder {
+  width: 200px;
+  height: 200px;
+  background: #f5f5f5;
+  border: 2px dashed #ccc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  font-size: 14px;
+  text-align: center;
+  border-radius: 8px;
+}
+
+.dialogContainer_dark .qrPlaceholder {
+  background: #2a2a2a;
+  border-color: #444;
+  color: #ccc;
+}
+
+/* Code Copy Container */
+.codeCopyContainer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 12px;
+  background: #667eea;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin-top: 20px;
+}
+
+.codeCopyContainer:hover {
+  background: #5a6fd8;
+}
+
+.codeCopyIcon, .copyIcon {
+  color: white;
+  display: flex;
+  align-items: center;
+}
+
+.copyContainer {
+  flex: 1;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.codeCopyText {
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  text-align: center;
+}
+
+/* Tablet Responsive */
+@media screen and (max-width: 800px) {
+
+  .container{
+        margin: 0 24px;
+
+  }
+  .title {
+    font-size: 17px;
+    margin-bottom: 18px;
+    padding: 0 24px;
+  }
+
+
+  .topicCard {
+    width: 100%;
+  }
+
+}
+
+/* Mobile Responsive */
+@media screen and (max-width: 500px) {
+
+  .container{
+        margin: 0 16px;
+
+  }
+  .title {
+    font-size: 16px;
+    margin-bottom: 16px;
+    padding: 0 16px;
+  }
+
+  .topicCard {
+    width: 100%;
+  }
+
+  .imageContainer {
+    border-radius: 12px;
+  }
+
+  .topicTitle {
+    font-size: 14px;
+  }
+
+  .codeText {
+    font-size: 14px;
+  }
+
+  .joinButton {
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+
+  .statusBadge {
+    font-size: 11px;
+    padding: 6px 12px;
+  }
+
+  .dialogContainer {
+    padding: 12px;
+  }
+
+  .dialogTitle {
+    font-size: 16px;
+  }
+
+  .qrPlaceholder {
+    width: 180px;
+    height: 180px;
+    font-size: 12px;
+  }
+
+  .codeCopyContainer {
+    padding: 12px;
+  }
+
+  .codeCopyText {
+    font-size: 14px;
+  }
+
+}

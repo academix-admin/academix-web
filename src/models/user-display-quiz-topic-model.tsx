@@ -148,7 +148,9 @@ export class ChallengeModel {
       challenge_max_participants: data.challengeMaxParticipant,
       challenge_identity: data.challengeIdentity,
       challenge_question_count: data.challengeQuestionCount,
-      game_mode_details: data.gameModeModel?.toBackend(),
+      game_mode_details: data.gameModeModel
+        ? GameModeModel.from(data.gameModeModel).toBackend()
+        : null
     });
   }
 

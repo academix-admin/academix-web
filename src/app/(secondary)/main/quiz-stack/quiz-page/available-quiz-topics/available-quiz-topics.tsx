@@ -18,6 +18,7 @@ import { ComponentStateProps } from '@/hooks/use-component-state';
 import { usePinnedState } from '@/hooks/pinned-state-hook';
 import { useNav } from "@/lib/NavigationStack";
 import { useAvailableQuiz } from "@/lib/stacks/available-quiz-stack";
+import { useActiveQuiz } from "@/lib/stacks/active-quiz-stack";
 
 type AvailableQuizTopicsProps = ComponentStateProps & {
   pType: string;
@@ -30,6 +31,8 @@ export default function AvailableQuizTopics({ onStateChange, pType }: AvailableQ
   const { userData, userData$ } = useUserData();
   const loaderRef = useRef<HTMLDivElement | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isMountedRef = useRef(true);
 
 
   const [paginateModel, setPaginateModel] = useState<PaginateModel>(new PaginateModel());
@@ -39,6 +42,15 @@ export default function AvailableQuizTopics({ onStateChange, pType }: AvailableQ
 
   const [quizModels, demandUserDisplayQuizTopicModel, setUserDisplayQuizTopicModel] = useAvailableQuiz(lang, pType);
 
+  const [activeQuiz, , ] = useActiveQuiz(lang);
+
+  useEffect(() => {
+    if(!activeQuiz)return;
+    const updatedModels = quizModels.filter(
+      (m) => m.topicsId !== activeQuiz.topicsId
+    );
+    setUserDisplayQuizTopicModel(updatedModels);
+  }, [activeQuiz]);
 
   useEffect(() => {
         if (!loaderRef.current) return;
@@ -88,8 +100,6 @@ export default function AvailableQuizTopics({ onStateChange, pType }: AvailableQ
         console.error("[UserDisplayQuizTopicModel] error:", error);
         return [];
       }
-//       console.log(data);
-//       console.log((data || []).map((row: BackendUserDisplayQuizTopicModel) => new UserDisplayQuizTopicModel(row)));
       return (data || []).map((row: BackendUserDisplayQuizTopicModel) => new UserDisplayQuizTopicModel(row));
     } catch (err) {
       console.error("[UserDisplayQuizTopicModel] error:", err);
@@ -129,6 +139,8 @@ export default function AvailableQuizTopics({ onStateChange, pType }: AvailableQ
       set(quizzesModel);
       setFirstLoaded(false);
       onStateChange?.('data');
+      // Start the first call
+      refreshData();
     });
   }, [demandUserDisplayQuizTopicModel]);
 
@@ -144,15 +156,36 @@ export default function AvailableQuizTopics({ onStateChange, pType }: AvailableQ
     }
   };
   const refreshData = async () => {
-    if (!userData || quizModels.length > 0) return;
-    setQuizLoading(true);
-    const quizzesModel = await fetchUserDisplayQuizTopicModel(userData, 10, paginateModel);
-    setQuizLoading(false);
-    if (quizzesModel.length > 0) {
-      extractLatest(quizzesModel);
-      setUserDisplayQuizTopicModel(quizzesModel);
-    }
+    if (!userData) return;
+
+     try {
+         const quizzesModel = await fetchUserDisplayQuizTopicModel(userData, 10, paginateModel);
+         if (quizzesModel.length > 0) {
+           extractLatest(quizzesModel);
+           setUserDisplayQuizTopicModel(quizzesModel);
+         }
+     } catch (error) {
+       console.error('Error fetching data:', error);
+     } finally {
+       // Schedule next call only if component is still mounted
+       if (isMountedRef.current) {
+         timeoutRef.current = setTimeout(() => {
+           refreshData();
+         }, 10000);
+       }
+     }
   };
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    // Cleanup function
+    return () => {
+      isMountedRef.current = false;
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
 
   const getTitle = (type: string | null): string => {
       switch (type) {

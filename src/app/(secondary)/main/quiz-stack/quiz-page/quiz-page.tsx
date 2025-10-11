@@ -14,6 +14,7 @@ import { useComponentState, ComponentStateProps, getComponentStatus } from '@/ho
 import QuizPageTitle from "./quiz-page-title/quiz-page-title";
 import AvailableQuizTopics from "./available-quiz-topics/available-quiz-topics";
 import PublicQuizTopics from "./public-quiz-topics/public-quiz-topics";
+import ActiveQuizTopic from "./active-quiz-topic/active-quiz-topic";
 
 
 export default function QuizPage() {
@@ -43,6 +44,8 @@ export default function QuizPage() {
       <QuizPageTitle onStateChange={(state) => handleStateChange('quizPageTitle', state)} />
 
 
+
+      <ActiveQuizTopic onStateChange={(state) => handleStateChange('creatorPublicQuizTopics', state)} />
 
       <PublicQuizTopics onStateChange={(state) => handleStateChange('creatorPublicQuizTopics', state)} pType={'creator'} />
 
