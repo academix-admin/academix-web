@@ -173,9 +173,7 @@ export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) 
     if (!userData) return;
     try {
         const active = await fetchActiveQuizTopicModel(userData);
-        if (active) {
-          setActiveQuizTopicModel(active);
-        }
+        setActiveQuizTopicModel(active);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
