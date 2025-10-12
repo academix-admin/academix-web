@@ -17,6 +17,26 @@ export class UserBalanceModel {
     this.usersBalanceUpdatedAt = data?.users_balance_updated_at ?? "";
   }
 
+  /** ✅ Convert from any frontend object into a fully initialized UserBalanceModel */
+  static from(data: any): UserBalanceModel {
+    if (data instanceof UserBalanceModel) return data;
+    return new UserBalanceModel({
+      users_id: data.usersId ?? "",
+      users_balance_amount: data.usersBalanceAmount ?? 0,
+      users_balance_updated_at: data.usersBalanceUpdatedAt ?? "",
+    });
+  }
+
+  /** ✅ Convert to backend-friendly format */
+  toBackend(): BackendUserBalanceModel {
+    return {
+      users_id: this.usersId,
+      users_balance_amount: this.usersBalanceAmount,
+      users_balance_updated_at: this.usersBalanceUpdatedAt,
+    };
+  }
+
+  /** ✅ Create a new instance with partial field overrides */
   copyWith(data: Partial<UserBalanceModel>): UserBalanceModel {
     const backendData: BackendUserBalanceModel = {
       users_id: data.usersId ?? this.usersId,

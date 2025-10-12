@@ -12,14 +12,34 @@ import { supabaseBrowser } from '@/lib/supabase/client';
 import { UserBalanceModel } from '@/models/user-balance';
 import { ComponentStateProps } from '@/hooks/use-component-state';
 import { useUserBalance } from '@/lib/stacks//user-balance-stack';
+import { userBalanceSubscriptionManager } from '@/lib/managers/UserBalanceManager';
+import { UserBalanceChangeEvent } from '@/lib/managers/UserBalanceManager';
 
 export default function UserBalance({ onStateChange }: ComponentStateProps) {
   const { theme } = useTheme();
   const { t, lang, tNode } = useLanguage();
   const { userData, userData$ } = useUserData();
-  const [balanceVisible, setBalanceVisible] = useState(false);
+  const [balanceVisible, setBalanceVisible] = useState(true);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isMountedRef = useRef(true);
 
   const [userBalance, demandUserBalance, setUserBalance] = useUserBalance(lang);
+
+  // Subscribe to changes
+  const handleBalanceChange = (event: UserBalanceChangeEvent) => {
+    const { eventType, newRecord: userBalance, oldRecordId: usersId } = event;
+     if (userBalance) {
+       setUserBalance(userBalance);
+    }
+  };
+
+  useEffect(() => {
+    userBalanceSubscriptionManager.attachListener(handleBalanceChange);
+
+    return () => {
+      userBalanceSubscriptionManager.removeListener(handleBalanceChange);
+    };
+  }, [handleBalanceChange]);
 
   useEffect(() => {
     if(!userData)return;
@@ -46,13 +66,63 @@ export default function UserBalance({ onStateChange }: ComponentStateProps) {
 
         if (balance) {
           set(balance);
-            onStateChange?.('data');
+          onStateChange?.('data');
         }
+        userBalanceSubscriptionManager.updateSubscription(userData.usersId);
+        refreshData();
       } catch (err) {
         console.error("[HomeExperience] demand error:", err);
       }
     });
   }, [lang, userData, demandUserBalance]);
+
+  const refreshData = async () => {
+    if (!userData) return;
+    try {
+            const paramatical = await getParamatical(
+              userData.usersId,
+              lang,
+              userData.usersSex,
+              userData.usersDob
+            );
+            if(!paramatical)return;
+            const { data, error } = await supabaseBrowser.rpc("get_user_balance", {
+              p_user_id: paramatical.usersId,
+              p_locale: paramatical.locale,
+              p_country: paramatical.country,
+              p_gender: paramatical.gender,
+              p_age: paramatical.age,
+            });
+
+            if (error || data?.error) throw error || data.error;
+            const balance = new UserBalanceModel(data);
+
+            if (balance) {
+              setUserBalance(balance);
+            }
+          } catch (err) {
+            console.error("[HomeExperience] demand error:", err);
+          } finally {
+      // Schedule next call only if component is still mounted
+      if (isMountedRef.current) {
+        timeoutRef.current = setTimeout(() => {
+          refreshData();
+        }, 30000);
+      }
+    }
+
+  };
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    // Cleanup function
+    return () => {
+      isMountedRef.current = false;
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
 
     useEffect(() => {
         if(userBalance){
