@@ -52,7 +52,6 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
   const handlePoolChange = (event: PoolChangeEvent) => {
     const { eventType, newRecord: quizPool, oldRecordId: poolsId } = event;
     if (!quizModels || quizModels.length === 0) return;
-    console.log(`Quiz received in ${pType}:`, { eventType, quizPool, poolsId });
 
     if (eventType === 'DELETE' && poolsId) {
       // 🔹 Remove deleted pool
@@ -68,6 +67,7 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
           (m) => m.quizPool?.poolsId !== quizPool.poolsId
         );
         setUserDisplayQuizTopicModel(updatedModels);
+        poolsSubscriptionManager.removeQuizTopicPool(quizPool.poolsId);
         return;
       }
 

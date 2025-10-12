@@ -19,6 +19,10 @@ import { ComponentStateProps } from '@/hooks/use-component-state';
 import { usePinnedState } from '@/hooks/pinned-state-hook';
 import { useTransactionModel } from '@/lib/stacks/transactions-stack';
 import { useNav } from "@/lib/NavigationStack";
+import { transactionSubscriptionManager } from '@/lib/managers/TransactionSubscriptionManager';
+import { TransactionChangeEvent } from '@/lib/managers/TransactionSubscriptionManager';
+import { poolsSubscriptionManager } from '@/lib/managers/PoolsQuizTopicSubscriptionManager';
+import { PoolChangeEvent } from '@/lib/managers/PoolsQuizTopicSubscriptionManager';
 
 export default function PaymentTransactions({ onStateChange }: ComponentStateProps) {
   const { theme } = useTheme();
@@ -32,6 +36,96 @@ export default function PaymentTransactions({ onStateChange }: ComponentStatePro
   const [transactionsLoading, setTransactionsLoading] = useState(false);
 
   const [transactionModels, demandTransactionModels, setTransactionModels] = useTransactionModel(lang);
+
+  // Subscribe to changes
+  const handlePoolChange = (event: PoolChangeEvent) => {
+    const { eventType, newRecord: quizPool, oldRecordId: poolsId } = event;
+    if (eventType === 'DELETE' && poolsId) {
+      const updatedModels = transactionModels.filter(
+        (m) => m.poolsId !== poolsId
+      );
+      setTransactionModels(updatedModels);
+    }
+  };
+
+  // Subscribe to changes
+  const handleTransactionChange = (event: TransactionChangeEvent) => {
+    const { eventType, newRecord: transaction, oldRecordId: transactionId } = event;
+
+    if (eventType === 'DELETE' && transactionId) {
+      // 🔹 Remove deleted pool
+      const updatedModels = transactionModels.filter(
+        (m) => m.transactionId !== transactionId
+      );
+      setTransactionModels(updatedModels);
+    } else if (transaction) {
+
+      if (shouldRemoveTransactionSubscription(transaction)) {
+         transactionSubscriptionManager.removeTransactionId(transaction.transactionId);
+      }
+
+      const updatedModels = transactionModels.map((m) => {
+        if (m.transactionId === transaction.transactionId) {
+          const transactionModel = TransactionModel.from(m);
+          return transactionModel.copyWith({ transactionReceiverStatus: transaction.transactionReceiverStatus, transactionSenderStatus: transaction.transactionSenderStatus  });
+        }
+        return m;
+      });
+
+      setTransactionModels(updatedModels);
+    }
+  };
+
+  function shouldRemoveTransactionSubscription(updatedTransaction?: TransactionModel | null): boolean {
+    if (!updatedTransaction) return false;
+
+    const senderStatus = updatedTransaction.transactionSenderStatus;
+    const receiverStatus = updatedTransaction.transactionReceiverStatus;
+
+    return senderStatus != 'TransactionStatus.pending' && receiverStatus != 'TransactionStatus.pending';
+  }
+
+  useEffect(() => {
+    transactionSubscriptionManager.attachListener(handleTransactionChange);
+
+    return () => {
+      transactionSubscriptionManager.removeListener(handleTransactionChange);
+    };
+  }, [handleTransactionChange]);
+
+  useEffect(() => {
+    poolsSubscriptionManager.attachListener(handlePoolChange);
+
+    return () => {
+      poolsSubscriptionManager.removeListener(handlePoolChange);
+    };
+  }, [handlePoolChange]);
+
+  useEffect(() => {
+    if (!transactionModels?.length) return;
+
+    let shouldUpdate = false;
+
+    for (const transaction of transactionModels) {
+    const senderStatus = transaction.transactionSenderStatus;
+    const receiverStatus = transaction.transactionReceiverStatus;
+
+      if (senderStatus === 'TransactionStatus.pending' || receiverStatus === 'TransactionStatus.pending') {
+        const added = transactionSubscriptionManager.addTransactionId(
+          transaction.transactionId,
+          {
+            override: false,
+            update: false
+          }
+        );
+        shouldUpdate = shouldUpdate || added;
+      }
+    }
+
+    if (shouldUpdate) {
+      transactionSubscriptionManager.updateSubscription();
+    }
+  }, [transactionModels]);
 
   useEffect(() => {
     if (!loaderRef.current) return;

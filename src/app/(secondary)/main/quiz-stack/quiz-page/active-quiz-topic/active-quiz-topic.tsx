@@ -52,6 +52,7 @@ export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) 
       // 🔹 If this updated pool should be removed (e.g., already started, closed, or cancelled)
       if (shouldRemoveOtherQuizPool(quizPool)) {
         setActiveQuizTopicModel(null);
+        poolsSubscriptionManager.removeQuizTopicPool(quizPool.poolsId);
         return;
       }
 
