@@ -16,6 +16,8 @@ import { PaginateModel } from '@/models/paginate-model';
 import Image from 'next/image';
 import { ComponentStateProps } from '@/hooks/use-component-state';
 import { usePinnedState } from '@/hooks/pinned-state-hook';
+import { friendsSubscriptionManager } from '@/lib/managers/FriendsSubscriptionManager';
+import { FriendsChangeEvent } from '@/lib/managers/FriendsSubscriptionManager';
 
 
 export default function RewardsFriends({ onStateChange }: ComponentStateProps) {
@@ -23,6 +25,8 @@ export default function RewardsFriends({ onStateChange }: ComponentStateProps) {
   const { t, lang, tNode } = useLanguage();
   const { userData, userData$ } = useUserData();
   const loaderRef = useRef<HTMLDivElement | null>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isMountedRef = useRef(true);
 
 
   const [paginateModel, setPaginateModel] = useState<PaginateModel>(new PaginateModel());
@@ -35,11 +39,72 @@ export default function RewardsFriends({ onStateChange }: ComponentStateProps) {
     {
       key: "friendsModel",
       persist: true,
-      ttl: 3600,
+//       ttl: 3600,
       scope: "secondary_flow",
       deps: [lang],
     }
   );
+
+  // Subscribe to changes
+  const handleFriendChange = (event: FriendsChangeEvent) => {
+    const { eventType, newRecord: friend, oldRecordId: usersId } = event;
+
+    if (eventType === 'DELETE' && usersId) {
+      // 🔹 Remove deleted pool
+      const updatedModels = friendsModel.filter(
+        (m) => m.usersId !== usersId
+      );
+      setFriendsModel(updatedModels);
+    } else if (friend) {
+
+      if (friend.usersReferredStatus != 'Referral.active') {
+         friendsSubscriptionManager.removeFriendsId(friend.usersId);
+      }
+
+      const updatedModels = friendsModel.map((m) => {
+        if (m.usersId === friend.usersId) {
+          const friendModel = FriendsModel.from(m);
+          return friendModel.copyWith({ usersReferredStatus: friend.usersReferredStatus});
+        }
+        return m;
+      });
+
+      setFriendsModel(updatedModels);
+    }
+  };
+
+  useEffect(() => {
+    friendsSubscriptionManager.attachListener(handleFriendChange);
+
+    return () => {
+      friendsSubscriptionManager.removeListener(handleFriendChange);
+    };
+  }, [handleFriendChange]);
+
+  useEffect(() => {
+    if (!friendsModel?.length) return;
+
+    let shouldUpdate = false;
+
+    for (const friend of friendsModel) {
+    const status = friend.usersReferredStatus;
+
+      if (status === 'Referral.active') {
+        const added = friendsSubscriptionManager.addFriendsId(
+          friend.usersId,
+          {
+            override: false,
+            update: false
+          }
+        );
+        shouldUpdate = shouldUpdate || added;
+      }
+    }
+
+    if (shouldUpdate) {
+      friendsSubscriptionManager.updateSubscription();
+    }
+  }, [friendsModel]);
 
 
   useEffect(() => {
@@ -126,6 +191,7 @@ export default function RewardsFriends({ onStateChange }: ComponentStateProps) {
       set(friendHistories);
       setFirstLoaded(true);
       onStateChange?.('data');
+      refreshData(true);
     });
   }, [demandFriendsModel]);
 
@@ -140,16 +206,39 @@ export default function RewardsFriends({ onStateChange }: ComponentStateProps) {
       processFriendsModelPaginate(friendHistories);
     }
   };
-  const refreshData = async () => {
-    if (!userData || friendsModel.length > 0) return;
-    setFriendsLoading(true);
-    const friendHistories = await fetchFriendsModel(userData, 10, paginateModel);
-    setFriendsLoading(false);
-    if (friendHistories.length > 0) {
-      extractLatest(friendHistories);
-      setFriendsModel(friendHistories);
+  const refreshData = async (interval?: boolean) => {
+    if (!userData) return;
+    try{
+      setFriendsLoading(true);
+      const friendHistories = await fetchFriendsModel(userData, 10, paginateModel);
+      setFriendsLoading(false);
+      if (friendHistories.length > 0) {
+        extractLatest(friendHistories);
+        setFriendsModel(friendHistories);
+      }
+    } catch (error) {
+       console.error('Error fetching data:', error);
+    } finally {
+       // Schedule next call only if component is still mounted
+       if (isMountedRef.current) {
+           timeoutRef.current = setTimeout(() => {
+               refreshData(true);
+           }, 10000);
+       }
     }
   };
+
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    // Cleanup function
+    return () => {
+      isMountedRef.current = false;
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
 
   // Format date to match the screenshot (e.g., "Apr 27 at 3:00AM")
   const formatDate = (dateString: string): string => {
@@ -305,7 +394,7 @@ export default function RewardsFriends({ onStateChange }: ComponentStateProps) {
                                                          <div className={styles.refreshHint}>
                                                            <span
                                                                                                                                                             role="button"
-                                                                                                                                                            onClick={refreshData}
+                                                                                                                                                            onClick={()=> refreshData()}
                                                                                                                                                             className={`${styles.refreshText} ${styles[`refreshText_${theme}`]}`}
                                                                                                                                                           >
                                                                                                                                                             {t('click_to_refresh')}
@@ -319,4 +408,3 @@ export default function RewardsFriends({ onStateChange }: ComponentStateProps) {
     </div>
   );
 }
-//  "referral_reward_info_username": "Earn {amount} when your friends use {username} and meets the required threshold {threshold}, provided their balances stays above that threshold for {hours} hours. Withdrawals below threshold will be temporarily restricted.",
