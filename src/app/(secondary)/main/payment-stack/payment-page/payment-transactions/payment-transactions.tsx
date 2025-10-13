@@ -30,6 +30,8 @@ export default function PaymentTransactions({ onStateChange }: ComponentStatePro
   const { userData, userData$ } = useUserData();
   const loaderRef = useRef<HTMLDivElement | null>(null);
   const nav = useNav();
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isMountedRef = useRef(true);
 
   const [paginateModel, setPaginateModel] = useState<PaginateModel>(new PaginateModel());
   const [firstLoaded, setFirstLoaded] = useState(false);
@@ -211,6 +213,7 @@ export default function PaymentTransactions({ onStateChange }: ComponentStatePro
       set(models);
       setFirstLoaded(true);
       onStateChange?.('data');
+      refreshData(true);
     });
   }, [demandTransactionModels]);
 
@@ -225,16 +228,38 @@ export default function PaymentTransactions({ onStateChange }: ComponentStatePro
     }
   };
 
-  const refreshData = async () => {
+  const refreshData = async (interval?: boolean) => {
     if (!userData) return;
-    setTransactionsLoading(true);
-    const models = await fetchTransactionModels(userData, 10, new PaginateModel());
-    setTransactionsLoading(false);
-    if (models.length > 0) {
-      extractLatest(models);
-      setTransactionModels(models);
+    try{
+       if(!interval)setTransactionsLoading(true);
+       const models = await fetchTransactionModels(userData, 10, new PaginateModel());
+       if(!interval)setTransactionsLoading(false);
+       if (models.length > 0) {
+           extractLatest(models);
+           setTransactionModels(models);
+       }
+    } catch (error) {
+       console.error('Error fetching data:', error);
+    } finally {
+       // Schedule next call only if component is still mounted
+       if (isMountedRef.current) {
+           timeoutRef.current = setTimeout(() => {
+               refreshData(true);
+           }, 10000);
+       }
     }
   };
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    // Cleanup function
+    return () => {
+      isMountedRef.current = false;
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
 
   // Format date to match the screenshot (e.g., "Aug 15 at 5:20PM")
   const formatDate = (dateString: string): string => {
@@ -453,7 +478,7 @@ export default function PaymentTransactions({ onStateChange }: ComponentStatePro
       {!transactionsLoading && transactionModels.length === 0 &&
         <span className={`${styles.refreshContainer} ${styles[`refreshContainer_${theme}`]}`}>
           {t('transaction_empty')}
-          <span role="button" onClick={refreshData} className={`${styles.refreshButton} ${styles[`refreshButton_${theme}`]}`}>
+          <span role="button" onClick={()=> refreshData()} className={`${styles.refreshButton} ${styles[`refreshButton_${theme}`]}`}>
             {t('refresh')}
           </span>
         </span>
