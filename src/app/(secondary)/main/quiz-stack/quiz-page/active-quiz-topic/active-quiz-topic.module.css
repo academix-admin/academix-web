@@ -22,7 +22,7 @@
 .topicCard {
   border-radius: 16px;
   overflow: hidden;
-  background: transparent;
+  background: #214421;
   flex: 0 0 auto;
   width: 100%;
    box-sizing:border-box;
@@ -36,7 +36,6 @@
   width: 100%;
   height: 0;
   padding-bottom: 60%; /* Aspect ratio */
-  border-radius: 16px;
   overflow: hidden;
 }
 
@@ -50,7 +49,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #214421;
   color: white;
   font-size: 2rem;
   font-weight: bold;
@@ -98,13 +96,34 @@
   padding-left: 12px;
 }
 
-.challengeIdentity {
+.pendingQuiz {
   color: rgba(255, 255, 255, 0.7);
   font-size: 11px;
   margin-bottom: 4px;
-  text-overflow: ellipsis;
-  overflow: hidden;
-  white-space: nowrap;
+  font-weight: 500;
+}
+
+.progressInfo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.progressText {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 11px;
+}
+
+.progressDot {
+  color: white;
+  font-size: 8px;
+}
+
+.challengeIdentity {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 11px;
+  text-transform: uppercase;
 }
 
 .topicTitle {
@@ -124,7 +143,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 0;
+  padding: 8px;
   gap: 12px;
 }
 
@@ -143,7 +162,7 @@
 }
 
 .codeIcon {
-  color: #666;
+  color: white;
   display: flex;
   align-items: center;
 }
@@ -151,7 +170,7 @@
 .codeText {
   font-size: 16px;
   font-weight: bold;
-  color: #333;
+  color: white;
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -159,29 +178,7 @@
 }
 
 .container_dark .codeText {
-  color: #fff;
-}
-
-.joinButton {
-  background: #667eea;
   color: white;
-  border: none;
-  border-radius: 16px;
-  padding: 6px 16px;
-  font-size: 14px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background-color 0.2s;
-  white-space: nowrap;
-}
-
-.joinButton:hover {
-  background: #5a6fd8;
-}
-
-.joinButton:disabled {
-  background: #ccc;
-  cursor: not-allowed;
 }
 
 .quizContainer {
@@ -189,22 +186,44 @@
 }
 
 
-/* Theme Variations */
-.quizContainer_light .codeIcon {
-  color: #666;
+.leaveButton {
+  background: #e53e3e;
+  color: white;
+  border: none;
+  border-radius: 16px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  white-space: nowrap;
+  min-width: 80px;
 }
 
-.quizContainer_dark .codeIcon {
-  color: #ccc;
+.leaveButton:hover {
+  background: #c53030;
 }
 
-.quizContainer_light .codeText {
-  color: #333;
+.leaveButton:disabled {
+  background: #a0aec0;
+  cursor: not-allowed;
 }
 
-.quizContainer_dark .codeText {
-  color: #fff;
+.leaveSpinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid transparent;
+  border-top: 2px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto;
 }
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 
 /* Dialog/Bottom Sheet Styles */
 .dialogContainer {
@@ -358,9 +377,7 @@
     width: 100%;
   }
 
-  .imageContainer {
-    border-radius: 12px;
-  }
+
 
   .topicTitle {
     font-size: 14px;
@@ -401,5 +418,11 @@
   .codeCopyText {
     font-size: 14px;
   }
+
+    .leaveButton {
+      padding: 6px 12px;
+      font-size: 13px;
+      min-width: 70px;
+    }
 
 }

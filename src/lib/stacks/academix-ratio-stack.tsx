@@ -7,7 +7,7 @@ export const useAcademixRatio = (lang: string) => {
              {
                key: "academixRatioData",
                persist: true,
-               ttl: 3600,
+//                ttl: 3600,
                scope: "secondary_flow",
                deps: [lang],
              }

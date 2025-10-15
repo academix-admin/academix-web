@@ -181,7 +181,7 @@ export default function LoginUser() {
          );
 
          if (!feature) {
-           console.log('feature not available');
+           console.log('feature not available', location);
            setError(t('feature_unavailable'));
            return null;
          }

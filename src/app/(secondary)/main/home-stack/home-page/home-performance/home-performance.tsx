@@ -22,7 +22,7 @@ export default function HomePerformance({ onStateChange }: ComponentStateProps) 
     {
       key: "performanceData",
       persist: true,
-      ttl: 3600,
+//       ttl: 3600,
       scope: "secondary_flow",
       deps: [lang],
     }

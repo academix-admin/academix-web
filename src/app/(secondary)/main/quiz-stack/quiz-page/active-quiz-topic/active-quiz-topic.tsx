@@ -24,7 +24,14 @@ import { BottomViewer, useBottomController } from "@/lib/BottomViewer";
 import { TimelapseManager, useTimelapseManager, TimelapseType  } from '@/lib/managers/TimelapseManager';
 import DialogCancel from '@/components/DialogCancel';
 import { QRCodeSVG } from 'qrcode.react';
+import { checkLocation, checkFeatures, fetchUserPartialDetails, fetchUserDetails } from '@/utils/checkers';
+import { TransactionModel } from '@/models/transaction-model';
+import { useTransactionModel } from '@/lib/stacks/transactions-stack';
 
+interface LeaveQuizResponse {
+  status: string;
+  pools_id?: string;
+}
 
 export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) {
   const { theme } = useTheme();
@@ -39,6 +46,7 @@ export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) 
 
 
   const [activeQuiz, demandActiveQuizTopicModel, setActiveQuizTopicModel] = useActiveQuiz(lang);
+  const [transactionModels, demandTransactionModels, setTransactionModels] = useTransactionModel(lang);
 
   // Subscribe to changes
   const handlePoolChange = (event: PoolChangeEvent) => {
@@ -235,33 +243,112 @@ export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) 
   const handleTopicClick = (topic: UserDisplayQuizTopicModel) => {
     nav.push('quiz_commitment',{poolsId: activeQuiz?.quizPool?.poolsId, action: 'action'});
   };
+  
+  // Function to leave quiz API call
+  const leaveQuiz = async (jwt: string, data: any): Promise<LeaveQuizResponse> => {
+    const proxyUrl = '/api/leave';
+
+    try {
+      const response = await fetch(proxyUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${jwt}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+      return await response.json();
+    } catch (error) {
+      console.error("Leave Quiz API error:", error);
+      throw error;
+    }
+  };
+
+  const handleLeave = async () => {
+    if (!userData) return;
+
+    try {
+      const location = await checkLocation();
+      const paramatical = await getParamatical(
+        userData.usersId,
+        lang,
+        userData.usersSex,
+        userData.usersDob
+      );
+
+      if (!paramatical) {
+        return;
+      }
+
+      const session = await supabaseBrowser.auth.getSession();
+      const jwt = session.data.session?.access_token;
+
+      if (!jwt) {
+        console.log('no JWT token');
+        return;
+      }
+
+      const requestData = {
+        userId: userData.usersId,
+        locale: paramatical.locale,
+        country: paramatical.country,
+        gender: paramatical.gender,
+        age: paramatical.age
+      };
+
+      const leave = await leaveQuiz(jwt, requestData);
+      const status = leave.status;
+
+      console.log(leave);
+
+      if (status === 'PoolActive.success') {
+         setActiveQuizTopicModel(null);
+         const updatedModels = transactionModels.filter(
+             (m) => m.poolsId !== leave.pools_id
+         );
+         setTransactionModels(updatedModels);
+      }else if(status === 'PoolActive.no_active' && activeQuiz){
+         setActiveQuizTopicModel(null);
+         const updatedModels = transactionModels.filter(
+             (m) => m.poolsId !== leave.pools_id
+         );
+         setTransactionModels(updatedModels);
+      }
+    } catch (error: any) {
+      console.error("Top up error:", error);
+    }
+  };  
+  
   return (
     <div className={styles.container}>
             {activeQuiz &&
-                  <OpenQuizCard
+                  <CurrentQuizCard
                     key={activeQuiz.topicsId}
                     topic={activeQuiz}
                     getInitials={getInitials}
                     onClick={()=> handleTopicClick(activeQuiz)}
+                    onLeave={handleLeave}
                   /> }
     </div>
   );
 }
 
 
-interface OpenQuizCardProps {
+interface CurrentQuizCardProps {
   topic: UserDisplayQuizTopicModel;
   getInitials: (text: string) => string;
   onClick: () => void;
+  onLeave: () => void;
 }
 
-function OpenQuizCard({ topic, getInitials, onClick  }: OpenQuizCardProps) {
+function CurrentQuizCard({ topic, getInitials, onClick, onLeave  }: CurrentQuizCardProps) {
   const { theme } = useTheme();
-  const { t } = useLanguage();
+  const { t, tNode } = useLanguage();
   const [remainingTime, setRemainingTime] = useState<number>(0);
   const [imageError, setImageError] = useState(false);
   const timelapseManager = useTimelapseManager();
   const [codeBottomViewerId, codeBottomController, codeBottomIsOpen] = useBottomController();
+  const [leaving, setLeaving] = useState(false);
 
   // Track previous values to detect changes
   const previousJobRef = useRef<string | null>(null);
@@ -344,12 +431,25 @@ function OpenQuizCard({ topic, getInitials, onClick  }: OpenQuizCardProps) {
     }
   };
 
+   const handleLeaveClick = async (e: React.MouseEvent) => {
+      e.stopPropagation();
+      setLeaving(true);
+      try {
+        await onLeave();
+      } finally {
+        setLeaving(false);
+      }
+    };
+
+
   const status = topic.quizPool?.poolsJob || '';
   const displayTime = formatQuizPoolStatusTime(status, remainingTime);
   const quizCode = topic.quizPool?.poolsCode || '';
+  const answeredCount = topic.quizPool?.questionTrackerCount || 0;
+  const totalQuestions = topic.quizPool?.challengeModel?.challengeQuestionCount || 0;
 
   return (
-    <div className={`${styles.quizContainer} ${styles[`quizContainer_${theme}`]}`}>
+    <div className={`${styles.quizContainer} ${styles[`quizContainer_${theme}`]}`} onClick={onClick}>
       <div className={`${styles.topicCard}`}>
         {/* Main Image with Overlay */}
         <div className={styles.imageContainer}>
@@ -379,12 +479,21 @@ function OpenQuizCard({ topic, getInitials, onClick  }: OpenQuizCardProps) {
 
             {/* Text Content */}
             <div className={styles.textContent}>
-              <div className={styles.challengeIdentity}>
-                {topic.quizPool?.challengeModel?.challengeIdentity?.toUpperCase()}
+             <div className={styles.pendingQuiz}>
+                {t('pending_quiz')}
               </div>
               <h3 className={styles.topicTitle}>
                 {topic.topicsIdentity}
               </h3>
+              <div className={styles.progressInfo}>
+                <span className={styles.progressText}>
+                  {tNode('answered_out_of', { answered: <strong>{answeredCount}</strong>, total: <strong>{totalQuestions}</strong> })}
+                </span>
+                <span className={styles.progressDot}>●</span>
+                <span className={styles.challengeIdentity}>
+                  {topic.quizPool?.challengeModel?.challengeIdentity?.toUpperCase()}
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -394,7 +503,10 @@ function OpenQuizCard({ topic, getInitials, onClick  }: OpenQuizCardProps) {
           {/* Quiz Code */}
           <div
             className={styles.codeContainer}
-            onClick={()=> codeBottomController.open()}
+            onClick={(e: React.MouseEvent) => {
+               e.stopPropagation();
+               codeBottomController.open();
+            }}
           >
             <div className={styles.codeIcon}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
@@ -406,12 +518,18 @@ function OpenQuizCard({ topic, getInitials, onClick  }: OpenQuizCardProps) {
             </span>
           </div>
 
-          {/* Join Button */}
+          {/* Leave Button */}
           <button
-            className={styles.joinButton}
-            onClick={onClick}
+            role="button"
+            className={styles.leaveButton}
+            onClick={handleLeaveClick}
+            disabled={leaving}
           >
-            {t('join_text')}
+            {leaving ? (
+                          <div className={styles.leaveSpinner}></div>
+                        ) : (
+                          t('leave_text')
+                        )}
           </button>
         </div>
       </div>

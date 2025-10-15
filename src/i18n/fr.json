@@ -321,5 +321,22 @@
   "challenge_text": "Défi",
   "topic_text": "Sujet",
   "amount_text": "Montant",
-  "insufficient_balance": "Solde Insuffisant"
+  "insufficient_balance": "Solde Insuffisant",
+  "open_quiz": "Quiz ouvert",
+  "extended_time": "Temps étendu",
+  "pool_time": "Temps du pool",
+  "starting_time": "Démarrage",
+  "quiz_cancelled": "Quiz annulé",
+  "pending_quiz": "QUIZ EN ATTENTE",
+  "answered_out_of": "{answered} sur {total} questions répondues",
+  "join_text": "Rejoindre",
+  "leave_text": "Quitter",
+  "scan_quiz_code": "Scanner le code du quiz",
+  "followed_creator": "Créateur suivi",
+  "discovered_interest": "Intérêt découvert",
+  "active_suggestions": "Suggestions actives",
+  "account_number_label": "Numéro de compte",
+  "account_number_placeholder": "Entrez le numéro de compte",
+  "number_valid": "Numéro valide",
+  "number_invalid": "Numéro invalide"
 }

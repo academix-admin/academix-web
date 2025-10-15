@@ -9,7 +9,7 @@ export const useMissionData = (lang: string) => {
              {
                key: "missionData",
                persist: true,
-               ttl: 3600,
+//                ttl: 3600,
                scope: "secondary_flow",
                deps: [lang],
              }
@@ -22,7 +22,7 @@ export const useAchievementsData = (lang: string) => {
              {
                key: "achievementsData",
                persist: true,
-               ttl: 3600,
+//                ttl: 3600,
                scope: "secondary_flow",
                deps: [lang],
              }

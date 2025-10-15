@@ -7,7 +7,7 @@ export const useMissionModel = (lang: string, tab: string) => {
              {
                key: `missionModel_${tab}`,
                persist: true,
-               ttl: 3600,
+//                ttl: 3600,
                scope: "mission_flow",
                deps: [lang],
              }

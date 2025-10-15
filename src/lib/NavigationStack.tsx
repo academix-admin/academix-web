@@ -246,6 +246,166 @@ class PageMemoryManager {
   }
 }
 
+// ==================== Enhanced Scroll Memory Manager ====================
+class ScrollMemoryManager {
+  private scrollPositions = new Map<string, number>();
+  private currentUid: string | null = null;
+  private lastSavedUid: string | null = null;
+
+  saveScrollPosition(uid: string, position?: number) {
+    if (typeof window === 'undefined') return;
+
+    const scrollY = position !== undefined ? position : window.scrollY;
+    this.scrollPositions.set(uid, scrollY);
+    this.lastSavedUid = uid;
+  }
+
+  restoreScrollPosition(uid: string) {
+    if (typeof window === 'undefined') return;
+
+    const savedPosition = this.scrollPositions.get(uid);
+
+    requestAnimationFrame(() => {
+      if (savedPosition !== undefined) {
+        window.scrollTo(0, savedPosition);
+      } else {
+        // Only scroll to top if this is a completely new page
+        // Don't scroll to top when going back to a page that was never saved
+        if (!this.scrollPositions.has(uid)) {
+          window.scrollTo(0, 0);
+        }
+      }
+    });
+  }
+
+  setCurrentUid(uid: string) {
+    // Save current scroll position before switching (if we have a current UID)
+    if (this.currentUid && this.currentUid !== uid) {
+      this.saveScrollPosition(this.currentUid);
+    }
+
+    this.currentUid = uid;
+    this.restoreScrollPosition(uid);
+  }
+
+  hasSavedPosition(uid: string): boolean {
+    return this.scrollPositions.has(uid);
+  }
+
+  delete(uid: string) {
+    this.scrollPositions.delete(uid);
+    if (this.lastSavedUid === uid) {
+      this.lastSavedUid = null;
+    }
+  }
+
+  clear() {
+    this.scrollPositions.clear();
+    this.currentUid = null;
+    this.lastSavedUid = null;
+  }
+
+  // Debug method
+  getStats() {
+    return {
+      currentUid: this.currentUid,
+      lastSavedUid: this.lastSavedUid,
+      savedPositions: Object.fromEntries(this.scrollPositions),
+      totalPages: this.scrollPositions.size
+    };
+  }
+}
+
+// ==================== Enhanced Scroll Restoration Hook ====================
+function useEnhancedScrollRestoration(api: NavStackAPI, renders: RenderRecord[], stackSnapshot: StackEntry[],transitionDuration: number) {
+  const scrollManager = useRef<ScrollMemoryManager>(new ScrollMemoryManager()).current;
+  const isInitialMount = useRef(true);
+  const lastTopUid = useRef<string | null>(null);
+  const scrollTimeoutRef = useRef<NodeJS.Timeout>(null);
+
+  // Save scroll position on scroll with proper throttling
+  useEffect(() => {
+    const handleScroll = () => {
+      const topEntry = stackSnapshot[stackSnapshot.length - 1];
+      if (topEntry) {
+        // Clear any pending save
+        if (scrollTimeoutRef.current) {
+          clearTimeout(scrollTimeoutRef.current);
+        }
+
+        // Debounce the save to avoid too many writes
+        scrollTimeoutRef.current = setTimeout(() => {
+          scrollManager.saveScrollPosition(topEntry.uid);
+        }, 50);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    };
+  }, [stackSnapshot, scrollManager]);
+
+  // Track page changes and manage scroll positions
+  useEffect(() => {
+    const currentTopUid = stackSnapshot[stackSnapshot.length - 1]?.uid;
+
+    if (!currentTopUid) return;
+
+    // Handle page transitions
+    if (lastTopUid.current && lastTopUid.current !== currentTopUid) {
+      // We're navigating away from a page - save its scroll position immediately
+      scrollManager.saveScrollPosition(lastTopUid.current);
+
+      // We're navigating to a new page - restore its scroll position after a delay
+      setTimeout(() => {
+        scrollManager.setCurrentUid(currentTopUid);
+      }, transitionDuration + 50); // Wait for transition to complete
+    }
+    // Initial mount or first page
+    else if (!lastTopUid.current || isInitialMount.current) {
+      if (isInitialMount.current) {
+        isInitialMount.current = false;
+        // On initial mount, wait a bit longer for everything to settle
+        setTimeout(() => {
+          scrollManager.setCurrentUid(currentTopUid);
+        }, 100);
+      } else {
+        scrollManager.setCurrentUid(currentTopUid);
+      }
+    }
+
+    lastTopUid.current = currentTopUid;
+  }, [stackSnapshot, scrollManager]);
+
+  // Enhanced cleanup - only remove scroll positions for pages that are truly gone
+  useEffect(() => {
+    const currentUids = new Set(stackSnapshot.map(entry => entry.uid));
+    const renderUids = new Set(renders.map(render => render.entry.uid));
+
+    // Remove scroll positions only for pages that are not in current stack AND not being rendered
+    Array.from(scrollManager['scrollPositions'].keys()).forEach(uid => {
+      if (!currentUids.has(uid) && !renderUids.has(uid)) {
+        scrollManager.delete(uid);
+      }
+    });
+  }, [stackSnapshot, renders, scrollManager]);
+
+  // Final save when component unmounts
+  useEffect(() => {
+    return () => {
+      const topEntry = stackSnapshot[stackSnapshot.length - 1];
+      if (topEntry) {
+        scrollManager.saveScrollPosition(topEntry.uid);
+      }
+    };
+  }, [stackSnapshot, scrollManager]);
+}
+
 // ==================== Core Functions ====================
 const NavContext = createContext<NavStackAPI | null>(null);
 const CurrentPageContext = createContext<string | null>(null);
@@ -1327,6 +1487,7 @@ export default function NavigationStack(props: {
   lazyComponents?: Record<string, () => LazyComponent>;
   missingRouteConfig?: MissingRouteConfig;
   persist?: boolean;
+  enableScrollRestoration?: boolean;
 }) {
   const {
     id,
@@ -1344,6 +1505,7 @@ export default function NavigationStack(props: {
     lazyComponents,
     missingRouteConfig,
     persist = false,
+    enableScrollRestoration = true,
   } = props;
 
   // Auto-detect parent navigation context
@@ -1605,6 +1767,10 @@ export default function NavigationStack(props: {
 
   const transitionManager = useRef<TransitionManager>(new TransitionManager()).current;
   const memoryManager = useRef<PageMemoryManager>(new PageMemoryManager()).current;
+
+  if (enableScrollRestoration) {
+    useEnhancedScrollRestoration(api, renders, stackSnapshot, transitionDuration);
+  }
 
   useEffect(() => {
     const handleTransitionEnd = (uid: string) => {

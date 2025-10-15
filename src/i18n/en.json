@@ -320,7 +320,24 @@
   "challenge_text": "Challenge",
   "topic_text": "Topic",
   "amount_text": "Amount",
-  "insufficient_balance": "Insufficient Balance"
+  "insufficient_balance": "Insufficient Balance",
+  "open_quiz": "Open Quiz",
+  "extended_time": "Extended time",
+  "pool_time": "Pool time",
+  "starting_time": "Starting time",
+  "quiz_cancelled": "Quiz cancelled",
+  "pending_quiz": "PENDING QUIZ",
+  "answered_out_of": "Answered {answered} out of {total} questions",
+  "join_text": "Join",
+  "leave_text": "Leave",
+  "scan_quiz_code": "Scan Quiz Code",
+  "followed_creator": "Followed Creator",
+  "discovered_interest": "Discovered Interest",
+  "active_suggestions": "Active Suggestions",
+  "account_number_label": "Account Number",
+  "account_number_placeholder": "Enter account number",
+  "number_valid": "Number is valid",
+  "number_invalid": "Number is invalid"
 }
 
 

@@ -35,7 +35,7 @@ export default function HomeQuizHistory({ onStateChange }: ComponentStateProps) 
     {
       key: "quizHistoryData",
       persist: true,
-      ttl: 3600,
+//       ttl: 3600,
       scope: "secondary_flow",
       deps: [lang],
     }

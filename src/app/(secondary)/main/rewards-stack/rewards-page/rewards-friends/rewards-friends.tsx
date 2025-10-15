@@ -209,9 +209,9 @@ export default function RewardsFriends({ onStateChange }: ComponentStateProps) {
   const refreshData = async (interval?: boolean) => {
     if (!userData) return;
     try{
-      setFriendsLoading(true);
+      if(!interval)setFriendsLoading(true);
       const friendHistories = await fetchFriendsModel(userData, 10, paginateModel);
-      setFriendsLoading(false);
+      if(!interval)setFriendsLoading(false);
       if (friendHistories.length > 0) {
         extractLatest(friendHistories);
         setFriendsModel(friendHistories);

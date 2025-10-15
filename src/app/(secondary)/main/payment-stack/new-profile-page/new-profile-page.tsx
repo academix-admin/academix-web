@@ -226,7 +226,7 @@ const BankTransfer = ({ onSubmit, methodId }: BankTransferProps) => {
                                disabled={searchLoading}
                                aria-disabled={searchLoading}
                              >
-                               { searchLoading ?  <span className={styles.spinner}></span> : t('search_text')}
+                               { searchLoading ?  <span className={styles.spinner}></span> : t('search')}
                              </button>  }
 
 
@@ -638,6 +638,7 @@ export default function NewProfilePage(props: NewProfileProps) {
           setWithdrawModify(false);
           setWithdraw(method.paymentMethodSellActive ?? false);
           const getTopUpModify = method.paymentMethodBuyActive ?? true;
+          setTopUpModify(getTopUpModify);
           if (!getTopUpModify) setTopUp(getTopUpModify);
       }
         setSelectedMethodData(method);
