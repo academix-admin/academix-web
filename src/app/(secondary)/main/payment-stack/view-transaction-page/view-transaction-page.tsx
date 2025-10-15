@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import styles from './view-transaction-page.module.css';
-import { useNav } from "@/lib/NavigationStack";
+import { useNav, usePageLifecycle } from "@/lib/NavigationStack";
 import { TransactionModel } from '@/models/transaction-model';
 import { useTransactionModel } from '@/lib/stacks/transactions-stack';
 import { PaymentDetails } from '@/models/payment-details';
@@ -22,6 +22,37 @@ export default function ViewTransactionPage(props: ViewTransactionProps) {
 
   const [currentTransaction, setCurrentTransaction] = useState<TransactionModel | null>(null);
   const [transactionModels,,, { isHydrated }] = useTransactionModel(lang);
+
+    // ✅ Clean lifecycle management with embedded hook
+    usePageLifecycle(nav, {
+      onEnter: ({ current, previous }) => {
+        console.log('🚀 Transaction page entered:', transactionId);
+        // Analytics, data loading, animations, etc.
+      },
+
+      onExit: ({ current, previous }) => {
+        console.log('🚪 Transaction page exited:', transactionId);
+        // Cleanup, pause videos, save state, etc.
+      },
+
+      onPause: ({ stack, current }) => {
+        console.log('⏸️ App backgrounded');
+        // Pause timers, videos, animations
+      },
+
+      onResume: ({ stack, current }) => {
+        console.log('▶️ App foregrounded');
+        // Resume timers, refresh data
+      },
+
+      onBeforePush: async ({ action }) => {
+        console.log('📤 Before push to:', action?.target?.key);
+        // Navigation guards, permission checks
+        if (action?.target?.key === 'premium') {
+          throw new Error('Premium feature required');
+        }
+      }
+    }, [transactionId]);
 
   useEffect(() => {
     if(!isHydrated)return;

@@ -17,123 +17,6 @@ export interface StorageAdapter {
   getItem(key: string): Promise<string | null>;
   setItem(key: string, value: string): Promise<void>;
   removeItem(key: string): Promise<void>;
-  clear?(): Promise<void>;
-  getAllKeys?(): Promise<string[]>;
-}
-
-/**
- * IndexedDB Adapter - Preferred for larger storage and better performance
- */
-class IndexedDBAdapter implements StorageAdapter {
-  private dbName = 'StateStackDB';
-  private storeName = 'state';
-  private version = 1;
-  private db: IDBDatabase | null = null;
-  private initPromise: Promise<IDBDatabase> | null = null;
-
-  private async init(): Promise<IDBDatabase> {
-    if (this.db) return this.db;
-    if (this.initPromise) return this.initPromise;
-
-    this.initPromise = new Promise((resolve, reject) => {
-      if (typeof window === 'undefined' || !window.indexedDB) {
-        reject(new Error('IndexedDB not available'));
-        return;
-      }
-
-      const request = indexedDB.open(this.dbName, this.version);
-
-      request.onerror = () => reject(request.error);
-      request.onsuccess = () => {
-        this.db = request.result;
-        resolve(this.db);
-      };
-
-      request.onupgradeneeded = (event) => {
-        const db = (event.target as IDBOpenDBRequest).result;
-        if (!db.objectStoreNames.contains(this.storeName)) {
-          db.createObjectStore(this.storeName);
-        }
-      };
-    });
-
-    return this.initPromise;
-  }
-
-  private async getStore(mode: IDBTransactionMode = 'readonly'): Promise<IDBObjectStore> {
-    const db = await this.init();
-    return db.transaction([this.storeName], mode).objectStore(this.storeName);
-  }
-
-  async getItem(key: string): Promise<string | null> {
-    try {
-      const store = await this.getStore();
-      return new Promise((resolve, reject) => {
-        const request = store.get(key);
-        request.onerror = () => reject(request.error);
-        request.onsuccess = () => resolve(request.result || null);
-      });
-    } catch (error) {
-      console.warn('[IndexedDBAdapter] getItem failed, falling back to null:', error);
-      return null;
-    }
-  }
-
-  async setItem(key: string, value: string): Promise<void> {
-    try {
-      const store = await this.getStore('readwrite');
-      return new Promise((resolve, reject) => {
-        const request = store.put(value, key);
-        request.onerror = () => reject(request.error);
-        request.onsuccess = () => resolve();
-      });
-    } catch (error) {
-      console.error('[IndexedDBAdapter] setItem failed:', error);
-      throw error;
-    }
-  }
-
-  async removeItem(key: string): Promise<void> {
-    try {
-      const store = await this.getStore('readwrite');
-      return new Promise((resolve, reject) => {
-        const request = store.delete(key);
-        request.onerror = () => reject(request.error);
-        request.onsuccess = () => resolve();
-      });
-    } catch (error) {
-      console.error('[IndexedDBAdapter] removeItem failed:', error);
-      throw error;
-    }
-  }
-
-  async clear(): Promise<void> {
-    try {
-      const store = await this.getStore('readwrite');
-      return new Promise((resolve, reject) => {
-        const request = store.clear();
-        request.onerror = () => reject(request.error);
-        request.onsuccess = () => resolve();
-      });
-    } catch (error) {
-      console.error('[IndexedDBAdapter] clear failed:', error);
-      throw error;
-    }
-  }
-
-  async getAllKeys(): Promise<string[]> {
-    try {
-      const store = await this.getStore();
-      return new Promise((resolve, reject) => {
-        const request = store.getAllKeys();
-        request.onerror = () => reject(request.error);
-        request.onsuccess = () => resolve(request.result as string[]);
-      });
-    } catch (error) {
-      console.error('[IndexedDBAdapter] getAllKeys failed:', error);
-      return [];
-    }
-  }
 }
 
 /**
@@ -150,132 +33,36 @@ const browserStorageAdapter: StorageAdapter = {
     if (typeof window !== "undefined") localStorage.removeItem(k);
     return Promise.resolve();
   },
-  clear: async () => {
-    if (typeof window !== "undefined") localStorage.clear();
-    return Promise.resolve();
-  },
-  getAllKeys: async () => {
-    if (typeof window !== "undefined") {
-      return Object.keys(localStorage);
-    }
-    return [];
-  },
 };
 
 export const fallbackStorageAdapter: StorageAdapter = {
   getItem: async () => null,
   setItem: async () => {},
   removeItem: async () => {},
-  clear: async () => {},
-  getAllKeys: async () => [],
 };
 
-// Create IndexedDB adapter instance
-const indexedDBAdapter = new IndexedDBAdapter();
-
-/**
- * Smart default storage that prefers IndexedDB with localStorage fallback
- */
-export const defaultStorageAdapter: StorageAdapter = {
-  getItem: async (key: string) => {
-    try {
-      // Try IndexedDB first
-      return await indexedDBAdapter.getItem(key);
-    } catch (error) {
-      console.warn('[StateStack] IndexedDB getItem failed, falling back to localStorage:', error);
-      try {
-        return await browserStorageAdapter.getItem(key);
-      } catch (fallbackError) {
-        console.error('[StateStack] All storage adapters failed:', fallbackError);
-        return null;
-      }
-    }
-  },
-
-  setItem: async (key: string, value: string) => {
-    try {
-      // Try IndexedDB first
-      await indexedDBAdapter.setItem(key, value);
-    } catch (error) {
-      console.warn('[StateStack] IndexedDB setItem failed, falling back to localStorage:', error);
-      try {
-        await browserStorageAdapter.setItem(key, value);
-      } catch (fallbackError) {
-        console.error('[StateStack] All storage adapters failed:', fallbackError);
-        throw fallbackError;
-      }
-    }
-  },
-
-  removeItem: async (key: string) => {
-    try {
-      // Try both adapters to ensure complete cleanup
-      await Promise.allSettled([
-        indexedDBAdapter.removeItem(key),
-        browserStorageAdapter.removeItem(key)
-      ]);
-    } catch (error) {
-      console.warn('[StateStack] Storage removeItem had issues:', error);
-    }
-  },
-
-  clear: async () => {
-    try {
-      await Promise.allSettled([
-        indexedDBAdapter.clear(),
-        browserStorageAdapter.clear()
-      ]);
-    } catch (error) {
-      console.warn('[StateStack] Storage clear had issues:', error);
-    }
-  },
-
-  getAllKeys: async () => {
-    try {
-      const [idbKeys, lsKeys] = await Promise.all([
-        indexedDBAdapter.getAllKeys(),
-        browserStorageAdapter.getAllKeys()
-      ]);
-      // Merge and deduplicate keys
-      return Array.from(new Set([...idbKeys, ...lsKeys]));
-    } catch (error) {
-      console.warn('[StateStack] getAllKeys failed, returning empty array:', error);
-      return [];
-    }
-  },
-};
+export const defaultStorageAdapter = browserStorageAdapter;
 
 export interface StateStackInitOptions {
   storagePrefix?: string;
   defaultStorageAdapter?: StorageAdapter | undefined;
   debug?: boolean;
   crossTabSync?: boolean;
-  // New option to force specific storage type
-  preferredStorage?: 'indexeddb' | 'localstorage' | 'auto';
 }
 
-let _globalConfig: StateStackInitOptions & { preferredStorage?: 'indexeddb' | 'localstorage' | 'auto' } = {
+let _globalConfig: StateStackInitOptions = {
   storagePrefix: "",
   defaultStorageAdapter: undefined,
   debug: DEBUG,
   crossTabSync: true,
-  preferredStorage: 'auto', // Default to auto (IndexedDB with fallback)
 };
 
-export function initStateStack(opts: StateStackInitOptions & { preferredStorage?: 'indexeddb' | 'localstorage' | 'auto' } = {}) {
+export function initStateStack(opts: StateStackInitOptions) {
   _globalConfig = { ..._globalConfig, ...opts };
-
-  // If preferredStorage is specified, override the default adapter
-  if (opts.preferredStorage === 'indexeddb') {
-    _globalConfig.defaultStorageAdapter = indexedDBAdapter;
-  } else if (opts.preferredStorage === 'localstorage') {
-    _globalConfig.defaultStorageAdapter = browserStorageAdapter;
-  }
-  // 'auto' (default) uses the smart hybrid adapter
 }
 
 export const getDefaultStorage = (): StorageAdapter =>
-  _globalConfig.defaultStorageAdapter ?? defaultStorageAdapter;
+  _globalConfig.defaultStorageAdapter ?? (typeof window !== "undefined" ? defaultStorageAdapter : fallbackStorageAdapter);
 
 const INTERNAL_SEPARATOR = "::";
 
@@ -1476,9 +1263,6 @@ export function useList<T>(initial: T[] = []) {
   return { list, push, removeAt, clear, updateAt, setList } as const;
 }
 
-// Export individual adapters for explicit usage
-export { indexedDBAdapter, browserStorageAdapter };
-
 if (typeof window !== "undefined" && process.env.NODE_ENV === "development") {
   (window as any).__STATE_STACK__ = {
     core: StateStackCore.instance,
@@ -1489,11 +1273,6 @@ if (typeof window !== "undefined" && process.env.NODE_ENV === "development") {
       atoms: atomStore.debug(),
       globalConfig: _globalConfig,
     }),
-    adapters: {
-      indexedDB: indexedDBAdapter,
-      localStorage: browserStorageAdapter,
-      default: defaultStorageAdapter
-    }
   };
 }
 
@@ -1537,9 +1316,4 @@ export const StateStack = {
   }) => {
     StateStackCore.instance.clearMatching(opts);
   },
-  adapters: {
-    indexedDB: indexedDBAdapter,
-    localStorage: browserStorageAdapter,
-    default: defaultStorageAdapter
-  }
 };
