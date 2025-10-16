@@ -223,7 +223,7 @@ export const defaultStorageAdapter: StorageAdapter = {
     try {
       await Promise.allSettled([
         indexedDBAdapter.clear(),
-        browserStorageAdapter.clear()
+        browserStorageAdapter.clear?.() ?? Promise.resolve()
       ]);
     } catch (error) {
       console.warn('[StateStack] Storage clear had issues:', error);
@@ -234,7 +234,7 @@ export const defaultStorageAdapter: StorageAdapter = {
     try {
       const [idbKeys, lsKeys] = await Promise.all([
         indexedDBAdapter.getAllKeys(),
-        browserStorageAdapter.getAllKeys()
+        browserStorageAdapter.getAllKeys?.() ?? Promise.resolve([])
       ]);
       // Merge and deduplicate keys
       return Array.from(new Set([...idbKeys, ...lsKeys]));

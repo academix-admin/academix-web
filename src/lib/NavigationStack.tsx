@@ -151,7 +151,7 @@ type AsyncLifecycleHandler = (context: {
     type: 'push' | 'pop' | 'replace' | 'popUntil' | 'popToRoot';
     target?: StackEntry;
   };
-}) => Promise<void>;
+}) => Promise<void> | void;
 
 // ==================== Constants ====================
 const DEFAULT_TRANSITION_DURATION = 220;
@@ -882,31 +882,47 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
 
 
   function emit(previousStack?: StackEntry[], action?: { type: string; target?: StackEntry }) {
-    const stackCopy = regEntry!.stack.slice();
-    const regEntryCurrentPath = regEntry.currentPath || (typeof window !== 'undefined' ? window.location.pathname : '');
+      const stackCopy = regEntry!.stack.slice();
+      const regEntryCurrentPath = regEntry.currentPath || (typeof window !== 'undefined' ? window.location.pathname : '');
 
-    const previous = previousStack ? previousStack[previousStack.length - 1] : undefined;
-    const current = stackCopy[stackCopy.length - 1];
+      const previous = previousStack ? previousStack[previousStack.length - 1] : undefined;
+      const current = stackCopy[stackCopy.length - 1];
 
-    // Trigger onEnter/onExit
-    if (previous?.uid !== current?.uid) {
-      if (previous) {
-        lifecycleManager.trigger('onExit', {
-          stack: stackCopy,
-          current,
-          previous,
-          action
-        });
+      if (!previousStack) {
+        if (current) {
+          lifecycleManager.trigger('onEnter', {
+            stack: stackCopy,
+            current,
+            previous: undefined,
+            action
+          });
+        }
+      } else {
+        const previousTop = previousStack[previousStack.length - 1];
+        const currentTop = stackCopy[stackCopy.length - 1];
+
+        const isDifferentPage = !previousTop || !currentTop || previousTop.uid !== currentTop.uid;
+
+        if (isDifferentPage) {
+          if (previousTop) {
+            lifecycleManager.trigger('onExit', {
+              stack: stackCopy,
+              current: currentTop,
+              previous: previousTop,
+              action
+            });
+          }
+
+          if (currentTop) {
+            lifecycleManager.trigger('onEnter', {
+              stack: stackCopy,
+              current: currentTop,
+              previous: previousTop,
+              action
+            });
+          }
+        }
       }
-      if (current) {
-        lifecycleManager.trigger('onEnter', {
-          stack: stackCopy,
-          current,
-          previous,
-          action
-        });
-      }
-    }
 
     // Update registry state
     regEntry.lastActiveEntry = current;
@@ -1091,13 +1107,16 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
         };
         const ok = await runGuards(action);
         if (!ok) return false;
+
+        const previousStack = regEntry.stack.slice();
+
         regEntry.stack.pop();
         runMiddlewares(action);
-        emit();
+        emit(previousStack, { type: 'pop', target: top });
         // After pop lifecycle
         lifecycleManager.trigger('onAfterPop', {
           stack: regEntry.stack.slice(),
-          current: regEntry.stack[regEntry.stack.length - 2],
+          current: regEntry.stack[regEntry.stack.length - 1],
           previous: top,
           action: { type: 'pop', target: top }
         });
@@ -1152,7 +1171,7 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
           });
 
           // Trigger onExit for each popped entry
-          poppedEntries.forEach(poppedEntry => {
+          poppedEntries.forEach((poppedEntry: StackEntry) => {
             lifecycleManager.trigger('onExit', {
               stack: regEntry.stack.slice(),
               current: targetEntry,
@@ -1209,7 +1228,7 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
         });
 
         // Trigger onExit for each popped entry
-        poppedEntries.forEach(poppedEntry => {
+        poppedEntries.forEach((poppedEntry: StackEntry) => {
           lifecycleManager.trigger('onExit', {
             stack: regEntry.stack.slice(),
             current: targetEntry,
@@ -1280,7 +1299,7 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
         });
 
         // Trigger onExit for popped entries
-        poppedEntries.forEach(poppedEntry => {
+        poppedEntries.forEach((poppedEntry: StackEntry) => {
           lifecycleManager.trigger('onExit', {
             stack: regEntry.stack.slice(),
             current: newEntry,
@@ -1750,64 +1769,167 @@ export function usePageLifecycle(
   },
   dependencies: any[] = []
 ) {
-  useMemo(() => {
+  const stableCallbacks = useMemo(() => callbacks, dependencies);
+  const currentPageUid = useContext(CurrentPageContext);
+  const isMounted = useRef(false);
+  const hasTriggeredInitialEnter = useRef(false);
+
+  useEffect(() => {
+    isMounted.current = true;
     const cleanupFunctions: (() => void)[] = [];
 
-    // Register each callback if provided
-    if (callbacks.onEnter) {
-      cleanupFunctions.push(nav.addOnEnter(callbacks.onEnter));
+    // Get current page info
+    const currentEntry = nav.peek();
+    const isCurrentPageActive = currentEntry?.uid === currentPageUid;
+
+    // Helper to check if context belongs to current page
+    const isOurPageEntering = (context: any) =>
+      context.current?.uid === currentPageUid;
+
+    const isOurPageExiting = (context: any) =>
+      context.previous?.uid === currentPageUid;
+
+    const isOurPageCurrent = (context: any) =>
+      context.current?.uid === currentPageUid;
+
+    // Handle initial page load - only for the current page
+    if (isCurrentPageActive && currentEntry && stableCallbacks.onEnter && !hasTriggeredInitialEnter.current) {
+      hasTriggeredInitialEnter.current = true;
+
+      const initialContext = {
+        stack: nav.getStack(),
+        current: currentEntry,
+        previous: undefined,
+        action: { type: 'initial' }
+      };
+
+      // Use microtask to ensure component is mounted
+      Promise.resolve().then(() => {
+        if (isMounted.current) {
+          stableCallbacks.onEnter!(initialContext);
+        }
+      });
     }
 
-    if (callbacks.onExit) {
-      cleanupFunctions.push(nav.addOnExit(callbacks.onExit));
+    // Register scoped lifecycle handlers
+
+    // PAGE TRANSITION EVENTS (scoped to specific page)
+    if (stableCallbacks.onEnter) {
+      const handler = (context: any) => {
+        if (!isMounted.current) return;
+        if (isOurPageEntering(context)) {
+          stableCallbacks.onEnter!(context);
+        }
+      };
+      cleanupFunctions.push(nav.addOnEnter(handler));
     }
 
-    if (callbacks.onPause) {
-      cleanupFunctions.push(nav.addOnPause(callbacks.onPause));
+    if (stableCallbacks.onExit) {
+      const handler = (context: any) => {
+        if (!isMounted.current) return;
+        if (isOurPageExiting(context)) {
+          stableCallbacks.onExit!(context);
+        }
+      };
+      cleanupFunctions.push(nav.addOnExit(handler));
     }
 
-    if (callbacks.onResume) {
-      cleanupFunctions.push(nav.addOnResume(callbacks.onResume));
+    // APP-LEVEL EVENTS (not scoped - fire for active page)
+    if (stableCallbacks.onPause) {
+      const handler = (context: any) => {
+        if (!isMounted.current) return;
+        const currentTopPage = nav.peek();
+        if (currentTopPage?.uid === currentPageUid) {
+          stableCallbacks.onPause!(context);
+        }
+      };
+      cleanupFunctions.push(nav.addOnPause(handler));
     }
 
-    if (callbacks.onBeforePush) {
-      cleanupFunctions.push(nav.addOnBeforePush(callbacks.onBeforePush));
+    if (stableCallbacks.onResume) {
+      const handler = (context: any) => {
+        if (!isMounted.current) return;
+        const currentTopPage = nav.peek();
+        if (currentTopPage?.uid === currentPageUid) {
+          stableCallbacks.onResume!(context);
+        }
+      };
+      cleanupFunctions.push(nav.addOnResume(handler));
     }
 
-    if (callbacks.onAfterPush) {
-      cleanupFunctions.push(nav.addOnAfterPush(callbacks.onAfterPush));
+    // NAVIGATION ACTION EVENTS (scoped to initiating page)
+    if (stableCallbacks.onBeforePush) {
+      const handler = (context: any) => {
+        if (!isMounted.current) return;
+        // onBeforePush: only when pushing FROM our current page
+        if (isOurPageCurrent(context)) {
+          return stableCallbacks.onBeforePush!(context);
+        }
+      };
+      cleanupFunctions.push(nav.addOnBeforePush(handler));
     }
 
-    if (callbacks.onBeforePop) {
-      cleanupFunctions.push(nav.addOnBeforePop(callbacks.onBeforePop));
+    if (stableCallbacks.onAfterPush) {
+      const handler = (context: any) => {
+        if (!isMounted.current) return;
+        // onAfterPush: only when push was initiated FROM our page
+        if (context.previous?.uid === currentPageUid) {
+          stableCallbacks.onAfterPush!(context);
+        }
+      };
+      cleanupFunctions.push(nav.addOnAfterPush(handler));
     }
 
-    if (callbacks.onAfterPop) {
-      cleanupFunctions.push(nav.addOnAfterPop(callbacks.onAfterPop));
+    if (stableCallbacks.onBeforePop) {
+      const handler = (context: any) => {
+        if (!isMounted.current) return;
+        // onBeforePop: only when popping FROM our current page
+        if (isOurPageCurrent(context)) {
+          return stableCallbacks.onBeforePop!(context);
+        }
+      };
+      cleanupFunctions.push(nav.addOnBeforePop(handler));
     }
 
-    if (callbacks.onBeforeReplace) {
-      cleanupFunctions.push(nav.addOnBeforeReplace(callbacks.onBeforeReplace));
+    if (stableCallbacks.onAfterPop) {
+      const handler = (context: any) => {
+        if (!isMounted.current) return;
+        // onAfterPop: only when our page was popped
+        if (isOurPageExiting(context)) {
+          stableCallbacks.onAfterPop!(context);
+        }
+      };
+      cleanupFunctions.push(nav.addOnAfterPop(handler));
     }
 
-    if (callbacks.onAfterReplace) {
-      cleanupFunctions.push(nav.addOnAfterReplace(callbacks.onAfterReplace));
+    if (stableCallbacks.onBeforeReplace) {
+      const handler = (context: any) => {
+        if (!isMounted.current) return;
+        // onBeforeReplace: only when replacing our current page
+        if (isOurPageCurrent(context)) {
+          return stableCallbacks.onBeforeReplace!(context);
+        }
+      };
+      cleanupFunctions.push(nav.addOnBeforeReplace(handler));
     }
 
-    // Log registration for debugging
-    if (process.env.NODE_ENV === 'development') {
-      const registeredHooks = Object.keys(callbacks).filter(key => callbacks[key as keyof typeof callbacks]);
-      console.log(`Registered ${registeredHooks.length} lifecycle hooks:`, registeredHooks);
+    if (stableCallbacks.onAfterReplace) {
+      const handler = (context: any) => {
+        if (!isMounted.current) return;
+        // onAfterReplace: only when our page was replaced
+        if (isOurPageExiting(context)) {
+          stableCallbacks.onAfterReplace!(context);
+        }
+      };
+      cleanupFunctions.push(nav.addOnAfterReplace(handler));
     }
 
-    // Return cleanup function
     return () => {
+      isMounted.current = false;
+      hasTriggeredInitialEnter.current = false;
       cleanupFunctions.forEach(cleanup => cleanup());
-      if (process.env.NODE_ENV === 'development') {
-        console.log('🧹 Cleaned up lifecycle hooks');
-      }
     };
-  }, [nav, ...dependencies]);
+  }, [nav, stableCallbacks, currentPageUid]);
 }
 
 /**

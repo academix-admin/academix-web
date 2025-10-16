@@ -26,22 +26,22 @@ export default function ViewTransactionPage(props: ViewTransactionProps) {
     // ✅ Clean lifecycle management with embedded hook
     usePageLifecycle(nav, {
       onEnter: ({ current, previous }) => {
-        console.log('🚀 Transaction page entered:', transactionId);
+        console.log(`onEnter: ${JSON.stringify(current.key)}`);
         // Analytics, data loading, animations, etc.
       },
 
       onExit: ({ current, previous }) => {
-        console.log('🚪 Transaction page exited:', transactionId);
+        console.log(`onExit: ${JSON.stringify(previous.key)}`);
         // Cleanup, pause videos, save state, etc.
       },
 
       onPause: ({ stack, current }) => {
-        console.log('⏸️ App backgrounded');
+        console.log(`App backgrounded: ${JSON.stringify(current.key)}`);
         // Pause timers, videos, animations
       },
 
       onResume: ({ stack, current }) => {
-        console.log('▶️ App foregrounded');
+        console.log(`App foregrounded: ${JSON.stringify(current.key)}`);
         // Resume timers, refresh data
       },
 
