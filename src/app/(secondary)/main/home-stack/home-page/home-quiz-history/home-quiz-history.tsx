@@ -123,13 +123,12 @@ export default function HomeQuizHistory({ onStateChange }: ComponentStateProps) 
 
 
   useEffect(() => {
+    if (!userData) return;
     demandQuizHistoryData(async ({ get, set }) => {
-      if (!userData || quizHistoryData.length > 0) return;
       const quizHistories = await fetchQuizHistory(userData, 10, new PaginateModel());
       extractLatest(quizHistories);
       set(quizHistories);
       setFirstLoaded(true);
-      onStateChange?.('data');
     });
   }, [demandQuizHistoryData]);
 
@@ -216,13 +215,20 @@ export default function HomeQuizHistory({ onStateChange }: ComponentStateProps) 
     if (rank === 3) return t('rank_3rd', { rank });
     return t('rank_other', { rank });
   };
-// ${stuck ? styles.historyTitlePinned : ''}
+
+// ✅ After
+useEffect(() => {
+
+  if (quizHistoryData.length > 0) {
+    onStateChange?.("data");
+  }
+
+}, [quizHistoryData]);
 
   if(!firstLoaded && quizHistoryData.length <= 0)return null;
 
-//     <h2 className={`${stuck ? styles.historyTitlePinned : styles.historyTitleHidden}`}>
-//          {t('history_text')}
-//       </h2>
+
+
   return (
     <div className={styles.historyContainer}>
 

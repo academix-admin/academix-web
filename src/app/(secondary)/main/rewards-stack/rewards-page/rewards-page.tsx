@@ -38,7 +38,8 @@ export default function RewardsPage() {
     const loading = loadedCount < 5 && errorCount === 0 && loadingCount > 0;
 
     // show ui
-    const show = !error && !loading;
+//     const show = !error && !loading;
+    const show = true;
 
 
 

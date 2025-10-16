@@ -42,9 +42,8 @@ export default function HomePage() {
   const loading = loadedCount < 5 && errorCount === 0 && loadingCount > 0;
 
   // show ui
-  const show = !error && !none && !loading;
-
-
+//   const show = !error && !none && !loading;
+  const show = true;
 
   return (
     <div  className={`${styles.mainContainer} ${styles[`mainContainer_${theme}`]}`}>

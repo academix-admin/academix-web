@@ -184,13 +184,12 @@ export default function RewardsFriends({ onStateChange }: ComponentStateProps) {
 
 
   useEffect(() => {
+      if (!userData) return;
     demandFriendsModel(async ({ get, set }) => {
-      if (!userData || friendsModel.length > 0) return;
       const friendHistories = await fetchFriendsModel(userData, 10,  new PaginateModel());
       extractLatest(friendHistories);
       set(friendHistories);
       setFirstLoaded(true);
-      onStateChange?.('data');
       refreshData(true);
     });
   }, [demandFriendsModel]);
@@ -307,6 +306,15 @@ export default function RewardsFriends({ onStateChange }: ComponentStateProps) {
       document.body.removeChild(textArea);
     }
   };
+
+// ✅ After
+useEffect(() => {
+
+  if (friendsModel.length > 0) {
+    onStateChange?.("data");
+  }
+
+}, [friendsModel]);
 
   if(!firstLoaded && friendsModel.length <= 0) return null;
 
