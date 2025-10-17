@@ -31,6 +31,7 @@ import QuizRedeemCode from "../quiz-redeem-code/quiz-redeem-code";
 import QuizImageViewer from "./quiz-image-viewer/quiz-image-viewer";
 import QuizDetailsViewer from "./quiz-details-viewer/quiz-details-viewer";
 import QuizChallengeDetails from "./quiz-challenge-details/quiz-challenge-details";
+import QuizStatusInfo from "./quiz-status-info/quiz-status-info";
 import { TransactionModel } from '@/models/transaction-model';
 import { BackendTransactionModel } from '@/models/transaction-model';
 import { useTransactionModel } from '@/lib/stacks/transactions-stack';
@@ -185,7 +186,7 @@ export default function QuizCommitment(props: QuizChallengeProps) {
       const requestData = {
         userId: userData.usersId,
         challengeId: currentQuiz.quizPool?.challengeModel?.challengeId,
-        poolsId: null,
+        poolsId: currentQuiz.quizPool?.poolsId,
         redeemCode: selectedRedeemCodeModel?.redeemCodeValue,
         locale: paramatical.locale,
         country: paramatical.country,
@@ -204,7 +205,7 @@ export default function QuizCommitment(props: QuizChallengeProps) {
 
         if(engagement.transaction_details) setTransactionModels([transaction,...transactionModels]);
         setActiveQuizTopicModel(quizModel);
-        await nav.pushAndPopUntil('quiz_commitment', (entry) => entry.key === 'quiz_page', {
+        await nav.replace('quiz_commitment',{
           poolsId: quizModel?.quizPool?.poolsId,
           action: 'active'
         });
@@ -285,6 +286,7 @@ export default function QuizCommitment(props: QuizChallengeProps) {
         {currentQuiz  && <QuizImageViewer imageUrl={currentQuiz.topicsImageUrl} identity={currentQuiz.topicsIdentity} />}
         {currentQuiz  && <QuizDetailsViewer topicsModel={currentQuiz} />}
         {currentQuiz  && <QuizChallengeDetails poolsId={currentQuiz?.quizPool?.poolsId || ''} membersCount={currentQuiz?.quizPool?.poolsMembersCount || 0} minimumMembers={ currentQuiz?.quizPool?.challengeModel?.challengeMinParticipant || 0} maximumMembers={currentQuiz?.quizPool?.challengeModel?.challengeMaxParticipant || 0} fee={currentQuiz?.quizPool?.challengeModel?.challengePrice || 0} status={formatStatus(currentQuiz?.quizPool?.poolsJob || '')} jobEndAt={currentQuiz?.quizPool?.poolsJobEndAt || ''} />}
+        {currentQuiz  && <QuizStatusInfo status={formatStatus(currentQuiz?.quizPool?.poolsJob || '')} />}
         {currentQuiz  && <QuizRuleAcceptance onAcceptanceChange={setSelectedRule} />}
         {currentQuiz  && <QuizPayoutAcceptance onAcceptanceChange={setSelectedPayout} />}
         {currentQuiz && selectedRule && selectedPayout && (

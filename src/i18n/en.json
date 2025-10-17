@@ -343,7 +343,8 @@
   "minimum_members": "Minimum of {count}",
   "maximum_members": "Maximum of {count}",
   "members_text": "Members",
-  "entry_fee": "Entry fee"
+  "entry_fee": "Entry fee",
+  "status_change_after_expiry": "Status ({status}) will change after expiry"
 }
 
 
