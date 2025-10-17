@@ -337,7 +337,13 @@
   "account_number_label": "Account Number",
   "account_number_placeholder": "Enter account number",
   "number_valid": "Number is valid",
-  "number_invalid": "Number is invalid"
+  "number_invalid": "Number is invalid",
+  "topic_creator": "TOPIC CREATOR",
+  "follow_text": "Follow",
+  "minimum_members": "Minimum of {count}",
+  "maximum_members": "Maximum of {count}",
+  "members_text": "Members",
+  "entry_fee": "Entry fee"
 }
 
 

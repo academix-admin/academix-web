@@ -338,5 +338,11 @@
   "account_number_label": "Numéro de compte",
   "account_number_placeholder": "Entrez le numéro de compte",
   "number_valid": "Numéro valide",
-  "number_invalid": "Numéro invalide"
+  "number_invalid": "Numéro invalide",
+  "topic_creator": "CRÉATEUR DU SUJET",
+  "follow_text": "Suivre",
+  "minimum_members": "Minimum de {count}",
+  "maximum_members": "Maximum de {count}",
+  "members_text": "Membres",
+  "entry_fee": "Frais d'inscription"
 }

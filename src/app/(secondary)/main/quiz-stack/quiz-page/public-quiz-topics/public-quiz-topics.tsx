@@ -226,8 +226,8 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
 
 
   useEffect(() => {
+      if (!userData ) return;
     demandUserDisplayQuizTopicModel(async ({ get, set }) => {
-      if (!userData || quizModels.length > 0) return;
       setFirstLoaded(true);
       const quizzesModel = await fetchUserDisplayQuizTopicModel(userData, 10,  new PaginateModel());
       extractLatest(quizzesModel);

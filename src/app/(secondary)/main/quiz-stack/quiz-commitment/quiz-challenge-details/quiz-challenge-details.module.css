@@ -1,0 +1,278 @@
+.performanceCard {
+  padding: 24px 28px 0 28px;
+  box-sizing: border-box;
+    width: 100%;
+}
+
+.performanceItem {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 16px;
+  border-radius: 16px;
+  gap: 12px;
+}
+
+.details {
+  font-size: 18px;
+  font-weight: bold;
+  margin: 0;
+}
+
+.details_dark {
+  color: #fff;
+}
+
+.details_light {
+  color: #6d6c6c;
+}
+
+.performanceItem_light {
+  background-color: #F7F6F6;
+}
+
+.performanceItem_dark {
+  background-color: #1c1c1c;
+}
+
+.membersSection {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  width: 100%;
+  position: relative;
+}
+
+.membersCount {
+  display: flex;
+  flex-direction: column;
+}
+
+.membersNumber {
+  font-size: 32px;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.membersLimit {
+  font-size: 14px;
+  opacity: 0.8;
+  margin-top: 4px;
+}
+
+
+.membersButton {
+  position: absolute;
+  top: 50%;
+  right: 0;
+        transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  transition: background-color 0.2s;
+}
+
+.membersButton:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.performanceItem_dark .membersButton:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.personIcon, .arrowIcon {
+  font-size: 16px;
+}
+
+.membersText {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.divider {
+  width: 100%;
+  height: 1px;
+  opacity: 0.5;
+}
+
+.performanceItem_light .divider {
+  background-color: #6d6c6c;
+}
+
+.performanceItem_dark .divider {
+  background-color: #fff;
+}
+
+.detailsGrid {
+  display: flex;
+  gap: 16px;
+  align-items: stretch; /* ✅ ensures children match each other's height */
+}
+
+.detailItem {
+  display: flex;
+  flex-direction: column;
+}
+
+.detailLabel {
+  font-size: 16px;
+  font-weight: bold;
+  margin-bottom: 6px;
+}
+
+.feeAmount {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.currencySymbol {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.feeNumber {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.verticalDivider {
+  width: 1px;
+  opacity: 0.5;
+  margin-left: 16px;
+  align-self: stretch; /* ✅ takes full height of the row */
+}
+
+.performanceItem_light .verticalDivider {
+  background-color: #6d6c6c;
+}
+
+.performanceItem_dark .verticalDivider {
+  background-color: #fff;
+}
+
+.statusHeader {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+
+.statusLabel {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.infoIcon {
+  font-size: 12px;
+  transform: translateY(1px);
+}
+
+.timer {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+/* Text colors for light theme */
+.performanceItem_light .membersNumber,
+.performanceItem_light .membersLimit,
+.performanceItem_light .membersText,
+.performanceItem_light .feeAmount,
+.performanceItem_light .timer {
+  color: #6d6c6c;
+}
+
+.performanceItem_light .detailLabel,
+.performanceItem_light .statusLabel {
+  color: #6d6c6c;
+}
+
+/* Text colors for dark theme */
+.performanceItem_dark .membersNumber,
+.performanceItem_dark .membersLimit,
+.performanceItem_dark .membersText,
+.performanceItem_dark .feeAmount,
+.performanceItem_dark .timer {
+  color: #fff;
+}
+
+.performanceItem_dark .detailLabel,
+.performanceItem_dark .statusLabel {
+  color: #fff;
+}
+
+/* Responsive Styles */
+@media screen and (min-width: 801px) {
+  .details {
+    font-size: 20px;
+  }
+
+  .performanceItem {
+    padding: 20px;
+  }
+}
+
+@media screen and (max-width: 800px) {
+  .performanceCard {
+    padding: 22px 24px 0 24px;
+}
+  .performanceItem {
+    padding: 14px;
+  }
+}
+
+@media screen and (max-width: 600px) {
+  .detailsGrid {
+    gap: 12px;
+  }
+
+}
+
+@media screen and (max-width: 500px) {
+  .performanceCard {
+    padding: 16px 16px 0 16px;
+  }
+  .performanceItem {
+    padding: 12px;
+    gap: 10px;
+  }
+
+  .details {
+    font-size: 16px;
+    margin-bottom: 8px;
+  }
+
+  .membersNumber {
+    font-size: 28px;
+  }
+
+  .membersLimit {
+    font-size: 12px;
+  }
+
+  .membersButton {
+    padding: 6px 10px;
+    gap: 6px;
+  }
+
+  .personIcon, .arrowIcon {
+    font-size: 14px;
+  }
+
+  .membersText {
+    font-size: 14px;
+  }
+
+  .detailLabel,
+  .statusLabel {
+    font-size: 14px;
+  }
+
+  .feeAmount,
+  .timer {
+    font-size: 16px;
+  }
+}

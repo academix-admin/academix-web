@@ -25,18 +25,20 @@ import { useAvailableQuiz } from "@/lib/stacks/available-quiz-stack";
 import { UserDisplayQuizTopicModel } from '@/models/user-display-quiz-topic-model';
 import { GameModeModel } from '@/models/user-display-quiz-topic-model';
 import { ChallengeModel } from '@/models/user-display-quiz-topic-model';
-import QuizAllocation from "./quiz-allocation/quiz-allocation";
-import GameMode from "./game-mode/game-mode";
-import GameChallenge from "./game-challenge/game-challenge";
 import QuizRuleAcceptance from "../quiz_rule-acceptance/quiz_rule-acceptance";
 import QuizPayoutAcceptance from "../quiz_payout-acceptance/quiz_payout-acceptance";
 import QuizRedeemCode from "../quiz-redeem-code/quiz-redeem-code";
+import QuizImageViewer from "./quiz-image-viewer/quiz-image-viewer";
+import QuizDetailsViewer from "./quiz-details-viewer/quiz-details-viewer";
+import QuizChallengeDetails from "./quiz-challenge-details/quiz-challenge-details";
 import { TransactionModel } from '@/models/transaction-model';
 import { BackendTransactionModel } from '@/models/transaction-model';
 import { useTransactionModel } from '@/lib/stacks/transactions-stack';
 import { BottomViewer, useBottomController } from "@/lib/BottomViewer";
 import { useUserBalance } from '@/lib/stacks/user-balance-stack';
 import { useActiveQuiz } from "@/lib/stacks/active-quiz-stack";
+import { poolsSubscriptionManager } from '@/lib/managers/PoolsQuizTopicSubscriptionManager';
+import { PoolChangeEvent } from '@/lib/managers/PoolsQuizTopicSubscriptionManager';
 
 interface QuizChallengeProps {
   poolsId: string;
@@ -62,9 +64,7 @@ export default function QuizCommitment(props: QuizChallengeProps) {
   const [transactionModels, demandTransactionModels, setTransactionModels] = useTransactionModel(lang);
 
   const [currentQuiz, setCurrentQuiz] = useState<UserDisplayQuizTopicModel | null>(null);
-  const [quizModels,,, { isHydrated }] = useAvailableQuiz(lang, action === 'active' ? 'public' : action);
-  const [selectedGameModeModel, setSelectedGameModeModel] = useState<GameModeModel | null>(null);
-  const [selectedChallengeModel, setSelectedChallengeModel] = useState<ChallengeModel | null>(null);
+  const [quizModels,,, { isHydrated: availableHydrated }] = useAvailableQuiz(lang, action === 'active' ? 'public' : action);
   const [selectedRule, setSelectedRule] = useState(false);
   const [selectedPayout, setSelectedPayout] = useState(false);
   const [selectedRedeemCodeModel, setSelectedRedeemCodeModel] = useState<RedeemCodeModel | null>(null);
@@ -74,18 +74,48 @@ export default function QuizCommitment(props: QuizChallengeProps) {
 
   const [withdrawBottomViewerId, withdrawBottomController, withdrawBottomIsOpen] = useBottomController();
 
-  const [activeQuiz, , setActiveQuizTopicModel] = useActiveQuiz(lang);
+  const [activeQuiz, , setActiveQuizTopicModel,  { isHydrated: activeHydrated }] = useActiveQuiz(lang);
 
   useEffect(() => {
-    if(!isHydrated) return;
+    if(!availableHydrated || !activeHydrated) return;
     const getQuiz = action === 'active' ? activeQuiz : quizModels.find((e) => e.topicsId === poolsId);
 
     if (getQuiz) {
       setCurrentQuiz(getQuiz);
     } else if(isTop) {
-//       nav.popToRoot();
+      if(!currentQuiz){
+       nav.popToRoot();
+      }
     }
-  }, [quizModels, poolsId, isHydrated, isTop]);
+  }, [quizModels, activeQuiz, poolsId, availableHydrated, activeHydrated, isTop]);
+
+  // Subscribe to changes
+  const handlePoolChange = (event: PoolChangeEvent) => {
+    const { eventType, newRecord: quizPool, oldRecordId: poolsId } = event;
+    if (!currentQuiz) return;
+    if (eventType === 'DELETE' && poolsId === currentQuiz?.quizPool?.poolsId) {
+//         something else - insufficient
+     console.log('something else 2');
+
+    } else if (quizPool) {
+      if(quizPool?.poolsId != currentQuiz?.quizPool?.poolsId)return;
+      // 🔹 Otherwise, update the pool normally
+      const topicModel = UserDisplayQuizTopicModel.from(currentQuiz);
+      const renewedPool = topicModel?.quizPool?.getStreamedUpdate(quizPool);
+
+      setCurrentQuiz(topicModel.copyWith({ quizPool: renewedPool }));
+      //         something else
+      // old status was active, ended
+    }
+  };
+
+  useEffect(() => {
+    poolsSubscriptionManager.attachListener(handlePoolChange);
+
+    return () => {
+      poolsSubscriptionManager.removeListener(handlePoolChange);
+    };
+  }, [handlePoolChange]);
 
   // Function to engage quiz API call
   const engageQuiz = async (jwt: string, data: any): Promise<EngageQuizResponse> => {
@@ -108,7 +138,7 @@ export default function QuizCommitment(props: QuizChallengeProps) {
   };
 
   const handleEngage = async () => {
-    if (!userData || !selectedGameModeModel || !selectedChallengeModel || !selectedRule || !selectedPayout) return;
+    if (!userData || !currentQuiz || !selectedRule || !selectedPayout) return;
 
     try {
       setQuizLoading(true);
@@ -154,7 +184,7 @@ export default function QuizCommitment(props: QuizChallengeProps) {
 
       const requestData = {
         userId: userData.usersId,
-        challengeId: selectedChallengeModel.challengeId,
+        challengeId: currentQuiz.quizPool?.challengeModel?.challengeId,
         poolsId: null,
         redeemCode: selectedRedeemCodeModel?.redeemCodeValue,
         locale: paramatical.locale,
@@ -199,6 +229,24 @@ export default function QuizCommitment(props: QuizChallengeProps) {
     return Number(num).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",").replace('.00', '');
   }, []);
 
+  const formatStatus= useCallback((status: string) => {
+        switch (status) {
+          case 'PoolJob.waiting':
+            return t('waiting_time');
+          case 'PoolJob.extended_waiting':
+            return t('extended_time');
+          case 'PoolJob.pool_period':
+            return t('pool_time');
+          case 'PoolJob.start_pool':
+            return t('starting_time');
+          case 'PoolJob.cancelled':
+            return 'Quiz cancelled';
+          default:
+            return t('open_quiz');
+        }
+  }, []);
+
+  const selectedChallengeModel = currentQuiz?.quizPool?.challengeModel;
   const balance = userBalance?.usersBalanceAmount ?? 0;
   const codeBalance = selectedRedeemCodeModel?.redeemCodeAmount || 0;
   const balanceSufficient = balance >= (selectedChallengeModel?.challengePrice || 0);
@@ -228,27 +276,18 @@ export default function QuizCommitment(props: QuizChallengeProps) {
               />
             </svg>
           </button>
-          <h1 className={styles.title}>{t('quiz_commitment')}</h1>
+          <h1 className={styles.title}>{selectedChallengeModel?.challengeIdentity}</h1>
           <div className={styles.headerSpacer} />
         </div>
       </header>
 
       <div className={styles.innerBody}>
-      {action}
-      {poolsId}
-        <QuizAllocation />
-        {currentQuiz && <GameMode onModeSelect={setSelectedGameModeModel} topicsId={currentQuiz.topicsId} />}
-        {currentQuiz && selectedGameModeModel && (
-          <GameChallenge
-            key={selectedGameModeModel.gameModeId}
-            onChallengeSelect={setSelectedChallengeModel}
-            topicsId={currentQuiz.topicsId}
-            gameModeId={selectedGameModeModel.gameModeId}
-          />
-        )}
-        {currentQuiz && selectedChallengeModel && <QuizRuleAcceptance onAcceptanceChange={setSelectedRule} />}
-        {currentQuiz && selectedChallengeModel && <QuizPayoutAcceptance onAcceptanceChange={setSelectedPayout} />}
-        {currentQuiz && selectedChallengeModel && selectedRule && selectedPayout && (
+        {currentQuiz  && <QuizImageViewer imageUrl={currentQuiz.topicsImageUrl} identity={currentQuiz.topicsIdentity} />}
+        {currentQuiz  && <QuizDetailsViewer topicsModel={currentQuiz} />}
+        {currentQuiz  && <QuizChallengeDetails poolsId={currentQuiz?.quizPool?.poolsId || ''} membersCount={currentQuiz?.quizPool?.poolsMembersCount || 0} minimumMembers={ currentQuiz?.quizPool?.challengeModel?.challengeMinParticipant || 0} maximumMembers={currentQuiz?.quizPool?.challengeModel?.challengeMaxParticipant || 0} fee={currentQuiz?.quizPool?.challengeModel?.challengePrice || 0} status={formatStatus(currentQuiz?.quizPool?.poolsJob || '')} jobEndAt={currentQuiz?.quizPool?.poolsJobEndAt || ''} />}
+        {currentQuiz  && <QuizRuleAcceptance onAcceptanceChange={setSelectedRule} />}
+        {currentQuiz  && <QuizPayoutAcceptance onAcceptanceChange={setSelectedPayout} />}
+        {currentQuiz && selectedRule && selectedPayout && (
           <QuizRedeemCode
             onRedeemCodeSelect={setSelectedRedeemCodeModel}
             onSkip={setSelectedSkip}

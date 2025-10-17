@@ -1,0 +1,48 @@
+/* home-experience.module.css */
+.experienceContainer {
+    padding: 0 28px 0 28px;
+    width: 100%;
+   box-sizing: border-box;
+}
+
+.logo,
+.initials {
+  width: 100%;
+  aspect-ratio: 2/1;
+  flex-shrink: 0;
+  border-radius: 12px;
+  object-fit: cover;
+}
+
+.initials {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 52px;
+  background: #2d2d2d;
+  color: #fff;
+}
+
+@media screen and (max-width: 800px) {
+.experienceContainer {
+    padding: 0 24px 0 24px;
+}
+ .initials {
+    font-size: 36px;
+  }
+}
+
+@media screen and (max-width: 500px) {
+.experienceContainer {
+    padding: 0;
+}
+
+
+  .logo, .initials {
+    font-size: 28px;
+      border-radius: 0;
+  }
+
+
+}

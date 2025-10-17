@@ -165,8 +165,8 @@ export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) 
 
 
   useEffect(() => {
+      if (!userData) return;
     demandActiveQuizTopicModel(async ({ get, set }) => {
-      if (!userData || activeQuiz) return;
       setFirstLoaded(true);
       const active = await fetchActiveQuizTopicModel(userData);
       set(active);
@@ -241,7 +241,7 @@ export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) 
 
 
   const handleTopicClick = (topic: UserDisplayQuizTopicModel) => {
-    nav.push('quiz_commitment',{poolsId: activeQuiz?.quizPool?.poolsId, action: 'action'});
+    nav.push('quiz_commitment',{poolsId: activeQuiz?.quizPool?.poolsId, action: 'active'});
   };
   
   // Function to leave quiz API call
@@ -415,6 +415,7 @@ function CurrentQuizCard({ topic, getInitials, onClick, onLeave  }: CurrentQuizC
       };
     } catch (error) {
       console.error('Quiz timer error:', error);
+
     }
   }, [topic.quizPool?.poolsJobEndAt, topic.quizPool?.poolsJob, timelapseManager]);
 

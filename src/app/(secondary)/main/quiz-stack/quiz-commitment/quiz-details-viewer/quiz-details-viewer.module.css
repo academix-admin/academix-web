@@ -1,0 +1,350 @@
+/* home-experience.module.css */
+.experienceContainer {
+    padding: 24px 28px 0 28px;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.details {
+  font-size: 18px;
+  font-weight: bold;
+  margin: 0px;
+  margin-bottom: 12px;
+}
+
+.itemTitle {
+  font-size: 17px;
+  font-weight: bold;
+  margin: 0px;
+  margin-bottom: 12px;
+}
+
+.details_light {
+  color: #000;
+}
+
+.details_dark {
+  color: #fff;
+}
+
+.itemTitle_light {
+  color: #6d6c6c;
+}
+
+.itemTitle_dark {
+  color: #fff;
+}
+
+.codeContainer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  cursor: pointer;
+  padding: 4px 0;
+  transition: opacity 0.2s;
+}
+
+.codeContainer:hover {
+  opacity: 0.8;
+}
+
+.codeIcon {
+  display: flex;
+  align-items: center;
+}
+
+.codeText {
+  font-size: 16px;
+  font-weight: bold;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.details_light .codeText .codeIcon {
+  color: #000;
+}
+.details_dark .codeText .codeIcon {
+  color: white;
+}
+
+/* Dialog/Bottom Sheet Styles */
+.dialogContainer {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 40vh;
+}
+
+.dialogContainer_light {
+  background: #fff;
+}
+
+.dialogContainer_dark {
+  background: #121212;
+}
+
+.dialogTitle {
+  font-size: 18px;
+  font-weight: bold;
+  margin: 0 0 20px 0;
+  padding: 0;
+}
+
+.dialogTitle_light {
+  color: #333;
+}
+
+.dialogTitle_dark {
+  color: #fff;
+}
+
+.dialogCancel {
+  padding: 8px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.dialogCancel_light {
+  color: #666;
+}
+
+.dialogCancel_dark {
+  color: #ccc;
+}
+
+.dialogCancel:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+/* QR Code Container */
+.qrContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex: 1;
+  margin: 20px 0;
+}
+
+.qrPlaceholder {
+  width: 200px;
+  height: 200px;
+  background: #f5f5f5;
+  border: 2px dashed #ccc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  font-size: 14px;
+  text-align: center;
+  border-radius: 8px;
+}
+
+.dialogContainer_dark .qrPlaceholder {
+  background: #2a2a2a;
+  border-color: #444;
+  color: #ccc;
+}
+
+/* Code Copy Container */
+.codeCopyContainer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 12px;
+  background: #667eea;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin-top: 20px;
+}
+
+.codeCopyContainer:hover {
+  background: #5a6fd8;
+}
+
+.codeCopyIcon, .copyIcon {
+  color: white;
+  display: flex;
+  align-items: center;
+}
+
+.copyContainer {
+  flex: 1;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.codeCopyText {
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  text-align: center;
+}
+
+.performanceItem {
+  display: flex;
+  flex-direction: column;
+  padding: 8px;
+  margin-top: 16px;
+  border-radius: 8px;
+  position: relative;
+}
+
+.performanceItem_light {
+  background-color: #F7F6F6;
+}
+
+.performanceItem_dark {
+  background-color: #1c1c1c;
+}
+
+.creatorInfo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: auto;
+}
+
+.creatorImageContainer {
+  flex-shrink: 0;
+}
+
+.creatorImage, .creatorInitials {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.creatorInitials {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 14px;
+  background: #244424;
+  color: #fff;
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.3),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.5),
+    inset 0 0 8px rgba(102, 126, 234, 0.3);
+}
+
+.creatorDetails {
+  flex: 1;
+  min-width: 0;
+}
+
+.creatorName {
+  font-size: 14px;
+  font-weight: bold;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.creatorName_light {
+  color: #000;
+}
+
+.creatorName_dark {
+  color: #fff;
+}
+
+.joinButton {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+      transform: translateY(-50%);
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 16px;
+  padding: 6px 16px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  white-space: nowrap;
+}
+
+.joinButton:hover {
+  background: #5a6fd8;
+}
+
+.joinButton:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+/* Responsive Styles */
+@media screen and (min-width: 801px) {
+
+  .details {
+    font-size: 20px;
+  }
+}
+
+@media screen and (max-width: 800px) {
+.experienceContainer {
+    padding: 22px 24px 0 24px;
+}
+
+}
+
+@media screen and (max-width: 500px) {
+.experienceContainer {
+    padding: 16px 16px 0 16px;
+}
+  .details {
+    font-size: 16px;
+    margin-bottom: 10px;
+  }
+  .itemTitle {
+    font-size: 15px;
+    margin-bottom: 10px;
+  }
+
+    .codeText {
+      font-size: 14px;
+    }
+
+
+  .dialogContainer {
+    padding: 12px;
+  }
+
+  .dialogTitle {
+    font-size: 16px;
+  }
+
+  .qrPlaceholder {
+    width: 180px;
+    height: 180px;
+    font-size: 12px;
+  }
+
+  .codeCopyContainer {
+    padding: 12px;
+  }
+
+  .codeCopyText {
+    font-size: 14px;
+  }
+    .creatorImage, .creatorInitials {
+      width: 30px;
+      height: 30px;
+    }
+
+    .creatorName {
+      font-size: 13px;
+    }
+
+}
