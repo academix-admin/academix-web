@@ -345,6 +345,7 @@
   "maximum_members": "Maximum de {count}",
   "members_text": "Membres",
   "entry_fee": "Frais d'inscription",
-  "status_change_after_expiry": "Le statut ({status}) changera après l’expiration"
+  "status_change_after_expiry": "Le statut ({status}) changera après l’expiration",
+  "commit_text": "Valider"
 
 }

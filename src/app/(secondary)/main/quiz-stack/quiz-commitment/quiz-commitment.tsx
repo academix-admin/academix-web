@@ -289,26 +289,26 @@ export default function QuizCommitment(props: QuizChallengeProps) {
         {currentQuiz  && <QuizDetailsViewer topicsModel={currentQuiz} />}
         {currentQuiz  && <QuizChallengeDetails poolsId={currentQuiz?.quizPool?.poolsId || ''} membersCount={currentQuiz?.quizPool?.poolsMembersCount || 0} minimumMembers={ currentQuiz?.quizPool?.challengeModel?.challengeMinParticipant || 0} maximumMembers={currentQuiz?.quizPool?.challengeModel?.challengeMaxParticipant || 0} fee={currentQuiz?.quizPool?.challengeModel?.challengePrice || 0} status={formatStatus(currentQuiz?.quizPool?.poolsJob || '')} jobEndAt={currentQuiz?.quizPool?.poolsJobEndAt || ''} />}
         {currentQuiz  && <QuizStatusInfo status={formatStatus(currentQuiz?.quizPool?.poolsJob || '')} />}
-        {currentQuiz  && <QuizRuleAcceptance onAcceptanceChange={setSelectedRule} />}
-        {currentQuiz  && <QuizPayoutAcceptance onAcceptanceChange={setSelectedPayout} />}
-        {currentQuiz && selectedRule && selectedPayout && (
+        {currentQuiz  && <QuizRuleAcceptance onAcceptanceChange={setSelectedRule} canChange={action != 'active'} initialValue={action === 'active'} />}
+        {currentQuiz  && <QuizPayoutAcceptance onAcceptanceChange={setSelectedPayout} canChange={action != 'active'} initialValue={action === 'active'} />}
+        {currentQuiz && action != 'active' && selectedRule && selectedPayout && (
           <QuizRedeemCode
             onRedeemCodeSelect={setSelectedRedeemCodeModel}
             onSkip={setSelectedSkip}
           />
         )}
-        {showBottom && (
+        {showBottom && action != 'active' && (
           <button
             onClick={() => withdrawBottomController.open()}
             type="button"
             className={styles.continueButton}
           >
-            {t('engage_text')}
+            {t('commit_text')}
           </button>
         )}
       </div>
 
-      { showBottom && <BottomViewer
+      { showBottom && action != 'active' && <BottomViewer
         id={withdrawBottomViewerId}
         isOpen={withdrawBottomIsOpen}
         onClose={withdrawBottomController.close}
