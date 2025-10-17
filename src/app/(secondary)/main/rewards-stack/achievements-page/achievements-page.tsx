@@ -357,8 +357,8 @@ const AchievementsContainer: React.FC<AchievementsContainerProps> = ({ tab, hand
   };
 
   useEffect(() => {
+      if (!userData) return;
     demandAchievementsModel(async ({ get, set }) => {
-      if (!userData || achievementsModel.length > 0) return;
       setAchievementsLoading(true);
       const achievementsModels = await fetchAchievementsModel(userData, 10, new PaginateModel());
       extractLatest(achievementsModels);

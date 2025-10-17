@@ -185,6 +185,7 @@ export default function QuizCommitment(props: QuizChallengeProps) {
 
       const requestData = {
         userId: userData.usersId,
+        topicsId: currentQuiz.topicsId,
         challengeId: currentQuiz.quizPool?.challengeModel?.challengeId,
         poolsId: currentQuiz.quizPool?.poolsId,
         redeemCode: selectedRedeemCodeModel?.redeemCodeValue,
@@ -205,6 +206,7 @@ export default function QuizCommitment(props: QuizChallengeProps) {
 
         if(engagement.transaction_details) setTransactionModels([transaction,...transactionModels]);
         setActiveQuizTopicModel(quizModel);
+        withdrawBottomController.close();
         await nav.replace('quiz_commitment',{
           poolsId: quizModel?.quizPool?.poolsId,
           action: 'active'

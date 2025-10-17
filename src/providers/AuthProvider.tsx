@@ -42,6 +42,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const initializeAuth = async () => {
+
       try {
         // Get current user and session separately
         const { data: { user: initialUser } } = await supabaseBrowser.auth.getUser()

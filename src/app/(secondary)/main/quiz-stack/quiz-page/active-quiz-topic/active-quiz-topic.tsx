@@ -318,12 +318,10 @@ export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) 
       console.error("Top up error:", error);
     }
   };  
-  
   return (
     <div className={styles.container}>
             {activeQuiz &&
                   <CurrentQuizCard
-                    key={activeQuiz.topicsId}
                     topic={activeQuiz}
                     getInitials={getInitials}
                     onClick={()=> handleTopicClick(activeQuiz)}

@@ -204,6 +204,7 @@ export default function QuizChallenge(props: QuizChallengeProps) {
         });
 
         setActiveQuizTopicModel(quizModel);
+        withdrawBottomController.close();
         await nav.pushAndPopUntil('quiz_commitment', (entry) => entry.key === 'quiz_page', {
           poolsId: poolsId,
           action: 'active'

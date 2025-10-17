@@ -25,6 +25,7 @@ import { BottomViewer, useBottomController } from "@/lib/BottomViewer";
 import { TimelapseManager, useTimelapseManager, TimelapseType  } from '@/lib/managers/TimelapseManager';
 import DialogCancel from '@/components/DialogCancel';
 import { QRCodeSVG } from 'qrcode.react';
+import { useActiveQuiz } from "@/lib/stacks/active-quiz-stack";
 
 
 type PublicQuizTopicsProps = ComponentStateProps & {
@@ -47,6 +48,7 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
 
 
   const [quizModels, demandUserDisplayQuizTopicModel, setUserDisplayQuizTopicModel] = usePublicQuiz(lang, pType);
+  const [activeQuiz, , ] = useActiveQuiz(lang);
 
   // Subscribe to changes
   const handlePoolChange = (event: PoolChangeEvent) => {
@@ -117,6 +119,14 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
       poolsSubscriptionManager.removeListener(handlePoolChange);
     };
   }, [handlePoolChange]);
+
+  useEffect(() => {
+    if(!activeQuiz)return;
+          const updatedModels = quizModels.filter(
+            (m) => m.quizPool?.poolsId !== activeQuiz.quizPool?.poolsId
+          );
+          setUserDisplayQuizTopicModel(updatedModels);
+  }, [activeQuiz]);
 
   useEffect(() => {
     if (!quizModels?.length) return;
