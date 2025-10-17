@@ -21,7 +21,7 @@ import { checkLocation, checkFeatures, fetchUserPartialDetails, fetchUserDetails
 import { useDemandState } from '@/lib/state-stack';
 import { PaginateModel } from '@/models/paginate-model';
 import { StateStack } from '@/lib/state-stack';
-import { useAvailableQuiz } from "@/lib/stacks/available-quiz-stack";
+import { usePublicQuiz } from "@/lib/stacks/public-quiz-stack";
 import { UserDisplayQuizTopicModel } from '@/models/user-display-quiz-topic-model';
 import { GameModeModel } from '@/models/user-display-quiz-topic-model';
 import { ChallengeModel } from '@/models/user-display-quiz-topic-model';
@@ -64,7 +64,7 @@ export default function QuizCommitment(props: QuizChallengeProps) {
   const [transactionModels, demandTransactionModels, setTransactionModels] = useTransactionModel(lang);
 
   const [currentQuiz, setCurrentQuiz] = useState<UserDisplayQuizTopicModel | null>(null);
-  const [quizModels,,, { isHydrated: availableHydrated }] = useAvailableQuiz(lang, action === 'active' ? 'public' : action);
+  const [quizModels,,, { isHydrated: availableHydrated }] = usePublicQuiz(lang, action === 'active' ? 'public' : action);
   const [selectedRule, setSelectedRule] = useState(false);
   const [selectedPayout, setSelectedPayout] = useState(false);
   const [selectedRedeemCodeModel, setSelectedRedeemCodeModel] = useState<RedeemCodeModel | null>(null);
@@ -78,7 +78,7 @@ export default function QuizCommitment(props: QuizChallengeProps) {
 
   useEffect(() => {
     if(!availableHydrated || !activeHydrated) return;
-    const getQuiz = action === 'active' ? activeQuiz : quizModels.find((e) => e.topicsId === poolsId);
+    const getQuiz = action === 'active' ? activeQuiz : quizModels.find((e) => e.quizPool?.poolsId === poolsId);
 
     if (getQuiz) {
       setCurrentQuiz(getQuiz);
