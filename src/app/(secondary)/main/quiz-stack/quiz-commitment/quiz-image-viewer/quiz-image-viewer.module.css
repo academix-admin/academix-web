@@ -9,6 +9,7 @@
 .initials {
   width: 100%;
   aspect-ratio: 2/1;
+    height: 100%;
   flex-shrink: 0;
   border-radius: 12px;
   object-fit: cover;

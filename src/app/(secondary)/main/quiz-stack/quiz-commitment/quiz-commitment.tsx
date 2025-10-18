@@ -41,6 +41,11 @@ import { useActiveQuiz } from "@/lib/stacks/active-quiz-stack";
 import { poolsSubscriptionManager } from '@/lib/managers/PoolsQuizTopicSubscriptionManager';
 import { PoolChangeEvent } from '@/lib/managers/PoolsQuizTopicSubscriptionManager';
 
+interface LeaveQuizResponse {
+  status: string;
+  pools_id?: string;
+}
+
 interface QuizChallengeProps {
   poolsId: string;
   action: string;
@@ -138,6 +143,91 @@ export default function QuizCommitment(props: QuizChallengeProps) {
     }
   };
 
+  // Function to leave quiz API call
+  const leaveQuiz = async (jwt: string, data: any): Promise<LeaveQuizResponse> => {
+    const proxyUrl = '/api/leave';
+
+    try {
+      const response = await fetch(proxyUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${jwt}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+      return await response.json();
+    } catch (error) {
+      console.error("Leave Quiz API error:", error);
+      throw error;
+    }
+  };
+
+  const handleLeave = async () => {
+    if (!userData || !currentQuiz) return;
+
+    try {
+      setQuizLoading(true);
+      setError('');
+      const location = await checkLocation();
+      const paramatical = await getParamatical(
+        userData.usersId,
+        lang,
+        userData.usersSex,
+        userData.usersDob
+      );
+
+      if (!paramatical) {
+           setQuizLoading(false);
+                  setError(t('error_occurred'));
+        return;
+      }
+
+      const session = await supabaseBrowser.auth.getSession();
+      const jwt = session.data.session?.access_token;
+
+      if (!jwt) {
+               console.log('no JWT token');
+               setQuizLoading(false);
+               setError(t('error_occurred'));
+        return;
+      }
+
+      const requestData = {
+        userId: userData.usersId,
+        locale: paramatical.locale,
+        country: paramatical.country,
+        gender: paramatical.gender,
+        age: paramatical.age
+      };
+
+      const leave = await leaveQuiz(jwt, requestData);
+      const status = leave.status;
+
+      console.log(leave);
+
+      if (status === 'PoolActive.success') {
+         setActiveQuizTopicModel(null);
+         const updatedModels = transactionModels.filter(
+             (m) => m.poolsId !== leave.pools_id
+         );
+         setTransactionModels(updatedModels);
+      }else if(status === 'PoolActive.no_active' && activeQuiz){
+         setActiveQuizTopicModel(null);
+         const updatedModels = transactionModels.filter(
+             (m) => m.poolsId !== leave.pools_id
+         );
+         setTransactionModels(updatedModels);
+      }
+            setQuizLoading(false);
+
+    } catch (error: any) {
+      console.error("Top up error:", error);
+            setQuizLoading(false);
+            setError(t('error_occurred'));
+    }
+  };
+
   const handleEngage = async () => {
     if (!userData || !currentQuiz || !selectedRule || !selectedPayout) return;
 
@@ -198,7 +288,6 @@ export default function QuizCommitment(props: QuizChallengeProps) {
       const engagement = await engageQuiz(jwt, requestData);
       const status = engagement.status;
 
-      console.log(engagement);
 
       if (status === 'PoolStatus.engaged' || status === 'PoolStatus.this_active') {
         const quizModel = new UserDisplayQuizTopicModel(engagement.quiz_pool);
@@ -225,6 +314,10 @@ export default function QuizCommitment(props: QuizChallengeProps) {
   const goBack = async () => {
     await nav.pop();
     StateStack.core.clearScope('redeem_code_flow');
+  };
+
+  const onContinueClick = async () => {
+
   };
 
   // Format number with commas
@@ -297,7 +390,7 @@ export default function QuizCommitment(props: QuizChallengeProps) {
             onSkip={setSelectedSkip}
           />
         )}
-        {showBottom && action != 'active' && (
+        {showBottom && currentQuiz && action != 'active' && (
           <button
             onClick={() => withdrawBottomController.open()}
             type="button"
@@ -305,6 +398,23 @@ export default function QuizCommitment(props: QuizChallengeProps) {
           >
             {t('commit_text')}
           </button>
+        )}
+        {action === 'active' && currentQuiz && (
+          <div className={styles.actionsRow}>
+              <button
+                            type="button"
+                            className={styles.removeButton}
+                            onClick={handleLeave}
+                          >
+                                          {quizLoading ? <span className={styles.spinner}></span> : t('leave_text')}
+                          </button>
+              <button
+                          className={styles.continueButton}
+                          onClick={onContinueClick}
+              >
+                              {t('continue')}
+              </button>
+        </div>
         )}
       </div>
 

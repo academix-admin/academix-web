@@ -148,6 +148,15 @@
   margin-bottom: 0.25rem;
 }
 
+.actionsRow {
+  display: flex;
+  gap: 1rem;
+  width: 100%;
+  margin-bottom: 3rem;
+      padding: 0 28px 0 28px;
+      box-sizing: border-box;
+}
+
 
 .moreSpinner {
   border: 3px solid #1D3D1E;
@@ -174,6 +183,8 @@
   cursor: pointer;
   transition: background-color 0.2s;
   margin-top: 3rem;
+    flex: 1;
+
 }
 
 .continueButton:hover {
@@ -186,6 +197,41 @@
   opacity: 0.7;
 }
 
+
+.removeButton {
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  background-color: red;
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin-top: 3rem;
+  flex: 1;
+}
+
+.removeButton:hover {
+  background-color: red;
+    opacity: 0.7;
+
+}
+
+
+.spinner {
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top: 3px solid white;
+  border-radius: 50%;
+  width: 10px;
+  height: 10px;
+  animation: spin 1s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
 
 /* Dialog Container */
 .dialogContainer {
@@ -377,7 +423,9 @@
     padding-top: 6rem;
       max-width: 800px;
   }
-
+      .actionsRow {
+            padding: 0 24px 0 24px;
+      }
 
 }
 
@@ -420,6 +468,10 @@
 
       .confirmationTitle {
         font-size: 16px;
+      }
+
+      .actionsRow {
+            padding: 0 16px 0 16px;
       }
 
 }

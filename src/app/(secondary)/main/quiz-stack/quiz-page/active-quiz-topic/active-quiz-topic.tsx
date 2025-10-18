@@ -179,6 +179,7 @@ export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) 
 
 
   const refreshData = async () => {
+      console.log('called');
     if (!userData) return;
     try {
         const active = await fetchActiveQuizTopicModel(userData);
@@ -198,6 +199,7 @@ export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) 
 
   useEffect(() => {
     isMountedRef.current = true;
+    refreshData();
     // Cleanup function
     return () => {
       isMountedRef.current = false;
@@ -317,7 +319,8 @@ export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) 
     } catch (error: any) {
       console.error("Top up error:", error);
     }
-  };  
+  };
+
   return (
     <div className={styles.container}>
             {activeQuiz &&
@@ -448,8 +451,8 @@ function CurrentQuizCard({ topic, getInitials, onClick, onLeave  }: CurrentQuizC
   const totalQuestions = topic.quizPool?.challengeModel?.challengeQuestionCount || 0;
 
   return (
-    <div className={`${styles.quizContainer} ${styles[`quizContainer_${theme}`]}`} onClick={onClick}>
-      <div className={`${styles.topicCard}`}>
+    <div className={`${styles.quizContainer} ${styles[`quizContainer_${theme}`]}`} >
+      <div className={`${styles.topicCard}`} onClick={onClick}>
         {/* Main Image with Overlay */}
         <div className={styles.imageContainer}>
           {topic.topicsImageUrl && !imageError ? (

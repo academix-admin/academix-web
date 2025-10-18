@@ -339,6 +339,7 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
 
 
   const handleTopicClick = (topic: UserDisplayQuizTopicModel) => {
+    if(activeQuiz)return;
     nav.push('quiz_commitment',{poolsId: topic?.quizPool?.poolsId, action: pType});
   };
 

@@ -1218,7 +1218,7 @@ export function useDemandState<T>(
   const pathname = usePathname() || "route:unknown";
   const scope = opts?.scope || `route:${pathname}`;
   const key = opts?.key ?? "demand";
-  const ttl = opts?.ttl ?? 3600;
+  const ttl = opts?.ttl;
   const persist = opts?.persist ?? true;
   const storage = opts?.storage || getDefaultStorage();
   const historyDepth = opts?.historyDepth ?? 10;
@@ -1304,7 +1304,7 @@ export function useDemandState<T>(
           get: () => core.getStateSync(scope, keyStr, initial) as T,
           set: (v: T) => {
             core.setState(scope, keyStr, v, persist, storage);
-            core.setTTL(scope, keyStr, ttl);
+            if(ttl)core.setTTL(scope, keyStr, ttl);
             core.markDemanded(scope, keyStr);
           },
         };
@@ -1322,7 +1322,7 @@ export function useDemandState<T>(
       const prev = core.getStateSync(scope, keyStr, initial) as T;
       const next = typeof v === "function" ? (v as any)(prev) : v;
       core.setState(scope, keyStr, next, persist, storage);
-      core.setTTL(scope, keyStr, ttl);
+      if(ttl)core.setTTL(scope, keyStr, ttl);
       core.markDemanded(scope, keyStr);
     },
     [scope, keyStr, ttl, persist, storage, core, initial]

@@ -267,7 +267,7 @@ export default function PaymentWallet({ profileType, onWalletData, onWalletAmoun
       if (paymentSwitch === 'wallet' && walletData?.paymentWalletRate) {
         const numValue = parseFloat(value) || 0;
         setPaymentAmount(numValue);
-        setAcademixAmount((numValue * walletData.paymentWalletRate).toFixed(2).replace('.00',''));
+        setAcademixAmount(parseFloat((numValue * walletData.paymentWalletRate).toFixed(2)).toString());
       }
     }
   }, [paymentSwitch, walletData?.paymentWalletRate]);
@@ -280,7 +280,7 @@ export default function PaymentWallet({ profileType, onWalletData, onWalletAmoun
       if (paymentSwitch === 'academix' && walletData?.paymentWalletRate) {
         const numValue = parseFloat(value) || 0;
         setPaymentAmount(numValue);
-        if(numValue > 0)setWalletAmount((numValue / walletData.paymentWalletRate).toFixed(2).replace('.00',''));
+        if(numValue > 0)setWalletAmount(parseFloat((numValue / walletData.paymentWalletRate).toFixed(2)).toString());
         if(numValue <= 0)setWalletAmount('');
       }
     }
@@ -305,12 +305,12 @@ export default function PaymentWallet({ profileType, onWalletData, onWalletAmoun
          feeValue = ((walletData?.paymentWalletRate || 0) * feeValue);
      }
 
-    return feeValue.toFixed(2).replace('.00','');
+    return parseFloat(feeValue.toFixed(2)).toString();
   }, [walletData?.paymentWalletRateType, walletData?.paymentWalletFee, walletData?.paymentWalletRate]);
 
   // Format number with commas
   const formatNumber = useCallback((num: number) => {
-    return num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",").replace('.00','');
+    return parseFloat(num.toFixed(2)).toString();
   }, []);
 
   useEffect(() => {
@@ -448,8 +448,8 @@ export default function PaymentWallet({ profileType, onWalletData, onWalletAmoun
             value={paymentSwitch === 'wallet' ? walletAmount : academixAmount}
             onChange={paymentSwitch === 'wallet' ? handleWalletAmountChange : handleAcademixAmountChange}
             placeholder="0.00"
-            inputMode="numeric"
-            pattern="[0-9]*"
+            inputMode="decimal"
+            pattern="^\d+(\.\d*)?$"
           />
         </div>
 
