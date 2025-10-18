@@ -81,13 +81,9 @@ export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) 
       ? new Date(updatedPool.poolsStartingAt)
       : null;
 
-    // Check if the pool has already started
-    const hasStarted =
-      date !== null && date < new Date();
 
-    // Check if the pool is active or closed
+    // Check if the pool is closed
     const statusCheck =
-      updatedPool.poolsStatus === 'Pools.active' ||
       updatedPool.poolsStatus === 'Pools.closed';
 
     // Check if the pool job is cancelled or ended
@@ -95,7 +91,7 @@ export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) 
       updatedPool.poolsJob === 'PoolJob.cancelled' ||
       updatedPool.poolsJob === 'PoolJob.pool_ended';
 
-    return hasStarted || statusCheck || jobCheck;
+    return  statusCheck || jobCheck;
   }
 
   useEffect(() => {
