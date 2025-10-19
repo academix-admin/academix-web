@@ -295,6 +295,8 @@ export default function QuizCommitment(props: QuizChallengeProps) {
 
         if(engagement.transaction_details) setTransactionModels([transaction,...transactionModels]);
         setActiveQuizTopicModel(quizModel);
+        console.log(quizModel);
+        poolsSubscriptionManager.handleQuizTopicData('UPDATE', quizModel.quizPool || null);
         withdrawBottomController.close();
         await nav.replace('quiz_commitment',{
           poolsId: quizModel?.quizPool?.poolsId,
@@ -335,8 +337,8 @@ export default function QuizCommitment(props: QuizChallengeProps) {
             return t('pool_time');
           case 'PoolJob.start_pool':
             return t('starting_time');
-          case 'PoolJob.cancelled':
-            return 'Quiz cancelled';
+          case 'PoolJob.pool_ended':
+            return t('quiz_closed');
           default:
             return t('open_quiz');
         }
@@ -404,6 +406,7 @@ export default function QuizCommitment(props: QuizChallengeProps) {
               <button
                             type="button"
                             className={styles.removeButton}
+                            disabled={!activeQuiz}
                             onClick={handleLeave}
                           >
                                           {quizLoading ? <span className={styles.spinner}></span> : t('leave_text')}
@@ -411,6 +414,7 @@ export default function QuizCommitment(props: QuizChallengeProps) {
               <button
                           className={styles.continueButton}
                           onClick={onContinueClick}
+                          disabled={!activeQuiz}
               >
                               {t('continue')}
               </button>

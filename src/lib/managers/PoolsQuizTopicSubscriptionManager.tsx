@@ -147,7 +147,7 @@ class PoolsQuizTopicSubscriptionManager {
   }
 
   // Handle quiz topic data - implement based on your needs
-  private handleQuizTopicData(
+  public handleQuizTopicData(
     eventType: 'INSERT' | 'UPDATE' | 'DELETE',
     newRecord: QuizPool | null,
     oldRecordId?: string

@@ -218,6 +218,11 @@
 
 }
 
+.removeButton:disabled {
+  background-color: red;
+  cursor: not-allowed;
+  opacity: 0.5;
+}
 
 .spinner {
   border: 3px solid rgba(255, 255, 255, 0.3);
