@@ -488,76 +488,104 @@ function useEnhancedScrollRestoration(
   transitionDuration: number
 ) {
   const scrollManager = useRef(new ScrollMemoryManager()).current;
-  const isInitialMount = useRef(true);
   const lastTopUid = useRef<string | null>(null);
-  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const restoreTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const currentScrollY = useRef(0);
 
-  // Save scroll position on scroll (debounced)
+  // 🔒 Disable native restoration
   useEffect(() => {
-    const handleScroll = () => {
-      const topEntry = stackSnapshot[stackSnapshot.length - 1];
-      if (!topEntry) return;
+    if (typeof window !== "undefined" && "scrollRestoration" in window.history) {
+      window.history.scrollRestoration = "manual";
+    }
+  }, []);
 
-      if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
-      scrollTimeoutRef.current = setTimeout(() => {
-        scrollManager.saveScrollPosition(topEntry.uid);
-      }, 80);
+  // 🧭 Track scroll position live
+  useEffect(() => {
+    const handleScroll = () => (currentScrollY.current = window.scrollY);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // 💾 Save position (debounced)
+  useEffect(() => {
+    let timeoutId: ReturnType<typeof setTimeout>;
+    const saveCurrent = () => {
+      const top = stackSnapshot.at(-1);
+      if (top) scrollManager.saveScrollPosition(top.uid, currentScrollY.current);
     };
-
+    const handleScroll = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(saveCurrent, 80);
+    };
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => {
       window.removeEventListener("scroll", handleScroll);
-      if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+      clearTimeout(timeoutId);
     };
   }, [stackSnapshot, scrollManager]);
 
-  // Track navigation changes
+  // 🕒 Save before tab close
   useEffect(() => {
-    const currentTopUid = stackSnapshot.at(-1)?.uid;
-    if (!currentTopUid) return;
+    const saveOnHide = () => {
+      const top = stackSnapshot.at(-1);
+      if (top) scrollManager.saveScrollPosition(top.uid, currentScrollY.current);
+    };
+    window.addEventListener("pagehide", saveOnHide);
+    window.addEventListener("beforeunload", saveOnHide);
+    return () => {
+      window.removeEventListener("pagehide", saveOnHide);
+      window.removeEventListener("beforeunload", saveOnHide);
+    };
+  }, [stackSnapshot]);
 
-    const previousUid = lastTopUid.current;
-    const isNewPage = !scrollManager.hasSavedPosition(currentTopUid);
+  // ⚙️ Handle navigation changes
+  useEffect(() => {
+    const topEntry = stackSnapshot.at(-1);
+    if (!topEntry) return;
 
-    // Save outgoing page scroll
-    if (previousUid && previousUid !== currentTopUid) {
-      scrollManager.saveScrollPosition(previousUid);
+    const uid = topEntry.uid;
+    const prevUid = lastTopUid.current;
+    if (prevUid === uid) return;
+
+    // Save outgoing page
+    if (prevUid) scrollManager.saveScrollPosition(prevUid, currentScrollY.current);
+    lastTopUid.current = uid;
+
+    if (restoreTimer.current) clearTimeout(restoreTimer.current);
+
+    const hasSaved = scrollManager.hasSavedPosition(uid);
+
+    if (!hasSaved) {
+      // New page - scroll to top
+      window.scrollTo({ top: 0, behavior: "instant" });
+      return;
     }
 
-    // Restore (or reset) for new page
-    requestAnimationFrame(() => {
-      if (isNewPage) {
-        // Always start at top for new pages
-        window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
-      } else {
-        // Restore immediately for known pages (no long timeout)
-        scrollManager.setCurrentUid(currentTopUid);
-      }
-    });
+    // 🎯 QUICK RESTORE for revisited pages - only 1 frame delay
+    restoreTimer.current = setTimeout(() => {
+      const savedY = scrollManager.getStats().savedPositions?.[uid];
+      const targetY = typeof savedY === "number" ? savedY : 0;
 
-    lastTopUid.current = currentTopUid;
-    isInitialMount.current = false;
-  }, [stackSnapshot, scrollManager]);
+      requestAnimationFrame(() => {
+        window.scrollTo(0, targetY);
+      });
+    }, 16); // Just 1 frame delay instead of transition-based delay
 
-  // Clean up orphaned scroll positions
+    return () => {
+      if (restoreTimer.current) clearTimeout(restoreTimer.current);
+    };
+  }, [stackSnapshot, scrollManager, transitionDuration]);
+
+  // 🧹 Clean stale
   useEffect(() => {
-    const activeUids = new Set(stackSnapshot.map((e) => e.uid));
-    const renderUids = new Set(renders.map((r) => r.entry.uid));
-
+    const valid = new Set([
+      ...stackSnapshot.map(s => s.uid),
+      ...renders.map(r => r.entry.uid),
+    ]);
     for (const uid of scrollManager["scrollPositions"].keys()) {
-      if (!activeUids.has(uid) && !renderUids.has(uid)) {
-        scrollManager.delete(uid);
-      }
+      if (!valid.has(uid)) scrollManager.delete(uid);
     }
   }, [stackSnapshot, renders, scrollManager]);
-
-  // Save final scroll when unmounting
-  useEffect(() => {
-    return () => {
-      const topEntry = stackSnapshot.at(-1);
-      if (topEntry) scrollManager.saveScrollPosition(topEntry.uid);
-    };
-  }, [stackSnapshot, scrollManager]);
 }
 
 

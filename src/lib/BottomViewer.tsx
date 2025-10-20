@@ -128,6 +128,7 @@ const BottomViewer: React.FC<BottomViewerProps> = ({
         style={{
           height: "auto",
                     maxWidth: "500px",
+                    maxHeight: "calc(100vh - env(safe-area-inset-top) - 8px)", // prevent overflow
                     margin: "0 auto",
                     width: "100%",
                     left: 0,
@@ -182,7 +183,12 @@ const BottomViewer: React.FC<BottomViewerProps> = ({
             )}
           </div>
         </Sheet.Header>
-        <Sheet.Content>
+        <Sheet.Content
+        style={{
+            flex: 1,
+            overflowY: "auto",
+            WebkitOverflowScrolling: "touch",
+          }}>
           <div className="bottom-viewer-content">
             {children}
           </div>
