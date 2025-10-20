@@ -187,12 +187,11 @@ export default function PoolMembers(props: PoolMembersProps) {
 
   useEffect(() => {
     demandPoolMembers(async ({ get, set }) => {
-      if (!userData || poolMembers.length > 0) return;
+      if (!userData) return;
       setFetchLoading(true);
       const poolMembersModel = await fetchPoolMembers(userData, 15,  new PaginateModel());
       extractLatest(poolMembersModel);
       set(poolMembersModel);
-      console.log(poolMembersModel);
       setEmpty(poolMembersModel.length === 0);
       setFetchLoading(false);
       if(poolMembersModel.length < 15)refreshData();
@@ -213,27 +212,36 @@ export default function PoolMembers(props: PoolMembersProps) {
 
   const refreshData = async () => {
     if (!userData) return;
-    let size = poolMembers.length;
-    try{
+
+    try {
       const poolMembersModel = await fetchPoolMembers(userData, 15, paginateModel);
-      setEmpty(poolMembersModel.length === 0);
-      if (poolMembersModel.length > 0) {
+
+      const isEmpty = poolMembersModel.length === 0;
+      setEmpty(isEmpty);
+
+      if (!isEmpty) {
         extractLatest(poolMembersModel);
         setPoolMembers(poolMembersModel);
-        size = poolMembersModel.length;
+      }else{
+        setPoolMembers([]);
+      }
+
+      // Schedule next call if still mounted
+      if (isMountedRef.current) {
+        const shouldContinue = poolMembersModel.length < 15;
+        timeoutRef.current = setTimeout(() => {
+          if (shouldContinue) refreshData();
+        }, 10000);
       }
     } catch (error) {
-       console.error('Error fetching data:', error);
-    } finally {
-       // Schedule next call only if component is still mounted
-       if (isMountedRef.current) {
-           timeoutRef.current = setTimeout(() => {
-               if(size < 15)refreshData();
-           }, 10000);
-       }
-    }
+      console.error('Error fetching data:', error);
 
+      if (isMountedRef.current) {
+        timeoutRef.current = setTimeout(refreshData, 15000);
+      }
+    }
   };
+
 
 
   useEffect(() => {
@@ -284,7 +292,7 @@ export default function PoolMembers(props: PoolMembersProps) {
           />
         )}
 
-        {empty && !error && !fetchLoading && (
+        {poolMembers.length === 0 && empty && !error && !fetchLoading && (
           <NoResultsView
             text="No result"
             buttonText="Try Again"
