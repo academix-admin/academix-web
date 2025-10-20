@@ -64,6 +64,8 @@ export default function QuizCommitment(props: QuizChallengeProps) {
   const nav = useNav();
   const { poolsId, action } = props;
   const isTop = nav.isTop();
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isMountedRef = useRef(true);
 
   const { userData, userData$ } = useUserData();
   const [userBalance] = useUserBalance(lang);
@@ -81,13 +83,15 @@ export default function QuizCommitment(props: QuizChallengeProps) {
   const [withdrawBottomViewerId, withdrawBottomController, withdrawBottomIsOpen] = useBottomController();
 
   const [activeQuiz, , setActiveQuizTopicModel,  { isHydrated: activeHydrated }] = useActiveQuiz(lang);
+  const [membersCount, setMembersCount] = useState<number | null>(null);
 
   useEffect(() => {
     if(!availableHydrated || !activeHydrated) return;
     const getQuiz = action === 'active' ? activeQuiz : quizModels.find((e) => e.quizPool?.poolsId === poolsId);
 
-    if (getQuiz) {
+    if (getQuiz && !currentQuiz) {
       setCurrentQuiz(getQuiz);
+      fetchPoolMembers(getQuiz);
     } else if(isTop) {
       if(!currentQuiz){
        nav.popToRoot();
@@ -318,6 +322,47 @@ export default function QuizCommitment(props: QuizChallengeProps) {
     StateStack.core.clearScope('redeem_code_flow');
   };
 
+  const fetchPoolMembers = useCallback(async (currentQuiz: UserDisplayQuizTopicModel) => {
+    if(!userData || !currentQuiz)return;
+    try {
+
+      const { data, error } = await supabaseBrowser.rpc("get_pools_members_count", {
+        p_user_id: userData.usersId,
+        p_pools_id: poolsId,
+        p_topics_id: currentQuiz.topicsId
+      });
+
+
+      if (error) {
+        console.error("[Members] error:", error);
+        return;
+      }
+
+      setMembersCount(data);
+    } catch (err) {
+      console.error("[Members] error:", err);
+      return;
+    } finally {
+           // Schedule next call only if component is still mounted
+           if (isMountedRef.current) {
+             timeoutRef.current = setTimeout(() => {
+               fetchPoolMembers(currentQuiz);
+             }, 10000);
+           }
+         }
+  }, []);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    // Cleanup function
+    return () => {
+      isMountedRef.current = false;
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+
   const onContinueClick = async () => {
 
   };
@@ -382,7 +427,7 @@ export default function QuizCommitment(props: QuizChallengeProps) {
       <div className={styles.innerBody}>
         {currentQuiz  && <QuizImageViewer imageUrl={currentQuiz.topicsImageUrl} identity={currentQuiz.topicsIdentity} />}
         {currentQuiz  && <QuizDetailsViewer topicsModel={currentQuiz} />}
-        {currentQuiz  && <QuizChallengeDetails poolsId={currentQuiz?.quizPool?.poolsId || ''} membersCount={currentQuiz?.quizPool?.poolsMembersCount || 0} minimumMembers={ currentQuiz?.quizPool?.challengeModel?.challengeMinParticipant || 0} maximumMembers={currentQuiz?.quizPool?.challengeModel?.challengeMaxParticipant || 0} fee={currentQuiz?.quizPool?.challengeModel?.challengePrice || 0} status={formatStatus(currentQuiz?.quizPool?.poolsJob || '')} jobEndAt={currentQuiz?.quizPool?.poolsJobEndAt || ''} />}
+        {currentQuiz  && <QuizChallengeDetails poolsId={currentQuiz?.quizPool?.poolsId || ''} membersCount={membersCount || currentQuiz?.quizPool?.poolsMembersCount || 0} minimumMembers={ currentQuiz?.quizPool?.challengeModel?.challengeMinParticipant || 0} maximumMembers={currentQuiz?.quizPool?.challengeModel?.challengeMaxParticipant || 0} fee={currentQuiz?.quizPool?.challengeModel?.challengePrice || 0} status={formatStatus(currentQuiz?.quizPool?.poolsJob || '')} jobEndAt={currentQuiz?.quizPool?.poolsJobEndAt || ''} />}
         {currentQuiz  && <QuizStatusInfo status={formatStatus(currentQuiz?.quizPool?.poolsJob || '')} />}
         {currentQuiz  && <QuizRuleAcceptance onAcceptanceChange={setSelectedRule} canChange={action != 'active'} initialValue={action === 'active'} />}
         {currentQuiz  && <QuizPayoutAcceptance onAcceptanceChange={setSelectedPayout} canChange={action != 'active'} initialValue={action === 'active'} />}

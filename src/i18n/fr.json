@@ -346,6 +346,9 @@
   "members_text": "Membres",
   "entry_fee": "Frais d'inscription",
   "status_change_after_expiry": "Le statut ({status}) changera après l’expiration",
-  "commit_text": "Valider"
+  "commit_text": "Valider",
+  "quiz_closed": "Quiz fermé",
+  "pool_members": "Membres du groupe"
+
 
 }

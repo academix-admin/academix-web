@@ -345,7 +345,9 @@
   "members_text": "Members",
   "entry_fee": "Entry fee",
   "status_change_after_expiry": "Status ({status}) will change after expiry",
-  "commit_text": "Commit"
+  "commit_text": "Commit",
+  "quiz_closed": "Quiz Closed",
+  "pool_members": "Pool Members"
 }
 
 

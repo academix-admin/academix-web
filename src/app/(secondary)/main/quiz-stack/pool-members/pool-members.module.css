@@ -1,0 +1,292 @@
+/* edit-profile.module.css */
+.container {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.header {
+  position: fixed;
+  top: 0;
+  left: var(--sidebar-width);
+  right: 0;
+  z-index: 10;
+    display: flex;
+  backdrop-filter: blur(8px);
+  box-sizing: border-box;
+}
+
+.header_light {
+  background-color: rgba(255, 255, 255, 0.95);
+  border-bottom: 1px solid #E5E5E5;
+}
+
+.header_dark {
+  background-color: rgba(18, 18, 18, 0.95);
+  border-bottom: 1px solid #333;
+}
+
+.headerContent {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 1rem;
+  padding: 1.1rem 2rem;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.backButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-color);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  justify-content: center;
+  margin-left: -8px;
+}
+
+.backButton:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.backIcon {
+  width: 20px;
+  height: 20px;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+  flex-grow: 1;
+  text-align: start;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-sizing: border-box;
+}
+
+.content {
+  flex: 1;
+  max-width: 800px;
+  margin: 0 auto;
+  width: 100%;
+    padding: 1rem 2.5rem;
+    padding-top: 6rem;
+  box-sizing: border-box;
+}
+
+/* Mission Cards */
+.redeemCodesList {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding: 0.25rem 2rem;
+  box-sizing: border-box;
+}
+
+
+/* Redeem Code Card Styles */
+.redeemCodeCard {
+  background: linear-gradient(90deg, #176b2d 0%, #1e7a36 100%);
+  border-radius: 12px;
+  margin: 8px 16px 16px 16px;
+  overflow: hidden;
+  color: white;
+}
+
+.cardContent {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header Section */
+.cardHeader {
+  padding: 12px 12px 8px 12px;
+}
+
+.codeSection {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.redeemCodeValue {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0;
+  color: white;
+  line-height: 1.2;
+  flex: 1;
+}
+
+.copyButton {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 6px;
+  padding: 6px;
+  cursor: pointer;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+  margin-left: 8px;
+}
+
+.copyButton:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Amount Section */
+.amountSection {
+  padding: 0 12px 12px 12px;
+}
+
+.amountContent {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.currencyIcon {
+  opacity: 0.9;
+}
+
+.amountText {
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* Footer Section */
+.cardFooter {
+  background: rgba(0, 0, 0, 0.2);
+  padding: 8px 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.rulesRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  font-size: 14px;
+  line-height: 1.3;
+}
+
+.rulesLabel {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.rulesValue {
+  opacity: 0.95;
+}
+
+.separator {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.2);
+  margin: 6px 0;
+}
+
+.expiryRow {
+  display: flex;
+  align-items: center;
+}
+
+.expiryText {
+  font-size: 14px;
+  font-weight: 700;
+  opacity: 0.95;
+}
+
+.moreSpinnerContainer {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.moreSpinner {
+  border: 3px solid #1D3D1E;
+  border-top: 3px solid white;
+  border-radius: 50%;
+  width: 10px;
+  height: 10px;
+  animation: spin 1s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+
+
+/* Responsive Design */
+@media screen and (max-width: 800px) {
+
+    .header {
+      left: 0;
+     }
+
+   .headerContent {
+     padding: 1rem 0rem;
+     margin: 0 1rem;
+   }
+
+  .content {
+  padding: 0;
+        padding-top: 6rem;
+          max-width: 800px;
+  }
+}
+
+@media screen and (max-width: 500px) {
+    .header {
+      left: 0;
+     }
+     .headerContent {
+        margin: 0;
+       padding: 1rem 1rem;
+     }
+
+  .title {
+    font-size: 1.2rem;
+  }
+    .backIcon {
+      width: 16px;
+      height: 16px;
+    }
+
+  .content {
+    padding: 0;
+    padding-top: 5rem;
+    max-width: 500px;
+  }
+    .redeemCodeCard {
+      margin: 8px 12px 12px 12px;
+      border-radius: 10px;
+    }
+
+    .amountText {
+      font-size: 28px;
+    }
+
+    .redeemCodeValue {
+      font-size: 14px;
+    }
+
+    .rulesRow,
+    .expiryText {
+      font-size: 13px;
+    }
+
+}

@@ -5,6 +5,7 @@ import { useTheme } from '@/context/ThemeContext';
 import styles from './quiz-challenge-details.module.css';
 import { useLanguage } from '@/context/LanguageContext';
 import { TimelapseManager, useTimelapseManager, TimelapseType } from '@/lib/managers/TimelapseManager';
+import { useNav } from "@/lib/NavigationStack";
 
 interface QuizChallengeDetailsProps {
   poolsId: string;
@@ -29,6 +30,7 @@ export default function QuizChallengeDetails({
   const { t } = useLanguage();
   const [remainingTime, setRemainingTime] = useState<number>(0);
   const timelapseManager = useTimelapseManager();
+  const nav = useNav();
 
   const formatPlainTime = (time: number | null): string => {
     if (time === null || time <= 0) {
@@ -93,6 +95,10 @@ export default function QuizChallengeDetails({
     }
   };
 
+  const openPoolMembers = () => {
+    nav.push('pool_members',{poolsId})
+  };
+
   return (
     <div className={styles.performanceCard}>
     <div className={`${styles.performanceItem} ${styles[`performanceItem_${theme}`]}`}>
@@ -106,7 +112,7 @@ export default function QuizChallengeDetails({
           <div className={styles.membersLimit}>{getMembersText()}</div>
         </div>
 
-          <div className={styles.membersButton}>
+          <div onClick={openPoolMembers} className={styles.membersButton}>
             <span className={styles.personIcon}>👤</span>
             <span className={styles.membersText}>{t('members_text')}</span>
             <span className={styles.arrowIcon}>→</span>
