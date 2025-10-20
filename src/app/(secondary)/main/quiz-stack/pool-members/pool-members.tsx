@@ -7,12 +7,12 @@ import Image from 'next/image';
 import styles from './pool-members.module.css';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useNav } from "@/lib/NavigationStack";
-import { capitalizeWords } from '@/utils/textUtils';
+import { capitalizeWords, capitalize } from '@/utils/textUtils';
 import { getParamatical } from '@/utils/checkers';
 import { useUserData } from '@/lib/stacks/user-stack';
 import { UserData } from '@/models/user-data';
-import { BackendRedeemCodeModel } from '@/models/redeem-code-model';
-import { RedeemCodeModel } from '@/models/redeem-code-model';
+import { BackendPoolMemberModel } from '@/models/pool-member';
+import { PoolMemberModel } from '@/models/pool-member';
 import LoadingView from '@/components/LoadingView/LoadingView';
 import NoResultsView from '@/components/NoResultsView/NoResultsView';
 import ErrorView from '@/components/ErrorView/ErrorView';
@@ -20,112 +20,67 @@ import { checkLocation, checkFeatures, fetchUserPartialDetails, fetchUserDetails
 import { useDemandState } from '@/lib/state-stack';
 import { PaginateModel } from '@/models/paginate-model';
 import { StateStack } from '@/lib/state-stack';
-import { useRedeemCodeModel } from '@/lib/stacks/redeem-code-stack';
+import { usePoolMemberModel } from '@/lib/stacks/pool-member-stack';
 
 interface PoolMembersProps {
   poolsId: string;
 }
 
-const RedeemCodeCard: React.FC<{ redeemCode: RedeemCodeModel }> = ({ redeemCode }) => {
+const PoolMemberCard: React.FC<{ poolMember: PoolMemberModel }> = ({ poolMember }) => {
   const { t, lang } = useLanguage();
   const { theme } = useTheme();
+  const [imageError, setImageError] = useState(false);
 
-  const handleCopy = async (code: RedeemCodeModel) => {
-    try {
-      await navigator.clipboard.writeText(code.redeemCodeValue);
-      // You might want to add a toast notification here
-      console.log('Code copied to clipboard:', code.redeemCodeValue);
-    } catch (err) {
-      console.error('Failed to copy code:', err);
-    }
-  };
-
-  const formatExpiryDate = (expiry: string | null | undefined) => {
-    if (!expiry) return null;
-    try {
-      const date = new Date(expiry);
-      return date.toLocaleDateString(lang, {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
-      });
-    } catch {
-      return expiry;
-    }
-  };
-
-  const expiryText = formatExpiryDate(redeemCode.redeemCodeExpires);
-
-  // Build rules text based on the conditions
-  const buildRulesText = () => {
-    const rules = [];
-
-    if (redeemCode.redeemCodeTop) rules.push(t('top_text'));
-    if (redeemCode.redeemCodeMid) rules.push(t('mid_text'));
-    if (redeemCode.redeemCodeBot) rules.push(t('bot_text'));
-    if (redeemCode.redeemCodeRank1) rules.push(t('first_rank'));
-    if (redeemCode.redeemCodeRank2) rules.push(t('second_rank'));
-    if (redeemCode.redeemCodeRank3) rules.push(t('third_rank'));
-
-    if (rules.length === 0) return null;
-
-    return (
-      <div className={styles.rulesRow}>
-        <span className={styles.rulesLabel}>{t('rules_text')}:</span>
-        <span className={styles.rulesValue}>{rules.join(', ')}</span>
-      </div>
-    );
-  };
-
-  const rulesElement = buildRulesText();
-  const hasRules = rulesElement !== null;
+   const getInitials = (text: string): string => {
+     if (!text) return '?';
+     return text.split(' ')
+       .map(word => word.charAt(0).toUpperCase())
+       .slice(0, 2)
+       .join('');
+   };
 
   return (
-    <div className={styles.redeemCodeCard} role="group" aria-labelledby={`redeemCode-${redeemCode.redeemCodeId}`}>
-      {/* Main Card Content */}
+    <div
+      className={`${styles.membersCard} ${styles[`membersCard_${theme}`]}`}
+    >
       <div className={styles.cardContent}>
-        {/* Header with code and copy button */}
-        <div className={styles.cardHeader}>
-          <div className={styles.codeSection}>
-            <h3 id={`redeemCode-${redeemCode.redeemCodeId}`} className={styles.redeemCodeValue}>
-              {redeemCode.redeemCodeValue}
-            </h3>
-            <button
-              className={styles.copyButton}
-              onClick={() => handleCopy(redeemCode)}
-              aria-label={`Copy code ${redeemCode.redeemCodeValue}`}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <rect x="9" y="9" width="9" height="9" stroke="currentColor" strokeWidth="1.6" rx="1" />
-                <rect x="4.5" y="4.5" width="9" height="9" stroke="currentColor" strokeWidth="1.2" rx="1" />
-              </svg>
-            </button>
-          </div>
-        </div>
-
-        {/* Amount section with icon */}
-        <div className={styles.amountSection}>
-          <div className={styles.amountContent}>
-            <div className={styles.currencyIcon}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.31-8.86c-1.77-.45-2.34-.94-2.34-1.67 0-.84.79-1.43 2.1-1.43 1.38 0 1.9.66 1.94 1.64h1.71c-.05-1.34-.87-2.57-2.49-2.97V5H10.9v1.69c-1.51.32-2.72 1.3-2.72 2.81 0 1.79 1.49 2.69 3.66 3.21 1.95.46 2.34 1.15 2.34 1.87 0 .53-.39 1.39-2.1 1.39-1.6 0-2.23-.72-2.32-1.64H8.32c.1 1.7 1.36 2.66 2.86 2.97V19h2.34v-1.67c1.52-.29 2.72-1.16 2.72-2.82 0-1.47-1.09-2.49-3.93-3.16z"/>
-              </svg>
-            </div>
-            <span className={styles.amountText}>{redeemCode.redeemCodeAmount}</span>
-          </div>
-        </div>
-
-        {/* Footer with rules and expiry */}
-        <div className={styles.cardFooter}>
-          {hasRules && rulesElement}
-          {hasRules && expiryText && <div className={styles.separator} />}
-          {expiryText && (
-            <div className={styles.expiryRow}>
-              <span className={styles.expiryText}>
-                {t('expires_text', { date: expiryText })}
-              </span>
+        {/* Pool Image/Initials */}
+        <div className={styles.membersImageContainer}>
+          {poolMember.userDetails.image && !imageError ? (
+            <Image
+              src={poolMember.userDetails.image}
+              alt={poolMember.userDetails.name}
+              width={60}
+              height={60}
+              className={styles.membersImage}
+              onError={() => setImageError(true)}
+            />
+          ) : (
+            <div className={styles.membersInitials}>
+              {getInitials(poolMember.userDetails.name)}
             </div>
           )}
+        </div>
+
+        {/* members Info */}
+        <div className={styles.membersInfo}>
+          <div className={styles.membersHeader}>
+            <h3 className={`${styles.membersTitle} ${styles[`membersTitle_${theme}`]}`}>
+              {capitalize(poolMember.userDetails.name)}
+            </h3>
+            <span className={`${styles.membersDate} ${styles[`membersDate_${theme}`]}`}>
+              {poolMember.userDetails.rolesDetails.identity}
+            </span>
+          </div>
+
+          {/* Creator Info */}
+          <div className={styles.creatorInfo}>
+            <div className={styles.creatorDetails}>
+              <span className={`${styles.creatorName} ${styles[`creatorName_${theme}`]}`}>
+                {poolMember.userDetails.username}
+              </span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -139,6 +94,8 @@ export default function PoolMembers(props: PoolMembersProps) {
   const { poolsId } = props;
   const { userData, userData$ } = useUserData();
   const loaderRef = useRef<HTMLDivElement | null>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isMountedRef = useRef(true);
 
   const [paginateModel, setPaginateModel] = useState<PaginateModel>(new PaginateModel());
   const [fetchLoading, setFetchLoading] = useState(false);
@@ -146,7 +103,7 @@ export default function PoolMembers(props: PoolMembersProps) {
   const [empty, setEmpty] = useState(false);
 
 
-  const [redeemCodes, demandRedeemCodes, setRedeemCodes] = useRedeemCodeModel(lang);
+  const [poolMembers, demandPoolMembers, setPoolMembers] = usePoolMemberModel(lang);
 
 
   useEffect(() => {
@@ -166,9 +123,9 @@ export default function PoolMembers(props: PoolMembersProps) {
         return () => {
             if (loaderRef.current) observer.unobserve(loaderRef.current);
         };
-    }, [redeemCodes, paginateModel]);
+    }, [poolMembers, paginateModel]);
 
-  const fetchRedeemCodes = useCallback(async (userData: UserData, limitBy: number, paginateModel: PaginateModel): Promise<RedeemCodeModel[]> => {
+  const fetchPoolMembers = useCallback(async (userData: UserData, limitBy: number, paginateModel: PaginateModel): Promise<PoolMemberModel[]> => {
     if (!userData) return [];
 
     try {
@@ -181,90 +138,118 @@ export default function PoolMembers(props: PoolMembersProps) {
 
       if (!paramatical) return [];
 
-      const { data, error } = await supabaseBrowser.rpc("get_users_redeem_code", {
+      const { data, error } = await supabaseBrowser.rpc("fetch_pool_members", {
         p_user_id: paramatical.usersId,
+        p_pool_id: poolsId,
         p_locale: paramatical.locale,
         p_country: paramatical.country,
         p_gender: paramatical.gender,
         p_age: paramatical.age,
         p_limit_by: limitBy,
-        p_after_codes: paginateModel.toJson(),
+        p_for_ranking: true,
+        p_after_pool_members: paginateModel.toJson(),
       });
 
       if (error) {
-        console.error("[RedeemCodes] error:", error);
+        console.error("[poolMembers] error:", error);
         setError(t('error_occurred'));
         return [];
       }
       setError('');
-      return (data || []).map((row: BackendRedeemCodeModel) => new RedeemCodeModel(row));
+      return (data || []).map((row: BackendPoolMemberModel) => new PoolMemberModel(row));
     } catch (err) {
-      console.error("[RedeemCodes] error:", err);
+      console.error("[poolMembers] error:", err);
       setError(t('error_occurred'));
       return [];
     }
   }, [lang]);
 
-  const extractLatest = (userRedeemCodes: RedeemCodeModel[]) => {
-    if (userRedeemCodes.length > 0) {
-      const lastItem = userRedeemCodes[userRedeemCodes.length - 1];
+  const extractLatest = (poolMembers: PoolMemberModel[]) => {
+    if (poolMembers.length > 0) {
+      const lastItem = poolMembers[poolMembers.length - 1];
       setPaginateModel(new PaginateModel({ sortId: lastItem.sortCreatedId }));
     }
   };
 
-  const processRedeemCodesPaginate = (userRedeemCodes: RedeemCodeModel[]) => {
-    const oldRedeemCodesIds = redeemCodes.map((e) => e.redeemCodeId);
-    const newRedeemCodes = [...redeemCodes];
+  const processPoolMembersPaginate = (poolMembers: PoolMemberModel[]) => {
+    const oldPoolMembersIds = poolMembers.map((e) => e.userDetails.userId);
+    const newPoolMembers = [...poolMembers];
 
-    for (const friend of userRedeemCodes) {
-      if (!oldRedeemCodesIds.includes(friend.redeemCodeId)) {
-        newRedeemCodes.push(friend);
+    for (const members of poolMembers) {
+      if (!oldPoolMembersIds.includes(members.userDetails.userId)) {
+        newPoolMembers.push(members);
       }
     }
 
-    setRedeemCodes(newRedeemCodes);
+    setPoolMembers(newPoolMembers);
   };
 
 
   useEffect(() => {
-    demandRedeemCodes(async ({ get, set }) => {
-      if (!userData || redeemCodes.length > 0) return;
+    demandPoolMembers(async ({ get, set }) => {
+      if (!userData || poolMembers.length > 0) return;
       setFetchLoading(true);
-      const redeemCodesModel = await fetchRedeemCodes(userData, 10,  new PaginateModel());
-      extractLatest(redeemCodesModel);
-      set(redeemCodesModel);
-      setEmpty(redeemCodesModel.length === 0);
+      const poolMembersModel = await fetchPoolMembers(userData, 15,  new PaginateModel());
+      extractLatest(poolMembersModel);
+      set(poolMembersModel);
+      console.log(poolMembersModel);
+      setEmpty(poolMembersModel.length === 0);
       setFetchLoading(false);
+      if(poolMembersModel.length < 15)refreshData();
     });
-  }, [demandRedeemCodes]);
+  }, [demandPoolMembers]);
 
 
   const callPaginate = async () => {
-    if (!userData || redeemCodes.length <= 0) return;
+    if (!userData || poolMembers.length <= 15) return;
     setFetchLoading(true);
-    const redeemCodesModel = await fetchRedeemCodes(userData, 20, paginateModel);
+    const poolMembersModel = await fetchPoolMembers(userData, 10, paginateModel);
     setFetchLoading(false);
-    if (redeemCodesModel.length > 0) {
-      extractLatest(redeemCodesModel);
-      processRedeemCodesPaginate(redeemCodesModel);
+    if (poolMembersModel.length > 0) {
+      extractLatest(poolMembersModel);
+      processPoolMembersPaginate(poolMembersModel);
     }
   };
 
   const refreshData = async () => {
-    if (!userData || redeemCodes.length > 0) return;
-    setFetchLoading(true);
-    const redeemCodesModel = await fetchRedeemCodes(userData, 10, paginateModel);
-    setFetchLoading(false);
-    setEmpty(redeemCodesModel.length === 0);
-    if (redeemCodesModel.length > 0) {
-      extractLatest(redeemCodesModel);
-      setRedeemCodes(redeemCodesModel);
+    if (!userData) return;
+    let size = poolMembers.length;
+    try{
+      const poolMembersModel = await fetchPoolMembers(userData, 15, paginateModel);
+      setEmpty(poolMembersModel.length === 0);
+      if (poolMembersModel.length > 0) {
+        extractLatest(poolMembersModel);
+        setPoolMembers(poolMembersModel);
+        size = poolMembersModel.length;
+      }
+    } catch (error) {
+       console.error('Error fetching data:', error);
+    } finally {
+       // Schedule next call only if component is still mounted
+       if (isMountedRef.current) {
+           timeoutRef.current = setTimeout(() => {
+               if(size < 15)refreshData();
+           }, 10000);
+       }
     }
+
   };
+
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    // Cleanup function
+    return () => {
+      isMountedRef.current = false;
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
 
     const goBack = async () => {
       await nav.pop();
-      StateStack.core.clearScope('redeem_code_flow');
+      StateStack.core.clearScope('pool_member_flow');
     };
 
   return (
@@ -289,9 +274,9 @@ export default function PoolMembers(props: PoolMembersProps) {
       </header>
 
       <div className={styles.content}>
-        {redeemCodes.length === 0  && fetchLoading && <LoadingView />}
+        {poolMembers.length === 0  && fetchLoading && <LoadingView />}
 
-        {redeemCodes.length === 0 && error && (
+        {poolMembers.length === 0 && error && (
           <ErrorView
             text={error}
             buttonText="Try Again"
@@ -307,10 +292,11 @@ export default function PoolMembers(props: PoolMembersProps) {
           />
         )}
 
-         {redeemCodes.map((redeemCode) => (
-                 <RedeemCodeCard key={redeemCode.redeemCodeId} redeemCode={redeemCode}/>
+         {poolMembers.map((poolMember) => (
+                 <PoolMemberCard key={poolMember.userDetails.userId} poolMember={poolMember}/>
          ))}
-         {redeemCodes.length > 0 && <div ref={loaderRef} className={styles.loadMoreSentinel}></div>}
+
+         {poolMembers.length > 15 && <div ref={loaderRef} className={styles.loadMoreSentinel}></div>}
       </div>
     </main>
   );
