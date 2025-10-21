@@ -27,6 +27,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { checkLocation, checkFeatures, fetchUserPartialDetails, fetchUserDetails } from '@/utils/checkers';
 import { TransactionModel } from '@/models/transaction-model';
 import { useTransactionModel } from '@/lib/stacks/transactions-stack';
+import { useAwaitableRouter } from "@/hooks/useAwaitableRouter";
 
 interface LeaveQuizResponse {
   status: string;
@@ -40,6 +41,7 @@ export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) 
   const { userData, userData$ } = useUserData();
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isMountedRef = useRef(true);
+  const { pushAndWait } = useAwaitableRouter();
 
   const [firstLoaded, setFirstLoaded] = useState(false);
   const [quizLoading, setQuizLoading] = useState(false);
@@ -240,6 +242,11 @@ export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) 
 
   const handleTopicClick = (topic: UserDisplayQuizTopicModel) => {
     nav.push('quiz_commitment',{poolsId: activeQuiz?.quizPool?.poolsId, action: 'active'});
+  };
+
+  const onContinueClick = async () => {
+    if(!userData || !activeQuiz.quizPool?.poolsId)return;
+    await pushAndWait(`/quiz/${activeQuiz.quizPool?.poolsId}`);
   };
   
   // Function to leave quiz API call

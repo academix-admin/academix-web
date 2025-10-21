@@ -40,6 +40,7 @@ import { useUserBalance } from '@/lib/stacks/user-balance-stack';
 import { useActiveQuiz } from "@/lib/stacks/active-quiz-stack";
 import { poolsSubscriptionManager } from '@/lib/managers/PoolsQuizTopicSubscriptionManager';
 import { PoolChangeEvent } from '@/lib/managers/PoolsQuizTopicSubscriptionManager';
+import { useAwaitableRouter } from "@/hooks/useAwaitableRouter";
 
 interface LeaveQuizResponse {
   status: string;
@@ -66,6 +67,7 @@ export default function QuizCommitment(props: QuizChallengeProps) {
   const isTop = nav.isTop();
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isMountedRef = useRef(true);
+  const { pushAndWait } = useAwaitableRouter();
 
   const { userData, userData$ } = useUserData();
   const [userBalance] = useUserBalance(lang);
@@ -364,7 +366,8 @@ export default function QuizCommitment(props: QuizChallengeProps) {
   }, []);
 
   const onContinueClick = async () => {
-
+    if(!userData || !currentQuiz?.quizPool?.poolsId)return;
+    await pushAndWait(`/quiz/${currentQuiz.quizPool?.poolsId}`);
   };
 
   // Format number with commas

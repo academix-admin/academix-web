@@ -37,7 +37,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { replaceAndWait } = useAwaitableRouter();
 
   const publicRoutes = ['/', '/login', '/signup','/welcome']
-  const protectedRoutes = ['/main']
+  const protectedRoutes = ['/main', '/quiz']
 
 
   useEffect(() => {
