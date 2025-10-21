@@ -451,7 +451,7 @@ export default function QuizCommitment(props: QuizChallengeProps) {
               <button
                             type="button"
                             className={styles.removeButton}
-                            disabled={!activeQuiz}
+                            disabled={!activeQuiz || activeQuiz.quizPool?.poolsStatus != 'Pools.open'}
                             onClick={handleLeave}
                           >
                                           {quizLoading ? <span className={styles.spinner}></span> : t('leave_text')}

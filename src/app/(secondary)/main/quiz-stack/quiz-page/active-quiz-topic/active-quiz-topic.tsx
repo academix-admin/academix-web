@@ -521,7 +521,7 @@ function CurrentQuizCard({ topic, getInitials, onClick, onLeave  }: CurrentQuizC
             role="button"
             className={styles.leaveButton}
             onClick={handleLeaveClick}
-            disabled={leaving}
+            disabled={leaving || topic.quizPool?.poolsStatus != 'Pools.open'}
           >
             {leaving ? (
                           <div className={styles.leaveSpinner}></div>
