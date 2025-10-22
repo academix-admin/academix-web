@@ -87,47 +87,56 @@ export default function QuizCommitment(props: QuizChallengeProps) {
   const [activeQuiz, , setActiveQuizTopicModel,  { isHydrated: activeHydrated }] = useActiveQuiz(lang);
   const [membersCount, setMembersCount] = useState<number | null>(null);
 
-  useEffect(() => {
-    if(!availableHydrated || !activeHydrated) return;
-    const getQuiz = action === 'active' ? activeQuiz : quizModels.find((e) => e.quizPool?.poolsId === poolsId);
 
-    if (getQuiz && !currentQuiz) {
-      setCurrentQuiz(getQuiz);
-      fetchPoolMembers(getQuiz);
-    } else if(isTop) {
-      if(!currentQuiz){
-       nav.popToRoot();
-      }
-    }
-  }, [quizModels, activeQuiz, poolsId, availableHydrated, activeHydrated, isTop]);
 
   // Subscribe to changes
   const handlePoolChange = (event: PoolChangeEvent) => {
-    const { eventType, newRecord: quizPool, oldRecordId: poolsId } = event;
+    const { eventType, newRecord: quizPool, oldRecordId: eventPoolsId } = event;
     if (!currentQuiz) return;
-    if (eventType === 'DELETE' && poolsId === currentQuiz?.quizPool?.poolsId) {
-//         something else - insufficient
-     console.log('something else 2');
 
-    } else if (quizPool) {
-      if(quizPool?.poolsId != currentQuiz?.quizPool?.poolsId)return;
-      // 🔹 Otherwise, update the pool normally
+    // Early return if pool ID doesn't match
+    if (quizPool?.poolsId !== currentQuiz?.quizPool?.poolsId && eventPoolsId !== currentQuiz?.quizPool?.poolsId) {
+      return;
+    }
+
+    if (eventType === 'DELETE' && eventPoolsId === currentQuiz.quizPool?.poolsId) {
+           console.log('Pool deleted');
+    } else if (quizPool && quizPool.poolsId === currentQuiz.quizPool?.poolsId) {
+
+      // Update the pool
       const topicModel = UserDisplayQuizTopicModel.from(currentQuiz);
       const renewedPool = topicModel?.quizPool?.getStreamedUpdate(quizPool);
 
       setCurrentQuiz(topicModel.copyWith({ quizPool: renewedPool }));
       //         something else
-      // old status was active, ended
+            // old status was active, ended
     }
   };
 
   useEffect(() => {
-    poolsSubscriptionManager.attachListener(handlePoolChange);
+    if(!availableHydrated || !activeHydrated) return;
+    const getQuiz = action === 'active' ? activeQuiz : quizModels.find((e) => e.quizPool?.poolsId === poolsId);
+
+    if (getQuiz) {
+      if(!currentQuiz)fetchPoolMembers(getQuiz);
+      setCurrentQuiz(getQuiz);
+    } else if(isTop) {
+      if(!currentQuiz){
+       nav.popToRoot();
+      }
+    }
+  }, [poolsId, availableHydrated, activeHydrated, isTop, action]);
+
+  useEffect(() => {
+      poolsSubscriptionManager.attachListener(handlePoolChange, !currentQuiz);
 
     return () => {
       poolsSubscriptionManager.removeListener(handlePoolChange);
     };
-  }, [handlePoolChange]);
+
+  }, [handlePoolChange ]);
+
+
 
   // Function to engage quiz API call
   const engageQuiz = async (jwt: string, data: any): Promise<EngageQuizResponse> => {
@@ -213,12 +222,14 @@ export default function QuizCommitment(props: QuizChallengeProps) {
       console.log(leave);
 
       if (status === 'PoolActive.success') {
+         if(activeQuiz?.quizPool?.poolsId)poolsSubscriptionManager.removeQuizTopicPool(activeQuiz.quizPool.poolsId);
          setActiveQuizTopicModel(null);
          const updatedModels = transactionModels.filter(
              (m) => m.poolsId !== leave.pools_id
          );
          setTransactionModels(updatedModels);
       }else if(status === 'PoolActive.no_active' && activeQuiz){
+          if(activeQuiz?.quizPool?.poolsId)poolsSubscriptionManager.removeQuizTopicPool(activeQuiz.quizPool.poolsId);
          setActiveQuizTopicModel(null);
          const updatedModels = transactionModels.filter(
              (m) => m.poolsId !== leave.pools_id
@@ -298,13 +309,20 @@ export default function QuizCommitment(props: QuizChallengeProps) {
       if (status === 'PoolStatus.engaged' || status === 'PoolStatus.this_active') {
         const quizModel = new UserDisplayQuizTopicModel(engagement.quiz_pool);
         const transaction = new TransactionModel(engagement.transaction_details);
-
         if(engagement.transaction_details) setTransactionModels([transaction,...transactionModels]);
         setActiveQuizTopicModel(quizModel);
-        console.log(quizModel);
-        poolsSubscriptionManager.handleQuizTopicData('UPDATE', quizModel.quizPool || null);
+        if(quizModel?.quizPool?.poolsId)poolsSubscriptionManager.addQuizTopicPool(
+                                          {
+                                            poolsId: quizModel.quizPool.poolsId,
+                                            poolsSubscriptionType: 'active'
+                                          },
+                                          {
+                                            override: true,
+                                            update: true
+                                          }
+                                        );
         withdrawBottomController.close();
-        await nav.replace('quiz_commitment',{
+        await nav.replaceParam({
           poolsId: quizModel?.quizPool?.poolsId,
           action: 'active'
         });
@@ -406,6 +424,25 @@ export default function QuizCommitment(props: QuizChallengeProps) {
 
   const showBottom = currentQuiz && selectedChallengeModel && (selectedSkip || selectedRedeemCodeModel) && selectedRule && selectedPayout;
 
+  const getIsContinueEnabled = (quiz: UserDisplayQuizTopicModel | null): boolean => {
+    if (!quiz?.quizPool) return false;
+
+    const { poolsStatus, poolsJob, poolsJobEndAt } = quiz.quizPool;
+
+    return (
+      poolsStatus === 'Pools.active' &&
+      (
+        poolsJob === 'PoolJob.pool_period' ||
+        (
+          poolsJob === 'PoolJob.start_pool' &&
+          !!poolsJobEndAt &&
+          new Date() >= new Date(poolsJobEndAt)
+        )
+      )
+    );
+  };
+
+
   return (
     <main className={`${styles.container} ${styles[`container_${theme}`]}`}>
       <header className={`${styles.header} ${styles[`header_${theme}`]}`}>
@@ -462,7 +499,7 @@ export default function QuizCommitment(props: QuizChallengeProps) {
               <button
                           className={styles.continueButton}
                           onClick={onContinueClick}
-                          disabled={!activeQuiz}
+                          disabled={!activeQuiz || !getIsContinueEnabled(activeQuiz)}
               >
                               {t('continue')}
               </button>

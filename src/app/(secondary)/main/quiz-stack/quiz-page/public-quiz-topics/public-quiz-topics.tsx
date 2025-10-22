@@ -45,6 +45,8 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
   const [paginateModel, setPaginateModel] = useState<PaginateModel>(new PaginateModel());
   const [firstLoaded, setFirstLoaded] = useState(false);
   const [quizLoading, setQuizLoading] = useState(false);
+  const maybeActivePoolId = useRef<string | null>(null);
+
 
 
   const [quizModels, demandUserDisplayQuizTopicModel, setUserDisplayQuizTopicModel] = usePublicQuiz(lang, pType);
@@ -69,7 +71,7 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
           (m) => m.quizPool?.poolsId !== quizPool.poolsId
         );
         setUserDisplayQuizTopicModel(updatedModels);
-        poolsSubscriptionManager.removeQuizTopicPool(quizPool.poolsId);
+        if(maybeActivePoolId.current != quizPool.poolsId)poolsSubscriptionManager.removeQuizTopicPool(quizPool.poolsId);
         return;
       }
 
@@ -287,6 +289,7 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
     // Cleanup function
     return () => {
       isMountedRef.current = false;
+      maybeActivePoolId.current = null;
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
@@ -340,6 +343,7 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
 
   const handleTopicClick = (topic: UserDisplayQuizTopicModel) => {
     if(activeQuiz)return;
+    maybeActivePoolId.current = topic?.quizPool?.poolsId ?? null;
     nav.push('quiz_commitment',{poolsId: topic?.quizPool?.poolsId, action: pType});
   };
 

@@ -38,10 +38,11 @@ export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) 
   const { theme } = useTheme();
   const { t, lang, tNode } = useLanguage();
   const nav = useNav();
-  const { userData, userData$ } = useUserData();
+  const { userData, userData$, __meta } = useUserData();
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isMountedRef = useRef(true);
   const { pushAndWait } = useAwaitableRouter();
+  const isRefreshingRef = useRef(false);
 
   const [firstLoaded, setFirstLoaded] = useState(false);
   const [quizLoading, setQuizLoading] = useState(false);
@@ -78,10 +79,10 @@ export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) 
   function shouldRemoveOtherQuizPool(updatedPool?: QuizPool | null): boolean {
     if (!updatedPool) return false;
 
-    // Convert the UTC timestamp (from Supabase) to a local Date object
-    const date = updatedPool.poolsStartingAt
-      ? new Date(updatedPool.poolsStartingAt)
-      : null;
+//     // Convert the UTC timestamp (from Supabase) to a local Date object
+//     const date = updatedPool.poolsStartingAt
+//       ? new Date(updatedPool.poolsStartingAt)
+//       : null;
 
 
     // Check if the pool is closed
@@ -173,18 +174,23 @@ export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) 
       // Start the first call
       refreshData();
     });
-  }, [demandActiveQuizTopicModel]);
+  }, [demandActiveQuizTopicModel ]);
 
 
   const refreshData = async () => {
-      console.log('called');
     if (!userData) return;
+    if (isRefreshingRef.current) return; // 🚫 already running
+      isRefreshingRef.current = true;
     try {
         const active = await fetchActiveQuizTopicModel(userData);
+        if(active?.quizPool)poolsSubscriptionManager.handleQuizTopicData('UPDATE', active.quizPool ?? null, undefined , active.quizPool?.poolsId );
+        if(!active && activeQuiz)poolsSubscriptionManager.handleQuizTopicData('DELETE', null, activeQuiz.quizPool?.poolsId , activeQuiz.quizPool?.poolsId );
+        if(activeQuiz?.quizPool?.poolsId && !active)poolsSubscriptionManager.removeQuizTopicPool(activeQuiz.quizPool.poolsId);
         setActiveQuizTopicModel(active);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
+        isRefreshingRef.current = false; // ✅ unlock
       // Schedule next call only if component is still mounted
       if (isMountedRef.current) {
         timeoutRef.current = setTimeout(() => {
@@ -196,6 +202,7 @@ export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) 
   };
 
   useEffect(() => {
+    if(!__meta.isHydrated)return;
     isMountedRef.current = true;
     refreshData();
     // Cleanup function
@@ -205,7 +212,7 @@ export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) 
         clearTimeout(timeoutRef.current);
       }
     };
-  }, []);
+  }, [__meta.isHydrated]);
 
 
    const getInitials = (text: string): string => {
@@ -248,7 +255,7 @@ export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) 
     if(!userData || !activeQuiz.quizPool?.poolsId)return;
     await pushAndWait(`/quiz/${activeQuiz.quizPool?.poolsId}`);
   };
-  
+
   // Function to leave quiz API call
   const leaveQuiz = async (jwt: string, data: any): Promise<LeaveQuizResponse> => {
     const proxyUrl = '/api/leave';
@@ -307,12 +314,14 @@ export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) 
       console.log(leave);
 
       if (status === 'PoolActive.success') {
+         if(activeQuiz?.quizPool?.poolsId)poolsSubscriptionManager.removeQuizTopicPool(activeQuiz.quizPool.poolsId);
          setActiveQuizTopicModel(null);
          const updatedModels = transactionModels.filter(
              (m) => m.poolsId !== leave.pools_id
          );
          setTransactionModels(updatedModels);
       }else if(status === 'PoolActive.no_active' && activeQuiz){
+         if(activeQuiz?.quizPool?.poolsId)poolsSubscriptionManager.removeQuizTopicPool(activeQuiz.quizPool.poolsId);
          setActiveQuizTopicModel(null);
          const updatedModels = transactionModels.filter(
              (m) => m.poolsId !== leave.pools_id
@@ -421,7 +430,7 @@ function CurrentQuizCard({ topic, getInitials, onClick, onLeave  }: CurrentQuizC
       console.error('Quiz timer error:', error);
 
     }
-  }, [topic.quizPool?.poolsJobEndAt, topic.quizPool?.poolsJob, timelapseManager]);
+  }, [topic.quizPool?.poolsJobEndAt, topic.quizPool?.poolsJob]);
 
   const handleCopyCode = async () => {
     if (!topic.quizPool?.poolsCode) return;

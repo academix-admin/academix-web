@@ -64,6 +64,7 @@ export type NavStackAPI = {
   pushAndReplace: (rawKey: string, params?: NavParams, metadata?: StackEntry['metadata']) => Promise<boolean>;
   peek: () => StackEntry | undefined;
   go: (rawKey: string, params?: NavParams, metadata?: StackEntry['metadata']) => Promise<boolean>;
+  replaceParam: (params: NavParams, merge?: boolean) => Promise<boolean>;
   getStack: () => StackEntry[];
   length: () => number;
   subscribe: (fn: StackChangeListener) => () => void;
@@ -106,14 +107,14 @@ type TransitionRenderer = (props: {
 }) => ReactNode;
 
 type GuardFn = (action: {
-  type: "push" | "replace" | "pop" | "popUntil" | "popToRoot";
+  type: "push" | "replace" | 'replaceParam' | "pop" | "popUntil" | "popToRoot";
   from?: StackEntry | undefined;
   to?: StackEntry | undefined;
   stackSnapshot: StackEntry[];
 }) => boolean | Promise<boolean>;
 
 type MiddlewareFn = (action: {
-  type: "push" | "replace" | "pop" | "popUntil" | "popToRoot" | "init";
+  type: "push" | "replace" | 'replaceParam' | "pop" | "popUntil" | "popToRoot" | "init";
   from?: StackEntry | undefined;
   to?: StackEntry | undefined;
   stackSnapshot: StackEntry[];
@@ -138,7 +139,7 @@ type LifecycleHandler = (context: {
   current?: StackEntry;
   previous?: StackEntry;
   action?: {
-    type: 'push' | 'pop' | 'replace' | 'popUntil' | 'popToRoot';
+    type: 'push' | 'pop' | 'replace' | 'replaceParam' | 'popUntil' | 'popToRoot';
     target?: StackEntry;
   };
 }) => void | Promise<void>;
@@ -148,7 +149,7 @@ type AsyncLifecycleHandler = (context: {
   current?: StackEntry;
   previous?: StackEntry;
   action?: {
-    type: 'push' | 'pop' | 'replace' | 'popUntil' | 'popToRoot';
+    type: 'push' | 'pop' | 'replace' | 'replaceParam' | 'popUntil' | 'popToRoot';
     target?: StackEntry;
   };
 }) => Promise<void> | void;
@@ -587,6 +588,7 @@ function useEnhancedScrollRestoration(
     }
   }, [stackSnapshot, renders, scrollManager]);
 }
+
 
 
 // ==================== Core Functions ====================
@@ -1427,6 +1429,77 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
       });
     },
 
+    async replaceParam(newParams: NavParams, merge: boolean = true) {
+      return withLock<boolean>(async () => {
+        const currentEntry = regEntry.stack[regEntry.stack.length - 1];
+
+        if (!currentEntry) {
+          console.warn('replaceParam: No current page in stack');
+          return false;
+        }
+
+        // Calculate the new parameters
+        const finalParams = merge
+          ? { ...currentEntry.params, ...newParams }
+          : newParams;
+         console.log('new finalParams',finalParams);
+        // Check if parameters actually changed
+        const paramsChanged = JSON.stringify(currentEntry.params) !== JSON.stringify(finalParams);
+        if (!paramsChanged) {
+          // No changes needed
+          return true;
+        }
+
+        // Create updated entry but KEEP THE SAME UID
+        // This is the key fix - don't generate new UID for param changes
+        const updatedEntry: StackEntry = {
+          ...currentEntry, // Keep the same UID and all other properties
+          params: finalParams
+        };
+
+        // Before replace lifecycle
+        await lifecycleManager.trigger('onBeforeReplace', {
+          stack: regEntry.stack.slice(),
+          current: currentEntry,
+          previous: undefined,
+          action: { type: 'replaceParam', target: updatedEntry }
+        });
+
+        const action = {
+          type: "replaceParam" as const,
+          from: currentEntry,
+          to: updatedEntry,
+          stackSnapshot: regEntry.stack.slice()
+        };
+
+        // Run guards
+        const ok = await runGuards(action);
+        if (!ok) return false;
+
+        const previousStack = regEntry.stack.slice();
+
+        // Replace the current entry with updated parameters (same position, same UID)
+        regEntry.stack[regEntry.stack.length - 1] = updatedEntry;
+
+        // Run middlewares
+        runMiddlewares(action);
+
+        // Emit changes to listeners - this should NOT trigger transitions
+        // since the UID remains the same
+        emit(previousStack, { type: 'replaceParam', target: updatedEntry });
+
+        // After replace lifecycle
+        lifecycleManager.trigger('onAfterReplace', {
+          stack: regEntry.stack.slice(),
+          current: updatedEntry,
+          previous: currentEntry,
+          action: { type: 'replaceParam', target: updatedEntry }
+        });
+
+        return true;
+      });
+    },
+
     peek() {
       return regEntry.stack[regEntry.stack.length - 1];
     },
@@ -2098,7 +2171,6 @@ export function GroupNavigationStack({
   defaultStack
 }: GroupNavigationStackProps) {
 
-
   // Get initial active stack from URL or fallback to current prop
   const getInitialActiveStackId = (): string => {
     if (typeof window === 'undefined') return current;
@@ -2115,6 +2187,8 @@ export function GroupNavigationStack({
 
   const [activeStackId, setActiveStackId] = useState<string>(getInitialActiveStackId);
   const [hydrated, setHydrated] = useState(false);
+    const previousActiveStackId = useRef<string | null>(null);
+
   useEffect(() => {
       onCurrentChange?.(getInitialActiveStackId());
       setHydrated(true);}, []);
@@ -2596,38 +2670,55 @@ export default function NavigationStack(props: {
     const isTop = topEntry ? rec.entry.uid === topEntry.uid : false;
     const pageOrComp = navLink[rec.entry.key];
 
-    const cached = memoryManager.get(rec.entry.uid);
-    let child: ReactNode = cached;
+    // 🔥 CRITICAL: Always get the FRESH entry from current stack
+    const currentEntry = stackSnapshot.find(s => s.uid === rec.entry.uid) || rec.entry;
+    const currentParams = currentEntry.params ?? {};
 
-    if (!cached) {
+    // 🔥 Check if params changed since last render
+    const cached = memoryManager.get(rec.entry.uid);
+    const hasParamChanges = cached &&
+      JSON.stringify(currentParams) !== JSON.stringify(rec.entry.params);
+
+    let child: ReactNode = null;
+
+    // 🔥 ONLY use cache if NO parameter changes
+    if (cached && !hasParamChanges) {
+      child = cached;
+    } else {
+      // 🔥 ALWAYS create fresh component when params changed or no cache
       if (!pageOrComp) {
         child = (
           <MissingRoute
-            entry={rec.entry}
+            entry={currentEntry}
             isTop={isTop}
             api={api}
             config={missingRouteConfig}
           />
         );
       } else if (typeof pageOrComp === 'function') {
-        if (rec.entry.metadata?.lazy) {
-          child = <LazyRouteLoader lazyComponent={rec.entry.metadata.lazy} />;
-        } else if (lazyComponents?.[rec.entry.key]) {
-          child = <LazyRouteLoader lazyComponent={lazyComponents[rec.entry.key]} />;
+        if (currentEntry.metadata?.lazy) {
+          child = <LazyRouteLoader lazyComponent={currentEntry.metadata.lazy} />;
+        } else if (lazyComponents?.[currentEntry.key]) {
+          child = <LazyRouteLoader lazyComponent={lazyComponents[currentEntry.key]} />;
         } else {
           const Component = pageOrComp as ComponentType<any>;
-          child = <Component {...(rec.entry.params ?? {})} />;
+          // 🔥 ALWAYS use currentParams (fresh from stack)
+          child = <Component {...currentParams} />;
         }
       }
 
-      if (child) {
+      // 🔥 ONLY cache if no parameter changes
+      if (child && !hasParamChanges) {
         memoryManager.set(rec.entry.uid, child);
+      } else if (hasParamChanges) {
+        // 🔥 Remove stale cache when params change
+        memoryManager.delete(rec.entry.uid);
       }
     }
 
     const builtInRenderer: TransitionRenderer = ({ children, state: s, isTop: t, index }) => {
       const baseClass = "navstack-page";
-      const uid = rec.entry.uid;
+      const uid = currentEntry.uid;
 
       if (transition === "slide" && index > 0) {
         return (
@@ -2659,10 +2750,10 @@ export default function NavigationStack(props: {
 
     const renderer = renderTransition ?? builtInRenderer;
     return (
-      <CurrentPageContext.Provider value={rec.entry.uid}>
+      <CurrentPageContext.Provider value={currentEntry.uid}>
         {renderer({
           children: (
-            <CurrentPageContext.Provider value={rec.entry.uid}>
+            <CurrentPageContext.Provider value={currentEntry.uid}>
               {child}
             </CurrentPageContext.Provider>
           ),
