@@ -411,184 +411,126 @@ class EnhancedLifecycleManager {
   }
 }
 
-// ==================== Enhanced Scroll Memory Manager ====================
-class ScrollMemoryManager {
-  private scrollPositions = new Map<string, number>();
-  private currentUid: string | null = null;
-  private lastSavedUid: string | null = null;
 
-  saveScrollPosition(uid: string, position?: number) {
-    if (typeof window === 'undefined') return;
-
-    const scrollY = position !== undefined ? position : window.scrollY;
-    this.scrollPositions.set(uid, scrollY);
-    this.lastSavedUid = uid;
-  }
-
-  restoreScrollPosition(uid: string) {
-    if (typeof window === 'undefined') return;
-
-    const savedPosition = this.scrollPositions.get(uid);
-
-    requestAnimationFrame(() => {
-      if (savedPosition !== undefined) {
-        window.scrollTo(0, savedPosition);
-      } else {
-        // Only scroll to top if this is a completely new page
-        // Don't scroll to top when going back to a page that was never saved
-        if (!this.scrollPositions.has(uid)) {
-          window.scrollTo(0, 0);
-        }
-      }
-    });
-  }
-
-  setCurrentUid(uid: string) {
-    // Save current scroll position before switching (if we have a current UID)
-    if (this.currentUid && this.currentUid !== uid) {
-      this.saveScrollPosition(this.currentUid);
-    }
-
-    this.currentUid = uid;
-    this.restoreScrollPosition(uid);
-  }
-
-  hasSavedPosition(uid: string): boolean {
-    return this.scrollPositions.has(uid);
-  }
-
-  delete(uid: string) {
-    this.scrollPositions.delete(uid);
-    if (this.lastSavedUid === uid) {
-      this.lastSavedUid = null;
-    }
-  }
-
-  clear() {
-    this.scrollPositions.clear();
-    this.currentUid = null;
-    this.lastSavedUid = null;
-  }
-
-  // Debug method
-  getStats() {
-    return {
-      currentUid: this.currentUid,
-      lastSavedUid: this.lastSavedUid,
-      savedPositions: Object.fromEntries(this.scrollPositions),
-      totalPages: this.scrollPositions.size
-    };
-  }
-}
-
-// ==================== Enhanced Scroll Restoration Hook ====================
-function useEnhancedScrollRestoration(
+// ==================== Group-Scoped Scroll Restoration ====================
+export function useGroupScopedScrollRestoration(
   api: NavStackAPI,
   renders: RenderRecord[],
   stackSnapshot: StackEntry[],
-  transitionDuration: number
+  groupContext: GroupNavigationContextType | null,
+  groupStackId: string | null
 ) {
-  const scrollManager = useRef(new ScrollMemoryManager()).current;
-  const lastTopUid = useRef<string | null>(null);
-  const restoreTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const currentScrollY = useRef(0);
+  // Create a unique key for this group/stack combination
+  const groupKey = groupContext ? `${groupContext.getGroupId()}:${groupStackId}` : 'root';
 
-  // 🔒 Disable native restoration
+  const scrollData = useRef<{
+    // Map<groupKey, Map<uid, position>>
+    groupPositions: Map<string, Map<string, number>>;
+    lastUid: string | null;
+    lastGroupKey: string | null;
+    lastActive: boolean;
+    // Track the current scroll position per group
+    currentScrollY: number;
+  }>({
+    groupPositions: new Map(),
+    lastUid: null,
+    lastGroupKey: null,
+    lastActive: true,
+    currentScrollY: 0
+  }).current;
+
+  const isActiveGroup = groupContext ? groupContext.isActiveStack(groupStackId || '') : true;
+
   useEffect(() => {
     if (typeof window !== "undefined" && "scrollRestoration" in window.history) {
       window.history.scrollRestoration = "manual";
     }
   }, []);
 
-  // 🧭 Track scroll position live
-  useEffect(() => {
-    const handleScroll = () => (currentScrollY.current = window.scrollY);
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  // Get or create position map for current group
+  const getGroupPositions = () => {
+    if (!scrollData.groupPositions.has(groupKey)) {
+      scrollData.groupPositions.set(groupKey, new Map());
+    }
+    return scrollData.groupPositions.get(groupKey)!;
+  };
 
-  // 💾 Save position (debounced)
+  // Track scroll position ONLY for active group
   useEffect(() => {
-    let timeoutId: ReturnType<typeof setTimeout>;
-    const saveCurrent = () => {
-      const top = stackSnapshot.at(-1);
-      if (top) scrollManager.saveScrollPosition(top.uid, currentScrollY.current);
-    };
+    if (!isActiveGroup) return;
+
+    const groupPositions = getGroupPositions();
+
     const handleScroll = () => {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(saveCurrent, 80);
-    };
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-      clearTimeout(timeoutId);
-    };
-  }, [stackSnapshot, scrollManager]);
-
-  // 🕒 Save before tab close
-  useEffect(() => {
-    const saveOnHide = () => {
       const top = stackSnapshot.at(-1);
-      if (top) scrollManager.saveScrollPosition(top.uid, currentScrollY.current);
+      if (top) {
+        const scrollY = window.scrollY;
+        groupPositions.set(top.uid, scrollY);
+        scrollData.currentScrollY = scrollY;
+      }
     };
-    window.addEventListener("pagehide", saveOnHide);
-    window.addEventListener("beforeunload", saveOnHide);
-    return () => {
-      window.removeEventListener("pagehide", saveOnHide);
-      window.removeEventListener("beforeunload", saveOnHide);
-    };
-  }, [stackSnapshot]);
 
-  // ⚙️ Handle navigation changes
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [stackSnapshot, isActiveGroup, groupKey]);
+
+  // Group-scoped restoration - FIXED VERSION
   useEffect(() => {
     const topEntry = stackSnapshot.at(-1);
     if (!topEntry) return;
 
-    const uid = topEntry.uid;
-    const prevUid = lastTopUid.current;
-    if (prevUid === uid) return;
+    const { uid } = topEntry;
+    const { lastUid, lastGroupKey, lastActive, groupPositions, currentScrollY } = scrollData;
+    const currentGroupPositions = getGroupPositions();
 
-    // Save outgoing page
-    if (prevUid) scrollManager.saveScrollPosition(prevUid, currentScrollY.current);
-    lastTopUid.current = uid;
+    const groupChanged = lastGroupKey !== groupKey;
+    const uidChanged = uid !== lastUid;
+    const activeChanged = lastActive !== isActiveGroup;
 
-    if (restoreTimer.current) clearTimeout(restoreTimer.current);
 
-    const hasSaved = scrollManager.hasSavedPosition(uid);
-
-    if (!hasSaved) {
-      // New page - scroll to top
-      window.scrollTo({ top: 0, behavior: "instant" });
-      return;
+    // CRITICAL FIX: Only save to previous group if we were actually active in it
+    if (lastUid && lastActive && lastGroupKey && groupChanged) {
+      const lastGroupPositions = groupPositions.get(lastGroupKey);
+      if (lastGroupPositions) {
+        // Use the tracked scroll position, NOT the current window scroll
+        lastGroupPositions.set(lastUid, currentScrollY);
+      }
     }
 
-    // 🎯 QUICK RESTORE for revisited pages - only 1 frame delay
-    restoreTimer.current = setTimeout(() => {
-      const savedY = scrollManager.getStats().savedPositions?.[uid];
-      const targetY = typeof savedY === "number" ? savedY : 0;
+    // Restore if we're active AND (group changed OR uid changed OR became active)
+    if (isActiveGroup && (groupChanged || uidChanged || activeChanged)) {
+      const savedPos = currentGroupPositions.get(uid);
 
-      requestAnimationFrame(() => {
-        window.scrollTo(0, targetY);
-      });
-    }, 16); // Just 1 frame delay instead of transition-based delay
+      if (savedPos !== undefined) {
+        // Multiple restoration attempts
+        window.scrollTo(0, savedPos);
+        scrollData.currentScrollY = savedPos;
 
-    return () => {
-      if (restoreTimer.current) clearTimeout(restoreTimer.current);
-    };
-  }, [stackSnapshot, scrollManager, transitionDuration]);
+        requestAnimationFrame(() => {
+          window.scrollTo(0, savedPos);
+        });
 
-  // 🧹 Clean stale
-  useEffect(() => {
-    const valid = new Set([
-      ...stackSnapshot.map(s => s.uid),
-      ...renders.map(r => r.entry.uid),
-    ]);
-    for (const uid of scrollManager["scrollPositions"].keys()) {
-      if (!valid.has(uid)) scrollManager.delete(uid);
+        setTimeout(() => {
+          if (window.scrollY !== savedPos) {
+            window.scrollTo(0, savedPos);
+            scrollData.currentScrollY = savedPos;
+          }
+        }, 50);
+      } else {
+        window.scrollTo(0, 0);
+        currentGroupPositions.set(uid, 0);
+        scrollData.currentScrollY = 0;
+      }
     }
-  }, [stackSnapshot, renders, scrollManager]);
+
+    // Update state
+    scrollData.lastUid = uid;
+    scrollData.lastGroupKey = groupKey;
+    scrollData.lastActive = isActiveGroup;
+  }, [stackSnapshot, isActiveGroup, groupKey]);
+
+  return null;
 }
-
 
 
 // ==================== Core Functions ====================
@@ -2200,6 +2142,7 @@ export function GroupNavigationStack({
     setActiveStackId(current);
   }, [current]);
 
+
   const restUrl = () => {
       const url = new URL(window.location.href);
       url.searchParams.delete('group');
@@ -2623,8 +2566,9 @@ export default function NavigationStack(props: {
   const memoryManager = useRef<PageMemoryManager>(new PageMemoryManager()).current;
 
   if (enableScrollRestoration) {
-    useEnhancedScrollRestoration(api, renders, stackSnapshot, transitionDuration);
+    useGroupScopedScrollRestoration(api, renders, stackSnapshot, groupContext, groupStackId);
   }
+
 
   useEffect(() => {
     const handleTransitionEnd = (uid: string) => {

@@ -64,6 +64,7 @@ export type NavStackAPI = {
   pushAndReplace: (rawKey: string, params?: NavParams, metadata?: StackEntry['metadata']) => Promise<boolean>;
   peek: () => StackEntry | undefined;
   go: (rawKey: string, params?: NavParams, metadata?: StackEntry['metadata']) => Promise<boolean>;
+  replaceParam: (params: NavParams, merge?: boolean) => Promise<boolean>;
   getStack: () => StackEntry[];
   length: () => number;
   subscribe: (fn: StackChangeListener) => () => void;
@@ -79,6 +80,21 @@ export type NavStackAPI = {
   isInGroup: () => boolean;
   getGroupId: () => string | null;
   goToGroupId: (groupId: string) => Promise<boolean>;
+  addOnCreate: (handler: LifecycleHandler) => () => void;
+  addOnDispose: (handler: LifecycleHandler) => () => void;
+  addOnPause: (handler: LifecycleHandler) => () => void;
+  addOnResume: (handler: LifecycleHandler) => () => void;
+  addOnEnter: (handler: LifecycleHandler) => () => void;
+  addOnExit: (handler: LifecycleHandler) => () => void;
+  addOnBeforePush: (handler: AsyncLifecycleHandler) => () => void;
+  addOnAfterPush: (handler: LifecycleHandler) => () => void;
+  addOnBeforePop: (handler: AsyncLifecycleHandler) => () => void;
+  addOnAfterPop: (handler: LifecycleHandler) => () => void;
+  addOnBeforeReplace: (handler: AsyncLifecycleHandler) => () => void;
+  addOnAfterReplace: (handler: LifecycleHandler) => () => void;
+  clearAllLifecycleHandlers: (hook?: LifecycleHook) => void;
+  getLifecycleHandlers: (hook: LifecycleHook) => LifecycleHandler[];
+  _getLifecycleManager: () => EnhancedLifecycleManager;
 };
 
 type NavigationMap = Record<string, ComponentType<any> | (() => LazyComponent)>;
@@ -91,18 +107,52 @@ type TransitionRenderer = (props: {
 }) => ReactNode;
 
 type GuardFn = (action: {
-  type: "push" | "replace" | "pop" | "popUntil" | "popToRoot";
+  type: "push" | "replace" | 'replaceParam' | "pop" | "popUntil" | "popToRoot";
   from?: StackEntry | undefined;
   to?: StackEntry | undefined;
   stackSnapshot: StackEntry[];
 }) => boolean | Promise<boolean>;
 
 type MiddlewareFn = (action: {
-  type: "push" | "replace" | "pop" | "popUntil" | "popToRoot" | "init";
+  type: "push" | "replace" | 'replaceParam' | "pop" | "popUntil" | "popToRoot" | "init";
   from?: StackEntry | undefined;
   to?: StackEntry | undefined;
   stackSnapshot: StackEntry[];
 }) => void;
+
+type LifecycleHook =
+  | 'onCreate'
+  | 'onDispose'
+  | 'onPause'
+  | 'onResume'
+  | 'onEnter'
+  | 'onExit'
+  | 'onBeforePush'
+  | 'onAfterPush'
+  | 'onBeforePop'
+  | 'onAfterPop'
+  | 'onBeforeReplace'
+  | 'onAfterReplace';
+
+type LifecycleHandler = (context: {
+  stack: StackEntry[];
+  current?: StackEntry;
+  previous?: StackEntry;
+  action?: {
+    type: 'push' | 'pop' | 'replace' | 'replaceParam' | 'popUntil' | 'popToRoot';
+    target?: StackEntry;
+  };
+}) => void | Promise<void>;
+
+type AsyncLifecycleHandler = (context: {
+  stack: StackEntry[];
+  current?: StackEntry;
+  previous?: StackEntry;
+  action?: {
+    type: 'push' | 'pop' | 'replace' | 'replaceParam' | 'popUntil' | 'popToRoot';
+    target?: StackEntry;
+  };
+}) => Promise<void> | void;
 
 // ==================== Constants ====================
 const DEFAULT_TRANSITION_DURATION = 220;
@@ -134,6 +184,9 @@ if (!isServer) {
     currentPath?: string;
     isInGroup?: boolean;
     groupId?: string;
+    lifecycleHandlers: Map<LifecycleHook, Set<LifecycleHandler | AsyncLifecycleHandler>>;
+    currentState: 'active' | 'paused' | 'background';
+    lastActiveEntry?: StackEntry;
   }>();
 } else {
   // Server-side stub
@@ -246,6 +299,118 @@ class PageMemoryManager {
   }
 }
 
+// ==================== Enhanced Lifecycle Manager ====================
+class EnhancedLifecycleManager {
+  private handlers: Map<LifecycleHook, Set<LifecycleHandler | AsyncLifecycleHandler>>;
+  private stackId: string;
+  private cleanupCallbacks: (() => void)[] = [];
+
+  constructor(stackId: string) {
+    this.stackId = stackId;
+    this.handlers = new Map();
+
+    // Initialize all lifecycle hooks
+    const hooks: LifecycleHook[] = [
+      'onCreate', 'onDispose', 'onPause', 'onResume',
+      'onEnter', 'onExit', 'onBeforePush', 'onAfterPush',
+      'onBeforePop', 'onAfterPop', 'onBeforeReplace', 'onAfterReplace'
+    ];
+
+    hooks.forEach(hook => {
+      this.handlers.set(hook, new Set());
+    });
+  }
+
+  // Add app state tracking
+  enableAppStateTracking(getCurrentContext: () => { stack: StackEntry[]; current?: StackEntry }) {
+    if (typeof window === 'undefined') return;
+
+    const handleVisibilityChange = () => {
+      const context = getCurrentContext();
+      if (document.hidden) {
+        this.trigger('onPause', context);
+      } else {
+        this.trigger('onResume', context);
+      }
+    };
+
+    const handlePageHide = () => {
+      const context = getCurrentContext();
+      this.trigger('onPause', context);
+    };
+
+    const handlePageShow = () => {
+      const context = getCurrentContext();
+      this.trigger('onResume', context);
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('pagehide', handlePageHide);
+    window.addEventListener('pageshow', handlePageShow);
+
+    const cleanup = () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('pagehide', handlePageHide);
+      window.removeEventListener('pageshow', handlePageShow);
+    };
+
+    this.cleanupCallbacks.push(cleanup);
+    return cleanup;
+  }
+
+  addHandler(hook: LifecycleHook, handler: LifecycleHandler | AsyncLifecycleHandler): () => void {
+    const hookHandlers = this.handlers.get(hook);
+    if (hookHandlers) {
+      hookHandlers.add(handler);
+      return () => hookHandlers.delete(handler);
+    }
+    return () => {};
+  }
+
+  async trigger(hook: LifecycleHook, context: any): Promise<void> {
+    const hookHandlers = this.handlers.get(hook);
+    if (!hookHandlers) return;
+
+    const handlers = Array.from(hookHandlers);
+
+    // For async handlers (onBefore* hooks), wait for all to complete
+    if (hook.startsWith('onBefore')) {
+      for (const handler of handlers) {
+        await (handler as AsyncLifecycleHandler)(context);
+      }
+    } else {
+      // For sync handlers, run in parallel but don't wait
+      handlers.forEach(handler => {
+        try {
+          (handler as LifecycleHandler)(context);
+        } catch (error) {
+          console.warn(`Lifecycle handler for ${hook} threw:`, error);
+        }
+      });
+    }
+  }
+
+  getHandlers(hook: LifecycleHook): LifecycleHandler[] {
+    const hookHandlers = this.handlers.get(hook);
+    return hookHandlers ? Array.from(hookHandlers) as LifecycleHandler[] : [];
+  }
+
+  clear(hook?: LifecycleHook) {
+    if (hook) {
+      this.handlers.get(hook)?.clear();
+    } else {
+      this.handlers.forEach(handlers => handlers.clear());
+    }
+  }
+
+  dispose() {
+    this.cleanupCallbacks.forEach(cleanup => cleanup());
+    this.cleanupCallbacks = [];
+    this.clear();
+    this.handlers.clear();
+  }
+}
+
 // ==================== Enhanced Scroll Memory Manager ====================
 class ScrollMemoryManager {
   private scrollPositions = new Map<string, number>();
@@ -324,77 +489,106 @@ function useEnhancedScrollRestoration(
   transitionDuration: number
 ) {
   const scrollManager = useRef(new ScrollMemoryManager()).current;
-  const isInitialMount = useRef(true);
   const lastTopUid = useRef<string | null>(null);
-  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const restoreTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const currentScrollY = useRef(0);
 
-  // Save scroll position on scroll (debounced)
+  // 🔒 Disable native restoration
   useEffect(() => {
-    const handleScroll = () => {
-      const topEntry = stackSnapshot[stackSnapshot.length - 1];
-      if (!topEntry) return;
+    if (typeof window !== "undefined" && "scrollRestoration" in window.history) {
+      window.history.scrollRestoration = "manual";
+    }
+  }, []);
 
-      if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
-      scrollTimeoutRef.current = setTimeout(() => {
-        scrollManager.saveScrollPosition(topEntry.uid);
-      }, 80);
+  // 🧭 Track scroll position live
+  useEffect(() => {
+    const handleScroll = () => (currentScrollY.current = window.scrollY);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // 💾 Save position (debounced)
+  useEffect(() => {
+    let timeoutId: ReturnType<typeof setTimeout>;
+    const saveCurrent = () => {
+      const top = stackSnapshot.at(-1);
+      if (top) scrollManager.saveScrollPosition(top.uid, currentScrollY.current);
     };
-
+    const handleScroll = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(saveCurrent, 80);
+    };
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => {
       window.removeEventListener("scroll", handleScroll);
-      if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+      clearTimeout(timeoutId);
     };
   }, [stackSnapshot, scrollManager]);
 
-  // Track navigation changes
+  // 🕒 Save before tab close
   useEffect(() => {
-    const currentTopUid = stackSnapshot.at(-1)?.uid;
-    if (!currentTopUid) return;
+    const saveOnHide = () => {
+      const top = stackSnapshot.at(-1);
+      if (top) scrollManager.saveScrollPosition(top.uid, currentScrollY.current);
+    };
+    window.addEventListener("pagehide", saveOnHide);
+    window.addEventListener("beforeunload", saveOnHide);
+    return () => {
+      window.removeEventListener("pagehide", saveOnHide);
+      window.removeEventListener("beforeunload", saveOnHide);
+    };
+  }, [stackSnapshot]);
 
-    const previousUid = lastTopUid.current;
-    const isNewPage = !scrollManager.hasSavedPosition(currentTopUid);
+  // ⚙️ Handle navigation changes
+  useEffect(() => {
+    const topEntry = stackSnapshot.at(-1);
+    if (!topEntry) return;
 
-    // Save outgoing page scroll
-    if (previousUid && previousUid !== currentTopUid) {
-      scrollManager.saveScrollPosition(previousUid);
+    const uid = topEntry.uid;
+    const prevUid = lastTopUid.current;
+    if (prevUid === uid) return;
+
+    // Save outgoing page
+    if (prevUid) scrollManager.saveScrollPosition(prevUid, currentScrollY.current);
+    lastTopUid.current = uid;
+
+    if (restoreTimer.current) clearTimeout(restoreTimer.current);
+
+    const hasSaved = scrollManager.hasSavedPosition(uid);
+
+    if (!hasSaved) {
+      // New page - scroll to top
+      window.scrollTo({ top: 0, behavior: "instant" });
+      return;
     }
 
-    // Restore (or reset) for new page
-    requestAnimationFrame(() => {
-      if (isNewPage) {
-        // Always start at top for new pages
-        window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
-      } else {
-        // Restore immediately for known pages (no long timeout)
-        scrollManager.setCurrentUid(currentTopUid);
-      }
-    });
+    // 🎯 QUICK RESTORE for revisited pages - only 1 frame delay
+    restoreTimer.current = setTimeout(() => {
+      const savedY = scrollManager.getStats().savedPositions?.[uid];
+      const targetY = typeof savedY === "number" ? savedY : 0;
 
-    lastTopUid.current = currentTopUid;
-    isInitialMount.current = false;
-  }, [stackSnapshot, scrollManager]);
+      requestAnimationFrame(() => {
+        window.scrollTo(0, targetY);
+      });
+    }, 16); // Just 1 frame delay instead of transition-based delay
 
-  // Clean up orphaned scroll positions
+    return () => {
+      if (restoreTimer.current) clearTimeout(restoreTimer.current);
+    };
+  }, [stackSnapshot, scrollManager, transitionDuration]);
+
+  // 🧹 Clean stale
   useEffect(() => {
-    const activeUids = new Set(stackSnapshot.map((e) => e.uid));
-    const renderUids = new Set(renders.map((r) => r.entry.uid));
-
+    const valid = new Set([
+      ...stackSnapshot.map(s => s.uid),
+      ...renders.map(r => r.entry.uid),
+    ]);
     for (const uid of scrollManager["scrollPositions"].keys()) {
-      if (!activeUids.has(uid) && !renderUids.has(uid)) {
-        scrollManager.delete(uid);
-      }
+      if (!valid.has(uid)) scrollManager.delete(uid);
     }
   }, [stackSnapshot, renders, scrollManager]);
-
-  // Save final scroll when unmounting
-  useEffect(() => {
-    return () => {
-      const topEntry = stackSnapshot.at(-1);
-      if (topEntry) scrollManager.saveScrollPosition(topEntry.uid);
-    };
-  }, [stackSnapshot, scrollManager]);
 }
+
 
 
 // ==================== Core Functions ====================
@@ -683,6 +877,7 @@ function removeNavQueryParamForStack(stackId: string, groupContext: GroupNavigat
 function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, parentApi: NavStackAPI | null, currentPath: string, groupContext: GroupNavigationContextType | null = null, groupStackId : string | null): NavStackAPI {
   const transitionManager = new TransitionManager();
   const memoryManager = new PageMemoryManager();
+  const lifecycleManager = new EnhancedLifecycleManager(id);
 
   let safeRegEntry = globalRegistry.get(id);
   if (!safeRegEntry) {
@@ -697,6 +892,9 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
       parentId: parentApi?.id || null,
       childIds: new Set(),
       navLink,
+      lifecycleHandlers: new Map(),
+      currentState: 'active',
+      lastActiveEntry: undefined,
     };
     globalRegistry.set(id, safeRegEntry);
 
@@ -712,9 +910,52 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
   }
   const regEntry = safeRegEntry;
 
-  function emit() {
-    const stackCopy = regEntry!.stack.slice();
-    const regEntryCurrentPath = regEntry.currentPath || (typeof window !== 'undefined' ? window.location.pathname : '');
+
+  function emit(previousStack?: StackEntry[], action?: { type: string; target?: StackEntry }) {
+      const stackCopy = regEntry!.stack.slice();
+      const regEntryCurrentPath = regEntry.currentPath || (typeof window !== 'undefined' ? window.location.pathname : '');
+
+      const previous = previousStack ? previousStack[previousStack.length - 1] : undefined;
+      const current = stackCopy[stackCopy.length - 1];
+
+      if (!previousStack) {
+        if (current) {
+          lifecycleManager.trigger('onEnter', {
+            stack: stackCopy,
+            current,
+            previous: undefined,
+            action
+          });
+        }
+      } else {
+        const previousTop = previousStack[previousStack.length - 1];
+        const currentTop = stackCopy[stackCopy.length - 1];
+
+        const isDifferentPage = !previousTop || !currentTop || previousTop.uid !== currentTop.uid;
+
+        if (isDifferentPage) {
+          if (previousTop) {
+            lifecycleManager.trigger('onExit', {
+              stack: stackCopy,
+              current: currentTop,
+              previous: previousTop,
+              action
+            });
+          }
+
+          if (currentTop) {
+            lifecycleManager.trigger('onEnter', {
+              stack: stackCopy,
+              current: currentTop,
+              previous: previousTop,
+              action
+            });
+          }
+        }
+      }
+
+    // Update registry state
+    regEntry.lastActiveEntry = current;
 
     if ((syncHistory || regEntry.historySyncEnabled) && regEntryCurrentPath) {
       if (typeof window !== 'undefined' && window.location.pathname !== regEntryCurrentPath) {
@@ -782,10 +1023,28 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
     async push(rawKey, params, metadata) {
       return withLock<boolean>(async () => {
         const { key, params: p } = parseRawKey(rawKey, params);
+
+        const newEntry: StackEntry = {
+          uid: generateStableUid(key, p),
+          key,
+          params: p,
+          metadata
+        };
+
+        const previousStack = regEntry.stack.slice();
+
+        // Before push lifecycle
+        await lifecycleManager.trigger('onBeforePush', {
+          stack: regEntry.stack.slice(),
+          current: regEntry.stack[regEntry.stack.length - 1],
+          previous: undefined,
+          action: { type: 'push', target: newEntry }
+        });
+
         const action = {
           type: "push" as const,
           from: regEntry.stack[regEntry.stack.length - 1],
-          to: { uid: generateStableUid(key, p), key, params: p, metadata },
+          to: newEntry,
           stackSnapshot: regEntry.stack.slice()
         };
         const ok = await runGuards(action);
@@ -793,35 +1052,67 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
         if (regEntry.maxStackSize && regEntry.stack.length >= regEntry.maxStackSize) {
           regEntry.stack.splice(0, regEntry.stack.length - regEntry.maxStackSize + 1);
         }
-        regEntry.stack.push(action.to);
+        regEntry.stack.push(newEntry);
         runMiddlewares(action);
-        emit();
+        emit(previousStack, { type: 'push', target: newEntry });
+
+        // After push lifecycle
+        lifecycleManager.trigger('onAfterPush', {
+          stack: regEntry.stack.slice(),
+          current: newEntry,
+          previous: action.from,
+          action: { type: 'push', target: newEntry }
+        });
+
         return true;
       });
     },
 
-    async replace(rawKey, params, metadata) {
-      return withLock<boolean>(async () => {
-        const { key, params: p } = parseRawKey(rawKey, params);
-        const top = regEntry.stack[regEntry.stack.length - 1];
-        const action = {
-          type: "replace" as const,
-          from: top,
-          to: { uid: generateStableUid(key, p), key, params: p, metadata },
-          stackSnapshot: regEntry.stack.slice()
-        };
-        const ok = await runGuards(action);
-        if (!ok) return false;
-        if (regEntry.stack.length === 0) {
-          regEntry.stack.push(action.to);
-        } else {
-          regEntry.stack[regEntry.stack.length - 1] = action.to;
-        }
-        runMiddlewares(action);
-        emit();
-        return true;
-      });
-    },
+   async replace(rawKey, params, metadata) {
+     return withLock<boolean>(async () => {
+       const { key, params: p } = parseRawKey(rawKey, params);
+       const newEntry: StackEntry = { uid: generateStableUid(key, p), key, params: p, metadata };
+       const previousEntry = regEntry.stack[regEntry.stack.length - 1];
+
+       // Before replace lifecycle
+       await lifecycleManager.trigger('onBeforeReplace', {
+         stack: regEntry.stack.slice(),
+         current: previousEntry,
+         previous: undefined,
+         action: { type: 'replace', target: newEntry }
+       });
+
+       const action = {
+         type: "replace" as const,
+         from: previousEntry,
+         to: newEntry,
+         stackSnapshot: regEntry.stack.slice()
+       };
+
+       const ok = await runGuards(action);
+       if (!ok) return false;
+
+       const previousStack = regEntry.stack.slice();
+       if (regEntry.stack.length === 0) {
+         regEntry.stack.push(newEntry);
+       } else {
+         regEntry.stack[regEntry.stack.length - 1] = newEntry;
+       }
+
+       runMiddlewares(action);
+       emit(previousStack, { type: 'replace', target: newEntry });
+
+       // After replace lifecycle
+       lifecycleManager.trigger('onAfterReplace', {
+         stack: regEntry.stack.slice(),
+         current: newEntry,
+         previous: previousEntry,
+         action: { type: 'replace', target: newEntry }
+       });
+
+       return true;
+     });
+   },
 
     async pop() {
       return withLock<boolean>(async () => {
@@ -830,6 +1121,14 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
             return false;
         }
         const top = regEntry.stack[regEntry.stack.length - 1];
+
+        await lifecycleManager.trigger('onBeforePop', {
+          stack: regEntry.stack.slice(),
+          current: top,
+          previous: regEntry.stack[regEntry.stack.length - 2],
+          action: { type: 'pop', target: top }
+        });
+
         const action = {
           type: "pop" as const,
           from: top,
@@ -838,9 +1137,19 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
         };
         const ok = await runGuards(action);
         if (!ok) return false;
+
+        const previousStack = regEntry.stack.slice();
+
         regEntry.stack.pop();
         runMiddlewares(action);
-        emit();
+        emit(previousStack, { type: 'pop', target: top });
+        // After pop lifecycle
+        lifecycleManager.trigger('onAfterPop', {
+          stack: regEntry.stack.slice(),
+          current: regEntry.stack[regEntry.stack.length - 1],
+          previous: top,
+          action: { type: 'pop', target: top }
+        });
         return true;
       });
     },
@@ -848,21 +1157,59 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
     async popUntil(predicate) {
       return withLock<boolean>(async () => {
         if (regEntry.stack.length === 0) {
-            if (regEntry.parentId) return false;
-            return false;
+          if (regEntry.parentId) return false;
+          return false;
         }
-        const action = {
-          type: "popUntil" as const,
-          stackSnapshot: regEntry.stack.slice()
-        };
-        const ok = await runGuards(action);
-        if (!ok) return false;
+
+        const previousStack = regEntry.stack.slice();
         let i = regEntry.stack.length - 1;
         while (i >= 0 && !predicate(regEntry.stack[i], i, regEntry.stack)) i--;
+
         if (i < regEntry.stack.length - 1) {
+          const poppedEntries = regEntry.stack.slice(i + 1);
+          const targetEntry = regEntry.stack[i];
+
+          // Before popUntil lifecycle for each popped entry
+          for (const poppedEntry of poppedEntries) {
+            await lifecycleManager.trigger('onBeforePop', {
+              stack: previousStack,
+              current: poppedEntry,
+              previous: targetEntry,
+              action: { type: 'popUntil', target: poppedEntry }
+            });
+          }
+
+          const action = {
+            type: "popUntil" as const,
+            stackSnapshot: previousStack
+          };
+
+          const ok = await runGuards(action);
+          if (!ok) return false;
+
           regEntry.stack.splice(i + 1);
+
           runMiddlewares(action);
-          emit();
+          emit(previousStack, { type: 'popUntil', target: targetEntry });
+
+          // After popUntil lifecycle
+          lifecycleManager.trigger('onAfterPop', {
+            stack: regEntry.stack.slice(),
+            current: targetEntry,
+            previous: poppedEntries[poppedEntries.length - 1],
+            action: { type: 'popUntil', target: targetEntry }
+          });
+
+          // Trigger onExit for each popped entry
+          poppedEntries.forEach((poppedEntry: StackEntry) => {
+            lifecycleManager.trigger('onExit', {
+              stack: regEntry.stack.slice(),
+              current: targetEntry,
+              previous: poppedEntry,
+              action: { type: 'popUntil', target: poppedEntry }
+            });
+          });
+
           return true;
         }
         return false;
@@ -875,16 +1222,52 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
           type: "popToRoot" as const,
           stackSnapshot: regEntry.stack.slice()
         };
+
         if (regEntry.parentId) return false;
+
+        if (regEntry.stack.length <= 1) return false;
+
+        const previousStack = regEntry.stack.slice();
+        const poppedEntries = regEntry.stack.slice(1);
+        const targetEntry = regEntry.stack[0];
+
+        // Before popToRoot lifecycle for each popped entry
+        for (const poppedEntry of poppedEntries) {
+          await lifecycleManager.trigger('onBeforePop', {
+            stack: previousStack,
+            current: poppedEntry,
+            previous: targetEntry,
+            action: { type: 'popToRoot', target: poppedEntry }
+          });
+        }
+
         const ok = await runGuards(action);
         if (!ok) return false;
-        if (regEntry.stack.length > 1) {
-          regEntry.stack.splice(1);
-          runMiddlewares(action);
-          emit();
-          return true;
-        }
-        return false;
+
+        regEntry.stack.splice(1);
+
+        runMiddlewares(action);
+        emit(previousStack, { type: 'popToRoot', target: targetEntry });
+
+        // After popToRoot lifecycle
+        lifecycleManager.trigger('onAfterPop', {
+          stack: regEntry.stack.slice(),
+          current: targetEntry,
+          previous: poppedEntries[poppedEntries.length - 1],
+          action: { type: 'popToRoot', target: targetEntry }
+        });
+
+        // Trigger onExit for each popped entry
+        poppedEntries.forEach((poppedEntry: StackEntry) => {
+          lifecycleManager.trigger('onExit', {
+            stack: regEntry.stack.slice(),
+            current: targetEntry,
+            previous: poppedEntry,
+            action: { type: 'popToRoot', target: poppedEntry }
+          });
+        });
+
+        return true;
       });
     },
 
@@ -892,26 +1275,69 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
       return withLock<boolean>(async () => {
         const { key, params: p } = parseRawKey(rawKey, params);
         const newEntry: StackEntry = { uid: generateStableUid(key, p), key, params: p, metadata };
+
+        const previousStack = regEntry.stack.slice();
+        let i = regEntry.stack.length - 1;
+        while (i >= 0 && !predicate(regEntry.stack[i], i, regEntry.stack)) i--;
+
+        const poppedEntries = i < regEntry.stack.length - 1 ? regEntry.stack.slice(i + 1) : [];
+        const targetEntry = i >= 0 ? regEntry.stack[i] : undefined;
+
+        // Before lifecycle for popped entries
+        for (const poppedEntry of poppedEntries) {
+          await lifecycleManager.trigger('onBeforePop', {
+            stack: previousStack,
+            current: poppedEntry,
+            previous: newEntry,
+            action: { type: 'pushAndPopUntil', target: poppedEntry }
+          });
+        }
+
+        // Before push lifecycle
+        await lifecycleManager.trigger('onBeforePush', {
+          stack: previousStack,
+          current: regEntry.stack[regEntry.stack.length - 1],
+          previous: undefined,
+          action: { type: 'pushAndPopUntil', target: newEntry }
+        });
+
         const action = {
           type: "push" as const,
           from: regEntry.stack[regEntry.stack.length - 1],
           to: newEntry,
-          stackSnapshot: regEntry.stack.slice()
+          stackSnapshot: previousStack
         };
 
         const ok = await runGuards(action);
         if (!ok) return false;
-
-        let i = regEntry.stack.length - 1;
-        while (i >= 0 && !predicate(regEntry.stack[i], i, regEntry.stack)) i--;
 
         if (i < regEntry.stack.length - 1) {
           regEntry.stack.splice(i + 1);
         }
 
         regEntry.stack.push(newEntry);
+
         runMiddlewares(action);
-        emit();
+        emit(previousStack, { type: 'pushAndPopUntil', target: newEntry });
+
+        // After lifecycle
+        lifecycleManager.trigger('onAfterPush', {
+          stack: regEntry.stack.slice(),
+          current: newEntry,
+          previous: action.from,
+          action: { type: 'pushAndPopUntil', target: newEntry }
+        });
+
+        // Trigger onExit for popped entries
+        poppedEntries.forEach((poppedEntry: StackEntry) => {
+          lifecycleManager.trigger('onExit', {
+            stack: regEntry.stack.slice(),
+            current: newEntry,
+            previous: poppedEntry,
+            action: { type: 'pushAndPopUntil', target: poppedEntry }
+          });
+        });
+
         return true;
       });
     },
@@ -920,9 +1346,19 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
       return withLock<boolean>(async () => {
         const { key, params: p } = parseRawKey(rawKey, params);
         const newEntry: StackEntry = { uid: generateStableUid(key, p), key, params: p, metadata };
+        const previousEntry = regEntry.stack[regEntry.stack.length - 1];
+
+        // Before replace lifecycle
+        await lifecycleManager.trigger('onBeforeReplace', {
+          stack: regEntry.stack.slice(),
+          current: previousEntry,
+          previous: undefined,
+          action: { type: 'pushAndReplace', target: newEntry }
+        });
+
         const action = {
           type: "replace" as const,
-          from: regEntry.stack[regEntry.stack.length - 1],
+          from: previousEntry,
           to: newEntry,
           stackSnapshot: regEntry.stack.slice()
         };
@@ -930,23 +1366,42 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
         const ok = await runGuards(action);
         if (!ok) return false;
 
+        const previousStack = regEntry.stack.slice();
         if (regEntry.stack.length > 0) regEntry.stack.pop();
         regEntry.stack.push(newEntry);
 
         runMiddlewares(action);
-        emit();
+        emit(previousStack, { type: 'pushAndReplace', target: newEntry });
+
+        // After replace lifecycle
+        lifecycleManager.trigger('onAfterReplace', {
+          stack: regEntry.stack.slice(),
+          current: newEntry,
+          previous: previousEntry,
+          action: { type: 'pushAndReplace', target: newEntry }
+        });
+
         return true;
       });
     },
 
-    go(rawKey, params, metadata) {
+    async go(rawKey, params, metadata) {
       return withLock<boolean>(async () => {
         const { key, params: p } = parseRawKey(rawKey, params);
         const newEntry: StackEntry = { uid: generateStableUid(key, p), key, params: p, metadata };
+        const previousEntry = regEntry.stack[regEntry.stack.length - 1];
+
+        // Before replace lifecycle (go is essentially a replace)
+        await lifecycleManager.trigger('onBeforeReplace', {
+          stack: regEntry.stack.slice(),
+          current: previousEntry,
+          previous: undefined,
+          action: { type: 'go', target: newEntry }
+        });
 
         const action = {
           type: "replace" as const,
-          from: regEntry.stack[regEntry.stack.length - 1],
+          from: previousEntry,
           to: newEntry,
           stackSnapshot: regEntry.stack.slice(),
         };
@@ -954,12 +1409,93 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
         const ok = await runGuards(action);
         if (!ok) return false;
 
+        const previousStack = regEntry.stack.slice();
         const len = regEntry.stack.length;
         regEntry.stack.push(newEntry);
         regEntry.stack.splice(0, len);
 
         runMiddlewares(action);
-        emit();
+        emit(previousStack, { type: 'go', target: newEntry });
+
+        // After replace lifecycle
+        lifecycleManager.trigger('onAfterReplace', {
+          stack: regEntry.stack.slice(),
+          current: newEntry,
+          previous: previousEntry,
+          action: { type: 'go', target: newEntry }
+        });
+
+        return true;
+      });
+    },
+
+    async replaceParam(newParams: NavParams, merge: boolean = true) {
+      return withLock<boolean>(async () => {
+        const currentEntry = regEntry.stack[regEntry.stack.length - 1];
+
+        if (!currentEntry) {
+          console.warn('replaceParam: No current page in stack');
+          return false;
+        }
+
+        // Calculate the new parameters
+        const finalParams = merge
+          ? { ...currentEntry.params, ...newParams }
+          : newParams;
+         console.log('new finalParams',finalParams);
+        // Check if parameters actually changed
+        const paramsChanged = JSON.stringify(currentEntry.params) !== JSON.stringify(finalParams);
+        if (!paramsChanged) {
+          // No changes needed
+          return true;
+        }
+
+        // Create updated entry but KEEP THE SAME UID
+        // This is the key fix - don't generate new UID for param changes
+        const updatedEntry: StackEntry = {
+          ...currentEntry, // Keep the same UID and all other properties
+          params: finalParams
+        };
+
+        // Before replace lifecycle
+        await lifecycleManager.trigger('onBeforeReplace', {
+          stack: regEntry.stack.slice(),
+          current: currentEntry,
+          previous: undefined,
+          action: { type: 'replaceParam', target: updatedEntry }
+        });
+
+        const action = {
+          type: "replaceParam" as const,
+          from: currentEntry,
+          to: updatedEntry,
+          stackSnapshot: regEntry.stack.slice()
+        };
+
+        // Run guards
+        const ok = await runGuards(action);
+        if (!ok) return false;
+
+        const previousStack = regEntry.stack.slice();
+
+        // Replace the current entry with updated parameters (same position, same UID)
+        regEntry.stack[regEntry.stack.length - 1] = updatedEntry;
+
+        // Run middlewares
+        runMiddlewares(action);
+
+        // Emit changes to listeners - this should NOT trigger transitions
+        // since the UID remains the same
+        emit(previousStack, { type: 'replaceParam', target: updatedEntry });
+
+        // After replace lifecycle
+        lifecycleManager.trigger('onAfterReplace', {
+          stack: regEntry.stack.slice(),
+          current: updatedEntry,
+          previous: currentEntry,
+          action: { type: 'replaceParam', target: updatedEntry }
+        });
+
         return true;
       });
     },
@@ -1079,8 +1615,30 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
       return groupContext.goToGroupId(groupId);
     },
 
+    addOnCreate: (handler) => lifecycleManager.addHandler('onCreate', handler),
+    addOnDispose: (handler) => lifecycleManager.addHandler('onDispose', handler),
+    addOnPause: (handler) => lifecycleManager.addHandler('onPause', handler),
+    addOnResume: (handler) => lifecycleManager.addHandler('onResume', handler),
+    addOnEnter: (handler) => lifecycleManager.addHandler('onEnter', handler),
+    addOnExit: (handler) => lifecycleManager.addHandler('onExit', handler),
+    addOnBeforePush: (handler) => lifecycleManager.addHandler('onBeforePush', handler),
+    addOnAfterPush: (handler) => lifecycleManager.addHandler('onAfterPush', handler),
+    addOnBeforePop: (handler) => lifecycleManager.addHandler('onBeforePop', handler),
+    addOnAfterPop: (handler) => lifecycleManager.addHandler('onAfterPop', handler),
+    addOnBeforeReplace: (handler) => lifecycleManager.addHandler('onBeforeReplace', handler),
+    addOnAfterReplace: (handler) => lifecycleManager.addHandler('onAfterReplace', handler),
+
+    clearAllLifecycleHandlers: (hook) => lifecycleManager.clear(hook),
+    getLifecycleHandlers: (hook) => lifecycleManager.getHandlers(hook),
+    _getLifecycleManager: () => lifecycleManager,
 
     dispose() {
+      lifecycleManager.trigger('onDispose', {
+        stack: regEntry.stack.slice(),
+        current: regEntry.stack[regEntry.stack.length - 1]
+      });
+
+      lifecycleManager.dispose();
       transitionManager.dispose();
       memoryManager.dispose();
       regEntry.listeners.clear();
@@ -1133,7 +1691,7 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
   };
 
   regEntry.api = api;
-
+  (api as any).lifecycleManager = lifecycleManager;
   return api;
 }
 
@@ -1288,6 +1846,281 @@ export function useNav() {
   return context;
 }
 
+// ==================== Custom Hooks ====================
+
+/**
+ * Hook for managing page lifecycle events
+ * @param nav - The navigation stack API
+ * @param callbacks - Object containing lifecycle callback functions
+ * @param dependencies - Additional dependencies for the callbacks
+ */
+export function usePageLifecycle(
+  nav: NavStackAPI,
+  callbacks: {
+    onEnter?: (context: any) => void;
+    onExit?: (context: any) => void;
+    onPause?: (context: any) => void;
+    onResume?: (context: any) => void;
+    onBeforePush?: (context: any) => Promise<void>;
+    onAfterPush?: (context: any) => void;
+    onBeforePop?: (context: any) => Promise<void>;
+    onAfterPop?: (context: any) => void;
+    onBeforeReplace?: (context: any) => Promise<void>;
+    onAfterReplace?: (context: any) => void;
+  },
+  dependencies: any[] = []
+) {
+  const stableCallbacks = useMemo(() => callbacks, dependencies);
+  const currentPageUid = useContext(CurrentPageContext);
+  const isMounted = useRef(false);
+  const hasTriggeredInitialEnter = useRef(false);
+
+  useEffect(() => {
+    isMounted.current = true;
+    const cleanupFunctions: (() => void)[] = [];
+
+    // Get current page info
+    const currentEntry = nav.peek();
+    const isCurrentPageActive = currentEntry?.uid === currentPageUid;
+
+    // Helper to check if context belongs to current page
+    const isOurPageEntering = (context: any) =>
+      context.current?.uid === currentPageUid;
+
+    const isOurPageExiting = (context: any) =>
+      context.previous?.uid === currentPageUid;
+
+    const isOurPageCurrent = (context: any) =>
+      context.current?.uid === currentPageUid;
+
+    // Handle initial page load - only for the current page
+    if (isCurrentPageActive && currentEntry && stableCallbacks.onEnter && !hasTriggeredInitialEnter.current) {
+      hasTriggeredInitialEnter.current = true;
+
+      const initialContext = {
+        stack: nav.getStack(),
+        current: currentEntry,
+        previous: undefined,
+        action: { type: 'initial' }
+      };
+
+      // Use microtask to ensure component is mounted
+      Promise.resolve().then(() => {
+        if (isMounted.current) {
+          stableCallbacks.onEnter!(initialContext);
+        }
+      });
+    }
+
+    // Register scoped lifecycle handlers
+
+    // PAGE TRANSITION EVENTS (scoped to specific page)
+    if (stableCallbacks.onEnter) {
+      const handler = (context: any) => {
+        if (!isMounted.current) return;
+        if (isOurPageEntering(context)) {
+          stableCallbacks.onEnter!(context);
+        }
+      };
+      cleanupFunctions.push(nav.addOnEnter(handler));
+    }
+
+    if (stableCallbacks.onExit) {
+      const handler = (context: any) => {
+        if (!isMounted.current) return;
+        if (isOurPageExiting(context)) {
+          stableCallbacks.onExit!(context);
+        }
+      };
+      cleanupFunctions.push(nav.addOnExit(handler));
+    }
+
+    // APP-LEVEL EVENTS (not scoped - fire for active page)
+    if (stableCallbacks.onPause) {
+      const handler = (context: any) => {
+        if (!isMounted.current) return;
+        const currentTopPage = nav.peek();
+        if (currentTopPage?.uid === currentPageUid) {
+          stableCallbacks.onPause!(context);
+        }
+      };
+      cleanupFunctions.push(nav.addOnPause(handler));
+    }
+
+    if (stableCallbacks.onResume) {
+      const handler = (context: any) => {
+        if (!isMounted.current) return;
+        const currentTopPage = nav.peek();
+        if (currentTopPage?.uid === currentPageUid) {
+          stableCallbacks.onResume!(context);
+        }
+      };
+      cleanupFunctions.push(nav.addOnResume(handler));
+    }
+
+    // NAVIGATION ACTION EVENTS (scoped to initiating page)
+    if (stableCallbacks.onBeforePush) {
+      const handler = (context: any) => {
+        if (!isMounted.current) return;
+        // onBeforePush: only when pushing FROM our current page
+        if (isOurPageCurrent(context)) {
+          return stableCallbacks.onBeforePush!(context);
+        }
+      };
+      cleanupFunctions.push(nav.addOnBeforePush(handler));
+    }
+
+    if (stableCallbacks.onAfterPush) {
+      const handler = (context: any) => {
+        if (!isMounted.current) return;
+        // onAfterPush: only when push was initiated FROM our page
+        if (context.previous?.uid === currentPageUid) {
+          stableCallbacks.onAfterPush!(context);
+        }
+      };
+      cleanupFunctions.push(nav.addOnAfterPush(handler));
+    }
+
+    if (stableCallbacks.onBeforePop) {
+      const handler = (context: any) => {
+        if (!isMounted.current) return;
+        // onBeforePop: only when popping FROM our current page
+        if (isOurPageCurrent(context)) {
+          return stableCallbacks.onBeforePop!(context);
+        }
+      };
+      cleanupFunctions.push(nav.addOnBeforePop(handler));
+    }
+
+    if (stableCallbacks.onAfterPop) {
+      const handler = (context: any) => {
+        if (!isMounted.current) return;
+        // onAfterPop: only when our page was popped
+        if (isOurPageExiting(context)) {
+          stableCallbacks.onAfterPop!(context);
+        }
+      };
+      cleanupFunctions.push(nav.addOnAfterPop(handler));
+    }
+
+    if (stableCallbacks.onBeforeReplace) {
+      const handler = (context: any) => {
+        if (!isMounted.current) return;
+        // onBeforeReplace: only when replacing our current page
+        if (isOurPageCurrent(context)) {
+          return stableCallbacks.onBeforeReplace!(context);
+        }
+      };
+      cleanupFunctions.push(nav.addOnBeforeReplace(handler));
+    }
+
+    if (stableCallbacks.onAfterReplace) {
+      const handler = (context: any) => {
+        if (!isMounted.current) return;
+        // onAfterReplace: only when our page was replaced
+        if (isOurPageExiting(context)) {
+          stableCallbacks.onAfterReplace!(context);
+        }
+      };
+      cleanupFunctions.push(nav.addOnAfterReplace(handler));
+    }
+
+    return () => {
+      isMounted.current = false;
+      hasTriggeredInitialEnter.current = false;
+      cleanupFunctions.forEach(cleanup => cleanup());
+    };
+  }, [nav, stableCallbacks, currentPageUid]);
+}
+
+/**
+ * Advanced hook with page state management
+ * @param nav - The navigation stack API
+ * @param pageKey - Optional page key to filter events
+ */
+export function usePageState(nav: NavStackAPI, pageKey?: string) {
+  const [state, setState] = useState({
+    isActive: false,
+    isPaused: false,
+    enterTime: null as number | null,
+    exitTime: null as number | null
+  });
+
+  usePageLifecycle(nav, {
+    onEnter: (context) => {
+      if (pageKey && context.current?.key !== pageKey) return;
+
+      setState(prev => ({
+        ...prev,
+        isActive: true,
+        isPaused: false,
+        enterTime: Date.now(),
+        exitTime: null
+      }));
+    },
+
+    onExit: (context) => {
+      if (pageKey && context.current?.key !== pageKey) return;
+
+      setState(prev => ({
+        ...prev,
+        isActive: false,
+        exitTime: Date.now()
+      }));
+    },
+
+    onPause: () => {
+      setState(prev => ({ ...prev, isPaused: true }));
+    },
+
+    onResume: () => {
+      setState(prev => ({ ...prev, isPaused: false }));
+    }
+  }, [pageKey]);
+
+  return state;
+}
+
+/**
+ * Hook for page-specific lifecycle with automatic cleanup
+ * @param nav - The navigation stack API
+ * @param pageKey - The specific page key to watch
+ * @param callbacks - Lifecycle callbacks
+ */
+export function usePageSpecificLifecycle(
+  nav: NavStackAPI,
+  pageKey: string,
+  callbacks: {
+    onEnter?: (context: any) => void;
+    onExit?: (context: any) => void;
+    onPause?: (context: any) => void;
+    onResume?: (context: any) => void;
+  }
+) {
+  usePageLifecycle(nav, {
+    onEnter: (context) => {
+      if (context.current?.key === pageKey) {
+        callbacks.onEnter?.(context);
+      }
+    },
+    onExit: (context) => {
+      if (context.current?.key === pageKey) {
+        callbacks.onExit?.(context);
+      }
+    },
+    onPause: (context) => {
+      if (context.current?.key === pageKey) {
+        callbacks.onPause?.(context);
+      }
+    },
+    onResume: (context) => {
+      if (context.current?.key === pageKey) {
+        callbacks.onResume?.(context);
+      }
+    }
+  }, [pageKey]);
+}
+
 // ==================== Group Navigation Stack ====================
 type GroupNavigationStackProps = {
   id: string;
@@ -1338,7 +2171,6 @@ export function GroupNavigationStack({
   defaultStack
 }: GroupNavigationStackProps) {
 
-
   // Get initial active stack from URL or fallback to current prop
   const getInitialActiveStackId = (): string => {
     if (typeof window === 'undefined') return current;
@@ -1355,6 +2187,8 @@ export function GroupNavigationStack({
 
   const [activeStackId, setActiveStackId] = useState<string>(getInitialActiveStackId);
   const [hydrated, setHydrated] = useState(false);
+    const previousActiveStackId = useRef<string | null>(null);
+
   useEffect(() => {
       onCurrentChange?.(getInitialActiveStackId());
       setHydrated(true);}, []);
@@ -1527,6 +2361,35 @@ export default function NavigationStack(props: {
 
     return newApi;
   }, [id, navLink, syncHistory, parentApi, currentPath, groupContext]);
+
+ // Trigger onCreate lifecycle when API is created
+  useEffect(() => {
+    const lifecycleManager = api._getLifecycleManager();
+    lifecycleManager.trigger('onCreate', {
+      stack: api.getStack(),
+      current: api.peek()
+    });
+  }, [api]);
+
+  // App state tracking
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const regEntry = globalRegistry.get(id);
+    if (!regEntry) return;
+
+    const lifecycleManager = api._getLifecycleManager();
+
+    // Enable app state tracking
+    const getCurrentContext = () => ({
+      stack: regEntry.stack.slice(),
+      current: regEntry.stack[regEntry.stack.length - 1]
+    });
+
+    const cleanupAppState = lifecycleManager.enableAppStateTracking(getCurrentContext);
+
+    return cleanupAppState;
+  }, [api, id]);
 
   // Update the registry with the current path
     useEffect(() => {
@@ -1807,38 +2670,55 @@ export default function NavigationStack(props: {
     const isTop = topEntry ? rec.entry.uid === topEntry.uid : false;
     const pageOrComp = navLink[rec.entry.key];
 
-    const cached = memoryManager.get(rec.entry.uid);
-    let child: ReactNode = cached;
+    // 🔥 CRITICAL: Always get the FRESH entry from current stack
+    const currentEntry = stackSnapshot.find(s => s.uid === rec.entry.uid) || rec.entry;
+    const currentParams = currentEntry.params ?? {};
 
-    if (!cached) {
+    // 🔥 Check if params changed since last render
+    const cached = memoryManager.get(rec.entry.uid);
+    const hasParamChanges = cached &&
+      JSON.stringify(currentParams) !== JSON.stringify(rec.entry.params);
+
+    let child: ReactNode = null;
+
+    // 🔥 ONLY use cache if NO parameter changes
+    if (cached && !hasParamChanges) {
+      child = cached;
+    } else {
+      // 🔥 ALWAYS create fresh component when params changed or no cache
       if (!pageOrComp) {
         child = (
           <MissingRoute
-            entry={rec.entry}
+            entry={currentEntry}
             isTop={isTop}
             api={api}
             config={missingRouteConfig}
           />
         );
       } else if (typeof pageOrComp === 'function') {
-        if (rec.entry.metadata?.lazy) {
-          child = <LazyRouteLoader lazyComponent={rec.entry.metadata.lazy} />;
-        } else if (lazyComponents?.[rec.entry.key]) {
-          child = <LazyRouteLoader lazyComponent={lazyComponents[rec.entry.key]} />;
+        if (currentEntry.metadata?.lazy) {
+          child = <LazyRouteLoader lazyComponent={currentEntry.metadata.lazy} />;
+        } else if (lazyComponents?.[currentEntry.key]) {
+          child = <LazyRouteLoader lazyComponent={lazyComponents[currentEntry.key]} />;
         } else {
           const Component = pageOrComp as ComponentType<any>;
-          child = <Component {...(rec.entry.params ?? {})} />;
+          // 🔥 ALWAYS use currentParams (fresh from stack)
+          child = <Component {...currentParams} />;
         }
       }
 
-      if (child) {
+      // 🔥 ONLY cache if no parameter changes
+      if (child && !hasParamChanges) {
         memoryManager.set(rec.entry.uid, child);
+      } else if (hasParamChanges) {
+        // 🔥 Remove stale cache when params change
+        memoryManager.delete(rec.entry.uid);
       }
     }
 
     const builtInRenderer: TransitionRenderer = ({ children, state: s, isTop: t, index }) => {
       const baseClass = "navstack-page";
-      const uid = rec.entry.uid;
+      const uid = currentEntry.uid;
 
       if (transition === "slide" && index > 0) {
         return (
@@ -1870,10 +2750,10 @@ export default function NavigationStack(props: {
 
     const renderer = renderTransition ?? builtInRenderer;
     return (
-      <CurrentPageContext.Provider value={rec.entry.uid}>
+      <CurrentPageContext.Provider value={currentEntry.uid}>
         {renderer({
           children: (
-            <CurrentPageContext.Provider value={rec.entry.uid}>
+            <CurrentPageContext.Provider value={currentEntry.uid}>
               {child}
             </CurrentPageContext.Provider>
           ),
