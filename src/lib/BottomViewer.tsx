@@ -78,6 +78,7 @@ const styles = `
 .bottom-viewer-cancel-btn.left { left: 0px; }
 .bottom-viewer-cancel-btn.right { right: 0px; }
 .react-modal-sheet-container {
+  max-height: calc(var(--vh, 1vh) * 100);
   max-width: 500px;
   margin: 0 auto;
   border-top-left-radius: 16px;
@@ -169,21 +170,52 @@ const BottomViewer = React.forwardRef<any, BottomViewerProps>(({
       }
     }, [children]);
 
-    // Calculate max safe height
-    const calculateSafeHeight = useCallback(() => {
-      const maxHeight = layoutProp?.maxHeight || 'auto';
+    useEffect(() => {
+      const updateVh = () => {
+        const vh = window.visualViewport
+          ? window.visualViewport.height * 0.01
+          : window.innerHeight * 0.01;
+        document.documentElement.style.setProperty('--vh', `${vh}px`);
+      };
+
+      updateVh();
+
+      window.visualViewport?.addEventListener('resize', updateVh);
+      window.visualViewport?.addEventListener('scroll', updateVh);
+      window.addEventListener('resize', updateVh);
+
+      return () => {
+        window.visualViewport?.removeEventListener('resize', updateVh);
+        window.visualViewport?.removeEventListener('scroll', updateVh);
+        window.removeEventListener('resize', updateVh);
+      };
+    }, []);
+
+
+//     // Calculate max safe height
+//     const calculateSafeHeight = useCallback(() => {
+//       const maxHeight = layoutProp?.maxHeight || 'auto';
+//       if (typeof window !== 'undefined' && window.innerWidth <= 500) {
+//         return `min(${maxHeight}, calc(100vh - env(safe-area-inset-top, 0px) - 60px))`;
+//       }
+//       return maxHeight;
+//     }, [layoutProp?.maxHeight]);
+
+    const calculateSafeMaxHeight = useCallback(() => {
+      const maxHeight = layoutProp?.maxHeight || '100vh';
       if (typeof window !== 'undefined' && window.innerWidth <= 500) {
-        return `min(${maxHeight}, calc(100vh - env(safe-area-inset-top, 0px) - 60px))`;
+        return `calc(var(--vh, 1vh) * 100 - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))`;
       }
       return maxHeight;
     }, [layoutProp?.maxHeight]);
+
 
     // Body scroll and focus management
     useEffect(() => {
       if (isOpen) {
         previousActiveElement.current = document.activeElement;
         document.body.classList.add('body-bottom-sheet-open');
-        setContentHeight(calculateSafeHeight());
+        setContentHeight(calculateSafeMaxHeight());
         setTimeout(() => contentRef.current?.focus(), 100);
       } else {
         document.body.classList.remove('body-bottom-sheet-open');
@@ -194,15 +226,15 @@ const BottomViewer = React.forwardRef<any, BottomViewerProps>(({
         isControlledInternally.current = false;
       }
       return () => document.body.classList.remove('body-bottom-sheet-open');
-    }, [isOpen, calculateSafeHeight]);
+    }, [isOpen, calculateSafeMaxHeight]);
 
     // ResizeObserver for dynamic content height
     useEffect(() => {
       if (!contentRef.current) return;
-      const observer = new ResizeObserver(() => setContentHeight(calculateSafeHeight()));
+      const observer = new ResizeObserver(() => setContentHeight(calculateSafeMaxHeight()));
       observer.observe(contentRef.current);
       return () => observer.disconnect();
-    }, [calculateSafeHeight]);
+    }, [calculateSafeMaxHeight]);
 
     const handleBackdropTap = useCallback(() => {
       if (backDrop) onClose();
@@ -248,8 +280,8 @@ const BottomViewer = React.forwardRef<any, BottomViewerProps>(({
     >
       <Sheet.Container
         style={{
-          height: contentHeight,
-          maxHeight: layoutProp?.maxHeight || "100vh",
+          height: "auto",
+          maxHeight: calculateSafeMaxHeight(),
           maxWidth: "500px",
           margin: "0 auto",
           width: "100%",
