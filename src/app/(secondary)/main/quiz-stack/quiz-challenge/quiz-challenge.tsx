@@ -73,7 +73,7 @@ export default function QuizChallenge(props: QuizChallengeProps) {
   const [quizLoading, setQuizLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const [withdrawBottomViewerId, withdrawBottomController, withdrawBottomIsOpen] = useBottomController();
+  const [withdrawBottomViewerId, withdrawBottomController, withdrawBottomIsOpen,,withdrawBottomRef] = useBottomController();
 
   const [activeQuiz, , setActiveQuizTopicModel] = useActiveQuiz(lang);
 
@@ -295,6 +295,7 @@ export default function QuizChallenge(props: QuizChallengeProps) {
       </div>
 
       { showBottom && <BottomViewer
+        ref={withdrawBottomRef}
         id={withdrawBottomViewerId}
         isOpen={withdrawBottomIsOpen}
         onClose={withdrawBottomController.close}
