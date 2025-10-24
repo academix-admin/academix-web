@@ -347,7 +347,16 @@
   "status_change_after_expiry": "Status ({status}) will change after expiry",
   "commit_text": "Commit",
   "quiz_closed": "Quiz Closed",
-  "pool_members": "Pool Members"
+  "pool_members": "Pool Members",
+  "pool_closed": "Pool closed",
+  "user_left_pool": "You left the pool quiz. Exit to join again",
+  "pool_info_reason": "Quiz pool with topic identity - {topic} was unable to continue.",
+  "pool_already_ended": "{topic} has completed. Therefore you cannot continue",
+  "exit_text": "Exit",
+  "popup_blocked": "Popup blocked. Please click the button to open the link manually.",
+  "payment_redirect_title": "Payment Redirect",
+  "payment_redirect_text": "A new tab should open to complete your payment. If nothing happens, click the button below.",
+  "open_payment_link": "Open Payment Link"
 }
 
 

@@ -348,7 +348,14 @@
   "status_change_after_expiry": "Le statut ({status}) changera après l’expiration",
   "commit_text": "Valider",
   "quiz_closed": "Quiz fermé",
-  "pool_members": "Membres du groupe"
-
-
+  "pool_members": "Membres du groupe",
+  "pool_closed": "Pool fermé",
+  "user_left_pool": "Vous avez quitté le quiz du pool. Quittez pour le rejoindre à nouveau",
+  "pool_info_reason": "Le quiz du pool avec le sujet {topic} n’a pas pu continuer.",
+  "pool_already_ended": "{topic} est terminé. Vous ne pouvez donc pas continuer",
+  "exit_text": "Quitter",
+  "popup_blocked": "Fenêtre contextuelle bloquée. Veuillez cliquer sur le bouton pour ouvrir le lien manuellement.",
+  "payment_redirect_title": "Redirection de paiement",
+  "payment_redirect_text": "Un nouvel onglet devrait s’ouvrir pour compléter votre paiement. Si rien ne se passe, cliquez sur le bouton ci-dessous.",
+  "open_payment_link": "Ouvrir le lien de paiement"
 }

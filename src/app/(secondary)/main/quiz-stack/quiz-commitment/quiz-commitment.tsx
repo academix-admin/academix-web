@@ -61,7 +61,7 @@ interface EngageQuizResponse {
 
 export default function QuizCommitment(props: QuizChallengeProps) {
   const { theme } = useTheme();
-  const { t, lang } = useLanguage();
+  const { t, tNode, lang } = useLanguage();
   const nav = useNav();
   const { poolsId, action } = props;
   const isTop = nav.isTop();
@@ -81,12 +81,14 @@ export default function QuizCommitment(props: QuizChallengeProps) {
   const [selectedSkip, setSelectedSkip] = useState(false);
   const [quizLoading, setQuizLoading] = useState(false);
   const [error, setError] = useState('');
+  const [infoState, setInfoState] = useState('');
 
   const [withdrawBottomViewerId, withdrawBottomController, withdrawBottomIsOpen] = useBottomController();
 
   const [activeQuiz, , setActiveQuizTopicModel,  { isHydrated: activeHydrated }] = useActiveQuiz(lang);
   const [membersCount, setMembersCount] = useState<number | null>(null);
 
+  const [quizInfoBottomViewerId, quizInfoBottomController, quizInfoBottomIsOpen,,quizInfoBottomRef] = useBottomController();
 
 
   // Subscribe to changes
@@ -100,16 +102,22 @@ export default function QuizCommitment(props: QuizChallengeProps) {
     }
 
     if (eventType === 'DELETE' && eventPoolsId === currentQuiz.quizPool?.poolsId) {
-           console.log('Pool deleted');
+           setInfoState('deleted');
+           quizInfoBottomController.open();
     } else if (quizPool && quizPool.poolsId === currentQuiz.quizPool?.poolsId) {
 
       // Update the pool
       const topicModel = UserDisplayQuizTopicModel.from(currentQuiz);
       const renewedPool = topicModel?.quizPool?.getStreamedUpdate(quizPool);
-
       setCurrentQuiz(topicModel.copyWith({ quizPool: renewedPool }));
       //         something else
             // old status was active, ended
+      if(quizPool.poolsJob === 'PoolJob.pool_ended'){
+            setInfoState('closed');
+            console.log('called');
+            quizInfoBottomController.open();
+      }
+
     }
   };
 
@@ -117,9 +125,10 @@ export default function QuizCommitment(props: QuizChallengeProps) {
     if(!availableHydrated || !activeHydrated) return;
     const getQuiz = action === 'active' ? activeQuiz : quizModels.find((e) => e.quizPool?.poolsId === poolsId);
 
-    if (getQuiz) {
-      if(!currentQuiz)fetchPoolMembers(getQuiz);
+    if (getQuiz && !currentQuiz) {
+      fetchPoolMembers(getQuiz);
       setCurrentQuiz(getQuiz);
+
     } else if(isTop) {
       if(!currentQuiz){
        nav.popToRoot();
@@ -219,8 +228,6 @@ export default function QuizCommitment(props: QuizChallengeProps) {
       const leave = await leaveQuiz(jwt, requestData);
       const status = leave.status;
 
-      console.log(leave);
-
       if (status === 'PoolActive.success') {
          if(activeQuiz?.quizPool?.poolsId)poolsSubscriptionManager.removeQuizTopicPool(activeQuiz.quizPool.poolsId);
          setActiveQuizTopicModel(null);
@@ -228,6 +235,8 @@ export default function QuizCommitment(props: QuizChallengeProps) {
              (m) => m.poolsId !== leave.pools_id
          );
          setTransactionModels(updatedModels);
+         setInfoState('left');
+         quizInfoBottomController.open();
       }else if(status === 'PoolActive.no_active' && activeQuiz){
           if(activeQuiz?.quizPool?.poolsId)poolsSubscriptionManager.removeQuizTopicPool(activeQuiz.quizPool.poolsId);
          setActiveQuizTopicModel(null);
@@ -235,6 +244,8 @@ export default function QuizCommitment(props: QuizChallengeProps) {
              (m) => m.poolsId !== leave.pools_id
          );
          setTransactionModels(updatedModels);
+         setInfoState('left');
+         quizInfoBottomController.open();
       }
             setQuizLoading(false);
 
@@ -321,6 +332,7 @@ export default function QuizCommitment(props: QuizChallengeProps) {
                                             update: true
                                           }
                                         );
+        await fetchPoolMembers(quizModel);
         withdrawBottomController.close();
         await nav.replaceParam({
           poolsId: quizModel?.quizPool?.poolsId,
@@ -388,6 +400,11 @@ export default function QuizCommitment(props: QuizChallengeProps) {
     await pushAndWait(`/quiz/${currentQuiz.quizPool?.poolsId}`);
   };
 
+  const onExit =  () => {
+    quizInfoBottomController.close();
+    nav.popToRoot();
+  };
+
   // Format number with commas
   const formatNumber = useCallback((num: number) => {
     return Number(num).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",").replace('.00', '');
@@ -441,7 +458,6 @@ export default function QuizCommitment(props: QuizChallengeProps) {
       )
     );
   };
-
 
   return (
     <main className={`${styles.container} ${styles[`container_${theme}`]}`}>
@@ -634,6 +650,46 @@ export default function QuizCommitment(props: QuizChallengeProps) {
               {quizLoading ? <span className={styles.spinner}></span> : t('pay_text')}
             </button>
           </div>
+        </div>
+      </BottomViewer>}
+
+      { currentQuiz && action === 'active' && <BottomViewer
+        ref={quizInfoBottomRef}
+        id={quizInfoBottomViewerId}
+        isOpen={quizInfoBottomIsOpen}
+        onClose={onExit}
+        backDrop={false}
+        cancelButton={{
+          position: "right",
+          onClick: onExit,
+          view: <DialogCancel />
+        }}
+        layoutProp={{
+          backgroundColor: theme === 'light' ? "#fff" : "#121212",
+          handleColor: "#888",
+          handleWidth: "48px",
+        }}
+        closeThreshold={0.2}
+        zIndex={1000}
+      >
+        <div className={`${styles.dialogContainer} ${styles[`dialogContainer_${theme}`]}`}>
+        <div className={styles.poolInfoContainer}>
+          <h3 className={`${styles.dialogTitle} ${styles[`dialogTitle_${theme}`]}`}>
+            {t('pool_closed')}
+          </h3>
+          <h3 className={`${styles.dialogBody} ${styles[`dialogBody_${theme}`]}`}>
+            {infoState === 'deleted' && tNode('pool_info_reason', {topic: <strong>{currentQuiz?.topicsIdentity || ''}</strong>})}
+            {infoState === 'left' && t('user_left_pool')}
+            {infoState === 'closed' && tNode('pool_already_ended', {topic: <strong>{currentQuiz?.topicsIdentity || ''}</strong>})}
+          </h3>
+          <button
+                        onClick={onExit}
+                        type="button"
+                        className={styles.continueButton}
+                      >
+                        {t('exit_text')}
+          </button>
+        </div>
         </div>
       </BottomViewer>}
     </main>

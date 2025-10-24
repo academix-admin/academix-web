@@ -254,6 +254,40 @@
   color: #ffffff;
 }
 
+.poolInfoContainer{
+  display: flex;
+  flex-direction: column;
+}
+.dialogTitle {
+  font-size: 18px;
+  font-weight: bold;
+  margin: 0 0 20px 0;
+  padding: 0;
+}
+
+.dialogTitle_light {
+  color: #333;
+}
+
+.dialogTitle_dark {
+  color: #fff;
+}
+
+.dialogBody {
+  font-size: 16px;
+  font-weight: normal;
+  margin: 0 0 20px 0;
+  padding: 0;
+}
+
+.dialogBody_light {
+  color: #333;
+}
+
+.dialogBody_dark {
+  color: #fff;
+}
+
 /* Payment Confirmation Styles */
 .paymentConfirmation {
   display: flex;

@@ -116,7 +116,7 @@ export default function QuizDetailsViewer({ topicsModel }: QuizDetailsViewerProp
       >
         <div className={`${styles.dialogContainer} ${styles[`dialogContainer_${theme}`]}`}>
           <h3 className={`${styles.dialogTitle} ${styles[`dialogTitle_${theme}`]}`}>
-            {t('scan_quiz_code') || 'Scan Quiz Code'}
+            {t('scan_quiz_code')}
           </h3>
 
           {/* QR Code Display */}

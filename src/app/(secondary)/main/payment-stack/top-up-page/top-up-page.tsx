@@ -13,6 +13,7 @@ import { useUserData } from '@/lib/stacks/user-stack';
 import PaymentWallet from '../payment-wallet/payment-wallet';
 import PaymentMethod from '../payment-method/payment-method';
 import PaymentProfile from '../payment-profile/payment-profile';
+import PaymentRedirect from '../payment-redirect/payment-redirect';
 import { PaymentWalletModel } from '@/models/payment-wallet-model';
 import { PaymentMethodModel } from '@/models/payment-method-model';
 import { PaymentProfileModel } from '@/models/payment-profile-model';
@@ -60,6 +61,7 @@ export default function TopUpPage() {
   const [error, setError] = useState('');
   const [continueState, setContinueState] = useState('initial');
   const [topUpLoading, setTopUpLoading] = useState(false);
+  const [redirectLink, setRedirectLink] = useState<string | null>(null);
 
   /** amount handler */
   const handleAmount = useCallback((newAmount: number) => {
@@ -187,7 +189,11 @@ export default function TopUpPage() {
     if (paymentCompletionMode === 'PaymentCompletion.redirect') {
       const link = paymentCompletionData?.link;
       if (link) {
-        window.open(link, '_blank');
+       const popup = window.open(link, '_blank');
+             if (!popup) {
+               // If popup is blocked, store link in state to show fallback
+               setRedirectLink(link);
+       }
       }
     }
 
@@ -573,6 +579,12 @@ Expires: ${expire}`);
           )}
         </div>
       </BottomViewer>
+      {redirectLink && (
+        <PaymentRedirect
+          link={redirectLink}
+          onClose={() => setRedirectLink(null)}
+        />
+      )}
     </main>
   );
 }
