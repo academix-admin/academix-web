@@ -251,10 +251,7 @@ export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) 
     nav.push('quiz_commitment',{poolsId: activeQuiz?.quizPool?.poolsId, action: 'active'});
   };
 
-  const onContinueClick = async () => {
-    if(!userData || !activeQuiz.quizPool?.poolsId)return;
-    await pushAndWait(`/quiz/${activeQuiz.quizPool?.poolsId}`);
-  };
+
 
   // Function to leave quiz API call
   const leaveQuiz = async (jwt: string, data: any): Promise<LeaveQuizResponse> => {
@@ -333,6 +330,29 @@ export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) 
     }
   };
 
+  const getIsContinueEnabled = (quiz: UserDisplayQuizTopicModel | null): boolean => {
+    if (!quiz?.quizPool) return false;
+
+    const { poolsStatus, poolsJob, poolsJobEndAt } = quiz.quizPool;
+
+    return (
+      poolsStatus === 'Pools.active' &&
+      (
+        poolsJob === 'PoolJob.pool_period' ||
+        (
+          poolsJob === 'PoolJob.start_pool' &&
+          !!poolsJobEndAt &&
+          new Date() >= new Date(poolsJobEndAt)
+        )
+      )
+    );
+  };
+
+  const onContinueClick = async () => {
+    if(!userData || !activeQuiz.quizPool?.poolsId)return;
+    await pushAndWait(`/quiz/${activeQuiz.quizPool?.poolsId}`);
+  };
+
   return (
     <div className={styles.container}>
             {activeQuiz &&
@@ -341,6 +361,8 @@ export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) 
                     getInitials={getInitials}
                     onClick={()=> handleTopicClick(activeQuiz)}
                     onLeave={handleLeave}
+                    showContinue={getIsContinueEnabled(activeQuiz)}
+                    onContinue={onContinueClick}
                   /> }
     </div>
   );
@@ -352,9 +374,11 @@ interface CurrentQuizCardProps {
   getInitials: (text: string) => string;
   onClick: () => void;
   onLeave: () => void;
+  showContinue: boolean;
+  onContinue: () => void;
 }
 
-function CurrentQuizCard({ topic, getInitials, onClick, onLeave  }: CurrentQuizCardProps) {
+function CurrentQuizCard({ topic, getInitials, onClick, onLeave, showContinue, onContinue  }: CurrentQuizCardProps) {
   const { theme } = useTheme();
   const { t, tNode } = useLanguage();
   const [remainingTime, setRemainingTime] = useState<number>(0);
@@ -533,7 +557,7 @@ function CurrentQuizCard({ topic, getInitials, onClick, onLeave  }: CurrentQuizC
           </div>
 
           {/* Leave Button */}
-          <button
+          {(!showContinue || topic.quizPool?.poolsStatus === 'Pools.open') && <button
             role="button"
             className={styles.leaveButton}
             onClick={handleLeaveClick}
@@ -544,7 +568,18 @@ function CurrentQuizCard({ topic, getInitials, onClick, onLeave  }: CurrentQuizC
                         ) : (
                           t('leave_text')
                         )}
-          </button>
+          </button>}
+          {/* Continue Button */}
+          {showContinue && <button
+            role="button"
+            className={styles.continueButton}
+            onClick={(e: React.MouseEvent) => {
+                  e.stopPropagation();
+                  onContinue();
+                }}
+          >
+            {t('continue')}
+          </button>}
         </div>
       </div>
 
