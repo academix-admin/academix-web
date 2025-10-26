@@ -443,7 +443,9 @@ function CurrentQuizCard({ topic, getInitials, onClick, onLeave, showContinue, o
 
     const endTime = new Date(topic.quizPool.poolsJobEndAt);
     const startTime = new Date();
-     controlDisplayMessage(topic.quizPool.poolsJob, topic.quizPool.poolsJobEndAt);
+    if (topic.quizPool?.poolsJob && topic.quizPool?.poolsJobEndAt) {
+      controlDisplayMessage(topic.quizPool.poolsJob, topic.quizPool.poolsJobEndAt);
+    }
     try {
 
       if (timelapseManager.current.isTimerInitialized) {
@@ -471,7 +473,9 @@ function CurrentQuizCard({ topic, getInitials, onClick, onLeave, showContinue, o
     // ✅ Clean lifecycle management with embedded hook
     usePageLifecycle(nav, {
       onResume: ({ stack, current }) => {
-         controlDisplayMessage(topic.quizPool?.poolsJob, topic.quizPool.poolsJobEndAt);
+         if (topic.quizPool?.poolsJob && topic.quizPool?.poolsJobEndAt) {
+               controlDisplayMessage(topic.quizPool.poolsJob, topic.quizPool.poolsJobEndAt);
+         }
       }
     }, [topic]);
 
@@ -695,7 +699,16 @@ function CurrentQuizCard({ topic, getInitials, onClick, onLeave, showContinue, o
         closeThreshold={0.2}
         zIndex={1000}
       >
-         <QuizStarter title={topic.topicsIdentity} challenge={topic.quizPool?.challengeModel?.challengeIdentity} mode={topic.quizPool?.challengeModel?.gameModeModel?.gameModeIdentity} status={topic.quizPool?.poolsJob} jobEndAt={topic.quizPool?.poolsJobEndAt} onContinueClick={()=> console.log('continue_clicked')}/>
+        {topic.quizPool?.challengeModel?.challengeIdentity && (
+          <QuizStarter
+            title={topic.topicsIdentity}
+            challenge={topic.quizPool.challengeModel.challengeIdentity}
+            mode={topic.quizPool.challengeModel.gameModeModel?.gameModeIdentity ?? ''}
+            status={topic.quizPool.poolsJob ?? ''}
+            jobEndAt={topic.quizPool.poolsJobEndAt ?? ''}
+            onContinueClick={() => console.log('continue_clicked')}
+          />
+        )}
       </BottomViewer>
 
     </div>

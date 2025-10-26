@@ -5,7 +5,6 @@ export interface QuizDisplayEvent {
   timestamp: number;
 }
 
-// Simpler version using useAtom (no demand loading complexity)
 export function useQuizDisplay() {
   const [lastEvent, setLastEvent] = useAtom<QuizDisplayEvent | null>('quiz-last-event', null);
   const [oldState, setOldState] = useAtom<{

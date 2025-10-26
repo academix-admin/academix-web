@@ -131,7 +131,9 @@ export default function QuizCommitment(props: QuizChallengeProps) {
     if (getQuiz && !currentQuiz) {
       fetchPoolMembers(getQuiz);
       setCurrentQuiz(getQuiz);
-      if(getQuiz.quizPool)controlDisplayMessage(getQuiz.quizPool?.poolsJob, getQuiz.quizPool?.poolsJobEndAt);
+      if (getQuiz.quizPool?.poolsJob && getQuiz.quizPool?.poolsJobEndAt) {
+        controlDisplayMessage(getQuiz.quizPool.poolsJob, getQuiz.quizPool.poolsJobEndAt);
+      }
     } else if(isTop) {
       if(!currentQuiz){
        nav.popToRoot();
