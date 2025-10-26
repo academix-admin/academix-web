@@ -344,7 +344,9 @@ export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) 
     return (
       poolsStatus === 'Pools.active' &&
       (
-        poolsJob === 'PoolJob.pool_period' ||
+        (poolsJob === 'PoolJob.pool_period' &&
+                                                      !!poolsJobEndAt &&
+                                                      new Date() < new Date(poolsJobEndAt)) ||
         (
           poolsJob === 'PoolJob.start_pool' &&
           !!poolsJobEndAt &&
@@ -381,7 +383,7 @@ interface CurrentQuizCardProps {
   onClick: () => void;
   onLeave: () => void;
   showContinue: boolean;
-  onContinue: () => void;
+  onContinue: () => Promise<void>;
 }
 
 function CurrentQuizCard({ topic, getInitials, onClick, onLeave, showContinue, onContinue  }: CurrentQuizCardProps) {
@@ -400,7 +402,7 @@ function CurrentQuizCard({ topic, getInitials, onClick, onLeave, showContinue, o
   const previousJobRef = useRef<string | null>(null);
   const previousEndAtRef = useRef<string | null>(null);
 
-  const { controlDisplayMessage, isOpen, closeDisplay } = useQuizDisplay();
+  const { controlDisplayMessage, lastEvent, closeDisplay } = useQuizDisplay();
 
 
   const formatQuizPoolStatusTime = useCallback((status: string | null, seconds: number): string => {
@@ -503,8 +505,7 @@ function CurrentQuizCard({ topic, getInitials, onClick, onLeave, showContinue, o
     };
 
    useEffect(() => {
-       console.log('isOpen',isOpen);
-       if (isOpen) {
+       if (lastEvent?.isOpen) {
          // Show your quiz starter component
          quizStarterBottomController.close();
          quizStarterBottomController.open();
@@ -512,11 +513,15 @@ function CurrentQuizCard({ topic, getInitials, onClick, onLeave, showContinue, o
          // Hide your quiz starter component
          quizStarterBottomController.close();
        }
-   }, [isOpen]);
+   }, [lastEvent]);
 
    const handleQuizDisplayClose =  () => {
       quizStarterBottomController.close();
       closeDisplay();
+   };
+   const handleContinue =  async () => {
+      await onContinue();
+      handleQuizDisplayClose();
    };
 
   const status = topic.quizPool?.poolsJob || '';
@@ -524,6 +529,7 @@ function CurrentQuizCard({ topic, getInitials, onClick, onLeave, showContinue, o
   const quizCode = topic.quizPool?.poolsCode || '';
   const answeredCount = topic.quizPool?.questionTrackerCount || 0;
   const totalQuestions = topic.quizPool?.challengeModel?.challengeQuestionCount || 0;
+
   return (
     <div className={`${styles.quizContainer} ${styles[`quizContainer_${theme}`]}`} >
       <div className={`${styles.topicCard}`} onClick={onClick}>
@@ -699,14 +705,14 @@ function CurrentQuizCard({ topic, getInitials, onClick, onLeave, showContinue, o
         closeThreshold={0.2}
         zIndex={1000}
       >
-        {topic.quizPool?.challengeModel?.challengeIdentity && (
+        {lastEvent?.status && lastEvent?.jobEndAt && topic.quizPool?.challengeModel?.challengeIdentity && (
           <QuizStarter
             title={topic.topicsIdentity}
             challenge={topic.quizPool.challengeModel.challengeIdentity}
             mode={topic.quizPool.challengeModel.gameModeModel?.gameModeIdentity ?? ''}
-            status={topic.quizPool.poolsJob ?? ''}
-            jobEndAt={topic.quizPool.poolsJobEndAt ?? ''}
-            onContinueClick={() => console.log('continue_clicked')}
+            status={lastEvent.status}
+            jobEndAt={lastEvent.jobEndAt}
+            onContinueClick={handleContinue}
           />
         )}
       </BottomViewer>

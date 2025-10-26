@@ -6,6 +6,7 @@ import styles from './quiz-challenge-details.module.css';
 import { useLanguage } from '@/context/LanguageContext';
 import { TimelapseManager, useTimelapseManager, TimelapseType } from '@/lib/managers/TimelapseManager';
 import { useNav } from "@/lib/NavigationStack";
+import { useQuizDisplay } from "@/lib/stacks/quiz-display-stack";
 
 interface QuizChallengeDetailsProps {
   poolsId: string;
@@ -31,6 +32,7 @@ export default function QuizChallengeDetails({
   const [remainingTime, setRemainingTime] = useState<number>(0);
   const timelapseManager = useTimelapseManager();
   const nav = useNav();
+  const {  controlDisplayMessage } = useQuizDisplay();
 
   const formatPlainTime = (time: number | null): string => {
     if (time === null || time <= 0) {
@@ -62,6 +64,10 @@ export default function QuizChallengeDetails({
       console.log('End time is in the past');
       return;
     }
+
+   if (status && jobEndAt) {
+         controlDisplayMessage(status, jobEndAt);
+   }
 
     try {
       if (timelapseManager.current.isTimerInitialized) {
@@ -98,6 +104,22 @@ export default function QuizChallengeDetails({
   const openPoolMembers = () => {
     nav.push('pool_members',{poolsId})
   };
+    const formatStatus= useCallback((status: string) => {
+          switch (status) {
+            case 'PoolJob.waiting':
+              return t('waiting_time');
+            case 'PoolJob.extended_waiting':
+              return t('extended_time');
+            case 'PoolJob.pool_period':
+              return t('pool_time');
+            case 'PoolJob.start_pool':
+              return t('starting_time');
+            case 'PoolJob.pool_ended':
+              return t('quiz_closed');
+            default:
+              return t('open_quiz');
+          }
+    }, []);
 
   return (
     <div className={styles.performanceCard}>
@@ -134,7 +156,7 @@ export default function QuizChallengeDetails({
 
         <div className={styles.detailItem}>
           <div className={styles.statusHeader}>
-            <span className={styles.statusLabel}>{status}</span>
+            <span className={styles.statusLabel}>{formatStatus(status)}</span>
             {jobEndAt && (
               <span className={styles.infoIcon}>ℹ️</span>
             )}

@@ -6,7 +6,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import Image from 'next/image';
 import styles from './quiz-commitment.module.css';
 import { supabaseBrowser } from '@/lib/supabase/client';
-import { useNav } from "@/lib/NavigationStack";
+import { useNav, usePageLifecycle } from "@/lib/NavigationStack";
 import { capitalizeWords } from '@/utils/textUtils';
 import { getParamatical } from '@/utils/checkers';
 import { useUserData } from '@/lib/stacks/user-stack';
@@ -151,7 +151,14 @@ export default function QuizCommitment(props: QuizChallengeProps) {
 
   }, [handlePoolChange ]);
 
-
+    // ✅ Clean lifecycle management with embedded hook
+    usePageLifecycle(nav, {
+      onResume: ({ stack, current }) => {
+         if (currentQuiz?.quizPool?.poolsJob && currentQuiz?.quizPool?.poolsJobEndAt) {
+                 controlDisplayMessage(currentQuiz.quizPool.poolsJob, currentQuiz.quizPool.poolsJobEndAt);
+               }
+      }
+    }, [currentQuiz]);
 
   // Function to engage quiz API call
   const engageQuiz = async (jwt: string, data: any): Promise<EngageQuizResponse> => {
@@ -457,7 +464,9 @@ export default function QuizCommitment(props: QuizChallengeProps) {
     return (
       poolsStatus === 'Pools.active' &&
       (
-        poolsJob === 'PoolJob.pool_period' ||
+        (poolsJob === 'PoolJob.pool_period' &&
+                                                      !!poolsJobEndAt &&
+                                                      new Date() >= new Date(poolsJobEndAt)) ||
         (
           poolsJob === 'PoolJob.start_pool' &&
           !!poolsJobEndAt &&
@@ -491,7 +500,7 @@ export default function QuizCommitment(props: QuizChallengeProps) {
       <div className={styles.innerBody}>
         {currentQuiz  && <QuizImageViewer imageUrl={currentQuiz.topicsImageUrl} identity={currentQuiz.topicsIdentity} />}
         {currentQuiz  && <QuizDetailsViewer topicsModel={currentQuiz} />}
-        {currentQuiz  && <QuizChallengeDetails poolsId={currentQuiz?.quizPool?.poolsId || ''} membersCount={membersCount || currentQuiz?.quizPool?.poolsMembersCount || 0} minimumMembers={ currentQuiz?.quizPool?.challengeModel?.challengeMinParticipant || 0} maximumMembers={currentQuiz?.quizPool?.challengeModel?.challengeMaxParticipant || 0} fee={currentQuiz?.quizPool?.challengeModel?.challengePrice || 0} status={formatStatus(currentQuiz?.quizPool?.poolsJob || '')} jobEndAt={currentQuiz?.quizPool?.poolsJobEndAt || ''} />}
+        {currentQuiz  && <QuizChallengeDetails poolsId={currentQuiz?.quizPool?.poolsId || ''} membersCount={membersCount || currentQuiz?.quizPool?.poolsMembersCount || 0} minimumMembers={ currentQuiz?.quizPool?.challengeModel?.challengeMinParticipant || 0} maximumMembers={currentQuiz?.quizPool?.challengeModel?.challengeMaxParticipant || 0} fee={currentQuiz?.quizPool?.challengeModel?.challengePrice || 0} status={currentQuiz?.quizPool?.poolsJob || ''} jobEndAt={currentQuiz?.quizPool?.poolsJobEndAt || ''} />}
         {currentQuiz  && <QuizStatusInfo status={formatStatus(currentQuiz?.quizPool?.poolsJob || '')} />}
         {currentQuiz  && <QuizRuleAcceptance onAcceptanceChange={setSelectedRule} canChange={action != 'active'} initialValue={action === 'active'} />}
         {currentQuiz  && <QuizPayoutAcceptance onAcceptanceChange={setSelectedPayout} canChange={action != 'active'} initialValue={action === 'active'} />}

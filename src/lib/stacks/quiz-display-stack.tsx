@@ -2,15 +2,13 @@ import { useAtom } from '../state-stack';
 
 export interface QuizDisplayEvent {
   isOpen: boolean;
+  status: string | null;
+  jobEndAt: string | null;
   timestamp: number;
 }
 
 export function useQuizDisplay() {
   const [lastEvent, setLastEvent] = useAtom<QuizDisplayEvent | null>('quiz-last-event', null);
-  const [oldState, setOldState] = useAtom<{
-    messageStatus: string | null;
-    jobEndAt: string | null;
-  }>('quiz-old-state', { messageStatus: null, jobEndAt: null });
 
   const controlDisplayMessage = (status: string | null, jobEndAt: string | null) => {
 
@@ -23,13 +21,11 @@ export function useQuizDisplay() {
       return;
     }
 
-    setOldState({ messageStatus: status, jobEndAt });
-    setLastEvent({ isOpen: true, timestamp: Date.now() });
+    setLastEvent({ isOpen: true, status, jobEndAt, timestamp: Date.now() });
   };
 
   const closeDisplay = () => {
-    setLastEvent({ isOpen: false, timestamp: Date.now() });
-    setOldState({ messageStatus: null, jobEndAt: null });
+    setLastEvent({ isOpen: false, timestamp: Date.now(), status: null, jobEndAt: null });
   };
 
   return {
@@ -39,7 +35,6 @@ export function useQuizDisplay() {
     closeDisplay,
     clearState: () => {
       setLastEvent(null);
-      setOldState({ messageStatus: null, jobEndAt: null });
     },
   };
 }

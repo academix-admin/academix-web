@@ -94,7 +94,6 @@ class PoolsQuizTopicSubscriptionManager {
 
     if (this.activePoolsSubscriptions.size > 0) {
       const poolIds = Array.from(this.activePoolsSubscriptions.keys());
-      console.log('Subscribing to pool IDs:', poolIds);
 
       this.realtimeChannel = supabaseBrowser
         .channel(this.channel)
@@ -158,8 +157,6 @@ class PoolsQuizTopicSubscriptionManager {
     if (update) {
       this.updateSubscription();
     }
-    console.log('Current:', poolSubscriptionModel);
-    console.log('Current pool IDs:', poolIds);
     return true;
   }
 
@@ -203,7 +200,6 @@ class PoolsQuizTopicSubscriptionManager {
     oldRecordId?: string,
     poolId?: string
   ): void {
-    console.log('Quiz topic data sent:', { eventType, newRecord, oldRecordId });
 
     const actualPoolId = poolId || newRecord?.poolsId || oldRecordId || 'unknown';
 
