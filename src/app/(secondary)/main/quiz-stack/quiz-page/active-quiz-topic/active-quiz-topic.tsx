@@ -16,7 +16,7 @@ import { QuizPool } from '@/models/user-display-quiz-topic-model';
 import Image from 'next/image';
 import { ComponentStateProps } from '@/hooks/use-component-state';
 import { usePinnedState } from '@/hooks/pinned-state-hook';
-import { useNav } from "@/lib/NavigationStack";
+import { useNav, usePageLifecycle } from "@/lib/NavigationStack";
 import { useActiveQuiz } from "@/lib/stacks/active-quiz-stack";
 import { poolsSubscriptionManager } from '@/lib/managers/PoolsQuizTopicSubscriptionManager';
 import { PoolChangeEvent } from '@/lib/managers/PoolsQuizTopicSubscriptionManager';
@@ -28,6 +28,8 @@ import { checkLocation, checkFeatures, fetchUserPartialDetails, fetchUserDetails
 import { TransactionModel } from '@/models/transaction-model';
 import { useTransactionModel } from '@/lib/stacks/transactions-stack';
 import { useAwaitableRouter } from "@/hooks/useAwaitableRouter";
+import QuizStarter from '../quiz-starter/quiz-starter'
+import { useQuizDisplay } from "@/lib/stacks/quiz-display-stack";
 
 interface LeaveQuizResponse {
   status: string;
@@ -50,6 +52,8 @@ export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) 
 
   const [activeQuiz, demandActiveQuizTopicModel, setActiveQuizTopicModel] = useActiveQuiz(lang);
   const [transactionModels, demandTransactionModels, setTransactionModels] = useTransactionModel(lang);
+    const { closeDisplay, controlDisplayMessage } = useQuizDisplay();
+
 
   // Subscribe to changes
   const handlePoolChange = (event: PoolChangeEvent) => {
@@ -70,8 +74,6 @@ export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) 
       // 🔹 Otherwise, update the pool normally
       const topicModel = UserDisplayQuizTopicModel.from(activeQuiz);
       const renewedPool = topicModel?.quizPool?.getStreamedUpdate(quizPool);
-
-
       setActiveQuizTopicModel(topicModel.copyWith({ quizPool: renewedPool }));
     }
   };
@@ -106,7 +108,10 @@ export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) 
   }, [handlePoolChange]);
 
   useEffect(() => {
-    if (!activeQuiz) return;
+    if (!activeQuiz){
+         closeDisplay();
+        return;
+        }
 
 
       const topicsId = activeQuiz.topicsId;
@@ -119,6 +124,7 @@ export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) 
             poolsSubscriptionType: 'active'
           }
         );
+
       }
   }, [activeQuiz]);
 
@@ -384,12 +390,18 @@ function CurrentQuizCard({ topic, getInitials, onClick, onLeave, showContinue, o
   const [remainingTime, setRemainingTime] = useState<number>(0);
   const [imageError, setImageError] = useState(false);
   const timelapseManager = useTimelapseManager();
+  const nav = useNav();
+
   const [codeBottomViewerId, codeBottomController, codeBottomIsOpen] = useBottomController();
+  const [quizStarterBottomViewerId, quizStarterBottomController, quizStarterBottomIsOpen] = useBottomController();
   const [leaving, setLeaving] = useState(false);
 
   // Track previous values to detect changes
   const previousJobRef = useRef<string | null>(null);
   const previousEndAtRef = useRef<string | null>(null);
+
+  const { controlDisplayMessage, isOpen, closeDisplay } = useQuizDisplay();
+
 
   const formatQuizPoolStatusTime = useCallback((status: string | null, seconds: number): string => {
     if (!status) return t('open_quiz');
@@ -431,7 +443,7 @@ function CurrentQuizCard({ topic, getInitials, onClick, onLeave, showContinue, o
 
     const endTime = new Date(topic.quizPool.poolsJobEndAt);
     const startTime = new Date();
-
+     controlDisplayMessage(topic.quizPool.poolsJob, topic.quizPool.poolsJobEndAt);
     try {
 
       if (timelapseManager.current.isTimerInitialized) {
@@ -456,6 +468,13 @@ function CurrentQuizCard({ topic, getInitials, onClick, onLeave, showContinue, o
     }
   }, [topic.quizPool?.poolsJobEndAt, topic.quizPool?.poolsJob]);
 
+    // ✅ Clean lifecycle management with embedded hook
+    usePageLifecycle(nav, {
+      onResume: ({ stack, current }) => {
+         controlDisplayMessage(topic.quizPool?.poolsJob, topic.quizPool.poolsJobEndAt);
+      }
+    }, [topic]);
+
   const handleCopyCode = async () => {
     if (!topic.quizPool?.poolsCode) return;
 
@@ -479,13 +498,28 @@ function CurrentQuizCard({ topic, getInitials, onClick, onLeave, showContinue, o
       }
     };
 
+   useEffect(() => {
+       console.log('isOpen',isOpen);
+       if (isOpen) {
+         // Show your quiz starter component
+         quizStarterBottomController.close();
+         quizStarterBottomController.open();
+       } else {
+         // Hide your quiz starter component
+         quizStarterBottomController.close();
+       }
+   }, [isOpen]);
+
+   const handleQuizDisplayClose =  () => {
+      quizStarterBottomController.close();
+      closeDisplay();
+   };
 
   const status = topic.quizPool?.poolsJob || '';
   const displayTime = formatQuizPoolStatusTime(status, remainingTime);
   const quizCode = topic.quizPool?.poolsCode || '';
   const answeredCount = topic.quizPool?.questionTrackerCount || 0;
   const totalQuestions = topic.quizPool?.challengeModel?.challengeQuestionCount || 0;
-
   return (
     <div className={`${styles.quizContainer} ${styles[`quizContainer_${theme}`]}`} >
       <div className={`${styles.topicCard}`} onClick={onClick}>
@@ -643,6 +677,27 @@ function CurrentQuizCard({ topic, getInitials, onClick, onLeave, showContinue, o
           </div>
         </div>
       </BottomViewer>
+
+      <BottomViewer
+        id={quizStarterBottomViewerId}
+        isOpen={quizStarterBottomIsOpen}
+        onClose={handleQuizDisplayClose}
+        cancelButton={{
+          position: "right",
+          onClick: handleQuizDisplayClose,
+          view: <DialogCancel />
+        }}
+        layoutProp={{
+          backgroundColor: theme === 'light' ? "#fff" : "#121212",
+          handleColor: "#888",
+          handleWidth: "48px",
+        }}
+        closeThreshold={0.2}
+        zIndex={1000}
+      >
+         <QuizStarter title={topic.topicsIdentity} challenge={topic.quizPool?.challengeModel?.challengeIdentity} mode={topic.quizPool?.challengeModel?.gameModeModel?.gameModeIdentity} status={topic.quizPool?.poolsJob} jobEndAt={topic.quizPool?.poolsJobEndAt} onContinueClick={()=> console.log('continue_clicked')}/>
+      </BottomViewer>
+
     </div>
   );
 }

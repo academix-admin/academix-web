@@ -1,0 +1,300 @@
+.quizStarterCard {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  box-sizing: border-box;
+  gap: 8px;
+}
+
+/* Title Section */
+.titleSection {
+  padding: 0 16px;
+  display: flex;
+  justify-content: center;
+}
+
+.title {
+  font-size: 22px;
+  font-weight: bold;
+  margin: 0;
+  text-align: center;
+  max-lines: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}
+
+.title_light {
+  color: #6d6c6c;
+}
+
+.title_dark {
+  color: #ffffff;
+}
+
+/* Challenge Section */
+.challengeSection {
+  padding: 0 16px;
+  display: flex;
+  justify-content: center;
+}
+
+.challenge {
+  font-size: 16px;
+  margin: 0;
+  text-align: center;
+  max-lines: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}
+
+.challenge_light {
+  color: #6d6c6c;
+}
+
+.challenge_dark {
+  color: #ffffff;
+}
+
+/* Mode Section */
+.modeSection {
+  padding: 0 16px;
+  display: flex;
+  justify-content: center;
+}
+
+.mode {
+  font-size: 16px;
+  margin: 0;
+  text-align: center;
+  max-lines: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}
+
+.mode_light {
+  color: #6d6c6c;
+}
+
+.mode_dark {
+  color: #ffffff;
+}
+
+/* Timer Section */
+.timerSection {
+  padding: 16px;
+}
+
+.timerContainer {
+  border-radius: 16px;
+  padding: 16px;
+  background-color: rgba(247, 246, 246, 0.8);
+}
+
+.timerContainer_light {
+  background-color: rgba(247, 246, 246, 0.8);
+}
+
+.timerContainer_dark {
+  background-color: rgba(28, 28, 28, 0.8);
+}
+
+.timerContent {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Status Row */
+.statusRow {
+  display: flex;
+  width: 100%;
+}
+
+.status {
+  font-size: 18px;
+  font-weight: bold;
+  text-align: start;
+  max-lines: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}
+
+.status_light {
+  color: #6d6c6c;
+}
+
+.status_dark {
+  color: #ffffff;
+}
+
+/* Timer Display */
+.timerDisplay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.timerValue {
+  font-size: 32px;
+  font-weight: bold;
+  text-align: center;
+  max-lines: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.timerValue_light {
+  color: #6d6c6c;
+}
+
+.timerValue_dark {
+  color: #ffffff;
+}
+
+.remainingLabel {
+  font-size: 16px;
+  text-align: center;
+  max-lines: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.remainingLabel_light {
+  color: #6d6c6c;
+}
+
+.remainingLabel_dark {
+  color: #ffffff;
+}
+
+/* Button Section */
+.buttonSection {
+  display: flex;
+  padding: 0 16px 16px 16px;
+  justify-content: center;
+}
+
+.continueButton {
+  padding: 12px 24px;
+  border-radius: 8px;
+  background-color: #1C6B1E;
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  width: calc((100vw - (16px * 3)) / 2);
+  max-width: 200px;
+  min-height: 44px;
+}
+
+.continueButton:hover {
+  background-color: #1D3D1E;
+}
+
+.continueButton:disabled {
+  background-color: #9CA3AF;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.continueButton:focus {
+  outline: 2px solid #1C6B1E;
+  outline-offset: 2px;
+}
+
+/* Responsive Styles */
+@media screen and (min-width: 801px) {
+  .title {
+    font-size: 24px;
+  }
+
+  .challenge,
+  .mode {
+    font-size: 18px;
+  }
+
+  .status {
+    font-size: 20px;
+  }
+
+  .timerValue {
+    font-size: 36px;
+  }
+
+  .remainingLabel {
+    font-size: 18px;
+  }
+}
+
+@media screen and (max-width: 800px) {
+  .timerSection {
+    padding: 14px;
+  }
+
+  .timerContainer {
+    padding: 14px;
+  }
+}
+
+@media screen and (max-width: 500px) {
+  .quizStarterCard {
+    gap: 6px;
+  }
+
+  .titleSection,
+  .challengeSection,
+  .modeSection {
+    padding: 0 12px;
+  }
+
+  .timerSection {
+    padding: 12px;
+  }
+
+  .timerContainer {
+    padding: 12px;
+    border-radius: 14px;
+  }
+
+  .timerContent {
+    gap: 6px;
+  }
+
+  .title {
+    font-size: 20px;
+  }
+
+  .challenge,
+  .mode {
+    font-size: 14px;
+  }
+
+  .status {
+    font-size: 16px;
+  }
+
+  .timerValue {
+    font-size: 28px;
+  }
+
+  .remainingLabel {
+    font-size: 14px;
+  }
+
+  .buttonSection {
+    padding: 0 12px 12px 12px;
+  }
+
+  .continueButton {
+    padding: 10px 20px;
+    font-size: 14px;
+    min-height: 40px;
+  }
+}

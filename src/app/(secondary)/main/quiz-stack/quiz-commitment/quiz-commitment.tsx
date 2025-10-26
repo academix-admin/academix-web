@@ -41,6 +41,7 @@ import { useActiveQuiz } from "@/lib/stacks/active-quiz-stack";
 import { poolsSubscriptionManager } from '@/lib/managers/PoolsQuizTopicSubscriptionManager';
 import { PoolChangeEvent } from '@/lib/managers/PoolsQuizTopicSubscriptionManager';
 import { useAwaitableRouter } from "@/hooks/useAwaitableRouter";
+import { useQuizDisplay } from "@/lib/stacks/quiz-display-stack";
 
 interface LeaveQuizResponse {
   status: string;
@@ -90,6 +91,7 @@ export default function QuizCommitment(props: QuizChallengeProps) {
 
   const [quizInfoBottomViewerId, quizInfoBottomController, quizInfoBottomIsOpen,,quizInfoBottomRef] = useBottomController();
 
+  const { controlDisplayMessage, closeDisplay } = useQuizDisplay();
 
   // Subscribe to changes
   const handlePoolChange = (event: PoolChangeEvent) => {
@@ -103,6 +105,7 @@ export default function QuizCommitment(props: QuizChallengeProps) {
 
     if (eventType === 'DELETE' && eventPoolsId === currentQuiz.quizPool?.poolsId) {
            setInfoState('deleted');
+           closeDisplay();
            quizInfoBottomController.open();
     } else if (quizPool && quizPool.poolsId === currentQuiz.quizPool?.poolsId) {
 
@@ -114,7 +117,7 @@ export default function QuizCommitment(props: QuizChallengeProps) {
             // old status was active, ended
       if(quizPool.poolsJob === 'PoolJob.pool_ended'){
             setInfoState('closed');
-            console.log('called');
+            closeDisplay();
             quizInfoBottomController.open();
       }
 
@@ -128,13 +131,14 @@ export default function QuizCommitment(props: QuizChallengeProps) {
     if (getQuiz && !currentQuiz) {
       fetchPoolMembers(getQuiz);
       setCurrentQuiz(getQuiz);
-
+      if(getQuiz.quizPool)controlDisplayMessage(getQuiz.quizPool?.poolsJob, getQuiz.quizPool?.poolsJobEndAt);
     } else if(isTop) {
       if(!currentQuiz){
        nav.popToRoot();
       }
     }
-  }, [poolsId, availableHydrated, activeHydrated, isTop, action]);
+  }, [poolsId, availableHydrated, activeHydrated, isTop, action, controlDisplayMessage
+      ]);
 
   useEffect(() => {
       poolsSubscriptionManager.attachListener(handlePoolChange, !currentQuiz);
@@ -236,6 +240,7 @@ export default function QuizCommitment(props: QuizChallengeProps) {
          );
          setTransactionModels(updatedModels);
          setInfoState('left');
+         closeDisplay();
          quizInfoBottomController.open();
       }else if(status === 'PoolActive.no_active' && activeQuiz){
           if(activeQuiz?.quizPool?.poolsId)poolsSubscriptionManager.removeQuizTopicPool(activeQuiz.quizPool.poolsId);
@@ -245,6 +250,7 @@ export default function QuizCommitment(props: QuizChallengeProps) {
          );
          setTransactionModels(updatedModels);
          setInfoState('left');
+         closeDisplay();
          quizInfoBottomController.open();
       }
             setQuizLoading(false);
