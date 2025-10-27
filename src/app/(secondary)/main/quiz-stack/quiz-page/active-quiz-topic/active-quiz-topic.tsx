@@ -365,7 +365,7 @@ export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) 
                     getInitials={getInitials}
                     onClick={()=> handleTopicClick(activeQuiz)}
                     onLeave={handleLeave}
-                    showContinue={getIsContinueEnabled(activeQuiz)}
+                    hideContinue={getIsContinueEnabled(activeQuiz)}
                     onContinue={onContinueClick}
                   /> }
     </div>
@@ -378,11 +378,11 @@ interface CurrentQuizCardProps {
   getInitials: (text: string) => string;
   onClick: () => void;
   onLeave: () => void;
-  showContinue: boolean;
+  hideContinue: boolean;
   onContinue: () => Promise<void>;
 }
 
-function CurrentQuizCard({ topic, getInitials, onClick, onLeave, showContinue, onContinue  }: CurrentQuizCardProps) {
+function CurrentQuizCard({ topic, getInitials, onClick, onLeave, hideContinue, onContinue  }: CurrentQuizCardProps) {
   const { theme } = useTheme();
   const { t, tNode } = useLanguage();
   const [remainingTime, setRemainingTime] = useState<number>(0);
@@ -613,7 +613,7 @@ function CurrentQuizCard({ topic, getInitials, onClick, onLeave, showContinue, o
           {(topic.quizPool?.poolsStatus != 'Pools.open')  && <button
             role="button"
             className={styles.continueButton}
-            disabled={!showContinue}
+            disabled={hideContinue}
             onClick={(e: React.MouseEvent) => {
                   e.stopPropagation();
                   onContinue();
