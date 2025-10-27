@@ -97,6 +97,13 @@ export class OptionModel {
       options_identity: update.optionsIdentity ?? this.optionsIdentity,
     });
   }
+
+  submission(): Record<string, any> {
+      return {
+        options_id: this.optionsId,
+        options_identity: this.optionsIdentity,
+      };
+  }
 }
 
 export class QuestionModel {
@@ -213,6 +220,8 @@ export class PoolQuestion {
   questionData: QuestionModel;
   optionData: OptionModel[];
 
+  private _timeTaken: number | null = null;
+
   constructor(data?: BackendPoolQuestion | null) {
     this.poolsQuestionId = data?.pools_question_id ?? "";
     this.questionTime = data?.question_time ?? null;
@@ -254,5 +263,21 @@ export class PoolQuestion {
       question_data: (update.questionData ?? this.questionData).toBackend(),
       options_data: (update.optionData ?? this.optionData).map(o => o.toBackend()),
     });
+  }
+
+  submission(timeTaken: number): Record<string, any> {
+      this._timeTaken = timeTaken;
+
+      return {
+        pools_question_id: this.poolsQuestionId,
+        time_taken: timeTaken.toFixed(6),
+        option_data: this.optionData
+         .filter((o) => o.optionSelected)
+         .map((o) => o.submission()),
+      };
+    }
+
+  get timeTaken(): number | null {
+      return this._timeTaken;
   }
 }

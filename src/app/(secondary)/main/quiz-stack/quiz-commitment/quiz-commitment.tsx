@@ -104,9 +104,9 @@ export default function QuizCommitment(props: QuizChallengeProps) {
     }
 
     if (eventType === 'DELETE' && eventPoolsId === currentQuiz.quizPool?.poolsId) {
-           setInfoState('deleted');
+           if(isTop){setInfoState('deleted');
            closeDisplay();
-           quizInfoBottomController.open();
+           quizInfoBottomController.open();}
     } else if (quizPool && quizPool.poolsId === currentQuiz.quizPool?.poolsId) {
 
       // Update the pool
@@ -116,9 +116,9 @@ export default function QuizCommitment(props: QuizChallengeProps) {
       //         something else
             // old status was active, ended
       if(quizPool.poolsJob === 'PoolJob.pool_ended'){
-            setInfoState('closed');
+            if(isTop){setInfoState('closed');
             closeDisplay();
-            quizInfoBottomController.open();
+            quizInfoBottomController.open();}
       }
 
     }
@@ -248,9 +248,9 @@ export default function QuizCommitment(props: QuizChallengeProps) {
              (m) => m.poolsId !== leave.pools_id
          );
          setTransactionModels(updatedModels);
-         setInfoState('left');
+         if(isTop){setInfoState('left');
          closeDisplay();
-         quizInfoBottomController.open();
+         quizInfoBottomController.open();}
       }else if(status === 'PoolActive.no_active' && activeQuiz){
           if(activeQuiz?.quizPool?.poolsId)poolsSubscriptionManager.removeQuizTopicPool(activeQuiz.quizPool.poolsId);
          setActiveQuizTopicModel(null);
@@ -258,9 +258,9 @@ export default function QuizCommitment(props: QuizChallengeProps) {
              (m) => m.poolsId !== leave.pools_id
          );
          setTransactionModels(updatedModels);
-         setInfoState('left');
+         if(isTop){setInfoState('left');
          closeDisplay();
-         quizInfoBottomController.open();
+         quizInfoBottomController.open();}
       }
             setQuizLoading(false);
 
