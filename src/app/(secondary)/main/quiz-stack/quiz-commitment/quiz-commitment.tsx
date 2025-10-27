@@ -460,21 +460,17 @@ export default function QuizCommitment(props: QuizChallengeProps) {
     if (!quiz?.quizPool) return false;
 
     const { poolsStatus, poolsJob, poolsJobEndAt } = quiz.quizPool;
+    if (poolsStatus !== 'Pools.active' || !poolsJobEndAt) return false;
 
-    return (
-      poolsStatus === 'Pools.active' &&
-      (
-        (poolsJob === 'PoolJob.pool_period' &&
-                                                      !!poolsJobEndAt &&
-                                                      new Date() >= new Date(poolsJobEndAt)) ||
-        (
-          poolsJob === 'PoolJob.start_pool' &&
-          !!poolsJobEndAt &&
-          new Date() >= new Date(poolsJobEndAt)
-        )
-      )
-    );
+    const now = new Date();
+    const endAt = new Date(poolsJobEndAt);
+
+    if (poolsJob === 'PoolJob.pool_period') return now < endAt;
+    if (poolsJob === 'PoolJob.start_pool') return now >= endAt;
+
+    return false;
   };
+
 
   return (
     <main className={`${styles.container} ${styles[`container_${theme}`]}`}>

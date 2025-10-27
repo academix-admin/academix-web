@@ -142,7 +142,7 @@ export default function AvailableQuizTopics({ onStateChange, pType }: AvailableQ
       // Start the first call
       refreshData();
     });
-  }, [demandUserDisplayQuizTopicModel]);
+  }, [demandUserDisplayQuizTopicModel, userData]);
 
 
   const callPaginate = async () => {

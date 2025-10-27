@@ -249,7 +249,7 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
       // Start the first call
       refreshData();
     });
-  }, [demandUserDisplayQuizTopicModel]);
+  }, [demandUserDisplayQuizTopicModel, userData]);
 
 
   const callPaginate = async () => {

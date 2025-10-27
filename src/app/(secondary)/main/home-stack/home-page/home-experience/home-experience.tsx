@@ -22,15 +22,14 @@ export default function HomeExperience({ onStateChange }: ComponentStateProps) {
     {
       key: "engagementData",
       persist: true,
-//       ttl: 3600,
       scope: "secondary_flow",
       deps: [lang],
     }
   );
 
   useEffect(() => {
+    if(!userData)return;
     demandUserEngagement(async ({ get, set }) => {
-      if(!userData)return;
       onStateChange?.('loading');
       try {
         const paramatical = await getParamatical(

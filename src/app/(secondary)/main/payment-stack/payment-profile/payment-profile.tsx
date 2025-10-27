@@ -242,6 +242,7 @@ export default function PaymentProfile({ profileType, methodId, methodType, onPr
   }, [userData, profilesModel, paginateModel, fetchPaymentProfileModel, extractLatest, setPaymentProfileModel]);
 
   const loadProfiles = useCallback(() => {
+      if(!userData)return;
     demandPaymentProfileModel(async ({ get, set }) => {
       profileSelectController.setSelectionState("loading");
       const profiles = await fetchPaymentProfileModel(userData!, 100, new PaginateModel());

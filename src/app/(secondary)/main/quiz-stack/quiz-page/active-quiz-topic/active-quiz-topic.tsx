@@ -180,7 +180,7 @@ export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) 
       // Start the first call
       refreshData();
     });
-  }, [demandActiveQuizTopicModel ]);
+  }, [demandActiveQuizTopicModel, userData]);
 
 
   const refreshData = async () => {
@@ -340,21 +340,17 @@ export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) 
     if (!quiz?.quizPool) return false;
 
     const { poolsStatus, poolsJob, poolsJobEndAt } = quiz.quizPool;
+    if (poolsStatus !== 'Pools.active' || !poolsJobEndAt) return false;
 
-    return (
-      poolsStatus === 'Pools.active' &&
-      (
-        (poolsJob === 'PoolJob.pool_period' &&
-                                                      !!poolsJobEndAt &&
-                                                      new Date() < new Date(poolsJobEndAt)) ||
-        (
-          poolsJob === 'PoolJob.start_pool' &&
-          !!poolsJobEndAt &&
-          new Date() >= new Date(poolsJobEndAt)
-        )
-      )
-    );
+    const now = new Date();
+    const endAt = new Date(poolsJobEndAt);
+
+    if (poolsJob === 'PoolJob.pool_period') return now < endAt;
+    if (poolsJob === 'PoolJob.start_pool') return now >= endAt;
+
+    return false;
   };
+
 
   const onContinueClick = async () => {
     if(!userData || !activeQuiz.quizPool?.poolsId)return;
@@ -601,7 +597,7 @@ function CurrentQuizCard({ topic, getInitials, onClick, onLeave, showContinue, o
           </div>
 
           {/* Leave Button */}
-          {(!showContinue || topic.quizPool?.poolsStatus === 'Pools.open') && <button
+          {(topic.quizPool?.poolsStatus === 'Pools.open') && <button
             role="button"
             className={styles.leaveButton}
             onClick={handleLeaveClick}
@@ -614,9 +610,10 @@ function CurrentQuizCard({ topic, getInitials, onClick, onLeave, showContinue, o
                         )}
           </button>}
           {/* Continue Button */}
-          {showContinue && <button
+          {(topic.quizPool?.poolsStatus != 'Pools.open')  && <button
             role="button"
             className={styles.continueButton}
+            disabled={!showContinue}
             onClick={(e: React.MouseEvent) => {
                   e.stopPropagation();
                   onContinue();

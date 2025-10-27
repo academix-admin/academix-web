@@ -20,8 +20,8 @@ export default function AcademixRatio({ onStateChange }: ComponentStateProps) {
   const [academixRatioData, demandAcademixRatio, setAcademixRatio] = useAcademixRatio(lang);
 
   useEffect(() => {
-    demandAcademixRatio(async ({ get, set }) => {
       if(!userData)return;
+    demandAcademixRatio(async ({ get, set }) => {
       onStateChange?.('loading');
       try {
         const paramatical = await getParamatical(

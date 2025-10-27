@@ -318,6 +318,7 @@ export default function PaymentWallet({ profileType, onWalletData, onWalletAmoun
   }, [paymentSwitch]);
 
   const loadWallets = useCallback(() => {
+    if(!userData)  return;
     demandPaymentWalletModel(async ({ get, set }) => {
       walletSelectController.setSelectionState("loading");
       const wallets = await fetchPaymentWalletModel(userData!, 100, new PaginateModel());

@@ -188,6 +188,7 @@ export default function PaymentMethod({ profileType, walletId, onMethodSelect, p
   }, [userData, methodsModel, paginateModel, fetchPaymentMethodModel, extractLatest, setPaymentMethodModel]);
 
   const loadMethods = useCallback(() => {
+      if(!userData) return;
     demandPaymentMethodModel(async ({ get, set }) => {
       methodSelectController.setSelectionState("loading");
       const methods = await fetchPaymentMethodModel(userData!, 100, new PaginateModel());

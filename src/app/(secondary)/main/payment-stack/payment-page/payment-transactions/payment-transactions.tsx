@@ -205,8 +205,7 @@ export default function PaymentTransactions({ onStateChange }: ComponentStatePro
   };
 
   useEffect(() => {
-
-      if (!userData) return;
+    if (!userData) return;
     demandTransactionModels(async ({ get, set }) => {
       const models = await fetchTransactionModels(userData, 10,  new PaginateModel());
       extractLatest(models);
@@ -215,7 +214,7 @@ export default function PaymentTransactions({ onStateChange }: ComponentStatePro
       onStateChange?.('data');
       refreshData(true);
     });
-  }, [demandTransactionModels]);
+  }, [demandTransactionModels, userData]);
 
   const callPaginate = async () => {
     if (!userData || transactionModels.length <= 0) return;

@@ -192,7 +192,7 @@ export default function RewardsFriends({ onStateChange }: ComponentStateProps) {
       setFirstLoaded(true);
       refreshData(true);
     });
-  }, [demandFriendsModel]);
+  }, [demandFriendsModel,userData]);
 
 
   const callPaginate = async () => {

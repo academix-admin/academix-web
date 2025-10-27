@@ -130,7 +130,7 @@ export default function HomeQuizHistory({ onStateChange }: ComponentStateProps) 
       set(quizHistories);
       setFirstLoaded(true);
     });
-  }, [demandQuizHistoryData]);
+  }, [demandQuizHistoryData, userData]);
 
 
   const callPaginate = async () => {

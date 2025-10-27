@@ -89,7 +89,6 @@ class FriendsSubscriptionManager {
     if (this.activeFriends.size > 0) {
       const friendsIds = Array.from(this.activeFriends);
 
-      console.log('Subscribing to Friends IDs:', friendsIds);
 
       try {
         this.realtimeChannel = supabaseBrowser
@@ -138,7 +137,6 @@ class FriendsSubscriptionManager {
     friendsId: string,
     options: { override?: boolean; update?: boolean } = {}
   ): boolean {
-    console.log('Current Friends IDs:', Array.from(this.activeFriends));
 
     const { override = false, update = true } = options;
     const existingSubscription = this.activeFriends.has(friendsId);
@@ -198,7 +196,6 @@ class FriendsSubscriptionManager {
     oldRecordId?: string,
     friendsId?: string
   ): void {
-    console.log('Friends data received:', { eventType, newRecord, oldRecordId });
 
     const actualFriendsId = friendsId || newRecord?.usersId || oldRecordId || 'unknown';
 
