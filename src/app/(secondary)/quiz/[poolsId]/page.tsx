@@ -949,7 +949,7 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
       return;
     }
 
-    if (quizSession.currentQuestionId && pendingQuestions.length === 0 && quizState !== 'quizEnd') {
+    if (!quizSession.currentQuestionId && pendingQuestions.length === 0 && quizState !== 'quizEnd') {
         setQuizState('quizEnd');
         return;
     }
