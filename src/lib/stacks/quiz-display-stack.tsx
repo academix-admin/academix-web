@@ -24,10 +24,8 @@ export function useQuizDisplay() {
     }
     const now = new Date();
     const endAt = new Date(jobEndAt);
-    if(now > endAt){
-        if(lastEvent?.isOpen){
-          closeDisplay();
-        }
+    if(now > endAt && status != 'PoolJob.start_pool'){
+        closeDisplay();
         return;
     }
     setLastEvent({ isOpen: true, status, jobEndAt, timestamp: Date.now() });
