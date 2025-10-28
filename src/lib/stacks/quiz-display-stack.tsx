@@ -15,12 +15,21 @@ export function useQuizDisplay() {
     const isWaitingStatus = status && [
       'PoolJob.extended_waiting',
       'PoolJob.waiting',
+      'PoolJob.pool_ended',
     ].includes(status);
+
 
     if (!status || !jobEndAt || isWaitingStatus) {
       return;
     }
-
+    const now = new Date();
+    const endAt = new Date(jobEndAt);
+    if(now > endAt){
+        if(lastEvent?.isOpen){
+          closeDisplay();
+        }
+        return;
+    }
     setLastEvent({ isOpen: true, status, jobEndAt, timestamp: Date.now() });
   };
 

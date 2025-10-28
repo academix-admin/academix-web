@@ -918,7 +918,7 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
     const pendingQuestions = quizSession.pendingQuestions;
 
     // Check if quiz has ended
-    if (checkEnd()) {
+    if (checkEnd() || (quizSession.currentQuestionId && pendingQuestions.length === 0)) {
       if (quizState !== 'quizEnd') {
         setQuizState('quizEnd');
       }
@@ -946,7 +946,14 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
     // Default to quiz play state if there are pending questions
     if (pendingQuestions.length > 0 && quizState !== 'quizPlay') {
       setQuizState('quizPlay');
+      return;
     }
+
+    if (quizSession.currentQuestionId && pendingQuestions.length === 0 && quizState !== 'quizEnd') {
+        setQuizState('quizEnd');
+        return;
+    }
+
   }, [quizSession, quizModel, checkEnd, validForNotSubmitted, automateSubmit, quizState]);
 
   // Monitor quiz session and quiz model to determine state transitions
@@ -1163,14 +1170,8 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
       );
 
       case 'quizPlay':
-          const currentQuestion = getCurrentQuestion(quizSession.currentQuestionId);
-        if (!currentQuestion) {
-          return (
-            <div style={{ textAlign: 'center', padding: '40px' }}>
-              <div>No questions available</div>
-            </div>
-          );
-        }
+        const currentQuestion = getCurrentQuestion(quizSession.currentQuestionId);
+        if (!currentQuestion) return null;
 
         return (
           <div>
