@@ -354,8 +354,8 @@ export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) 
 
   const onContinueClick = async () => {
     if(!userData || !activeQuiz.quizPool?.poolsId)return;
-    await nav.popToRoot();
     await pushAndWait(`/quiz/${activeQuiz.quizPool?.poolsId}`);
+    await nav.popToRoot();
   };
 
   return (
