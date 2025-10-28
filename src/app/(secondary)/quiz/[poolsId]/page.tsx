@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useEffect, useState, useCallback, useRef } from 'react';
+import { use, useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import styles from './page.module.css';
 import { useLanguage } from '@/context/LanguageContext';
@@ -67,110 +67,197 @@ interface QuizProgressProps {
   onQuestionSelect: (questionId: string) => void;
 }
 
-// Question Display Component
+interface UseQuestionTimerProps {
+  questionId: string;
+  timeLimit: number;
+  onTimeUp: () => void;
+  autoStart?: boolean;
+}
+
+const useQuestionTimer = ({
+  questionId,
+  timeLimit,
+  onTimeUp,
+  autoStart = true
+}: UseQuestionTimerProps) => {
+  const [remainingTime, setRemainingTime] = useState(timeLimit);
+  const [isActive, setIsActive] = useState(autoStart);
+  const [isTimeUp, setIsTimeUp] = useState(false);
+
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const onTimeUpRef = useRef(onTimeUp);
+
+  // Update the callback ref when onTimeUp changes
+  useEffect(() => {
+    onTimeUpRef.current = onTimeUp;
+  }, [onTimeUp]);
+
+  const clearTimer = useCallback(() => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+  }, []);
+
+  const startTimer = useCallback(() => {
+    clearTimer();
+    setIsActive(true);
+    setIsTimeUp(false);
+    setRemainingTime(timeLimit);
+
+    timerRef.current = setInterval(() => {
+      setRemainingTime(prev => {
+        if (prev <= 1) {
+          clearTimer();
+          setIsTimeUp(true);
+          setIsActive(false);
+          onTimeUpRef.current();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  }, [timeLimit, clearTimer]);
+
+  const pauseTimer = useCallback(() => {
+    setIsActive(false);
+    clearTimer();
+  }, [clearTimer]);
+
+  const resumeTimer = useCallback(() => {
+    if (remainingTime > 0 && !isTimeUp) {
+      setIsActive(true);
+
+      timerRef.current = setInterval(() => {
+        setRemainingTime(prev => {
+          if (prev <= 1) {
+            clearTimer();
+            setIsTimeUp(true);
+            setIsActive(false);
+            onTimeUpRef.current();
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+  }, [remainingTime, isTimeUp, clearTimer]);
+
+  const resetTimer = useCallback(() => {
+    clearTimer();
+    setIsActive(autoStart);
+    setIsTimeUp(false);
+    setRemainingTime(timeLimit);
+
+    if (autoStart) {
+      startTimer();
+    }
+  }, [timeLimit, autoStart, clearTimer, startTimer]);
+
+  // Initialize timer when questionId changes
+  useEffect(() => {
+    resetTimer();
+
+    return () => {
+      clearTimer();
+    };
+  }, [questionId, resetTimer, clearTimer]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      clearTimer();
+    };
+  }, [clearTimer]);
+
+  const progress = (remainingTime / timeLimit) * 100;
+
+  return {
+    remainingTime,
+    isActive,
+    isTimeUp,
+    progress,
+    startTimer,
+    pauseTimer,
+    resumeTimer,
+    resetTimer,
+    clearTimer
+  };
+};
+
+// Question Display
 const QuestionDisplay = ({ question, onAnswer, onSubmit }: QuestionDisplayProps) => {
+  const questionId = question.poolsQuestionId;
+  const timeLimit = question.timeData.questionTimeValue;
+
   // State
-  const [remainingTime, setRemainingTime] = useState(question.timeData.questionTimeValue);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Refs for stable values across renders
-  const stateRef = useRef({
-    timer: null as NodeJS.Timeout | null,
-    isSubmitting: false,
-    remainingTime: question.timeData.questionTimeValue,
-    questionId: question.poolsQuestionId
+  // Use the custom timer hook
+  const {
+    remainingTime,
+    isActive,
+    isTimeUp,
+    progress,
+    pauseTimer,
+    clearTimer
+  } = useQuestionTimer({
+    questionId,
+    timeLimit,
+    onTimeUp: () => {
+      console.log(`Auto-submitting question: ${questionId}`);
+      handleAutoSubmit();
+    },
+    autoStart: true
   });
-
-  // Update ref when question changes
-  useEffect(() => {
-    stateRef.current.questionId = question.poolsQuestionId;
-  }, [question.poolsQuestionId]);
 
   // Auto-submit handler
   const handleAutoSubmit = useCallback(async () => {
-    const { questionId, remainingTime, isSubmitting } = stateRef.current;
+    if (isSubmitting) return;
 
-    if (isSubmitting) {
-      return;
-    }
-
-    // Set submission state
-    stateRef.current.isSubmitting = true;
     setIsSubmitting(true);
+    const timeTaken = timeLimit - remainingTime;
 
-    const timeTaken = question.timeData.questionTimeValue - remainingTime;
+    onSubmit(questionId, timeTaken);
+    setIsSubmitting(false);
+  }, [questionId, timeLimit, remainingTime, onSubmit, isSubmitting]);
 
-      onSubmit(questionId, timeTaken);
-      stateRef.current.isSubmitting = false;
-      setIsSubmitting(false);
+  // Manual submit handler
+  const handleManualSubmit = useCallback(async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    const timeTaken = timeLimit - remainingTime;
 
-  }, [onSubmit, question.timeData.questionTimeValue]);
+    onSubmit(questionId, timeTaken);
+    setIsSubmitting(false);
 
-  // Timer management
-  const manageTimer = useCallback((action: 'start' | 'stop') => {
-    const { timer, questionId } = stateRef.current;
-
-    if (timer) {
-      clearInterval(timer);
-      stateRef.current.timer = null;
-    }
-
-    if (action === 'start') {
-      // Reset timer state
-      stateRef.current.remainingTime = question.timeData.questionTimeValue;
-      setRemainingTime(question.timeData.questionTimeValue);
-
-      // Start new timer
-      stateRef.current.timer = setInterval(() => {
-        stateRef.current.remainingTime -= 1;
-        setRemainingTime(stateRef.current.remainingTime);
-
-        if (stateRef.current.remainingTime <= 0) {
-          console.log(` Time expired for ${questionId}`);
-          manageTimer('stop');
-          handleAutoSubmit();
-        }
-      }, 1000);
-    }
-  }, [question.timeData.questionTimeValue, handleAutoSubmit]);
+  }, [questionId, timeLimit, remainingTime, onSubmit, isSubmitting, pauseTimer]);
 
   // Option selection handler
   const handleOptionClick = useCallback((optionId: string) => {
+    if (isSubmitting) return;
+
     const questionType = question.typeData.questionTypeLocalIdentity;
 
     if (questionType.includes('slider')) {
       const answer = prompt('Enter your value:');
       if (answer !== null) {
-        onAnswer(question.poolsQuestionId, optionId, answer);
+        onAnswer(questionId, optionId, answer);
       }
     } else {
-      onAnswer(question.poolsQuestionId, optionId);
+      onAnswer(questionId, optionId);
     }
-  }, [question.poolsQuestionId, question.typeData.questionTypeLocalIdentity, onAnswer]);
+  }, [questionId, question.typeData.questionTypeLocalIdentity, onAnswer, isSubmitting]);
 
-  // Manual submit handler
-  const handleManualSubmit = useCallback(() => {
-    manageTimer('stop');
-    handleAutoSubmit();
-  }, [question.poolsQuestionId, manageTimer, handleAutoSubmit]);
-
-  // Initialize timer on question mount/change
+  // Cleanup on unmount
   useEffect(() => {
-    console.log(` Question Display Mounted`);
-    console.log('Question:', question.poolsQuestionId);
-
-    manageTimer('start');
-
-    // Cleanup on unmount
     return () => {
-      manageTimer('stop');
+      clearTimer();
     };
-  }, [question.poolsQuestionId, manageTimer]);
+  }, [clearTimer]);
 
   // Derived values
-  const progress = (remainingTime / question.timeData.questionTimeValue) * 100;
   const hasSelectedOption = question.optionData.some(o => o.optionSelected);
-  const isTimeUp = remainingTime <= 0;
 
   return (
     <div style={{
@@ -184,8 +271,9 @@ const QuestionDisplay = ({ question, onAnswer, onSubmit }: QuestionDisplayProps)
         <h3 style={{ margin: '0 0 10px 0' }}>{question.questionData.questionsText}</h3>
         <div style={{ fontSize: '14px', color: '#666' }}>
           <span>Type: {question.typeData.questionTypeIdentity}</span>
-          <span style={{ marginLeft: '15px' }}>ID: {question.poolsQuestionId}</span>
-          <span style={{ marginLeft: '15px' }}>Time: {question.timeData.questionTimeValue}s</span>
+          <span style={{ marginLeft: '15px' }}>ID: {questionId}</span>
+          <span style={{ marginLeft: '15px' }}>Time: {timeLimit}s</span>
+          <span style={{ marginLeft: '15px' }}>Status: {isActive ? 'Running' : 'Paused'}</span>
         </div>
       </div>
 
@@ -308,12 +396,12 @@ const QuestionDisplay = ({ question, onAnswer, onSubmit }: QuestionDisplayProps)
         }}>
           {isSubmitting && 'Submitting your answer...'}
           {isTimeUp && !isSubmitting && 'Time expired - answer submitted automatically'}
+          {!isActive && !isTimeUp && !isSubmitting && 'Timer paused'}
         </div>
       </div>
     </div>
   );
 };
-
 
 // Quiz Progress Component
 const QuizProgress = ({ current, total, submissions, onQuestionSelect }: QuizProgressProps) => {
@@ -424,7 +512,7 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
     // Create initial submissions map
     const initialSubmissions = new Map(
       questions.map(q => [q.poolsQuestionId, {
-        status: q.timeData.questionTimeValue != null ? 'submitted' as SubmissionStatus : 'initial',
+        status: q.questionTime != null ? 'submitted' as SubmissionStatus : 'initial',
         questionId: q.poolsQuestionId
       }])
     );
@@ -559,6 +647,8 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
       });
 
       if (error) throw error;
+
+      console.log(data);
 
       if (data.status === 'Submission.success' || data.status === 'Submission.duplicate') {
         // Update submission status to successful
@@ -828,7 +918,6 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
     const pendingQuestions = quizSession.pendingQuestions;
 
     // Check if quiz has ended
-    console.log(quizModel.poolsJob);
     if (checkEnd()) {
       if (quizState !== 'quizEnd') {
         setQuizState('quizEnd');
@@ -955,7 +1044,6 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
     };
   }, []);
 
-
   // Render quiz content based on current state
   const renderQuizContent = () => {
     switch (quizState) {
@@ -1075,7 +1163,7 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
       );
 
       case 'quizPlay':
-        const currentQuestion = getCurrentQuestion(quizSession.currentQuestionId);
+          const currentQuestion = getCurrentQuestion(quizSession.currentQuestionId);
         if (!currentQuestion) {
           return (
             <div style={{ textAlign: 'center', padding: '40px' }}>
