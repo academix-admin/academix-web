@@ -20,7 +20,7 @@ export const { useStack } = createStateStack(methods);
 export const userDataConfig = {
   initial: null,
   persist: true,
-  ttl: 3600,
+//   ttl: 3600,
   historyDepth: 1,
   clearOnZeroSubscribers: false,
 };
