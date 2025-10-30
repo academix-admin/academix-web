@@ -106,8 +106,8 @@ export const resetPasswordConfig = {
     password: '',
     confirm_password: ''
   },
-  persist: true,
-  ttl: 300, // 5 minutes
+//   persist: true,
+//   ttl: 300, // 5 minutes
   historyDepth: 1,
   clearOnZeroSubscribers: false,
 };

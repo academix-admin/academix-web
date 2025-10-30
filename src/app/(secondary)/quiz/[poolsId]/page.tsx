@@ -19,7 +19,7 @@ import { BackendPoolQuestion, PoolQuestion } from '@/models/pool-question-model'
 import { BackendPoolMemberModel, PoolMemberModel } from '@/models/pool-member';
 import { StateStack } from '@/lib/state-stack';
 import { RealtimeChannel, RealtimePostgresChangesPayload } from '@supabase/supabase-js';
-
+import QuestionDisplay from './question-display/question-display'
 
 // Quiz state types
 type QuizState =
@@ -53,12 +53,6 @@ interface QuizResult {
   rankResults: PoolMemberModel[];
 }
 
-// Component Props Interfaces
-interface QuestionDisplayProps {
-  question: PoolQuestion;
-  onAnswer: (questionId: string, optionId: string, answer?: string) => void;
-  onSubmit: (questionId: string, timeTaken: number) => void;
-}
 
 interface QuizProgressProps {
   current: number;
@@ -67,341 +61,6 @@ interface QuizProgressProps {
   onQuestionSelect: (questionId: string) => void;
 }
 
-interface UseQuestionTimerProps {
-  questionId: string;
-  timeLimit: number;
-  onTimeUp: () => void;
-  autoStart?: boolean;
-}
-
-const useQuestionTimer = ({
-  questionId,
-  timeLimit,
-  onTimeUp,
-  autoStart = true
-}: UseQuestionTimerProps) => {
-  const [remainingTime, setRemainingTime] = useState(timeLimit);
-  const [isActive, setIsActive] = useState(autoStart);
-  const [isTimeUp, setIsTimeUp] = useState(false);
-
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const onTimeUpRef = useRef(onTimeUp);
-
-  // Update the callback ref when onTimeUp changes
-  useEffect(() => {
-    onTimeUpRef.current = onTimeUp;
-  }, [onTimeUp]);
-
-  const clearTimer = useCallback(() => {
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-  }, []);
-
-  const startTimer = useCallback(() => {
-    clearTimer();
-    setIsActive(true);
-    setIsTimeUp(false);
-    setRemainingTime(timeLimit);
-
-    timerRef.current = setInterval(() => {
-      setRemainingTime(prev => {
-        if (prev <= 1) {
-          clearTimer();
-          setIsTimeUp(true);
-          setIsActive(false);
-          onTimeUpRef.current();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-  }, [timeLimit, clearTimer]);
-
-  const pauseTimer = useCallback(() => {
-    setIsActive(false);
-    clearTimer();
-  }, [clearTimer]);
-
-  const resumeTimer = useCallback(() => {
-    if (remainingTime > 0 && !isTimeUp) {
-      setIsActive(true);
-
-      timerRef.current = setInterval(() => {
-        setRemainingTime(prev => {
-          if (prev <= 1) {
-            clearTimer();
-            setIsTimeUp(true);
-            setIsActive(false);
-            onTimeUpRef.current();
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }
-  }, [remainingTime, isTimeUp, clearTimer]);
-
-  const resetTimer = useCallback(() => {
-    clearTimer();
-    setIsActive(autoStart);
-    setIsTimeUp(false);
-    setRemainingTime(timeLimit);
-
-    if (autoStart) {
-      startTimer();
-    }
-  }, [timeLimit, autoStart, clearTimer, startTimer]);
-
-  // Initialize timer when questionId changes
-  useEffect(() => {
-    resetTimer();
-
-    return () => {
-      clearTimer();
-    };
-  }, [questionId, resetTimer, clearTimer]);
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      clearTimer();
-    };
-  }, [clearTimer]);
-
-  const progress = (remainingTime / timeLimit) * 100;
-
-  return {
-    remainingTime,
-    isActive,
-    isTimeUp,
-    progress,
-    startTimer,
-    pauseTimer,
-    resumeTimer,
-    resetTimer,
-    clearTimer
-  };
-};
-
-// Question Display
-const QuestionDisplay = ({ question, onAnswer, onSubmit }: QuestionDisplayProps) => {
-  const questionId = question.poolsQuestionId;
-  const timeLimit = question.timeData.questionTimeValue;
-
-  // State
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Use the custom timer hook
-  const {
-    remainingTime,
-    isActive,
-    isTimeUp,
-    progress,
-    pauseTimer,
-    clearTimer
-  } = useQuestionTimer({
-    questionId,
-    timeLimit,
-    onTimeUp: () => {
-      console.log(`Auto-submitting question: ${questionId}`);
-      handleAutoSubmit();
-    },
-    autoStart: true
-  });
-
-  // Auto-submit handler
-  const handleAutoSubmit = useCallback(async () => {
-    if (isSubmitting) return;
-
-    setIsSubmitting(true);
-    const timeTaken = timeLimit - remainingTime;
-
-    onSubmit(questionId, timeTaken);
-    setIsSubmitting(false);
-  }, [questionId, timeLimit, remainingTime, onSubmit, isSubmitting]);
-
-  // Manual submit handler
-  const handleManualSubmit = useCallback(async () => {
-    if (isSubmitting) return;
-    setIsSubmitting(true);
-    const timeTaken = timeLimit - remainingTime;
-
-    onSubmit(questionId, timeTaken);
-    setIsSubmitting(false);
-
-  }, [questionId, timeLimit, remainingTime, onSubmit, isSubmitting, pauseTimer]);
-
-  // Option selection handler
-  const handleOptionClick = useCallback((optionId: string) => {
-    if (isSubmitting) return;
-
-    const questionType = question.typeData.questionTypeLocalIdentity;
-
-    if (questionType.includes('slider')) {
-      const answer = prompt('Enter your value:');
-      if (answer !== null) {
-        onAnswer(questionId, optionId, answer);
-      }
-    } else {
-      onAnswer(questionId, optionId);
-    }
-  }, [questionId, question.typeData.questionTypeLocalIdentity, onAnswer, isSubmitting]);
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      clearTimer();
-    };
-  }, [clearTimer]);
-
-  // Derived values
-  const hasSelectedOption = question.optionData.some(o => o.optionSelected);
-
-  return (
-    <div style={{
-      border: '1px solid #ccc',
-      padding: '20px',
-      margin: '10px',
-      opacity: isSubmitting ? 0.7 : 1
-    }}>
-      {/* Header */}
-      <div style={{ marginBottom: '15px' }}>
-        <h3 style={{ margin: '0 0 10px 0' }}>{question.questionData.questionsText}</h3>
-        <div style={{ fontSize: '14px', color: '#666' }}>
-          <span>Type: {question.typeData.questionTypeIdentity}</span>
-          <span style={{ marginLeft: '15px' }}>ID: {questionId}</span>
-          <span style={{ marginLeft: '15px' }}>Time: {timeLimit}s</span>
-          <span style={{ marginLeft: '15px' }}>Status: {isActive ? 'Running' : 'Paused'}</span>
-        </div>
-      </div>
-
-      {/* Timer Progress */}
-      <div style={{ margin: '15px 0' }}>
-        <div style={{
-          width: '100%',
-          backgroundColor: '#f0f0f0',
-          borderRadius: '5px',
-          overflow: 'hidden',
-          marginBottom: '5px'
-        }}>
-          <div
-            style={{
-              width: `${progress}%`,
-              height: '20px',
-              backgroundColor: progress > 20 ? '#4CAF50' : progress > 10 ? '#FF9800' : '#f44336',
-              transition: 'width 1s linear',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'white',
-              fontWeight: 'bold',
-              fontSize: '12px'
-            }}
-          >
-            {progress.toFixed(0)}%
-          </div>
-        </div>
-        <p style={{
-          margin: 0,
-          fontWeight: 'bold',
-          color: isTimeUp ? '#f44336' : '#333'
-        }}>
-          {isTimeUp ? 'Time Up!' : `Time Remaining: ${remainingTime}s`}
-        </p>
-      </div>
-
-      {/* Options */}
-      <div style={{ margin: '20px 0' }}>
-        {question.optionData.map(option => (
-          <button
-            key={option.optionsId}
-            onClick={() => handleOptionClick(option.optionsId)}
-            disabled={isSubmitting || isTimeUp}
-            style={{
-              margin: '5px',
-              padding: '12px 16px',
-              backgroundColor: option.optionSelected ? '#4CAF50' : '#e0e0e0',
-              color: option.optionSelected ? 'white' : '#333',
-              border: `2px solid ${option.optionSelected ? '#388E3C' : '#ccc'}`,
-              borderRadius: '6px',
-              cursor: (isSubmitting || isTimeUp) ? 'not-allowed' : 'pointer',
-              opacity: (isSubmitting || isTimeUp) ? 0.6 : 1,
-              transition: 'all 0.2s ease',
-              fontSize: '14px',
-              fontWeight: '500'
-            }}
-            onMouseOver={(e) => {
-              if (!isSubmitting && !isTimeUp && !option.optionSelected) {
-                e.currentTarget.style.backgroundColor = '#d6d6d6';
-              }
-            }}
-            onMouseOut={(e) => {
-              if (!isSubmitting && !isTimeUp && !option.optionSelected) {
-                e.currentTarget.style.backgroundColor = '#e0e0e0';
-              }
-            }}
-          >
-            {option.optionsIdentity} {option.optionSelected ? ' ✓' : ''}
-          </button>
-        ))}
-      </div>
-
-      {/* Submit Button */}
-      <div style={{ textAlign: 'center', marginTop: '25px' }}>
-        <button
-          onClick={handleManualSubmit}
-          disabled={!hasSelectedOption || isSubmitting || isTimeUp}
-          style={{
-            padding: '12px 30px',
-            fontSize: '16px',
-            fontWeight: 'bold',
-            backgroundColor: !hasSelectedOption || isSubmitting || isTimeUp ? '#cccccc' : '#2196F3',
-            color: 'white',
-            border: 'none',
-            borderRadius: '6px',
-            cursor: (!hasSelectedOption || isSubmitting || isTimeUp) ? 'not-allowed' : 'pointer',
-            transition: 'all 0.2s ease',
-            minWidth: '150px'
-          }}
-          onMouseOver={(e) => {
-            if (hasSelectedOption && !isSubmitting && !isTimeUp) {
-              e.currentTarget.style.backgroundColor = '#1976D2';
-              e.currentTarget.style.transform = 'translateY(-1px)';
-            }
-          }}
-          onMouseOut={(e) => {
-            if (hasSelectedOption && !isSubmitting && !isTimeUp) {
-              e.currentTarget.style.backgroundColor = '#2196F3';
-              e.currentTarget.style.transform = 'translateY(0)';
-            }
-          }}
-        >
-          {isSubmitting ? (
-            <>⏳ Submitting...</>
-          ) : isTimeUp ? (
-            <>⏰ Time Expired</>
-          ) : (
-            <>🚀 Submit Answer</>
-          )}
-        </button>
-
-        {/* Status indicator */}
-        <div style={{
-          marginTop: '10px',
-          fontSize: '12px',
-          color: '#666',
-          height: '15px'
-        }}>
-          {isSubmitting && 'Submitting your answer...'}
-          {isTimeUp && !isSubmitting && 'Time expired - answer submitted automatically'}
-          {!isActive && !isTimeUp && !isSubmitting && 'Timer paused'}
-        </div>
-      </div>
-    </div>
-  );
-};
 
 // Quiz Progress Component
 const QuizProgress = ({ current, total, submissions, onQuestionSelect }: QuizProgressProps) => {
@@ -558,51 +217,99 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
     };
   }, [poolsId, setQuizModel]);
 
-  // Handle answer selection
+//   // Handle answer selection
+//   const handleAnswer = useCallback((questionId: string, optionId: string, answer?: string) => {
+//     setQuizSession(prev => {
+//       // Find the current question in pending questions
+//       const currentQuestion = prev.pendingQuestions.find(q => q.poolsQuestionId === questionId);
+//       if (!currentQuestion) return prev;
+//
+//       const questionType = currentQuestion.typeData.questionTypeLocalIdentity;
+//
+//       // Update question with new option selection
+//       const updatedQuestion = currentQuestion.copyWith({
+//         optionData: currentQuestion.optionData.map(option => {
+//           if (option.optionsId === optionId) {
+//             if (questionType === 'QuestionType.slider') {
+//               // For slider questions, update the option identity with the answer
+//               return option.copyWith({
+//                 optionSelected: true,
+//                 optionsIdentity: answer
+//               });
+//             }
+//             // Toggle selection for other question types
+//             return option.copyWith({ optionSelected: !option.optionSelected });
+//           }
+//
+//           // For single-choice questions, deselect other options
+//           if ((questionType === 'QuestionType.true_false' || questionType === 'QuestionType.one_choice') && option.optionSelected) {
+//             return option.copyWith({ optionSelected: false });
+//           }
+//
+//           return option;
+//         })
+//       });
+//
+//       // Replace the old question with updated one
+//       const newPendingQuestions = [
+//         ...prev.pendingQuestions.filter(q => q.poolsQuestionId !== questionId),
+//         updatedQuestion
+//       ];
+//
+//       return {
+//         ...prev,
+//         pendingQuestions: newPendingQuestions
+//       };
+//     });
+//     });
+//   }, []);
+
   const handleAnswer = useCallback((questionId: string, optionId: string, answer?: string) => {
     setQuizSession(prev => {
-      // Find the current question in pending questions
-      const currentQuestion = prev.pendingQuestions.find(q => q.poolsQuestionId === questionId);
-      if (!currentQuestion) return prev;
+      const newPendingQuestions = prev.pendingQuestions.map(q => {
+        if (q.poolsQuestionId !== questionId) return q;
 
-      const questionType = currentQuestion.typeData.questionTypeLocalIdentity;
+        const questionType = q.typeData.questionTypeLocalIdentity;
 
-      // Update question with new option selection
-      const updatedQuestion = currentQuestion.copyWith({
-        optionData: currentQuestion.optionData.map(option => {
-          if (option.optionsId === optionId) {
-            if (questionType === 'QuestionType.slider') {
-              // For slider questions, update the option identity with the answer
-              return option.copyWith({
-                optionSelected: true,
-                optionsIdentity: answer
-              });
+        // Create updated question
+        const updatedQuestion = q.copyWith({
+          optionData: q.optionData.map(option => {
+            if (option.optionsId === optionId) {
+              if (questionType === 'QuestionType.slider') {
+                // For slider questions, store the slider value
+                return option.copyWith({
+                  optionSelected: true,
+                  optionsIdentity: answer
+                });
+              }
+
+              // Toggle for other question types
+              return option.copyWith({ optionSelected: !option.optionSelected });
             }
-            // Toggle selection for other question types
-            return option.copyWith({ optionSelected: !option.optionSelected });
-          }
 
-          // For single-choice questions, deselect other options
-          if ((questionType === 'QuestionType.true_false' || questionType === 'QuestionType.one_choice') && option.optionSelected) {
-            return option.copyWith({ optionSelected: false });
-          }
+            // Deselect other options for single-choice types
+            if (
+              (questionType === 'QuestionType.true_false' ||
+                questionType === 'QuestionType.one_choice') &&
+              option.optionSelected
+            ) {
+              return option.copyWith({ optionSelected: false });
+            }
 
-          return option;
-        })
+            return option;
+          })
+        });
+
+        return updatedQuestion;
       });
-
-      // Replace the old question with updated one
-      const newPendingQuestions = [
-        ...prev.pendingQuestions.filter(q => q.poolsQuestionId !== questionId),
-        updatedQuestion
-      ];
 
       return {
         ...prev,
-        pendingQuestions: newPendingQuestions
+        pendingQuestions: newPendingQuestions,
       };
     });
   }, []);
+
 
   // Submit question to backend
   const submitQuestionToBackend = useCallback(async (question: PoolQuestion, timeTaken: number) => {
@@ -725,7 +432,7 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
         // Submit to backend
         submitQuestionToBackend(currentQuestion, timeTaken);
 
-        // Get next question (you can keep your shuffle logic here if needed)\
+        // Get next question
         const shuffledPending = [...newPending].sort(() => Math.random() - 0.5);
         const nextQuestionId = shuffledPending.length > 0 ? shuffledPending[0].poolsQuestionId : null;
 
@@ -1173,26 +880,7 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
         const currentQuestion = getCurrentQuestion(quizSession.currentQuestionId);
         if (!currentQuestion) return null;
 
-        return (
-          <div>
-            <QuizProgress
-              current={quizSession.completedQuestions.length + 1}
-              total={quizSession.totalQuestions}
-              submissions={quizSession.submissions}
-              onQuestionSelect={(questionId) => {
-                // In a real implementation, this would navigate to specific question
-                console.log('Navigate to question:', questionId);
-                // You could implement question navigation logic here
-              }}
-            />
-
-            <QuestionDisplay
-              question={currentQuestion}
-              onAnswer={handleAnswer}
-              onSubmit={handleSubmitQuestion}
-            />
-          </div>
-        );
+        return <QuestionDisplay question={currentQuestion} onAnswer={handleAnswer} onSubmit={handleSubmitQuestion} getQuestionNumber={()=> quizSession.totalQuestions - quizSession.pendingQuestions.length + 1} totalNumber={quizSession.totalQuestions} />;
 
       case 'quizEnd':
         return (
@@ -1310,33 +998,9 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
         );
 
       default:
-        return <div>Unknown state</div>;
+        return null;
     }
   };
 
-  return (
-    <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif', maxWidth: '800px', margin: '0 auto' }}>
-      <header style={{ borderBottom: '1px solid #eee', paddingBottom: '10px', marginBottom: '20px' }}>
-        <h1 style={{ margin: 0, color: '#333' }}>Quiz: {poolsId}</h1>
-        {userData && (
-          <p style={{ margin: '5px 0', color: '#666' }}>
-            Welcome, {userData.usersId}
-          </p>
-        )}
-        <div style={{
-          padding: '5px 10px',
-          backgroundColor: '#f0f0f0',
-          borderRadius: '4px',
-          display: 'inline-block',
-          fontSize: '14px'
-        }}>
-          Status: <strong>{quizState}</strong>
-        </div>
-      </header>
-
-      <main>
-        {renderQuizContent()}
-      </main>
-    </div>
-  );
+  return renderQuizContent();
 }

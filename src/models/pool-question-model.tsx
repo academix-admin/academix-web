@@ -228,7 +228,7 @@ export class PoolQuestion {
     this.timeData = new PoolTimeModel(data?.question_time_data ?? null);
     this.typeData = new PoolTypeModel(data?.question_type_data ?? null);
     this.questionData = new QuestionModel(data?.question_data ?? null);
-    this.optionData = data?.options_data?.map(o => new OptionModel(o)) ?? [];
+    this.optionData = data?.options_data?.map(o => new OptionModel(o)) ?? [] ;
   }
 
   static from(data: any): PoolQuestion {
