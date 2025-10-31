@@ -439,24 +439,41 @@ export default function QuestionDisplay({ question, onAnswer, onSubmit, getQuest
     }
   };
 
+  function formatQuizTime(time?: number): string {
+    if (time == null || time < 0) {
+      return "0s";
+    }
+
+    const totalSeconds = Math.floor(time); // truncate decimals
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+
+    if (minutes > 0) {
+      return `${minutes}m ${seconds}s`; // e.g., "3m 42s"
+    } else {
+      return `${seconds}s`; // e.g., "42s" or "0s"
+    }
+  }
+
+
   return (
     <div className={styles.quizContainer}>
       {/* Header */}
       <div className={styles.quizHeader}>
-        <button className={styles.menuButton}>
+        <button className={`${styles.menuButton} ${styles[`menuButton_${theme}`]}`}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
             <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
           </svg>
         </button>
 
-        <div className={styles.questionTypeIndicator}>
+        <div className={`${styles.questionTypeIndicator} ${styles[`questionTypeIndicator_${theme}`]}`}>
           <QuestionTypeIcon type={question.typeData.questionTypeLocalIdentity} />
-          <span className={styles.questionTypeText}>
+          <span  className={`${styles.questionTypeText} ${styles[`questionTypeText_${theme}`]}`}>
             {getQuestionTypeName(question.typeData.questionTypeLocalIdentity)}
           </span>
         </div>
 
-        <button className={styles.exitButton}>
+        <button className={`${styles.exitButton} ${styles[`exitButton_${theme}`]}`}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
             <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
           </svg>
@@ -477,7 +494,7 @@ export default function QuestionDisplay({ question, onAnswer, onSubmit, getQuest
           </div>
         )}
 
-        <div className={styles.questionTextContainer}>
+        <div className={`${styles.questionTextContainer} ${styles[`questionTextContainer_${theme}`]}`}>
           <div className={styles.questionCounter}>
             {getQuestionNumber()}/{totalNumber}
           </div>
@@ -499,10 +516,10 @@ export default function QuestionDisplay({ question, onAnswer, onSubmit, getQuest
               className={styles.timeProgressFill}
             />
           </div>
-        <div className={styles.footerContent}>
+        <div  className={`${styles.footerContent} ${styles[`footerContent_${theme}`]}`}>
           <div className={styles.timeInfo}>
             <div className={styles.remainingText}>{t('remaining_time')}</div>
-            <div className={styles.timeValue}>{remainingTime}s</div>
+            <div className={styles.timeValue}>{formatQuizTime(remainingTime)}</div>
           </div>
 
           <button
