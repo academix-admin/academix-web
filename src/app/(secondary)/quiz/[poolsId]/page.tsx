@@ -32,7 +32,7 @@ type QuizState =
   | 'quizReward'
   | 'error';
 
-type SubmissionStatus = 'initial' | 'loading' | 'submitted' | 'error';
+type SubmissionStatus = 'initial' | 'loading' | 'data' | 'error';
 
 interface SubmissionState {
   status: SubmissionStatus;
@@ -74,7 +74,7 @@ const QuizProgress = ({ current, total, submissions, onQuestionSelect }: QuizPro
             onClick={() => onQuestionSelect(questionId)}
             style={{
               padding: '10px',
-              backgroundColor: submission.status === 'submitted' ? '#4CAF50' :
+              backgroundColor: submission.status === 'data' ? '#4CAF50' :
                              submission.status === 'loading' ? '#FFC107' :
                              submission.status === 'error' ? '#f44336' : '#e0e0e0',
               border: '1px solid #ccc',
@@ -171,7 +171,7 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
     // Create initial submissions map
     const initialSubmissions = new Map(
       questions.map(q => [q.poolsQuestionId, {
-        status: q.questionTime != null ? 'submitted' as SubmissionStatus : 'initial',
+        status: q.questionTime != null ? 'data' as SubmissionStatus : 'initial',
         questionId: q.poolsQuestionId
       }])
     );
@@ -216,53 +216,6 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
       }
     };
   }, [poolsId, setQuizModel]);
-
-//   // Handle answer selection
-//   const handleAnswer = useCallback((questionId: string, optionId: string, answer?: string) => {
-//     setQuizSession(prev => {
-//       // Find the current question in pending questions
-//       const currentQuestion = prev.pendingQuestions.find(q => q.poolsQuestionId === questionId);
-//       if (!currentQuestion) return prev;
-//
-//       const questionType = currentQuestion.typeData.questionTypeLocalIdentity;
-//
-//       // Update question with new option selection
-//       const updatedQuestion = currentQuestion.copyWith({
-//         optionData: currentQuestion.optionData.map(option => {
-//           if (option.optionsId === optionId) {
-//             if (questionType === 'QuestionType.slider') {
-//               // For slider questions, update the option identity with the answer
-//               return option.copyWith({
-//                 optionSelected: true,
-//                 optionsIdentity: answer
-//               });
-//             }
-//             // Toggle selection for other question types
-//             return option.copyWith({ optionSelected: !option.optionSelected });
-//           }
-//
-//           // For single-choice questions, deselect other options
-//           if ((questionType === 'QuestionType.true_false' || questionType === 'QuestionType.one_choice') && option.optionSelected) {
-//             return option.copyWith({ optionSelected: false });
-//           }
-//
-//           return option;
-//         })
-//       });
-//
-//       // Replace the old question with updated one
-//       const newPendingQuestions = [
-//         ...prev.pendingQuestions.filter(q => q.poolsQuestionId !== questionId),
-//         updatedQuestion
-//       ];
-//
-//       return {
-//         ...prev,
-//         pendingQuestions: newPendingQuestions
-//       };
-//     });
-//     });
-//   }, []);
 
   const handleAnswer = useCallback((questionId: string, optionId: string, answer?: string) => {
     setQuizSession(prev => {
@@ -315,6 +268,12 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
   const submitQuestionToBackend = useCallback(async (question: PoolQuestion, timeTaken: number) => {
     if (!userData) throw new Error('User not authenticated');
 
+    const submission = quizSession.submissions.get(question.poolsQuestionId);
+    if (submission?.status === 'loading' || submission?.status === 'data') {
+            console.log(' MAIN: Question already being processed, skipping', question.poolsQuestionId);
+            return;
+    }
+
     // Get user paramatical data for submission
     const paramatical = await getParamatical(
       userData.usersId,
@@ -324,12 +283,6 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
     );
 
     if (!paramatical) return;
-
-    const submission = quizSession.submissions.get(question.poolsQuestionId);
-    if (submission?.status === 'loading' || submission?.status === 'submitted') {
-            console.log(' MAIN: Question already being processed, skipping', question.poolsQuestionId);
-            return;
-    }
 
     // Update submission status to loading
     setQuizSession(prev => {
@@ -373,7 +326,7 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
         // Update submission status to successful
         const newSubmissions = new Map(prev.submissions);
         newSubmissions.set(question.poolsQuestionId, {
-          status: 'submitted',
+          status: 'data',
           questionId: question.poolsQuestionId,
           time: timeTaken
         });
@@ -717,9 +670,15 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
           const quizPool = new QuizPool(data.pools_quiz);
           const poolQuestions = (data.pools_question || []).map((row: BackendPoolQuestion) => new PoolQuestion(row));
 
-          set(quizPool);
-          initializeQuizSession(poolQuestions);
-          startQuizStream();
+          if(getIsContinueEnabled(quizPool)){
+            set(quizPool);
+            initializeQuizSession(poolQuestions);
+            startQuizStream();
+          }else{
+            set(null);
+            setQuizState('notFound');
+          }
+
         } else {
           set(null);
           setQuizState('notFound');
@@ -731,6 +690,21 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
       }
     });
   }, [demandQuizModel, poolsId, userData, lang, initializeQuizSession, startQuizStream]);
+
+  const getIsContinueEnabled = (quizPool: QuizPool | null): boolean => {
+    if (!quizPool) return false;
+
+    const { poolsStatus, poolsJob, poolsJobEndAt } = quizPool;
+    if (poolsStatus === 'Pools.close' || !poolsJobEndAt || poolsJob === 'PoolJob.pool_ended') return false;
+
+    const now = new Date();
+    const endAt = new Date(poolsJobEndAt);
+
+    if (poolsJob === 'PoolJob.pool_period') return now < endAt;
+    if (poolsJob === 'PoolJob.start_pool') return now >= endAt;
+
+    return true;
+  };
 
   // Cleanup on component unmount
   useEffect(() => {

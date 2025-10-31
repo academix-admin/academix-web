@@ -157,7 +157,19 @@ const TrueFalseComponent = ({ optionData, optionSelection }: {
             {option.optionsIdentity}
           </span>
           {option.optionSelected && (
-            <div className={styles.selectionIndicator}>✓</div>
+              <svg
+               className={styles.selectionIndicator}
+               fill="none"
+               height="24"
+               viewBox="0 0 24 24"
+               width="24"
+               xmlns="http://www.w3.org/2000/svg"
+               aria-hidden="true"
+              >
+                  <path clipRule="evenodd" d="M2.25 0C1.65326 0 1.08097 0.237053 0.65901 0.65901C0.237053 1.08097 0 1.65326 0 2.25V6.75C0 7.34674 0.237053 7.91903 0.65901 8.34099C1.08097 8.76295 1.65326 9 2.25 9H6.75C7.34674 9 7.91903 8.76295 8.34099 8.34099C8.76295 7.91903 9 7.34674 9 6.75V2.25C9 1.65326 8.76295 1.08097 8.34099 0.65901C7.91903 0.237053 7.34674 0 6.75 0H2.25ZM6.1785 3.9078C6.21892 3.86466 6.25045 3.81398 6.27128 3.75866C6.29212 3.70333 6.30185 3.64445 6.29993 3.58536C6.29801 3.52628 6.28447 3.46815 6.26008 3.4143C6.23569 3.36044 6.20094 3.31192 6.1578 3.2715C6.11466 3.23108 6.06398 3.19955 6.00866 3.17872C5.95333 3.15788 5.89445 3.14815 5.83536 3.15007C5.77628 3.15199 5.71815 3.16553 5.6643 3.18992C5.61044 3.21431 5.56192 3.24906 5.5215 3.2922L4.13415 4.7727L3.4488 4.16385C3.35901 4.0892 3.24371 4.05238 3.12727 4.06117C3.01084 4.06995 2.90237 4.12365 2.8248 4.21093C2.74722 4.2982 2.7066 4.41222 2.71153 4.52888C2.71646 4.64555 2.76654 4.75573 2.8512 4.83615L3.8637 5.73615C3.95131 5.81397 4.06582 5.85455 4.18288 5.84926C4.29994 5.84396 4.41032 5.79321 4.49055 5.7078L6.1785 3.9078Z"
+                      fill="orange"
+                      fillRule="evenodd" />
+              </svg>
           )}
         </button>
       ))}
@@ -177,15 +189,36 @@ const MultipleChoiceComponent = ({ optionData, optionSelection }: {
       {optionData.map((option) => (
         <div
           key={option.optionsId}
-          className={`${styles.multipleChoiceOption} ${
-            option.optionSelected ? styles.multipleChoiceSelected : ''
-          }`}
+          className={`${styles.multipleChoiceOption}`}
           onClick={() => optionSelection(option.optionsId,option.optionsIdentity)}
         >
-          <div className={styles.optionCircle}>
-            {option.optionSelected && <div className={styles.optionCircleSelected} />}
-          </div>
+          {option.optionsImage && (
+                    <div className={styles.optionImageContainer}>
+                      <Image
+                        src={option.optionsImage}
+                        alt="Option visual"
+                        width={50}
+                        height={50}
+                        className={styles.optionImage}
+                      />
+                    </div>
+                  )}
           <span className={styles.optionText}>{option.optionsIdentity}</span>
+          {option.optionSelected && (
+                        <svg
+                         className={styles.selectionIndicator}
+                         fill="none"
+                         height="24"
+                         viewBox="0 0 24 24"
+                         width="24"
+                         xmlns="http://www.w3.org/2000/svg"
+                         aria-hidden="true"
+                        >
+                            <path clipRule="evenodd" d="M2.25 0C1.65326 0 1.08097 0.237053 0.65901 0.65901C0.237053 1.08097 0 1.65326 0 2.25V6.75C0 7.34674 0.237053 7.91903 0.65901 8.34099C1.08097 8.76295 1.65326 9 2.25 9H6.75C7.34674 9 7.91903 8.76295 8.34099 8.34099C8.76295 7.91903 9 7.34674 9 6.75V2.25C9 1.65326 8.76295 1.08097 8.34099 0.65901C7.91903 0.237053 7.34674 0 6.75 0H2.25ZM6.1785 3.9078C6.21892 3.86466 6.25045 3.81398 6.27128 3.75866C6.29212 3.70333 6.30185 3.64445 6.29993 3.58536C6.29801 3.52628 6.28447 3.46815 6.26008 3.4143C6.23569 3.36044 6.20094 3.31192 6.1578 3.2715C6.11466 3.23108 6.06398 3.19955 6.00866 3.17872C5.95333 3.15788 5.89445 3.14815 5.83536 3.15007C5.77628 3.15199 5.71815 3.16553 5.6643 3.18992C5.61044 3.21431 5.56192 3.24906 5.5215 3.2922L4.13415 4.7727L3.4488 4.16385C3.35901 4.0892 3.24371 4.05238 3.12727 4.06117C3.01084 4.06995 2.90237 4.12365 2.8248 4.21093C2.74722 4.2982 2.7066 4.41222 2.71153 4.52888C2.71646 4.64555 2.76654 4.75573 2.8512 4.83615L3.8637 5.73615C3.95131 5.81397 4.06582 5.85455 4.18288 5.84926C4.29994 5.84396 4.41032 5.79321 4.49055 5.7078L6.1785 3.9078Z"
+                                fill="orange"
+                                fillRule="evenodd" />
+                        </svg>
+                    )}
         </div>
       ))}
     </div>
@@ -495,10 +528,10 @@ export default function QuestionDisplay({ question, onAnswer, onSubmit, getQuest
         )}
 
         <div className={`${styles.questionTextContainer} ${styles[`questionTextContainer_${theme}`]}`}>
-          <div className={styles.questionCounter}>
-            {getQuestionNumber()}/{totalNumber}
-          </div>
           <h3 className={styles.questionText}>
+            <span className={styles.questionCounterInline}>
+              {getQuestionNumber()}/{totalNumber}
+            </span>{" "}
             {question.questionData.questionsText}
           </h3>
         </div>
@@ -513,7 +546,7 @@ export default function QuestionDisplay({ question, onAnswer, onSubmit, getQuest
         <div className={styles.timeProgressBar}>
             <div
               style={{ width: `${progress}%` }}
-              className={styles.timeProgressFill}
+              className={`${styles.timeProgressFill} ${styles[`timeProgressFill_${theme}`]}`}
             />
           </div>
         <div  className={`${styles.footerContent} ${styles[`footerContent_${theme}`]}`}>
