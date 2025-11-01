@@ -357,7 +357,10 @@
   "payment_redirect_title": "Payment Redirect",
   "payment_redirect_text": "A new tab should open to complete your payment. If nothing happens, click the button below.",
   "open_payment_link": "Open Payment Link",
-  "remaining_time": "Remaining"
+  "remaining_time": "Remaining",
+  "question_count": "Question {x} of {y}",
+  "submit_text": "Submit Answer",
+  "progress_text": "Progress: {current} of {total}"
 }
 
 

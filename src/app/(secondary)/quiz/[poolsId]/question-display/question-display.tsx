@@ -20,6 +20,18 @@ interface QuestionDisplayProps {
   onSubmit: (questionId: string, timeTaken: number) => void;
 }
 
+interface BaseViewProps {
+  question: PoolQuestion;
+  getQuestionNumber: () => number;
+  totalNumber: number;
+  remainingTime: number;
+  progress: number;
+  hasSelectedOption: boolean;
+  isSubmitting: boolean;
+  handleManualSubmit: () => void;
+  renderOptionType: (type: string, displayType?: DisplayType) => React.ReactNode;
+}
+
 interface UseQuestionTimerProps {
   questionId: string;
   timeLimit: number;
@@ -138,38 +150,84 @@ const useQuestionTimer = ({
   };
 };
 
+// Types
+type DisplayType = 'mobile' | 'tablet' | 'web';
+
 // True/False Component
-const TrueFalseComponent = ({ optionData, optionSelection }: {
+const TrueFalseComponent = ({
+  optionData,
+  optionSelection,
+  displayType = 'mobile'
+}: {
   optionData: OptionModel[];
   optionSelection: (optionId: string, answer?: string) => void;
+  displayType?: DisplayType;
 }) => {
   const { theme } = useTheme();
 
+  const getContainerClass = () => {
+    switch (displayType) {
+      case 'web': return styles.trueFalseContainerWeb;
+      case 'tablet': return styles.trueFalseContainerTablet;
+      case 'mobile':
+      default: return styles.mobileTrueFalseContainer;
+    }
+  };
+
+  const getButtonClass = () => {
+    const baseClass = displayType === 'web' ? styles.trueFalseButtonWeb :
+                     displayType === 'tablet' ? styles.trueFalseButtonTablet :
+                     styles.mobileTrueFalseButton;
+
+    return `${baseClass} ${styles[`trueFalseButton_${theme}`]}`;
+  };
+
+  const getTextClass = () => {
+    switch (displayType) {
+      case 'web': return styles.trueFalseTextWeb;
+      case 'tablet': return styles.trueFalseTextTablet;
+      case 'mobile':
+      default: return styles.mobileTrueFalseText;
+    }
+  };
+
+  const getIndicatorClass = () => {
+    switch (displayType) {
+      case 'web': return styles.selectionIndicatorWeb;
+      case 'tablet': return styles.selectionIndicatorTablet;
+      case 'mobile':
+      default: return styles.mobileSelectionIndicator;
+    }
+  };
+
   return (
-    <div className={styles.trueFalseContainer}>
+    <div className={getContainerClass()}>
       {optionData.map((option) => (
         <button
           key={option.optionsId}
-          className={`${styles.trueFalseButton}`}
+          className={`${getButtonClass()} ${option.optionSelected ? styles.trueFalseSelected : ''}`}
           onClick={() => optionSelection(option.optionsId, option.optionsIdentity)}
         >
-          <span className={styles.trueFalseText}>
+          <span className={getTextClass()}>
             {option.optionsIdentity}
           </span>
           {option.optionSelected && (
-              <svg
-               className={styles.selectionIndicator}
-               fill="none"
-               height="24"
-               viewBox="0 0 24 24"
-               width="24"
-               xmlns="http://www.w3.org/2000/svg"
-               aria-hidden="true"
-              >
-                  <path clipRule="evenodd" d="M2.25 0C1.65326 0 1.08097 0.237053 0.65901 0.65901C0.237053 1.08097 0 1.65326 0 2.25V6.75C0 7.34674 0.237053 7.91903 0.65901 8.34099C1.08097 8.76295 1.65326 9 2.25 9H6.75C7.34674 9 7.91903 8.76295 8.34099 8.34099C8.76295 7.91903 9 7.34674 9 6.75V2.25C9 1.65326 8.76295 1.08097 8.34099 0.65901C7.91903 0.237053 7.34674 0 6.75 0H2.25ZM6.1785 3.9078C6.21892 3.86466 6.25045 3.81398 6.27128 3.75866C6.29212 3.70333 6.30185 3.64445 6.29993 3.58536C6.29801 3.52628 6.28447 3.46815 6.26008 3.4143C6.23569 3.36044 6.20094 3.31192 6.1578 3.2715C6.11466 3.23108 6.06398 3.19955 6.00866 3.17872C5.95333 3.15788 5.89445 3.14815 5.83536 3.15007C5.77628 3.15199 5.71815 3.16553 5.6643 3.18992C5.61044 3.21431 5.56192 3.24906 5.5215 3.2922L4.13415 4.7727L3.4488 4.16385C3.35901 4.0892 3.24371 4.05238 3.12727 4.06117C3.01084 4.06995 2.90237 4.12365 2.8248 4.21093C2.74722 4.2982 2.7066 4.41222 2.71153 4.52888C2.71646 4.64555 2.76654 4.75573 2.8512 4.83615L3.8637 5.73615C3.95131 5.81397 4.06582 5.85455 4.18288 5.84926C4.29994 5.84396 4.41032 5.79321 4.49055 5.7078L6.1785 3.9078Z"
-                      fill="orange"
-                      fillRule="evenodd" />
-              </svg>
+            <svg
+              className={getIndicatorClass()}
+              fill="none"
+              height="24"
+              viewBox="0 0 24 24"
+              width="24"
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden="true"
+            >
+              <path
+                clipRule="evenodd"
+                d="M2.25 0C1.65326 0 1.08097 0.237053 0.65901 0.65901C0.237053 1.08097 0 1.65326 0 2.25V6.75C0 7.34674 0.237053 7.91903 0.65901 8.34099C1.08097 8.76295 1.65326 9 2.25 9H6.75C7.34674 9 7.91903 8.76295 8.34099 8.34099C8.76295 7.91903 9 7.34674 9 6.75V2.25C9 1.65326 8.76295 1.08097 8.34099 0.65901C7.91903 0.237053 7.34674 0 6.75 0H2.25ZM6.1785 3.9078C6.21892 3.86466 6.25045 3.81398 6.27128 3.75866C6.29212 3.70333 6.30185 3.64445 6.29993 3.58536C6.29801 3.52628 6.28447 3.46815 6.26008 3.4143C6.23569 3.36044 6.20094 3.31192 6.1578 3.2715C6.11466 3.23108 6.06398 3.19955 6.00866 3.17872C5.95333 3.15788 5.89445 3.14815 5.83536 3.15007C5.77628 3.15199 5.71815 3.16553 5.6643 3.18992C5.61044 3.21431 5.56192 3.24906 5.5215 3.2922L4.13415 4.7727L3.4488 4.16385C3.35901 4.0892 3.24371 4.05238 3.12727 4.06117C3.01084 4.06995 2.90237 4.12365 2.8248 4.21093C2.74722 4.2982 2.7066 4.41222 2.71153 4.52888C2.71646 4.64555 2.76654 4.75573 2.8512 4.83615L3.8637 5.73615C3.95131 5.81397 4.06582 5.85455 4.18288 5.84926C4.29994 5.84396 4.41032 5.79321 4.49055 5.7078L6.1785 3.9078Z"
+                fill="orange"
+                fillRule="evenodd"
+              />
+            </svg>
           )}
         </button>
       ))}
@@ -178,47 +236,119 @@ const TrueFalseComponent = ({ optionData, optionSelection }: {
 };
 
 // Multiple Choice Component
-const MultipleChoiceComponent = ({ optionData, optionSelection }: {
+const MultipleChoiceComponent = ({
+  optionData,
+  optionSelection,
+  displayType = 'mobile'
+}: {
   optionData: OptionModel[];
   optionSelection: (optionId: string, answer?: string) => void;
+  displayType?: DisplayType;
 }) => {
   const { theme } = useTheme();
 
+  const getContainerClass = () => {
+    switch (displayType) {
+      case 'web': return styles.multipleChoiceContainerWeb;
+      case 'tablet': return styles.multipleChoiceContainerTablet;
+      case 'mobile':
+      default: return styles.mobileMultipleChoiceContainer;
+    }
+  };
+
+  const getOptionClass = () => {
+    const baseClass = displayType === 'web' ? styles.multipleChoiceOptionWeb :
+                     displayType === 'tablet' ? styles.multipleChoiceOptionTablet :
+                     styles.mobileMultipleChoiceOption;
+
+    return `${baseClass} ${styles[`multipleChoiceOption_${theme}`]}`;
+  };
+
+  const getImageContainerClass = () => {
+    switch (displayType) {
+      case 'web': return styles.optionImageContainerWeb;
+      case 'tablet': return styles.optionImageContainerTablet;
+      case 'mobile':
+      default: return styles.mobileOptionImageContainer;
+    }
+  };
+
+  const getImageClass = () => {
+    switch (displayType) {
+      case 'web': return styles.optionImageWeb;
+      case 'tablet': return styles.optionImageTablet;
+      case 'mobile':
+      default: return styles.mobileOptionImage;
+    }
+  };
+
+  const getTextClass = () => {
+    switch (displayType) {
+      case 'web': return styles.optionTextWeb;
+      case 'tablet': return styles.optionTextTablet;
+      case 'mobile':
+      default: return styles.mobileOptionText;
+    }
+  };
+
+  const getIndicatorClass = () => {
+    switch (displayType) {
+      case 'web': return styles.selectionIndicatorWeb;
+      case 'tablet': return styles.selectionIndicatorTablet;
+      case 'mobile':
+      default: return styles.mobileSelectionIndicator;
+    }
+  };
+
+  const getImageSize = () => {
+    switch (displayType) {
+      case 'web': return { width: 60, height: 60 };
+      case 'tablet': return { width: 50, height: 50 };
+      case 'mobile':
+      default: return { width: 50, height: 50 };
+    }
+  };
+
+  const imageSize = getImageSize();
+
   return (
-    <div className={styles.multipleChoiceContainer}>
+    <div className={getContainerClass()}>
       {optionData.map((option) => (
         <div
           key={option.optionsId}
-          className={`${styles.multipleChoiceOption}`}
-          onClick={() => optionSelection(option.optionsId,option.optionsIdentity)}
+          className={`${getOptionClass()} ${option.optionSelected ? styles.multipleChoiceSelected : ''}`}
+          onClick={() => optionSelection(option.optionsId, option.optionsIdentity)}
         >
           {option.optionsImage && (
-                    <div className={styles.optionImageContainer}>
-                      <Image
-                        src={option.optionsImage}
-                        alt="Option visual"
-                        width={50}
-                        height={50}
-                        className={styles.optionImage}
-                      />
-                    </div>
-                  )}
-          <span className={styles.optionText}>{option.optionsIdentity}</span>
+            <div className={getImageContainerClass()}>
+              <Image
+                src={option.optionsImage}
+                alt="Option visual"
+                width={imageSize.width}
+                height={imageSize.height}
+                className={getImageClass()}
+              />
+            </div>
+          )}
+          <span className={getTextClass()}>{option.optionsIdentity}</span>
           {option.optionSelected && (
-                        <svg
-                         className={styles.selectionIndicator}
-                         fill="none"
-                         height="24"
-                         viewBox="0 0 24 24"
-                         width="24"
-                         xmlns="http://www.w3.org/2000/svg"
-                         aria-hidden="true"
-                        >
-                            <path clipRule="evenodd" d="M2.25 0C1.65326 0 1.08097 0.237053 0.65901 0.65901C0.237053 1.08097 0 1.65326 0 2.25V6.75C0 7.34674 0.237053 7.91903 0.65901 8.34099C1.08097 8.76295 1.65326 9 2.25 9H6.75C7.34674 9 7.91903 8.76295 8.34099 8.34099C8.76295 7.91903 9 7.34674 9 6.75V2.25C9 1.65326 8.76295 1.08097 8.34099 0.65901C7.91903 0.237053 7.34674 0 6.75 0H2.25ZM6.1785 3.9078C6.21892 3.86466 6.25045 3.81398 6.27128 3.75866C6.29212 3.70333 6.30185 3.64445 6.29993 3.58536C6.29801 3.52628 6.28447 3.46815 6.26008 3.4143C6.23569 3.36044 6.20094 3.31192 6.1578 3.2715C6.11466 3.23108 6.06398 3.19955 6.00866 3.17872C5.95333 3.15788 5.89445 3.14815 5.83536 3.15007C5.77628 3.15199 5.71815 3.16553 5.6643 3.18992C5.61044 3.21431 5.56192 3.24906 5.5215 3.2922L4.13415 4.7727L3.4488 4.16385C3.35901 4.0892 3.24371 4.05238 3.12727 4.06117C3.01084 4.06995 2.90237 4.12365 2.8248 4.21093C2.74722 4.2982 2.7066 4.41222 2.71153 4.52888C2.71646 4.64555 2.76654 4.75573 2.8512 4.83615L3.8637 5.73615C3.95131 5.81397 4.06582 5.85455 4.18288 5.84926C4.29994 5.84396 4.41032 5.79321 4.49055 5.7078L6.1785 3.9078Z"
-                                fill="orange"
-                                fillRule="evenodd" />
-                        </svg>
-                    )}
+            <svg
+              className={getIndicatorClass()}
+              fill="none"
+              height="24"
+              viewBox="0 0 24 24"
+              width="24"
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden="true"
+            >
+              <path
+                clipRule="evenodd"
+                d="M2.25 0C1.65326 0 1.08097 0.237053 0.65901 0.65901C0.237053 1.08097 0 1.65326 0 2.25V6.75C0 7.34674 0.237053 7.91903 0.65901 8.34099C1.08097 8.76295 1.65326 9 2.25 9H6.75C7.34674 9 7.91903 8.76295 8.34099 8.34099C8.76295 7.91903 9 7.34674 9 6.75V2.25C9 1.65326 8.76295 1.08097 8.34099 0.65901C7.91903 0.237053 7.34674 0 6.75 0H2.25ZM6.1785 3.9078C6.21892 3.86466 6.25045 3.81398 6.27128 3.75866C6.29212 3.70333 6.30185 3.64445 6.29993 3.58536C6.29801 3.52628 6.28447 3.46815 6.26008 3.4143C6.23569 3.36044 6.20094 3.31192 6.1578 3.2715C6.11466 3.23108 6.06398 3.19955 6.00866 3.17872C5.95333 3.15788 5.89445 3.14815 5.83536 3.15007C5.77628 3.15199 5.71815 3.16553 5.6643 3.18992C5.61044 3.21431 5.56192 3.24906 5.5215 3.2922L4.13415 4.7727L3.4488 4.16385C3.35901 4.0892 3.24371 4.05238 3.12727 4.06117C3.01084 4.06995 2.90237 4.12365 2.8248 4.21093C2.74722 4.2982 2.7066 4.41222 2.71153 4.52888C2.71646 4.64555 2.76654 4.75573 2.8512 4.83615L3.8637 5.73615C3.95131 5.81397 4.06582 5.85455 4.18288 5.84926C4.29994 5.84396 4.41032 5.79321 4.49055 5.7078L6.1785 3.9078Z"
+                fill="orange"
+                fillRule="evenodd"
+              />
+            </svg>
+          )}
         </div>
       ))}
     </div>
@@ -226,34 +356,65 @@ const MultipleChoiceComponent = ({ optionData, optionSelection }: {
 };
 
 // Slider Component
-const SliderComponent = ({ optionData, optionSelection }: {
+const SliderComponent = ({
+  optionData,
+  optionSelection,
+  displayType = 'mobile'
+}: {
   optionData: OptionModel[];
   optionSelection: (optionId: string, answer?: string) => void;
+  displayType?: DisplayType;
 }) => {
   const [sliderValue, setSliderValue] = useState(50);
+  const { theme } = useTheme();
 
   const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value);
     setSliderValue(value);
-    // For slider, we might want to pass the value as answer
     if (optionData[0]) {
       optionSelection(optionData[0].optionsId, value.toString());
     }
   };
 
+  const getContainerClass = () => {
+    switch (displayType) {
+      case 'web': return styles.sliderContainerWeb;
+      case 'tablet': return styles.sliderContainerTablet;
+      case 'mobile':
+      default: return styles.mobileSliderContainer;
+    }
+  };
+
+  const getSliderClass = () => {
+    const baseClass = displayType === 'web' ? styles.sliderWeb :
+                     displayType === 'tablet' ? styles.sliderTablet :
+                     styles.mobileSlider;
+
+    return `${baseClass} ${styles[`slider_${theme}`]}`;
+  };
+
+  const getLabelsClass = () => {
+    switch (displayType) {
+      case 'web': return styles.sliderLabelsWeb;
+      case 'tablet': return styles.sliderLabelsTablet;
+      case 'mobile':
+      default: return styles.mobileSliderLabels;
+    }
+  };
+
   return (
-    <div className={styles.sliderContainer}>
+    <div className={getContainerClass()}>
       <input
         type="range"
         min={optionData[0]?.optionsMin || 0}
         max={optionData[0]?.optionsMax || 100}
         value={sliderValue}
         onChange={handleSliderChange}
-        className={styles.slider}
+        className={getSliderClass()}
       />
-      <div className={styles.sliderLabels}>
+      <div className={getLabelsClass()}>
         <span>{optionData[0]?.optionsMin || 0}</span>
-        <span>{sliderValue}</span>
+        <span className={styles.sliderCurrentValue}>{sliderValue}</span>
         <span>{optionData[0]?.optionsMax || 100}</span>
       </div>
     </div>
@@ -261,11 +422,17 @@ const SliderComponent = ({ optionData, optionSelection }: {
 };
 
 // Fill Gap Component
-const FillGapComponent = ({ optionData, optionSelection }: {
+const FillGapComponent = ({
+  optionData,
+  optionSelection,
+  displayType = 'mobile'
+}: {
   optionData: OptionModel[];
   optionSelection: (optionId: string, answer?: string) => void;
+  displayType?: DisplayType;
 }) => {
   const [answer, setAnswer] = useState('');
+  const { theme } = useTheme();
 
   const handleAnswerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -275,19 +442,35 @@ const FillGapComponent = ({ optionData, optionSelection }: {
     }
   };
 
+  const getContainerClass = () => {
+    switch (displayType) {
+      case 'web': return styles.fillGapContainerWeb;
+      case 'tablet': return styles.fillGapContainerTablet;
+      case 'mobile':
+      default: return styles.mobileFillGapContainer;
+    }
+  };
+
+  const getInputClass = () => {
+    const baseClass = displayType === 'web' ? styles.fillGapInputWeb :
+                     displayType === 'tablet' ? styles.fillGapInputTablet :
+                     styles.mobileFillGapInput;
+
+    return `${baseClass} ${styles[`fillGapInput_${theme}`]}`;
+  };
+
   return (
-    <div className={styles.fillGapContainer}>
+    <div className={getContainerClass()}>
       <input
         type="text"
         value={answer}
         onChange={handleAnswerChange}
         placeholder="Type your answer here..."
-        className={styles.fillGapInput}
+        className={getInputClass()}
       />
     </div>
   );
 };
-
 
 // Question Type Icons with proper sizing
 const QuestionTypeIcon = ({ type }: { type: string }) => {
@@ -392,6 +575,378 @@ const QuestionTypeIcon = ({ type }: { type: string }) => {
   }
 };
 
+const getQuestionTypeName = (type: string) => {
+  switch (type) {
+    case 'QuestionType.true_false':
+      return 'True/False';
+    case 'QuestionType.multiple_choice':
+      return 'Multiple Choice';
+    case 'QuestionType.one_choice':
+      return 'Single Choice';
+    case 'QuestionType.slider':
+      return 'Slider';
+    case 'QuestionType.fill_gap':
+      return 'Fill Gap';
+    default:
+      return 'Question';
+  }
+};
+
+function formatQuizTime(time?: number): string {
+  if (time == null || time < 0) {
+    return "0s";
+  }
+
+  const totalSeconds = Math.floor(time); // truncate decimals
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+
+  if (minutes > 0) {
+    return `${minutes}m ${seconds}s`; // e.g., "3m 42s"
+  } else {
+    return `${seconds}s`; // e.g., "42s" or "0s"
+  }
+}
+
+
+// Web View
+const WebView = ({
+  question,
+  getQuestionNumber,
+  totalNumber,
+  remainingTime,
+  progress,
+  hasSelectedOption,
+  isSubmitting,
+  handleManualSubmit,
+  renderOptionType
+}: BaseViewProps) => {
+  const { theme } = useTheme();
+  const { t } = useLanguage();
+  const image = question.questionData.questionsImage;
+
+  return (
+    <div className={`${styles.webQuizContainer} ${styles[`webQuizContainer_${theme}`]}`}>
+      {/* Header */}
+      <div className={`${styles.webQuizHeader} ${styles[`webQuizHeader_${theme}`]}`}>
+        <div className={styles.webHeaderLeft}>
+          <button className={`${styles.webMenuButton} ${styles[`webMenuButton_${theme}`]}`}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
+            </svg>
+          </button>
+
+          <div className={styles.webQuizInfo}>
+            <span className={`${styles.webQuestionCounter} ${styles[`webQuestionCounter_${theme}`]}`}>
+               {t('question_count', {x: getQuestionNumber(), y: totalNumber})}
+            </span>
+            <div className={`${styles.webQuestionType} ${styles[`webQuestionType_${theme}`]}`}>
+              <QuestionTypeIcon type={question.typeData.questionTypeLocalIdentity} />
+              <span>{getQuestionTypeName(question.typeData.questionTypeLocalIdentity)}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className={styles.webTimerSection}>
+          <div className={`${styles.webTimeDisplay} ${styles[`webTimeDisplay_${theme}`]}`}>
+            <span className={`${styles.webRemainingText} ${styles[`webRemainingText_${theme}`]}`}>{t('remaining_time')}</span>
+            <span className={`${styles.webTimeValue} ${styles[`webTimeValue_${theme}`]}`}>{formatQuizTime(remainingTime)}</span>
+          </div>
+          <div className={styles.webProgressContainer}>
+            <div
+              className={`${styles.webProgressBar} ${styles[`webProgressBar_${theme}`]}`}
+            >
+              <div
+                style={{ width: `${progress}%` }}
+                className={`${styles.webProgressFill} ${styles[`webProgressFill_${theme}`]}`}
+              />
+            </div>
+          </div>
+        </div>
+
+        <button className={`${styles.webExitButton} ${styles[`webExitButton_${theme}`]}`}>
+          <svg fill="none" height="22" viewBox="0 0 26 22" width="24" xmlns="http://www.w3.org/2000/svg">
+            <path
+              d="M17.6431 16.8182V10.9091H9.22783C8.98155 10.9091 8.74537 10.8133 8.57122 10.6428C8.39708 10.4723 8.29924 10.2411 8.29924 10C8.29924 9.75889 8.39708 9.52766 8.57122 9.35718C8.74537 9.18669 8.98155 9.09091 9.22783 9.09091H17.6431V3.18182C17.6422 2.33822 17.2995 1.52944 16.6902 0.93293C16.0809 0.336419 15.2548 0.000902401 14.3931 0H3.25005C2.38837 0.000902401 1.56224 0.336419 0.952937 0.93293C0.343633 1.52944 0.000921753 2.33822 0 3.18182V16.8182C0.000921753 17.6618 0.343633 18.4706 0.952937 19.0671C1.56224 19.6636 2.38837 19.9991 3.25005 20H14.3931C15.2548 19.9991 16.0809 19.6636 16.6902 19.0671C17.2995 18.4706 17.6422 17.6618 17.6431 16.8182ZM22.8299 10.9091L19.7725 13.9028C19.6057 14.0747 19.5141 14.3036 19.5172 14.5406C19.5203 14.7777 19.6179 15.0042 19.7891 15.1718C19.9603 15.3395 20.1917 15.435 20.4338 15.438C20.676 15.441 20.9097 15.3514 21.0853 15.1881L25.7282 10.6426C25.9022 10.4721 26 10.241 26 10C26 9.759 25.9022 9.52786 25.7282 9.35739L21.0853 4.81193C20.9097 4.64864 20.676 4.55895 20.4338 4.56199C20.1917 4.56502 19.9603 4.66054 19.7891 4.82818C19.6179 4.99582 19.5203 5.22231 19.5172 5.45937C19.5141 5.69642 19.6057 5.92528 19.7725 6.09716L22.8299 9.09091H17.6431V10.9091H22.8299Z"
+              fill="#FF0000"
+            />
+          </svg>
+        </button>
+      </div>
+
+      {/* Main Content */}
+      <div className={styles.webQuizContent}>
+        {/* Left Panel - Question */}
+        <div className={styles.webQuestionPanel}>
+          {image && (
+            <div className={styles.webQuestionImageContainer}>
+              <Image
+                src={image}
+                alt="Question visual"
+                width={600}
+                height={300}
+                className={styles.webQuestionImage}
+              />
+            </div>
+          )}
+
+          <div className={`${styles.webQuestionCard} ${styles[`webQuestionCard_${theme}`]}`}>
+            <div className={styles.webQuestionHeader}>
+              <span className={styles.webQuestionNumber}>
+                {getQuestionNumber()}
+              </span>
+              <h2 className={`${styles.webQuestionText} ${styles[`webQuestionText_${theme}`]}`}>
+                {question.questionData.questionsText}
+              </h2>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Panel - Options */}
+        <div className={`${styles.webOptionsPanel} ${styles[`webOptionsPanel_${theme}`]}`}>
+          <div className={`${styles.webOptionsCard} ${styles[`webOptionsCard_${theme}`]}`}>
+            <div className={styles.webOptionsContent}>
+              {renderOptionType(question.typeData.questionTypeLocalIdentity,'web')}
+            </div>
+
+            <div className={styles.webSubmitSection}>
+              <button
+                className={`${styles.webSubmitButton} ${
+                  !hasSelectedOption || isSubmitting ? styles.webSubmitButtonDisabled : ''
+                } ${styles[`webSubmitButton_${theme}`]}`}
+                onClick={handleManualSubmit}
+                disabled={!hasSelectedOption || isSubmitting}
+              >
+                {isSubmitting ? (
+                  <div className={styles.progressSpinner}></div>
+                ) : (
+                  t('submit_text')
+                )}
+              </button>
+
+              <div className={`${styles.webProgressHint} ${styles[`webProgressHint_${theme}`]}`}>
+                <span>{t('progress_text', {current: getQuestionNumber(), total: totalNumber})}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Tablet View
+const TabletView = ({
+  question,
+  getQuestionNumber,
+  totalNumber,
+  remainingTime,
+  progress,
+  hasSelectedOption,
+  isSubmitting,
+  handleManualSubmit,
+  renderOptionType
+}: BaseViewProps) => {
+  const { theme } = useTheme();
+  const { t } = useLanguage();
+  const image = question.questionData.questionsImage;
+
+  return (
+    <div className={`${styles.tabletQuizContainer} ${styles[`tabletQuizContainer_${theme}`]}`}>
+      {/* Header */}
+      <div className={`${styles.tabletQuizHeader} ${styles[`tabletQuizHeader_${theme}`]}`}>
+        <div className={styles.tabletHeaderMain}>
+          <button className={`${styles.tabletMenuButton} ${styles[`tabletMenuButton_${theme}`]}`}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
+            </svg>
+          </button>
+
+          <div className={styles.tabletQuizInfo}>
+            <div className={`${styles.tabletQuestionType} ${styles[`tabletQuestionType_${theme}`]}`}>
+              <QuestionTypeIcon type={question.typeData.questionTypeLocalIdentity} />
+              <span>{getQuestionTypeName(question.typeData.questionTypeLocalIdentity)}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className={styles.tabletTimerSection}>
+          <div className={`${styles.tabletTimeDisplay} ${styles[`tabletTimeDisplay_${theme}`]}`}>
+            <span>{formatQuizTime(remainingTime)}</span>
+          </div>
+          <div className={styles.tabletProgressContainer}>
+            <div
+              className={`${styles.tabletProgressBar} ${styles[`tabletProgressBar_${theme}`]}`}
+            >
+              <div
+                style={{ width: `${progress}%` }}
+                className={`${styles.tabletProgressFill} ${styles[`tabletProgressFill_${theme}`]}`}
+              />
+            </div>
+          </div>
+        </div>
+
+        <button className={`${styles.tabletExitButton} ${styles[`tabletExitButton_${theme}`]}`}>
+          <svg fill="none" height="20" viewBox="0 0 26 22" width="22" xmlns="http://www.w3.org/2000/svg">
+            <path
+              d="M17.6431 16.8182V10.9091H9.22783C8.98155 10.9091 8.74537 10.8133 8.57122 10.6428C8.39708 10.4723 8.29924 10.2411 8.29924 10C8.29924 9.75889 8.39708 9.52766 8.57122 9.35718C8.74537 9.18669 8.98155 9.09091 9.22783 9.09091H17.6431V3.18182C17.6422 2.33822 17.2995 1.52944 16.6902 0.93293C16.0809 0.336419 15.2548 0.000902401 14.3931 0H3.25005C2.38837 0.000902401 1.56224 0.336419 0.952937 0.93293C0.343633 1.52944 0.000921753 2.33822 0 3.18182V16.8182C0.000921753 17.6618 0.343633 18.4706 0.952937 19.0671C1.56224 19.6636 2.38837 19.9991 3.25005 20H14.3931C15.2548 19.9991 16.0809 19.6636 16.6902 19.0671C17.2995 18.4706 17.6422 17.6618 17.6431 16.8182ZM22.8299 10.9091L19.7725 13.9028C19.6057 14.0747 19.5141 14.3036 19.5172 14.5406C19.5203 14.7777 19.6179 15.0042 19.7891 15.1718C19.9603 15.3395 20.1917 15.435 20.4338 15.438C20.676 15.441 20.9097 15.3514 21.0853 15.1881L25.7282 10.6426C25.9022 10.4721 26 10.241 26 10C26 9.759 25.9022 9.52786 25.7282 9.35739L21.0853 4.81193C20.9097 4.64864 20.676 4.55895 20.4338 4.56199C20.1917 4.56502 19.9603 4.66054 19.7891 4.82818C19.6179 4.99582 19.5203 5.22231 19.5172 5.45937C19.5141 5.69642 19.6057 5.92528 19.7725 6.09716L22.8299 9.09091H17.6431V10.9091H22.8299Z"
+              fill="#FF0000"
+            />
+          </svg>
+        </button>
+      </div>
+
+      {/* Content */}
+      <div className={styles.tabletQuizContent}>
+        {image && (
+          <div className={styles.tabletQuestionImageContainer}>
+            <Image
+              src={image}
+              alt="Question visual"
+              width={500}
+              height={250}
+              className={styles.tabletQuestionImage}
+            />
+          </div>
+        )}
+
+        <div className={styles.tabletQuestionSection}>
+          <div className={`${styles.tabletQuestionCard} ${styles[`tabletQuestionCard_${theme}`]}`}>
+            <h2 className={`${styles.tabletQuestionText} ${styles[`tabletQuestionText_${theme}`]}`}>
+              {question.questionData.questionsText}
+            </h2>
+          </div>
+        </div>
+
+        <div className={styles.tabletOptionsSection}>
+          <div className={styles.tabletOptionsContainer}>
+            {renderOptionType(question.typeData.questionTypeLocalIdentity, 'tablet')}
+          </div>
+        </div>
+
+        <div className={styles.tabletFooter}>
+          <button
+            className={`${styles.tabletSubmitButton} ${
+              !hasSelectedOption || isSubmitting ? styles.tabletSubmitButtonDisabled : ''
+            } ${styles[`tabletSubmitButton_${theme}`]}`}
+            onClick={handleManualSubmit}
+            disabled={!hasSelectedOption || isSubmitting}
+          >
+            {isSubmitting ? (
+              <div className={styles.progressSpinner}></div>
+            ) : (
+              t('submit_text')
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Mobile View (unchanged as requested)
+const MobileView = ({
+  question,
+  getQuestionNumber,
+  totalNumber,
+  remainingTime,
+  progress,
+  hasSelectedOption,
+  isSubmitting,
+  handleManualSubmit,
+  renderOptionType
+}: BaseViewProps) => {
+  const { theme } = useTheme();
+  const { t } = useLanguage();
+  const image = question.questionData.questionsImage;
+
+  return (
+    <div className={styles.mobileQuizContainer}>
+      {/* Header */}
+      <div className={styles.mobileQuizHeader}>
+        <button className={`${styles.mobileMenuButton} ${styles[`mobileMenuButton_${theme}`]}`}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" stroke-width="2"/>
+          </svg>
+        </button>
+
+        <div className={`${styles.mobileQuestionTypeIndicator} ${styles[`mobileQuestionTypeIndicator_${theme}`]}`}>
+          <QuestionTypeIcon type={question.typeData.questionTypeLocalIdentity} />
+          <span  className={`${styles.mobileQuestionTypeText} ${styles[`mobileQuestionTypeText_${theme}`]}`}>
+            {getQuestionTypeName(question.typeData.questionTypeLocalIdentity)}
+          </span>
+        </div>
+
+        <button className={`${styles.mobileExitButton} ${styles[`mobileExitButton_${theme}`]}`}>
+          <svg fill="none" height="22" viewBox="0 0 26 22" width="24" xmlns="http://www.w3.org/2000/svg">
+              <path
+                  d="M17.6431 16.8182V10.9091H9.22783C8.98155 10.9091 8.74537 10.8133 8.57122 10.6428C8.39708 10.4723 8.29924 10.2411 8.29924 10C8.29924 9.75889 8.39708 9.52766 8.57122 9.35718C8.74537 9.18669 8.98155 9.09091 9.22783 9.09091H17.6431V3.18182C17.6422 2.33822 17.2995 1.52944 16.6902 0.93293C16.0809 0.336419 15.2548 0.000902401 14.3931 0H3.25005C2.38837 0.000902401 1.56224 0.336419 0.952937 0.93293C0.343633 1.52944 0.000921753 2.33822 0 3.18182V16.8182C0.000921753 17.6618 0.343633 18.4706 0.952937 19.0671C1.56224 19.6636 2.38837 19.9991 3.25005 20H14.3931C15.2548 19.9991 16.0809 19.6636 16.6902 19.0671C17.2995 18.4706 17.6422 17.6618 17.6431 16.8182ZM22.8299 10.9091L19.7725 13.9028C19.6057 14.0747 19.5141 14.3036 19.5172 14.5406C19.5203 14.7777 19.6179 15.0042 19.7891 15.1718C19.9603 15.3395 20.1917 15.435 20.4338 15.438C20.676 15.441 20.9097 15.3514 21.0853 15.1881L25.7282 10.6426C25.9022 10.4721 26 10.241 26 10C26 9.759 25.9022 9.52786 25.7282 9.35739L21.0853 4.81193C20.9097 4.64864 20.676 4.55895 20.4338 4.56199C20.1917 4.56502 19.9603 4.66054 19.7891 4.82818C19.6179 4.99582 19.5203 5.22231 19.5172 5.45937C19.5141 5.69642 19.6057 5.92528 19.7725 6.09716L22.8299 9.09091H17.6431V10.9091H22.8299Z"
+                  fill="#FF0000" />
+          </svg>
+        </button>
+      </div>
+
+      {/* Body */}
+      <div className={styles.mobileQuizBody}>
+        {image && (
+          <div className={styles.mobileQuestionImageContainer}>
+            <Image
+              src={image}
+              alt="Question visual"
+              width={400}
+              height={200}
+              className={styles.mobileQuestionImage}
+            />
+          </div>
+        )}
+
+        <div className={`${styles.mobileQuestionTextContainer} ${styles[`mobileQuestionTextContainer_${theme}`]}`}>
+          <h3 className={styles.questionText}>
+            <span className={styles.mobileQuestionCounterInline}>
+              {getQuestionNumber()}/{totalNumber}
+            </span>{" "}
+            {question.questionData.questionsText}
+          </h3>
+        </div>
+
+        <div className={styles.mobileOptionsContainer}>
+          {renderOptionType(question.typeData.questionTypeLocalIdentity, 'mobile')}
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className={styles.mobileQuizFooter}>
+        <div className={styles.mobileTimeProgressBar}>
+            <div
+              style={{ width: `${progress}%` }}
+              className={`${styles.mobileTimeProgressFill} ${styles[`mobileTimeProgressFill_${theme}`]}`}
+            />
+          </div>
+        <div  className={`${styles.mobileFooterContent} ${styles[`mobileFooterContent_${theme}`]}`}>
+          <div className={styles.mobileTimeInfo}>
+            <div className={styles.mobileRemainingText}>{t('remaining_time')}</div>
+            <div className={styles.mobileTimeValue}>{formatQuizTime(remainingTime)}</div>
+          </div>
+
+          <button
+            className={`${styles.mobileSubmitButton} ${
+              !hasSelectedOption || isSubmitting ? styles.mobileSubmitButtonDisabled : ''
+            }`}
+            onClick={handleManualSubmit}
+            disabled={!hasSelectedOption || isSubmitting}
+          >
+            {isSubmitting ? (
+              <div className={styles.progressSpinner}></div>
+            ) : (
+              t('submit_text')
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function QuestionDisplay({ question, onAnswer, onSubmit, getQuestionNumber, totalNumber }: QuestionDisplayProps) {
   const { theme } = useTheme();
   const { t } = useLanguage();
@@ -438,138 +993,74 @@ export default function QuestionDisplay({ question, onAnswer, onSubmit, getQuest
   const hasSelectedOption = question.optionData.some(o => o.optionSelected);
   const image = question.questionData.questionsImage;
 
-  const renderOptionType = (type: string) => {
+  const renderOptionType = (type: string,displayType: DisplayType = 'mobile') => {
+    const commonProps = {
+      optionData: question.optionData,
+      displayType,
+    };
+
     switch (type) {
       case 'QuestionType.true_false':
-        return <TrueFalseComponent optionData={question.optionData} optionSelection={(optionId, answer) => onAnswer(questionId, optionId)} />;
+        return <TrueFalseComponent {...commonProps} optionSelection={(optionId, answer) => onAnswer(questionId, optionId)} />;
       case 'QuestionType.multiple_choice':
-        return <MultipleChoiceComponent optionData={question.optionData} optionSelection={(optionId, answer) => onAnswer(questionId, optionId)} />;
+        return <MultipleChoiceComponent {...commonProps} optionSelection={(optionId, answer) => onAnswer(questionId, optionId)} />;
       case 'QuestionType.one_choice':
-        return <MultipleChoiceComponent optionData={question.optionData} optionSelection={(optionId, answer) => onAnswer(questionId, optionId)} />;
+        return <MultipleChoiceComponent {...commonProps} optionSelection={(optionId, answer) => onAnswer(questionId, optionId)} />;
       case 'QuestionType.slider':
-        return <SliderComponent optionData={question.optionData} optionSelection={(optionId, answer) => onAnswer(questionId, optionId, answer)} />;
+        return <SliderComponent {...commonProps} optionSelection={(optionId, answer) => onAnswer(questionId, optionId, answer)} />;
       case 'QuestionType.fill_gap':
-        return <FillGapComponent optionData={question.optionData} optionSelection={(optionId, answer) => onAnswer(questionId, optionId, answer)} />;
+        return <FillGapComponent {...commonProps} optionSelection={(optionId, answer) => onAnswer(questionId, optionId, answer)} />;
       default:
         return null;
     }
   };
 
-  const getQuestionTypeName = (type: string) => {
-    switch (type) {
-      case 'QuestionType.true_false':
-        return 'True/False';
-      case 'QuestionType.multiple_choice':
-        return 'Multiple Choice';
-      case 'QuestionType.one_choice':
-        return 'Single Choice';
-      case 'QuestionType.slider':
-        return 'Slider';
-      case 'QuestionType.fill_gap':
-        return 'Fill Gap';
-      default:
-        return 'Question';
-    }
-  };
-
-  function formatQuizTime(time?: number): string {
-    if (time == null || time < 0) {
-      return "0s";
-    }
-
-    const totalSeconds = Math.floor(time); // truncate decimals
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-
-    if (minutes > 0) {
-      return `${minutes}m ${seconds}s`; // e.g., "3m 42s"
-    } else {
-      return `${seconds}s`; // e.g., "42s" or "0s"
-    }
-  }
-
-
   return (
-    <div className={styles.quizContainer}>
-      {/* Header */}
-      <div className={styles.quizHeader}>
-        <button className={`${styles.menuButton} ${styles[`menuButton_${theme}`]}`}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
-          </svg>
-        </button>
-
-        <div className={`${styles.questionTypeIndicator} ${styles[`questionTypeIndicator_${theme}`]}`}>
-          <QuestionTypeIcon type={question.typeData.questionTypeLocalIdentity} />
-          <span  className={`${styles.questionTypeText} ${styles[`questionTypeText_${theme}`]}`}>
-            {getQuestionTypeName(question.typeData.questionTypeLocalIdentity)}
-          </span>
-        </div>
-
-        <button className={`${styles.exitButton} ${styles[`exitButton_${theme}`]}`}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-          </svg>
-        </button>
+    <>
+      {/* Web View */}
+      <div className={styles.webOnly}>
+        <WebView
+          question={question}
+          getQuestionNumber={getQuestionNumber}
+          totalNumber={totalNumber}
+          remainingTime={remainingTime}
+          progress={progress}
+          hasSelectedOption={hasSelectedOption}
+          isSubmitting={isSubmitting}
+          handleManualSubmit={handleManualSubmit}
+          renderOptionType={renderOptionType}
+        />
       </div>
 
-      {/* Body */}
-      <div className={styles.quizBody}>
-        {image && (
-          <div className={styles.questionImageContainer}>
-            <Image
-              src={image}
-              alt="Question visual"
-              width={400}
-              height={200}
-              className={styles.questionImage}
-            />
-          </div>
-        )}
-
-        <div className={`${styles.questionTextContainer} ${styles[`questionTextContainer_${theme}`]}`}>
-          <h3 className={styles.questionText}>
-            <span className={styles.questionCounterInline}>
-              {getQuestionNumber()}/{totalNumber}
-            </span>{" "}
-            {question.questionData.questionsText}
-          </h3>
-        </div>
-
-        <div className={styles.optionsContainer}>
-          {renderOptionType(question.typeData.questionTypeLocalIdentity)}
-        </div>
+      {/* Tablet View */}
+      <div className={styles.tabletOnly}>
+        <TabletView
+          question={question}
+          getQuestionNumber={getQuestionNumber}
+          totalNumber={totalNumber}
+          remainingTime={remainingTime}
+          progress={progress}
+          hasSelectedOption={hasSelectedOption}
+          isSubmitting={isSubmitting}
+          handleManualSubmit={handleManualSubmit}
+          renderOptionType={renderOptionType}
+        />
       </div>
 
-      {/* Footer */}
-      <div className={styles.quizFooter}>
-        <div className={styles.timeProgressBar}>
-            <div
-              style={{ width: `${progress}%` }}
-              className={`${styles.timeProgressFill} ${styles[`timeProgressFill_${theme}`]}`}
-            />
-          </div>
-        <div  className={`${styles.footerContent} ${styles[`footerContent_${theme}`]}`}>
-          <div className={styles.timeInfo}>
-            <div className={styles.remainingText}>{t('remaining_time')}</div>
-            <div className={styles.timeValue}>{formatQuizTime(remainingTime)}</div>
-          </div>
-
-          <button
-            className={`${styles.submitButton} ${
-              !hasSelectedOption || isSubmitting ? styles.submitButtonDisabled : ''
-            }`}
-            onClick={handleManualSubmit}
-            disabled={!hasSelectedOption || isSubmitting}
-          >
-            {isSubmitting ? (
-              <div className={styles.progressSpinner}></div>
-            ) : (
-              t('submit')
-            )}
-          </button>
-        </div>
+      {/* Mobile View */}
+      <div className={styles.mobileOnly}>
+        <MobileView
+          question={question}
+          getQuestionNumber={getQuestionNumber}
+          totalNumber={totalNumber}
+          remainingTime={remainingTime}
+          progress={progress}
+          hasSelectedOption={hasSelectedOption}
+          isSubmitting={isSubmitting}
+          handleManualSubmit={handleManualSubmit}
+          renderOptionType={renderOptionType}
+        />
       </div>
-    </div>
-  );
+    </>
+  )
 }

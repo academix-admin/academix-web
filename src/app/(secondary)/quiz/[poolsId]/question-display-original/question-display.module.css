@@ -1,5 +1,3 @@
-/* question-display.module.css */
-
 /* General Design */
 .progressSpinner {
   width: 20px;
@@ -18,6 +16,7 @@
 
 /* Web Design */
 @media screen and (min-width: 801px) {
+
   .webOnly {
     display: block;
   }
@@ -32,32 +31,12 @@
     height: 100dvh;
   }
 
-  .webQuizContainer_light {
-    background-color: #ffffff;
-    color: #333333;
-  }
-
-  .webQuizContainer_dark {
-    background-color: #1a1a1a;
-    color: #ffffff;
-  }
-
   .webQuizHeader {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 16px 24px;
-    border-bottom: 1px solid;
-  }
-
-  .webQuizHeader_light {
-    border-bottom-color: #e0e0e0;
-    background-color: #f8f9fa;
-  }
-
-  .webQuizHeader_dark {
-    border-bottom-color: #404040;
-    background-color: #2d2d2d;
+    border-bottom: 1px solid var(--border-color, #e0e0e0);
   }
 
   .webHeaderLeft {
@@ -83,7 +62,7 @@
   }
 
   .webMenuButton_dark {
-    background-color: #404040;
+    background-color: #2d2d2d;
     color: white;
   }
 
@@ -95,15 +74,8 @@
 
   .webQuestionCounter {
     font-size: 14px;
+    color: var(--text-secondary, #666);
     font-weight: 500;
-  }
-
-  .webQuestionCounter_light {
-    color: #666;
-  }
-
-  .webQuestionCounter_dark {
-    color: #ccc;
   }
 
   .webQuestionType {
@@ -112,14 +84,7 @@
     gap: 8px;
     font-size: 14px;
     font-weight: 600;
-  }
-
-  .webQuestionType_light {
-    color: #333;
-  }
-
-  .webQuestionType_dark {
-    color: #fff;
+    color: var(--text-primary, #333);
   }
 
   .webTimerSection {
@@ -139,27 +104,13 @@
 
   .webRemainingText {
     font-size: 14px;
-  }
-
-  .webRemainingText_light {
-    color: #666;
-  }
-
-  .webRemainingText_dark {
-    color: #ccc;
+    color: var(--text-secondary, #666);
   }
 
   .webTimeValue {
     font-size: 18px;
     font-weight: 700;
-  }
-
-  .webTimeValue_light {
-    color: #1C6B1E;
-  }
-
-  .webTimeValue_dark {
-    color: #4CAF50;
+    color: var(--accent-color, #1C6B1E);
   }
 
   .webProgressContainer {
@@ -169,6 +120,7 @@
   .webProgressBar {
     width: 100%;
     height: 6px;
+    background-color: var(--progress-bg, #e0e0e0);
     border-radius: 3px;
     overflow: hidden;
   }
@@ -211,7 +163,7 @@
   }
 
   .webExitButton_dark {
-    background-color: #404040;
+    background-color: #2d2d2d;
   }
 
   .webQuizContent {
@@ -249,8 +201,6 @@
     padding: 24px;
     border-radius: 16px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-    width: 100%;
-    max-width: 600px;
   }
 
   .webQuestionCard_light {
@@ -284,33 +234,16 @@
     font-size: 20px;
     font-weight: 600;
     line-height: 1.6;
+    color: var(--text-primary, #333);
     margin: 0;
     flex: 1;
   }
 
-  .webQuestionText_light {
-    color: #333;
-  }
-
-  .webQuestionText_dark {
-    color: #fff;
-  }
-
   .webOptionsPanel {
-    border-left: 1px solid;
+    border-left: 1px solid var(--border-color, #e0e0e0);
     padding: 24px;
     display: flex;
     flex-direction: column;
-  }
-
-  .webOptionsPanel_light {
-    border-left-color: #e0e0e0;
-    background-color: #f8f9fa;
-  }
-
-  .webOptionsPanel_dark {
-    border-left-color: #404040;
-    background-color: #2d2d2d;
   }
 
   .webOptionsCard {
@@ -322,31 +255,23 @@
     flex-direction: column;
   }
 
-  .webOptionsCard_light {
-    background: #ffffff;
-    border: 1px solid #f0f0f0;
-  }
-
-  .webOptionsCard_dark {
-    background: #363636;
-    border: 1px solid #404040;
-  }
-
   .webOptionsContent {
     flex: 1;
   }
 
   /* Web Option Components */
-  .trueFalseContainerWeb {
+  .webTrueFalseContainer {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 16px;
     margin-bottom: 24px;
   }
 
-  .trueFalseButtonWeb {
+  .webTrueFalseButton {
     padding: 20px;
-    border: 2px solid;
+    border: 2px solid #1C6B1E;
+    background: white;
+    color: #1C6B1E;
     border-radius: 12px;
     font-size: 18px;
     font-weight: 700;
@@ -355,72 +280,35 @@
     position: relative;
   }
 
-  .trueFalseButton_light {
-    background: white;
-    color: #1C6B1E;
-    border-color: #1C6B1E;
-  }
-
-  .trueFalseButton_dark {
-    background: #2d2d2d;
-    color: #4CAF50;
-    border-color: #4CAF50;
-  }
-
-  .trueFalseButtonWeb:hover {
+  .webTrueFalseButton:hover {
+    background: #1C6B1E;
+    color: white;
     transform: translateY(-2px);
   }
 
-  .trueFalseSelected {
-    background: #1C6B1E !important;
-    color: white !important;
-  }
-
-  .trueFalseTextWeb {
-    font-size: 16px;
-    font-weight: bold;
-  }
-
-  .multipleChoiceContainerWeb {
-    display: grid;
-    grid-template-columns: 1fr;
+  .webMultipleChoiceContainer {
+    display: flex;
+    flex-direction: column;
     gap: 12px;
   }
 
-  .multipleChoiceOptionWeb {
+  .webMultipleChoiceOption {
     display: flex;
     align-items: center;
     padding: 16px;
-    border: 2px solid;
+    border: 2px solid #e0e0e0;
     border-radius: 12px;
     cursor: pointer;
     transition: all 0.2s ease;
     gap: 12px;
   }
 
-  .multipleChoiceOption_light {
-    border-color: #e0e0e0;
-    background: white;
-    color: #333;
-  }
-
-  .multipleChoiceOption_dark {
-    border-color: #404040;
-    background: #2d2d2d;
-    color: #fff;
-  }
-
-  .multipleChoiceOptionWeb:hover {
+  .webMultipleChoiceOption:hover {
+    border-color: #1C6B1E;
     transform: translateX(4px);
   }
 
-  .multipleChoiceSelected {
-    border-color: #1C6B1E !important;
-    background: #1C6B1E !important;
-    color: white !important;
-  }
-
-  .optionImageContainerWeb {
+  .webOptionImageContainer {
     width: 60px;
     height: 60px;
     border-radius: 8px;
@@ -428,102 +316,25 @@
     flex-shrink: 0;
   }
 
-  .optionImageWeb {
+  .webOptionImage {
     width: 100%;
     height: 100%;
     object-fit: cover;
   }
 
-  .optionTextWeb {
+  .webOptionText {
     font-size: 16px;
     font-weight: 500;
     flex: 1;
   }
 
-  .selectionIndicatorWeb {
-    width: 24px;
-    height: 24px;
-  }
-
-  .sliderContainerWeb {
-    margin-top: 16px;
-  }
-
-  .sliderWeb {
-    width: 100%;
-    height: 32px;
-    border-radius: 3px;
-    outline: none;
-  }
-
-  .slider_light {
-    background: #1C6B1E;
-  }
-
-  .slider_dark {
-    background: #4CAF50;
-  }
-
-  .sliderLabelsWeb {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 8px;
-    font-size: 14px;
-  }
-
-  .sliderLabelsWeb_light {
-    color: #333;
-  }
-
-  .sliderLabelsWeb_dark {
-    color: #fff;
-  }
-
-  .fillGapContainerWeb {
-    padding: 20px;
-  }
-
-  .fillGapInputWeb {
-    width: 100%;
-    padding: 16px;
-    border: 2px solid;
-    border-radius: 12px;
-    font-size: 16px;
-    outline: none;
-    transition: border-color 0.3s ease;
-  }
-
-  .fillGapInput_light {
-    border-color: #e0e0e0;
-    background: white;
-    color: #333;
-  }
-
-  .fillGapInput_dark {
-    border-color: #404040;
-    background: #2d2d2d;
-    color: #fff;
-  }
-
-  .fillGapInputWeb:focus {
-    border-color: #1C6B1E;
-  }
-
   .webSubmitSection {
     margin-top: auto;
     padding-top: 24px;
-    border-top: 1px solid;
+    border-top: 1px solid var(--border-color, #e0e0e0);
     display: flex;
     flex-direction: column;
     gap: 16px;
-  }
-
-  .webSubmitSection_light {
-    border-top-color: #e0e0e0;
-  }
-
-  .webSubmitSection_dark {
-    border-top-color: #404040;
   }
 
   .webSubmitButton {
@@ -553,19 +364,13 @@
   .webProgressHint {
     text-align: center;
     font-size: 14px;
-  }
-
-  .webProgressHint_light {
-    color: #666;
-  }
-
-  .webProgressHint_dark {
-    color: #ccc;
+    color: var(--text-secondary, #666);
   }
 }
 
 /* Tablet Design */
 @media screen and (max-width: 800px) and (min-width: 501px) {
+
   .tabletOnly {
     display: block;
   }
@@ -580,32 +385,12 @@
     height: 100dvh;
   }
 
-  .tabletQuizContainer_light {
-    background-color: #ffffff;
-    color: #333333;
-  }
-
-  .tabletQuizContainer_dark {
-    background-color: #1a1a1a;
-    color: #ffffff;
-  }
-
   .tabletQuizHeader {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 12px 20px;
-    border-bottom: 1px solid;
-  }
-
-  .tabletQuizHeader_light {
-    border-bottom-color: #e0e0e0;
-    background-color: #f8f9fa;
-  }
-
-  .tabletQuizHeader_dark {
-    border-bottom-color: #404040;
-    background-color: #2d2d2d;
+    border-bottom: 1px solid var(--border-color, #e0e0e0);
   }
 
   .tabletHeaderMain {
@@ -630,26 +415,20 @@
   }
 
   .tabletMenuButton_dark {
-    background-color: #404040;
+    background-color: #2d2d2d;
     color: white;
   }
 
   .tabletQuizInfo {
     display: flex;
-    flex-direction: column;
+    align-items: center;
+    gap: 16px;
   }
 
   .tabletQuestionCounter {
     font-size: 14px;
     font-weight: 600;
-  }
-
-  .tabletQuestionCounter_light {
-    color: #333;
-  }
-
-  .tabletQuestionCounter_dark {
-    color: #fff;
+    color: var(--text-primary, #333);
   }
 
   .tabletQuestionType {
@@ -658,35 +437,20 @@
     gap: 8px;
     font-size: 14px;
     font-weight: 600;
-  }
-
-  .tabletQuestionType_light {
-    color: #333;
-  }
-
-  .tabletQuestionType_dark {
-    color: #fff;
+    color: var(--text-primary, #333);
   }
 
   .tabletTimerSection {
     display: flex;
     align-items: center;
-    flex-direction: column;
     gap: 12px;
   }
 
   .tabletTimeDisplay {
     font-size: 16px;
     font-weight: 700;
+    color: var(--accent-color, #1C6B1E);
     min-width: 80px;
-  }
-
-  .tabletTimeDisplay_light {
-    color: #1C6B1E;
-  }
-
-  .tabletTimeDisplay_dark {
-    color: #4CAF50;
   }
 
   .tabletProgressContainer {
@@ -696,6 +460,7 @@
   .tabletProgressBar {
     width: 100%;
     height: 6px;
+    background-color:  #e0e0e0;
     border-radius: 3px;
     overflow: hidden;
   }
@@ -737,7 +502,7 @@
   }
 
   .tabletExitButton_dark {
-    background-color: #404040;
+    background-color: #2d2d2d;
   }
 
   .tabletQuizContent {
@@ -789,16 +554,9 @@
     font-size: 18px;
     font-weight: 600;
     line-height: 1.5;
+    color: #333;
     margin: 0;
     text-align: center;
-  }
-
-  .tabletQuestionText_light {
-    color: #333;
-  }
-
-  .tabletQuestionText_dark {
-    color: #fff;
   }
 
   .tabletOptionsSection {
@@ -811,16 +569,18 @@
   }
 
   /* Tablet Option Components */
-  .trueFalseContainerTablet {
+  .tabletTrueFalseContainer {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 16px;
     margin-bottom: 20px;
   }
 
-  .trueFalseButtonTablet {
+  .tabletTrueFalseButton {
     padding: 20px;
-    border: 2px solid;
+    border: 2px solid #1C6B1E;
+    background: white;
+    color: #1C6B1E;
     border-radius: 12px;
     font-size: 18px;
     font-weight: 700;
@@ -829,37 +589,33 @@
     position: relative;
   }
 
-  .trueFalseButtonTablet:hover {
-    transform: translateY(-2px);
+  .tabletTrueFalseButton:hover {
+    background: #1C6B1E;
+    color: white;
   }
 
-  .trueFalseTextTablet {
-    font-size: 16px;
-    font-weight: bold;
-  }
-
-  .multipleChoiceContainerTablet {
+  .tabletMultipleChoiceContainer {
     display: grid;
     grid-template-columns: 1fr;
     gap: 12px;
   }
 
-  .multipleChoiceOptionTablet {
+  .tabletMultipleChoiceOption {
     display: flex;
     align-items: center;
     padding: 16px;
-    border: 2px solid;
+    border: 2px solid #e0e0e0;
     border-radius: 12px;
     cursor: pointer;
     transition: all 0.2s ease;
     gap: 12px;
   }
 
-  .multipleChoiceOptionTablet:hover {
-    transform: translateX(4px);
+  .tabletMultipleChoiceOption:hover {
+    border-color: #1C6B1E;
   }
 
-  .optionImageContainerTablet {
+  .tabletOptionImageContainer {
     width: 50px;
     height: 50px;
     border-radius: 8px;
@@ -867,65 +623,16 @@
     flex-shrink: 0;
   }
 
-  .optionImageTablet {
+  .tabletOptionImage {
     width: 100%;
     height: 100%;
     object-fit: cover;
   }
 
-  .optionTextTablet {
+  .tabletOptionText {
     font-size: 16px;
     font-weight: 500;
     flex: 1;
-  }
-
-  .selectionIndicatorTablet {
-    width: 24px;
-    height: 24px;
-  }
-
-  .sliderContainerTablet {
-    margin-top: 16px;
-  }
-
-  .sliderTablet {
-    width: 100%;
-    height: 32px;
-    border-radius: 3px;
-    outline: none;
-  }
-
-  .sliderLabelsTablet {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 8px;
-    font-size: 14px;
-  }
-
-  .sliderLabelsTablet_light {
-    color: #333;
-  }
-
-  .sliderLabelsTablet_dark {
-    color: #fff;
-  }
-
-  .fillGapContainerTablet {
-    padding: 20px;
-  }
-
-  .fillGapInputTablet {
-    width: 100%;
-    padding: 16px;
-    border: 2px solid;
-    border-radius: 12px;
-    font-size: 16px;
-    outline: none;
-    transition: border-color 0.3s ease;
-  }
-
-  .fillGapInputTablet:focus {
-    border-color: #1C6B1E;
   }
 
   .tabletFooter {
@@ -1324,5 +1031,5 @@
     opacity: 0.6;
   }
 
-
+  
 }

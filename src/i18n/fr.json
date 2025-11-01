@@ -358,5 +358,8 @@
   "payment_redirect_title": "Redirection de paiement",
   "payment_redirect_text": "Un nouvel onglet devrait s’ouvrir pour compléter votre paiement. Si rien ne se passe, cliquez sur le bouton ci-dessous.",
   "open_payment_link": "Ouvrir le lien de paiement",
-  "remaining_time": "Restant"
+  "remaining_time": "Restant",
+  "question_count": "Question {x} sur {y}",
+  "submit_text": "Soumettre la réponse",
+  "progress_text": "Progression : {current} sur {total}"
 }

@@ -45,8 +45,8 @@ const PoolMemberCard: React.FC<{ poolMember: PoolMemberModel }> = ({ poolMember 
     >
       <div className={styles.cardContent}>
         {/* Pool Image/Initials */}
-        <div className={styles.membersImageContainer}>
           {poolMember.userDetails.image && !imageError ? (
+        <div className={styles.membersImageContainer}>
             <Image
               src={poolMember.userDetails.image}
               alt={poolMember.userDetails.name}
@@ -55,12 +55,14 @@ const PoolMemberCard: React.FC<{ poolMember: PoolMemberModel }> = ({ poolMember 
               className={styles.membersImage}
               onError={() => setImageError(true)}
             />
+        </div>
           ) : (
+            <div className={styles.membersInitialsContainer}>
             <div className={styles.membersInitials}>
               {getInitials(poolMember.userDetails.name)}
             </div>
+            </div>
           )}
-        </div>
 
         {/* members Info */}
         <div className={styles.membersInfo}>
