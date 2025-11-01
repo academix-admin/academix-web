@@ -360,6 +360,6 @@
   "open_payment_link": "Ouvrir le lien de paiement",
   "remaining_time": "Restant",
   "question_count": "Question {x} sur {y}",
-  "submit_text": "Soumettre la réponse",
+  "submit_text": "Soumettre",
   "progress_text": "Progression : {current} sur {total}"
 }

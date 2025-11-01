@@ -359,7 +359,7 @@
   "open_payment_link": "Open Payment Link",
   "remaining_time": "Remaining",
   "question_count": "Question {x} of {y}",
-  "submit_text": "Submit Answer",
+  "submit_text": "Submit",
   "progress_text": "Progress: {current} of {total}"
 }
 
