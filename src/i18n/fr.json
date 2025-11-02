@@ -361,5 +361,6 @@
   "remaining_time": "Restant",
   "question_count": "Question {x} sur {y}",
   "submit_text": "Soumettre",
-  "progress_text": "Progression : {current} sur {total}"
+  "progress_text": "Progression : {current} sur {total}",
+  "options_count": "{count} choix"
 }

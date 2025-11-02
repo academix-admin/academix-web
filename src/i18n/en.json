@@ -360,7 +360,8 @@
   "remaining_time": "Remaining",
   "question_count": "Question {x} of {y}",
   "submit_text": "Submit",
-  "progress_text": "Progress: {current} of {total}"
+  "progress_text": "Progress: {current} of {total}",
+  "options_count": "{count} options"
 }
 
 

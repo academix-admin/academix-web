@@ -624,6 +624,7 @@ const WebView = ({
   const { theme } = useTheme();
   const { t } = useLanguage();
   const image = question.questionData.questionsImage;
+  const optionsCount = question.optionData.length;
 
   return (
     <div className={`${styles.webQuizContainer} ${styles[`webQuizContainer_${theme}`]}`}>
@@ -691,41 +692,46 @@ const WebView = ({
           )}
 
           <div className={`${styles.webQuestionCard} ${styles[`webQuestionCard_${theme}`]}`}>
-            <div className={styles.webQuestionHeader}>
+            <h3 className={styles.webQuestionText}>
               <span className={styles.webQuestionNumber}>
-                {getQuestionNumber()}
-              </span>
-              <h2 className={`${styles.webQuestionText} ${styles[`webQuestionText_${theme}`]}`}>
+                {getQuestionNumber()}/{totalNumber}
+              </span>{" "}
                 {question.questionData.questionsText}
-              </h2>
-            </div>
+                {optionsCount > 1 && (
+                    <span className={`${styles.optionsCount} ${styles[`optionsCount_${theme}`]}`}>
+                       {t('options_count', {count: optionsCount})}
+                    </span>
+                )}
+            </h3>
           </div>
         </div>
 
         {/* Right Panel - Options */}
         <div className={`${styles.webOptionsPanel} ${styles[`webOptionsPanel_${theme}`]}`}>
           <div className={`${styles.webOptionsCard} ${styles[`webOptionsCard_${theme}`]}`}>
-            <div className={styles.webOptionsContent}>
-              {renderOptionType(question.typeData.questionTypeLocalIdentity,'web')}
-            </div>
+            <div className={styles.webOptionsWrapper}>
+              <div className={styles.webOptionsContent}>
+                {renderOptionType(question.typeData.questionTypeLocalIdentity,'web')}
+              </div>
 
-            <div className={styles.webSubmitSection}>
-              <button
-                className={`${styles.webSubmitButton} ${
-                  !hasSelectedOption || isSubmitting ? styles.webSubmitButtonDisabled : ''
-                } ${styles[`webSubmitButton_${theme}`]}`}
-                onClick={handleManualSubmit}
-                disabled={!hasSelectedOption || isSubmitting}
-              >
-                {isSubmitting ? (
-                  <div className={styles.progressSpinner}></div>
-                ) : (
-                  t('submit_text')
-                )}
-              </button>
+              <div className={styles.webSubmitSection}>
+                <button
+                  className={`${styles.webSubmitButton} ${
+                    !hasSelectedOption || isSubmitting ? styles.webSubmitButtonDisabled : ''
+                  } ${styles[`webSubmitButton_${theme}`]}`}
+                  onClick={handleManualSubmit}
+                  disabled={!hasSelectedOption || isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <div className={styles.progressSpinner}></div>
+                  ) : (
+                    t('submit_text')
+                  )}
+                </button>
 
-              <div className={`${styles.webProgressHint} ${styles[`webProgressHint_${theme}`]}`}>
-                <span>{t('progress_text', {current: getQuestionNumber(), total: totalNumber})}</span>
+                <div className={`${styles.webProgressHint} ${styles[`webProgressHint_${theme}`]}`}>
+                  <span>{t('progress_text', {current: getQuestionNumber(), total: totalNumber})}</span>
+                </div>
               </div>
             </div>
           </div>
@@ -750,6 +756,7 @@ const TabletView = ({
   const { theme } = useTheme();
   const { t } = useLanguage();
   const image = question.questionData.questionsImage;
+  const optionsCount = question.optionData.length;
 
   return (
     <div className={`${styles.tabletQuizContainer} ${styles[`tabletQuizContainer_${theme}`]}`}>
@@ -813,7 +820,15 @@ const TabletView = ({
         <div className={styles.tabletQuestionSection}>
           <div className={`${styles.tabletQuestionCard} ${styles[`tabletQuestionCard_${theme}`]}`}>
             <h2 className={`${styles.tabletQuestionText} ${styles[`tabletQuestionText_${theme}`]}`}>
+            <span className={styles.tabletQuestionCounterInline}>
+                {getQuestionNumber()}/{totalNumber}
+            </span>{" "}
               {question.questionData.questionsText}
+              {optionsCount > 1 && (
+                <span className={`${styles.optionsCount} ${styles[`optionsCount_${theme}`]}`}>
+                  {t('options_count', {count: optionsCount})}
+                </span>
+              )}
             </h2>
           </div>
         </div>
@@ -859,6 +874,7 @@ const MobileView = ({
   const { theme } = useTheme();
   const { t } = useLanguage();
   const image = question.questionData.questionsImage;
+  const optionsCount = question.optionData.length;
 
   return (
     <div className={styles.mobileQuizContainer}>
@@ -906,6 +922,11 @@ const MobileView = ({
               {getQuestionNumber()}/{totalNumber}
             </span>{" "}
             {question.questionData.questionsText}
+            {optionsCount > 1 && (
+              <span className={`${styles.optionsCount} ${styles[`optionsCount_${theme}`]}`}>
+                {t('options_count', {count: optionsCount})}
+              </span>
+            )}
           </h3>
         </div>
 
