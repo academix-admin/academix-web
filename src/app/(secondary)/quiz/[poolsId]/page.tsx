@@ -20,6 +20,7 @@ import { BackendPoolMemberModel, PoolMemberModel } from '@/models/pool-member';
 import { StateStack } from '@/lib/state-stack';
 import { RealtimeChannel, RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 import QuestionDisplay from './question-display/question-display'
+import QuizTimer from './quiz-timer/quiz-timer'
 
 // Quiz state types
 type QuizState =
@@ -773,82 +774,7 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
           </div>
         );
     case 'quizTime':
-      return (
-        <div style={{
-          textAlign: 'center',
-          padding: '40px',
-          backgroundColor: '#f8f9fa',
-          borderRadius: '12px',
-          margin: '20px 0'
-        }}>
-          <div style={{
-            width: '120px',
-            height: '120px',
-            borderRadius: '50%',
-            backgroundColor: '#e3f2fd',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            margin: '0 auto 30px',
-            border: '4px solid #2196F3'
-          }}>
-            <span style={{
-              fontSize: '32px',
-              fontWeight: 'bold',
-              color: '#1976d2'
-            }}>
-              {Math.floor(quizTimerValue / 60)}:{(quizTimerValue % 60).toString().padStart(2, '0')}
-            </span>
-          </div>
-
-          <h2 style={{
-            color: '#333',
-            marginBottom: '16px'
-          }}>
-            Quiz Time Remaining
-          </h2>
-
-          <p style={{
-            color: '#666',
-            fontSize: '18px',
-            marginBottom: '30px',
-            lineHeight: '1.5'
-          }}>
-            Time remaining in the quiz session
-          </p>
-
-          {/* Progress summary */}
-          <div style={{
-            display: 'inline-flex',
-            gap: '30px',
-            backgroundColor: 'white',
-            padding: '20px',
-            borderRadius: '8px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-          }}>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#4CAF50' }}>
-                {quizSession.completedQuestions.length}
-              </div>
-              <div style={{ fontSize: '14px', color: '#666' }}>Completed</div>
-            </div>
-
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#2196F3' }}>
-                {quizSession.totalQuestions}
-              </div>
-              <div style={{ fontSize: '14px', color: '#666' }}>Total</div>
-            </div>
-
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#FF9800' }}>
-                {quizSession.pendingQuestions.length}
-              </div>
-              <div style={{ fontSize: '14px', color: '#666' }}>Missed</div>
-            </div>
-          </div>
-        </div>
-      );
+      return <QuizTimer quizTimerValue={quizTimerValue}/>;
 
       case 'quizPlay':
         const currentQuestion = getCurrentQuestion(quizSession.currentQuestionId);

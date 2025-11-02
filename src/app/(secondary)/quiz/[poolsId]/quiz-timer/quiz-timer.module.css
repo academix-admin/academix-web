@@ -1,0 +1,462 @@
+/* Base Styles */
+.timerSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.timerContent {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.statusRow {
+  display: flex;
+  justify-content: flex-start;
+  width: 100%;
+}
+
+.status {
+  font-size: 16px;
+  font-weight: 600;
+  text-align: center;
+  max-lines: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.status_light {
+  color: #6d6c6c;
+}
+
+.status_dark {
+  color: white;
+}
+
+.timerDisplay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.timerValue {
+  font-weight: 700;
+  text-align: center;
+  max-lines: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.timerValue_light {
+  color: #2d2d2d;
+}
+
+.timerValue_dark {
+  color: #ffffff;
+}
+
+.remainingLabel {
+  font-size: 14px;
+  text-align: center;
+  max-lines: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 500;
+}
+
+.remainingLabel_light {
+  color: #6d6c6c;
+}
+
+.remainingLabel_dark {
+  color: #a0a0a0;
+}
+
+.skipButtonContainer {
+  display: flex;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.skipButton {
+  padding: 12px 32px;
+  border-radius: 25px;
+  border: none;
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 120px;
+  background-color: #1C6B1E;
+  color: white;
+}
+
+.skipButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.timerTextContainer {
+  display: flex;
+  flex: 1;
+}
+
+.timerText {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 8px;
+}
+
+.timerText_light {
+  color: #333333;
+}
+
+.timerText_dark {
+  color: #ffffff;
+}
+
+/* Web Design */
+@media screen and (min-width: 801px) {
+  .webOnly {
+    display: block;
+  }
+  .tabletOnly,
+  .mobileOnly {
+    display: none;
+  }
+
+  .webQuizContainer {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+  }
+
+  .webQuizContainer_light {
+    background-color: #ffffff;
+    color: #333333;
+  }
+
+  .webQuizContainer_dark {
+    background-color: #1a1a1a;
+    color: #ffffff;
+  }
+
+  .webQuizHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 24px;
+    border-bottom: 1px solid;
+  }
+
+  .webQuizHeader_light {
+    border-bottom-color: #e0e0e0;
+    background-color: #f8f9fa;
+  }
+
+  .webQuizHeader_dark {
+    border-bottom-color: #404040;
+    background-color: #2d2d2d;
+  }
+
+  .webHeaderLeft {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .webMenuButton {
+    padding: 8px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease;
+  }
+
+  .webMenuButton_light {
+    background-color: #f5f5f5;
+    color: #333;
+  }
+
+  .webMenuButton_dark {
+    background-color: #404040;
+    color: white;
+  }
+
+  .webExitButton {
+    padding: 8px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease;
+  }
+
+  .webExitButton_light {
+    background-color: #f5f5f5;
+  }
+
+  .webExitButton_dark {
+    background-color: #404040;
+  }
+
+  .webTimerWrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex: 1;
+    padding: 40px;
+  }
+
+  .webTimerSection {
+    max-width: 500px;
+    width: 100%;
+  }
+
+  .webTimerContainer {
+    border-radius: 20px;
+    padding: 28px;
+    width: 100%;
+    box-sizing: border-box;
+    backdrop-filter: blur(10px);
+  }
+
+  .webTimerContainer_light {
+    background-color: rgba(247, 246, 246, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  }
+
+  .webTimerContainer_dark {
+    background-color: rgba(28, 28, 28, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  }
+
+  .webTimerValue {
+    font-size: 48px;
+    line-height: 1.2;
+  }
+}
+
+/* Tablet Design */
+@media screen and (max-width: 800px) and (min-width: 501px) {
+  .tabletOnly {
+    display: block;
+  }
+  .webOnly,
+  .mobileOnly {
+    display: none;
+  }
+
+  .tabletQuizContainer {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+  }
+
+  .tabletQuizContainer_light {
+    background-color: #ffffff;
+    color: #333333;
+  }
+
+  .tabletQuizContainer_dark {
+    background-color: #1a1a1a;
+    color: #ffffff;
+  }
+
+  .tabletQuizHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 20px;
+    border-bottom: 1px solid;
+  }
+
+  .tabletQuizHeader_light {
+    border-bottom-color: #e0e0e0;
+    background-color: #f8f9fa;
+  }
+
+  .tabletQuizHeader_dark {
+    border-bottom-color: #404040;
+    background-color: #2d2d2d;
+  }
+
+  .tabletHeaderMain {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .tabletMenuButton {
+    padding: 8px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .tabletMenuButton_light {
+    background-color: #f5f5f5;
+    color: #333;
+  }
+
+  .tabletMenuButton_dark {
+    background-color: #404040;
+    color: white;
+  }
+
+  .tabletExitButton {
+    padding: 8px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .tabletExitButton_light {
+    background-color: #f5f5f5;
+  }
+
+  .tabletExitButton_dark {
+    background-color: #404040;
+  }
+
+  .tabletTimerWrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex: 1;
+    padding: 32px;
+  }
+
+  .tabletTimerSection {
+    max-width: 400px;
+    width: 100%;
+  }
+
+  .tabletTimerContainer {
+    border-radius: 20px;
+    padding: 24px;
+    width: 100%;
+    box-sizing: border-box;
+    backdrop-filter: blur(10px);
+  }
+
+  .tabletTimerContainer_light {
+    background-color: rgba(247, 246, 246, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.1);
+  }
+
+  .tabletTimerContainer_dark {
+    background-color: rgba(28, 28, 28, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3);
+  }
+
+  .tabletTimerValue {
+    font-size: 42px;
+    line-height: 1.2;
+  }
+}
+
+/* Mobile Design */
+@media screen and (max-width: 500px) {
+  .mobileOnly {
+    display: block;
+  }
+  .webOnly,
+  .tabletOnly {
+    display: none;
+  }
+
+  .mobileQuizContainer {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    overflow: hidden;
+  }
+
+  .mobileQuizHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px;
+    gap: 8px;
+  }
+
+  .mobileMenuButton, .mobileExitButton {
+    padding: 8px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .mobileMenuButton_light,
+  .mobileExitButton_light {
+    color: black;
+    background-color: #F0EFEF;
+  }
+
+  .mobileMenuButton_dark,
+  .mobileExitButton_dark {
+    background-color: #515151;
+    color: white;
+  }
+
+  .mobileExitButton {
+    color: #f44336;
+  }
+
+  .mobileTimerSection {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    flex: 1;
+    flex-direction: column;
+    box-sizing: border-box;
+    padding: 20px;
+    width: 100%;
+  }
+
+  .mobileTimerContainer {
+    border-radius: 20px;
+    padding: 16px;
+    width: 100%;
+    box-sizing: border-box;
+    backdrop-filter: blur(10px);
+  }
+
+  .mobileTimerContainer_light {
+    background-color: rgba(247, 246, 246, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+  }
+
+  .mobileTimerContainer_dark {
+    background-color: rgba(28, 28, 28, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .mobileTimerValue {
+    font-size: 36px;
+    line-height: 1.2;
+  }
+}

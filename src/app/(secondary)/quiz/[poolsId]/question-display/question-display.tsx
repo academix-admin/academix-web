@@ -34,35 +34,56 @@ interface BaseViewProps {
 
 interface UseQuestionTimerProps {
   questionId: string;
-  timeLimit: number;
+  timeLimit: number; // in seconds
   onTimeUp: () => void;
   autoStart?: boolean;
 }
 
-const useQuestionTimer = ({
+export const useQuestionTimer = ({
   questionId,
   timeLimit,
   onTimeUp,
-  autoStart = true
+  autoStart = true,
 }: UseQuestionTimerProps) => {
   const [remainingTime, setRemainingTime] = useState(timeLimit);
   const [isActive, setIsActive] = useState(autoStart);
   const [isTimeUp, setIsTimeUp] = useState(false);
 
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const onTimeUpRef = useRef(onTimeUp);
+  const startTimestampRef = useRef<number | null>(null);
+  const pausedOffsetRef = useRef<number>(0); // time spent paused (ms)
 
-  // Update the callback ref when onTimeUp changes
+  // Keep callback fresh
   useEffect(() => {
     onTimeUpRef.current = onTimeUp;
   }, [onTimeUp]);
 
   const clearTimer = useCallback(() => {
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
     }
   }, []);
+
+  const computeRemaining = useCallback(() => {
+    if (!startTimestampRef.current) return timeLimit;
+    const now = Date.now();
+    const elapsed = Math.floor((now - startTimestampRef.current - pausedOffsetRef.current) / 1000);
+    return Math.max(timeLimit - elapsed, 0);
+  }, [timeLimit]);
+
+  const tick = useCallback(() => {
+    const remaining = computeRemaining();
+    setRemainingTime(remaining);
+
+    if (remaining <= 0) {
+      clearTimer();
+      setIsActive(false);
+      setIsTimeUp(true);
+      onTimeUpRef.current();
+    }
+  }, [computeRemaining, clearTimer]);
 
   const startTimer = useCallback(() => {
     clearTimer();
@@ -70,70 +91,66 @@ const useQuestionTimer = ({
     setIsTimeUp(false);
     setRemainingTime(timeLimit);
 
-    timerRef.current = setInterval(() => {
-      setRemainingTime(prev => {
-        if (prev <= 1) {
-          clearTimer();
-          setIsTimeUp(true);
-          setIsActive(false);
-          onTimeUpRef.current();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-  }, [timeLimit, clearTimer]);
+    startTimestampRef.current = Date.now();
+    pausedOffsetRef.current = 0;
+
+    intervalRef.current = setInterval(tick, 1000);
+  }, [timeLimit, clearTimer, tick]);
 
   const pauseTimer = useCallback(() => {
+    if (!isActive) return;
     setIsActive(false);
     clearTimer();
-  }, [clearTimer]);
+
+    // Record paused offset
+    if (startTimestampRef.current) {
+      pausedOffsetRef.current += Date.now() - (startTimestampRef.current + pausedOffsetRef.current);
+    }
+  }, [isActive, clearTimer]);
 
   const resumeTimer = useCallback(() => {
-    if (remainingTime > 0 && !isTimeUp) {
-      setIsActive(true);
+    if (isActive || isTimeUp || remainingTime <= 0) return;
+    setIsActive(true);
 
-      timerRef.current = setInterval(() => {
-        setRemainingTime(prev => {
-          if (prev <= 1) {
-            clearTimer();
-            setIsTimeUp(true);
-            setIsActive(false);
-            onTimeUpRef.current();
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }
-  }, [remainingTime, isTimeUp, clearTimer]);
+    // Adjust start time so total elapsed remains correct
+    startTimestampRef.current = Date.now() - pausedOffsetRef.current;
+    intervalRef.current = setInterval(tick, 1000);
+  }, [isActive, isTimeUp, remainingTime, tick]);
 
   const resetTimer = useCallback(() => {
     clearTimer();
     setIsActive(autoStart);
     setIsTimeUp(false);
     setRemainingTime(timeLimit);
+    pausedOffsetRef.current = 0;
+    startTimestampRef.current = autoStart ? Date.now() : null;
 
     if (autoStart) {
-      startTimer();
+      intervalRef.current = setInterval(tick, 1000);
     }
-  }, [timeLimit, autoStart, clearTimer, startTimer]);
+  }, [timeLimit, autoStart, clearTimer, tick]);
 
-  // Initialize timer when questionId changes
+  // Auto start/reset when questionId changes
   useEffect(() => {
     resetTimer();
-
-    return () => {
-      clearTimer();
-    };
+    return () => clearTimer();
   }, [questionId, resetTimer, clearTimer]);
 
-  // Cleanup on unmount
+  // Background tab visibility handling
   useEffect(() => {
-    return () => {
-      clearTimer();
+    const handleVisibilityChange = () => {
+      if (!document.hidden && isActive) {
+        // When returning to foreground, re-sync immediately
+        tick();
+      }
     };
-  }, [clearTimer]);
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [isActive, tick]);
+
+  // Cleanup on unmount
+  useEffect(() => clearTimer, [clearTimer]);
 
   const progress = (remainingTime / timeLimit) * 100;
 
@@ -146,9 +163,10 @@ const useQuestionTimer = ({
     pauseTimer,
     resumeTimer,
     resetTimer,
-    clearTimer
+    clearTimer,
   };
 };
+
 
 // Types
 type DisplayType = 'mobile' | 'tablet' | 'web';

@@ -361,7 +361,10 @@
   "question_count": "Question {x} of {y}",
   "submit_text": "Submit",
   "progress_text": "Progress: {current} of {total}",
-  "options_count": "{count} options"
+  "options_count": "{count} options",
+  "ongoing_quiz": "Ongoing Quiz",
+  "skip_text": "Skip",
+  "timer_text": "Timer"
 }
 
 
