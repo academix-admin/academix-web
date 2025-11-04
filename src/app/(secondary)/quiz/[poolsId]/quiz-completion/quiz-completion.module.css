@@ -1,0 +1,508 @@
+/* Base Styles */
+.completionTextContainer {
+  display: flex;
+  flex: 1;
+}
+
+.completionText {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 8px;
+}
+
+.completionText_light {
+  color: #333333;
+}
+
+.completionText_dark {
+  color: #ffffff;
+}
+
+/* Status Section Styles */
+.statusTable {
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid;
+}
+
+.statusTable_light {
+  border-color: #e0e0e0;
+  background-color: rgba(248, 249, 250, 0.8);
+}
+
+.statusTable_dark {
+  border-color: #404040;
+  background-color: rgba(45, 45, 45, 0.8);
+}
+
+.statusRow {
+  display: flex;
+  align-items: center;
+}
+
+.statusRowWithBorder {
+  border-top: 1px solid;
+}
+
+.statusRow_light.statusRowWithBorder {
+  border-top-color: #e0e0e0;
+}
+
+.statusRow_dark.statusRowWithBorder {
+  border-top-color: #404040;
+}
+
+.statusLabel {
+  flex: 2;
+  padding: 12px 16px;
+  text-align: center;
+  font-weight: bold;
+  font-size: 16px;
+  border-right: 1px solid;
+}
+
+.statusLabel_light {
+  border-right-color: #e0e0e0;
+  color: #333333;
+}
+
+.statusLabel_dark {
+  border-right-color: #404040;
+  color: #ffffff;
+}
+
+.statusValue {
+  flex: 3;
+  padding: 12px 16px;
+  text-align: center;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.statusValue_light {
+  color: #333333;
+}
+
+.statusValue_dark {
+  color: #ffffff;
+}
+
+/* Web Design */
+@media screen and (min-width: 801px) {
+  .webOnly {
+    display: block;
+  }
+  .tabletOnly,
+  .mobileOnly {
+    display: none;
+  }
+
+  .webQuizContainer {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+  }
+
+  .webQuizContainer_light {
+    background-color: #ffffff;
+    color: #333333;
+  }
+
+  .webQuizContainer_dark {
+    background-color: #1a1a1a;
+    color: #ffffff;
+  }
+
+  .webQuizHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 24px;
+    border-bottom: 1px solid;
+  }
+
+  .webQuizHeader_light {
+    border-bottom-color: #e0e0e0;
+    background-color: #f8f9fa;
+  }
+
+  .webQuizHeader_dark {
+    border-bottom-color: #404040;
+    background-color: #2d2d2d;
+  }
+
+  .webHeaderLeft {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .webMenuButton {
+    padding: 8px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease;
+  }
+
+  .webMenuButton_light {
+    background-color: #f5f5f5;
+    color: #333;
+  }
+
+  .webMenuButton_dark {
+    background-color: #404040;
+    color: white;
+  }
+
+  .webExitButton {
+    padding: 8px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease;
+  }
+
+  .webExitButton_light {
+    background-color: #f5f5f5;
+  }
+
+  .webExitButton_dark {
+    background-color: #404040;
+  }
+
+  .webStatusContainer {
+    padding: 32px;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .webStatusContainer_light {
+    background-color: #ffffff;
+  }
+
+  .webStatusContainer_dark {
+    background-color: #1a1a1a;
+  }
+
+  .webStatusContainer .statusTable {
+    width: 100%;
+    max-width: 600px;
+  }
+
+  .webStatusContainer .statusLabel,
+  .webStatusContainer .statusValue {
+    padding: 14px 20px;
+    font-size: 16px;
+  }
+
+  .webQuizBody {
+    display: flex;
+    flex-direction: column;
+    padding: 32px;
+  }
+
+  .webButtonContainer {
+    display: flex;
+    justify-content: center;
+    margin-top: 40px;
+    padding: 0 20px;
+  }
+
+  .webCheckResultButton {
+    padding: 16px 40px;
+    background-color: #1C6B1E;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 200px;
+  }
+
+  .webCheckResultButton:hover {
+    background-color: #155c17;
+    transform: translateY(-1px);
+  }
+}
+
+/* Tablet Design */
+@media screen and (max-width: 800px) and (min-width: 501px) {
+  .tabletOnly {
+    display: block;
+  }
+  .webOnly,
+  .mobileOnly {
+    display: none;
+  }
+
+  .tabletQuizContainer {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+  }
+
+  .tabletQuizContainer_light {
+    background-color: #ffffff;
+    color: #333333;
+  }
+
+  .tabletQuizContainer_dark {
+    background-color: #1a1a1a;
+    color: #ffffff;
+  }
+
+  .tabletQuizHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 20px;
+    border-bottom: 1px solid;
+  }
+
+  .tabletQuizHeader_light {
+    border-bottom-color: #e0e0e0;
+    background-color: #f8f9fa;
+  }
+
+  .tabletQuizHeader_dark {
+    border-bottom-color: #404040;
+    background-color: #2d2d2d;
+  }
+
+  .tabletHeaderMain {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .tabletMenuButton {
+    padding: 8px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .tabletMenuButton_light {
+    background-color: #f5f5f5;
+    color: #333;
+  }
+
+  .tabletMenuButton_dark {
+    background-color: #404040;
+    color: white;
+  }
+
+  .tabletExitButton {
+    padding: 8px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .tabletExitButton_light {
+    background-color: #f5f5f5;
+  }
+
+  .tabletExitButton_dark {
+    background-color: #404040;
+  }
+
+  .tabletStatusContainer {
+    padding: 24px;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .tabletStatusContainer_light {
+    background-color: #ffffff;
+  }
+
+  .tabletStatusContainer_dark {
+    background-color: #1a1a1a;
+  }
+
+  .tabletStatusContainer .statusTable {
+    width: 100%;
+    max-width: 500px;
+  }
+
+  .tabletStatusContainer .statusLabel,
+  .tabletStatusContainer .statusValue {
+    padding: 12px 16px;
+    font-size: 15px;
+  }
+
+  .tabletQuizBody {
+    display: flex;
+    flex-direction: column;
+    padding: 24px;
+  }
+
+  .tabletButtonContainer {
+    display: flex;
+    justify-content: center;
+    margin-top: 32px;
+    padding: 0 16px;
+  }
+
+  .tabletCheckResultButton {
+    padding: 14px 32px;
+    background-color: #1C6B1E;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 100%;
+    max-width: 300px;
+  }
+
+  .tabletCheckResultButton:hover {
+    background-color: #155c17;
+    transform: translateY(-1px);
+  }
+}
+
+/* Mobile Design */
+@media screen and (max-width: 500px) {
+  .mobileOnly {
+    display: block;
+  }
+  .webOnly,
+  .tabletOnly {
+    display: none;
+  }
+
+  .mobileQuizContainer {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    overflow: hidden;
+  }
+
+  .mobileQuizHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px;
+    gap: 8px;
+  }
+
+  .mobileMenuButton, .mobileExitButton {
+    padding: 8px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .mobileMenuButton_light,
+  .mobileExitButton_light {
+    color: black;
+    background-color: #F0EFEF;
+  }
+
+  .mobileMenuButton_dark,
+  .mobileExitButton_dark {
+    background-color: #515151;
+    color: white;
+  }
+
+  .mobileExitButton {
+    color: #f44336;
+  }
+  
+  .mobileQuizBody {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  
+  .mobileQuizFooter {
+    position: relative;
+    border-top-left-radius: 16px;
+    border-top-right-radius: 16px;
+    overflow: hidden;
+    padding: 12px;
+  }
+  
+  .mobileQuizFooter_light {
+    color: black;
+    background-color: #F0EFEF;
+  }
+
+  .mobileQuizFooter_dark {
+      background-color: #515151;
+      color: white;
+  }  
+
+  .mobileCheckResultButton {
+    padding: 12px 24px;
+    background-color: #1C6B1E;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 100%;
+  }
+
+  .mobileCheckResultButtonDisabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  .mobileStatusContainer {
+    padding: 16px;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .mobileStatusContainer_light {
+    background-color: #ffffff;
+  }
+
+  .mobileStatusContainer_dark {
+    background-color: #1a1a1a;
+  }
+
+  .mobileStatusContainer .statusTable {
+    width: 100%;
+    max-width: 400px;
+  }
+
+  .mobileStatusContainer .statusLabel,
+  .mobileStatusContainer .statusValue {
+    padding: 10px 12px;
+    font-size: 14px;
+  }
+      
+}

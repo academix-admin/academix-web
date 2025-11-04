@@ -365,5 +365,11 @@
   "options_count": "{count} choix",
   "ongoing_quiz": "Quiz en Cours",
   "skip_text": "Passer",
-  "timer_text": "Minuteur"
+  "timer_text": "Minuteur",
+  "completion_text": "Achèvement",
+  "check_result_text": "Vérifier le résultat",
+  "ending_text": "se termine",
+  "ended_text": "terminé",
+  "graded_text": "noté",
+  "ranked_text": "classé"
 }

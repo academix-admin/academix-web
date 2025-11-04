@@ -364,7 +364,13 @@
   "options_count": "{count} options",
   "ongoing_quiz": "Ongoing Quiz",
   "skip_text": "Skip",
-  "timer_text": "Timer"
+  "timer_text": "Timer",
+  "completion_text": "Completion",
+  "check_result_text": "Check Result",
+  "ending_text": "ending",
+  "ended_text": "ended",
+  "graded_text": "graded",
+  "ranked_text": "ranked"
 }
 
 

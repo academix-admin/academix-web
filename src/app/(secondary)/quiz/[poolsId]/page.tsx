@@ -24,6 +24,7 @@ import NoResultsView from '@/components/NoResultsView/NoResultsView';
 import ErrorView from '@/components/ErrorView/ErrorView';
 import QuestionDisplay from './question-display/question-display'
 import QuizTimer from './quiz-timer/quiz-timer'
+import QuizCompletion from './quiz-completion/quiz-completion'
 
 // Quiz state types
 type QuizState =
@@ -758,40 +759,7 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
         return <QuestionDisplay question={currentQuestion} onAnswer={handleAnswer} onSubmit={handleSubmitQuestion} getQuestionNumber={()=> quizSession.totalQuestions - quizSession.pendingQuestions.length + 1} totalNumber={quizSession.totalQuestions} />;
 
       case 'quizEnd':
-        return (
-          <div style={{ textAlign: 'center', padding: '40px' }}>
-            <h2>Quiz Completed!</h2>
-            <p>You've answered {quizSession.completedQuestions.length} out of {quizSession.totalQuestions} questions</p>
-            <div style={{ marginTop: '20px', display: 'flex', gap: '10px', justifyContent: 'center' }}>
-              <button
-                onClick={fetchQuizResults}
-                style={{
-                  padding: '10px 20px',
-                  backgroundColor: '#4CAF50',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer'
-                }}
-              >
-                View Results
-              </button>
-              <button
-                onClick={() => setQuizState('questionTrack')}
-                style={{
-                  padding: '10px 20px',
-                  backgroundColor: '#2196F3',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer'
-                }}
-              >
-                Question Track
-              </button>
-            </div>
-          </div>
-        );
+        return <QuizCompletion quizPool={quizModel}/>;
 
       case 'questionTrack':
         return (

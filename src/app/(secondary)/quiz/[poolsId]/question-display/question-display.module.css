@@ -1266,7 +1266,7 @@
   .mobileFillGapInput {
     width: 100%;
     padding: 16px;
-    border: 2px solid var(--slide-container, #e0e0e0);
+    border: 2px solid  #e0e0e0;
     border-radius: 12px;
     font-size: 16px;
     outline: none;
@@ -1274,7 +1274,7 @@
   }
 
   .mobileFillGapInput:focus {
-    border-color: var(--main-color, #2196f3);
+    border-color:  #2196f3;
   }
 
   /* Footer Styles */
@@ -1354,7 +1354,7 @@
 
   .mobileSubmitButton {
     padding: 12px 24px;
-    background-color: var(--main-color, #2196f3);
+    background-color: #1C6B1E;
     color: white;
     border: none;
     border-radius: 8px;
