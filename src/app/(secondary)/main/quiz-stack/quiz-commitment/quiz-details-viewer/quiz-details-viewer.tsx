@@ -59,12 +59,7 @@ export default function QuizDetailsViewer({ topicsModel }: QuizDetailsViewerProp
           </div>
 
           <div className={`${styles.performanceItem} ${styles[`performanceItem_${theme}`]}`}>
-          <button
-                      className={styles.joinButton}
-                      onClick={()=> console.log('follow')}
-                    >
-                      {t('follow_text')}
-                    </button>
+
           <h2 className={`${styles.itemTitle} ${styles[`itemTitle_${theme}`]}`}>
                  {t('topic_creator')}
           </h2>
@@ -160,3 +155,10 @@ export default function QuizDetailsViewer({ topicsModel }: QuizDetailsViewerProp
     </div>
   );
 }
+
+//           <button
+//                       className={styles.joinButton}
+//                       onClick={()=> console.log('follow')}
+//                     >
+//                       {t('follow_text')}
+//                     </button>

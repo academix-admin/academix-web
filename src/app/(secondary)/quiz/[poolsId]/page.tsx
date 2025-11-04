@@ -19,6 +19,9 @@ import { BackendPoolQuestion, PoolQuestion } from '@/models/pool-question-model'
 import { BackendPoolMemberModel, PoolMemberModel } from '@/models/pool-member';
 import { StateStack } from '@/lib/state-stack';
 import { RealtimeChannel, RealtimePostgresChangesPayload } from '@supabase/supabase-js';
+import LoadingView from '@/components/LoadingView/LoadingView'
+import NoResultsView from '@/components/NoResultsView/NoResultsView';
+import ErrorView from '@/components/ErrorView/ErrorView';
 import QuestionDisplay from './question-display/question-display'
 import QuizTimer from './quiz-timer/quiz-timer'
 
@@ -737,44 +740,16 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
   const renderQuizContent = () => {
     switch (quizState) {
       case 'loading':
-        return (
-          <div style={{ textAlign: 'center', padding: '40px' }}>
-            <div>Loading quiz...</div>
-            <div style={{ marginTop: '20px' }}>Please wait while we prepare your questions.</div>
-          </div>
-        );
+        return (<LoadingView text="Please wait while we load your quiz..." />);
 
       case 'notFound':
-        return (
-          <div style={{ textAlign: 'center', padding: '40px' }}>
-            <h2>Quiz Not Found</h2>
-            <p>The quiz you're looking for doesn't exist or you don't have access to it.</p>
-          </div>
-        );
+        return (<NoResultsView text="The quiz you're looking for doesn't exist or you don't have access to it." buttonText="Try Again" onButtonClick={()=> window.location.reload()} />);
 
       case 'error':
-        return (
-          <div style={{ textAlign: 'center', padding: '40px' }}>
-            <h2>Error</h2>
-            <p>Something went wrong while loading the quiz. Please try again later.</p>
-            <button
-              onClick={() => window.location.reload()}
-              style={{
-                marginTop: '20px',
-                padding: '10px 20px',
-                backgroundColor: '#2196F3',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer'
-              }}
-            >
-              Retry
-            </button>
-          </div>
-        );
-    case 'quizTime':
-      return <QuizTimer quizTimerValue={quizTimerValue}/>;
+        return (<ErrorView text="Something went wrong while loading the quiz." buttonText="Try Again" onButtonClick={()=> window.location.reload()} />);
+
+      case 'quizTime':
+        return <QuizTimer quizTimerValue={quizTimerValue}/>;
 
       case 'quizPlay':
         const currentQuestion = getCurrentQuestion(quizSession.currentQuestionId);

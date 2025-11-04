@@ -715,8 +715,9 @@ const WebView = ({
                 {getQuestionNumber()}/{totalNumber}
               </span>{" "}
                 {question.questionData.questionsText}
+                {optionsCount > 1 && <span>{" "}</span>}
                 {optionsCount > 1 && (
-                    <span className={`${styles.optionsCount} ${styles[`optionsCount_${theme}`]}`}>
+                    <span className={styles.optionsCount}>
                        {t('options_count', {count: optionsCount})}
                     </span>
                 )}
@@ -842,9 +843,10 @@ const TabletView = ({
                 {getQuestionNumber()}/{totalNumber}
             </span>{" "}
               {question.questionData.questionsText}
+              {optionsCount > 1 && <span>{" "}</span>}
               {optionsCount > 1 && (
-                <span className={`${styles.optionsCount} ${styles[`optionsCount_${theme}`]}`}>
-                  {t('options_count', {count: optionsCount})}
+                <span className={styles.optionsCount}>
+                  {" "}{t('options_count', {count: optionsCount})}
                 </span>
               )}
             </h2>
@@ -940,8 +942,9 @@ const MobileView = ({
               {getQuestionNumber()}/{totalNumber}
             </span>{" "}
             {question.questionData.questionsText}
+            {optionsCount > 1 && <span>{" "}</span>}
             {optionsCount > 1 && (
-              <span className={`${styles.optionsCount} ${styles[`optionsCount_${theme}`]}`}>
+              <span className={styles.optionsCount}>
                 {t('options_count', {count: optionsCount})}
               </span>
             )}

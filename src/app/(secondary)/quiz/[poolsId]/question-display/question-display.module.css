@@ -4,23 +4,11 @@
 /* Add to your CSS file - options count styles */
 .optionsCount {
   display: inline-block;
-  margin-left: 8px;
-  padding: 2px 8px;
+  background: #1C6B1E;
+  color: white;
+  padding: 8px 16px;
   border-radius: 12px;
-  font-size: 12px;
   font-weight: 600;
-}
-
-.optionsCount_light {
-  background-color: #e8f5e8;
-  color: #1C6B1E;
-  border: 1px solid #1C6B1E;
-}
-
-.optionsCount_dark {
-  background-color: #2d4d2d;
-  color: #4CAF50;
-  border: 1px solid #4CAF50;
 }
 
 /* Web specific adjustments */
@@ -39,7 +27,6 @@
 .questionText .optionsCount {
   font-size: 12px;
   padding: 2px 8px;
-  margin-left: 6px;
 }
 
 .progressSpinner {
