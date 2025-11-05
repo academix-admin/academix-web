@@ -26,6 +26,7 @@ import QuestionDisplay from './question-display/question-display'
 import QuizTimer from './quiz-timer/quiz-timer'
 import QuizCompletion from './quiz-completion/quiz-completion'
 import QuizTracker from './quiz-tracker/quiz-tracker'
+import SideDrawer from '@/lib/SideDrawer';
 
 // Quiz state types
 type QuizState =
@@ -82,6 +83,7 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
   const [isTimerActive, setIsTimerActive] = useState<boolean>(false);
 
   const [endTimeFrom, setEndTimeFrom] = useState<string | null>(null);
+  const [isDrawerOpen, setDrawerIsOpen] = useState<boolean>(false);
 
   // Quiz session state
   const [quizSession, setQuizSession] = useState<QuizSession>({
@@ -777,19 +779,19 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
         return (<ErrorView text="Something went wrong while loading the quiz." buttonText="Try Again" onButtonClick={()=> window.location.reload()} />);
 
       case 'quizTime':
-        return <QuizTimer quizTimerValue={quizTimerValue} onSkip={()=> setEndTimeFrom('timer')}/>;
+        return <QuizTimer quizTimerValue={quizTimerValue} onSkip={() => {setEndTimeFrom('timer'); setQuizState('quizEnd');}} clickMenu={()=> setDrawerIsOpen(!isDrawerOpen)} clickExit={()=> console.log('clicked exit')}/>;
 
       case 'quizPlay':
         const currentQuestion = getCurrentQuestion(quizSession.currentQuestionId);
         if (!currentQuestion) return null;
 
-        return <QuestionDisplay question={currentQuestion} onAnswer={handleAnswer} onSubmit={handleSubmitQuestion} getQuestionNumber={()=> quizSession.totalQuestions - quizSession.pendingQuestions.length + 1} totalNumber={quizSession.totalQuestions} />;
+        return <QuestionDisplay question={currentQuestion} onAnswer={handleAnswer} onSubmit={handleSubmitQuestion} getQuestionNumber={()=> quizSession.totalQuestions - quizSession.pendingQuestions.length + 1} totalNumber={quizSession.totalQuestions} clickMenu={()=> setDrawerIsOpen(!isDrawerOpen)} clickExit={()=> console.log('clicked exit')} />;
 
       case 'quizEnd':
-        return <QuizCompletion quizPool={quizModel}/>;
+        return <QuizCompletion quizPool={quizModel} clickMenu={()=> setDrawerIsOpen(!isDrawerOpen)} clickExit={()=> console.log('clicked exit')}/>;
 
       case 'questionTrack':
-        return <QuizTracker trackerState={getQuestionTrackers()} onRetry={handleRetry} onEndClick={()=> setEndTimeFrom('tracker')} />;
+        return <QuizTracker trackerState={getQuestionTrackers()} onRetry={handleRetry} onEndClick={()=> {setEndTimeFrom('tracker'); determineState();}} />;
 
       case 'quizReward':
         return (
@@ -846,5 +848,83 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
     }
   };
 
-  return renderQuizContent();
+  return (
+    <>
+      {renderQuizContent()}
+      <SideDrawer
+        isOpen={isDrawerOpen}
+        onClose={() => setDrawerIsOpen(false)}
+        position="left"
+        width={{
+          mobile: "85%",
+          tablet: "450px",
+          desktop: "750px"
+        }}
+        backdropOpacity={0.7}
+        className={`${styles.sideDrawer} ${styles[`sideDrawer_${theme}`]}`}
+      >
+        {/* Enhanced drawer content */}
+        <div style={{ padding: '24px', height: '100%' }}>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '24px',
+            paddingBottom: '16px',
+            borderBottom: '1px solid #e0e0e0'
+          }}>
+            <h2 style={{ margin: 0, color: theme === 'light' ? '#333' : '#fff' }}>Menu</h2>
+            <button
+              onClick={() => setDrawerIsOpen(false)}
+              aria-label="Close menu"
+              style={{
+                background: 'none',
+                border: 'none',
+                fontSize: '20px',
+                cursor: 'pointer',
+                padding: '8px',
+                borderRadius: '4px',
+                color: theme === 'light' ? '#666' : '#fff'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor =  theme === 'light' ? '#f5f5f5' : 'grey';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+              }}
+            >
+              ✕
+            </button>
+          </div>
+
+          <nav style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {['Profile', 'Settings', 'Help', 'About'].map((item, index) => (
+              <button
+                key={index}
+                style={{
+                  padding: '12px 16px',
+                  border: 'none',
+                  backgroundColor: 'transparent',
+                  textAlign: 'left',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontSize: '16px',
+                  transition: 'all 0.2s ease',
+                  color: theme === 'light' ? '#333' : '#fff'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = theme === 'light' ? '#f5f5f5' : 'grey';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                }}
+              >
+                {item}
+              </button>
+            ))}
+          </nav>
+        </div>
+      </SideDrawer>
+    </>
+  );
 }

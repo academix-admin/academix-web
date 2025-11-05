@@ -486,14 +486,6 @@
     justify-content: center;
   }
 
-  .mobileStatusContainer_light {
-    background-color: #ffffff;
-  }
-
-  .mobileStatusContainer_dark {
-    background-color: #1a1a1a;
-  }
-
   .mobileStatusContainer .statusTable {
     width: 100%;
     max-width: 400px;
