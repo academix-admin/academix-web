@@ -93,6 +93,8 @@ export default function QuizCommitment(props: QuizChallengeProps) {
 
   const { controlDisplayMessage, closeDisplay } = useQuizDisplay();
 
+  const [toQuizLoading, setToQuizLoading] = useState(false);
+
   // Subscribe to changes
   const handlePoolChange = (event: PoolChangeEvent) => {
     const { eventType, newRecord: quizPool, oldRecordId: eventPoolsId } = event;
@@ -411,8 +413,10 @@ export default function QuizCommitment(props: QuizChallengeProps) {
   }, []);
 
   const onContinueClick = async () => {
+    setToQuizLoading(true);
     if(!userData || !currentQuiz?.quizPool?.poolsId)return;
     await pushAndWait(`/quiz/${currentQuiz.quizPool?.poolsId}`);
+    setToQuizLoading(false);
   };
 
   const onExit =  () => {
@@ -470,7 +474,6 @@ export default function QuizCommitment(props: QuizChallengeProps) {
 
     return false;
   };
-
 
   return (
     <main className={`${styles.container} ${styles[`container_${theme}`]}`}>
@@ -530,7 +533,7 @@ export default function QuizCommitment(props: QuizChallengeProps) {
                           onClick={onContinueClick}
                           disabled={!activeQuiz || !getIsContinueEnabled(activeQuiz)}
               >
-                              {t('continue')}
+                              {toQuizLoading ? <span className={styles.spinner}></span> : t('continue')}
               </button>
         </div>
         )}

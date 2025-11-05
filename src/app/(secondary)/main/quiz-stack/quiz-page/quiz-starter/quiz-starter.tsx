@@ -12,6 +12,7 @@ interface QuizStarterProps {
   mode: string;
   status: string;
   jobEndAt?: string;
+  isLoading: boolean;
   onContinueClick: () => void;
 }
 
@@ -21,6 +22,7 @@ export default function QuizStarter({
   mode,
   status,
   jobEndAt,
+  isLoading,
   onContinueClick
 }: QuizStarterProps) {
   const { theme } = useTheme();
@@ -165,7 +167,7 @@ export default function QuizStarter({
           onClick={onContinueClick}
           disabled={!getIsContinueEnabled()}
         >
-          {t('continue')}
+          {isLoading ? <span className={styles.spinner}></span> : t('continue')}
         </button>
       </div>
     </div>

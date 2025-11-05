@@ -233,7 +233,7 @@
   opacity: 0.7;
 }
 
-.leaveSpinner {
+.spinner {
   width: 16px;
   height: 16px;
   border: 2px solid transparent;

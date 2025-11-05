@@ -52,8 +52,9 @@ export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) 
 
   const [activeQuiz, demandActiveQuizTopicModel, setActiveQuizTopicModel] = useActiveQuiz(lang);
   const [transactionModels, demandTransactionModels, setTransactionModels] = useTransactionModel(lang);
-    const { closeDisplay, controlDisplayMessage } = useQuizDisplay();
+  const { closeDisplay, controlDisplayMessage } = useQuizDisplay();
 
+  const [toQuizLoading, setToQuizLoading] = useState(false);
 
   // Subscribe to changes
   const handlePoolChange = (event: PoolChangeEvent) => {
@@ -401,6 +402,7 @@ function CurrentQuizCard({ topic, getInitials, onClick, onLeave, showContinue, o
 
   const { controlDisplayMessage, lastEvent, closeDisplay } = useQuizDisplay();
 
+  const [toQuizLoading, setToQuizLoading] = useState(false);
 
   const formatQuizPoolStatusTime = useCallback((status: string | null, seconds: number): string => {
     if (!status) return t('open_quiz');
@@ -517,8 +519,10 @@ function CurrentQuizCard({ topic, getInitials, onClick, onLeave, showContinue, o
       closeDisplay();
    };
    const handleContinue =  async () => {
+      setToQuizLoading(true);
       await onContinue();
       handleQuizDisplayClose();
+      setToQuizLoading(false);
    };
 
   const status = topic.quizPool?.poolsJob || '';
@@ -605,7 +609,7 @@ function CurrentQuizCard({ topic, getInitials, onClick, onLeave, showContinue, o
             disabled={leaving || topic.quizPool?.poolsStatus != 'Pools.open'}
           >
             {leaving ? (
-                          <div className={styles.leaveSpinner}></div>
+                          <div className={styles.spinner}></div>
                         ) : (
                           t('leave_text')
                         )}
@@ -617,10 +621,10 @@ function CurrentQuizCard({ topic, getInitials, onClick, onLeave, showContinue, o
             disabled={!showContinue}
             onClick={(e: React.MouseEvent) => {
                   e.stopPropagation();
-                  onContinue();
+                  handleContinue();
                 }}
           >
-            {t('continue')}
+            {toQuizLoading ? <div className={styles.spinner}></div> : t('continue')}
           </button>}
         </div>
       </div>
@@ -710,6 +714,7 @@ function CurrentQuizCard({ topic, getInitials, onClick, onLeave, showContinue, o
             mode={topic.quizPool.challengeModel.gameModeModel?.gameModeIdentity ?? ''}
             status={lastEvent.status}
             jobEndAt={lastEvent.jobEndAt}
+            isLoading={toQuizLoading}
             onContinueClick={handleContinue}
           />
         )}
