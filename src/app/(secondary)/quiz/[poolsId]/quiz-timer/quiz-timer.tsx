@@ -6,6 +6,7 @@ import { useLanguage } from '@/context/LanguageContext';
 
 interface QuizTimerProps {
   quizTimerValue: number;
+  onSkip: () => void;
 }
 
 const formatPlainTime = (time: number | null): string => {
@@ -26,9 +27,11 @@ const formatPlainTime = (time: number | null): string => {
 // Common Timer Section Component
 const TimerSection = ({
   quizTimerValue,
+  onSkip,
   size = 'mobile'
 }: {
   quizTimerValue: number;
+  onSkip: () => void;
   size?: 'mobile' | 'tablet' | 'web';
 }) => {
   const { theme } = useTheme();
@@ -71,7 +74,7 @@ const TimerSection = ({
 
       {/* Skip Button */}
       <div className={styles.skipButtonContainer}>
-        <button className={styles.skipButton}>
+        <button onClick={onSkip} className={styles.skipButton}>
           {t('skip_text')}
         </button>
       </div>
@@ -81,7 +84,8 @@ const TimerSection = ({
 
 // Web View
 const WebView = ({
-  quizTimerValue
+  quizTimerValue,
+  onSkip
 }: QuizTimerProps) => {
   const { theme } = useTheme();
   const { t } = useLanguage();
@@ -116,7 +120,7 @@ const WebView = ({
 
       {/* Timer Section - Centered with max width */}
       <div className={styles.webTimerWrapper}>
-        <TimerSection quizTimerValue={quizTimerValue} size="web" />
+        <TimerSection quizTimerValue={quizTimerValue} onSkip={onSkip} size="web" />
       </div>
     </div>
   );
@@ -124,7 +128,8 @@ const WebView = ({
 
 // Tablet View
 const TabletView = ({
-  quizTimerValue
+  quizTimerValue,
+  onSkip
 }: QuizTimerProps) => {
   const { theme } = useTheme();
   const { t } = useLanguage();
@@ -159,7 +164,7 @@ const TabletView = ({
 
       {/* Timer Section - Centered with max width */}
       <div className={styles.tabletTimerWrapper}>
-        <TimerSection quizTimerValue={quizTimerValue} size="tablet" />
+        <TimerSection quizTimerValue={quizTimerValue} onSkip={onSkip} size="tablet" />
       </div>
     </div>
   );
@@ -167,7 +172,8 @@ const TabletView = ({
 
 // Mobile View
 const MobileView = ({
-  quizTimerValue
+  quizTimerValue,
+  onSkip
 }: QuizTimerProps) => {
   const { theme } = useTheme();
   const { t } = useLanguage();
@@ -199,27 +205,27 @@ const MobileView = ({
       </div>
 
       {/* Timer Section - Full width on mobile */}
-      <TimerSection quizTimerValue={quizTimerValue} size="mobile" />
+      <TimerSection quizTimerValue={quizTimerValue} onSkip={onSkip} size="mobile" />
     </div>
   );
 };
 
-export default function QuizTimer({ quizTimerValue }: QuizTimerProps) {
+export default function QuizTimer({ quizTimerValue, onSkip }: QuizTimerProps) {
   return (
     <>
       {/* Web View */}
       <div className={styles.webOnly}>
-        <WebView quizTimerValue={quizTimerValue} />
+        <WebView quizTimerValue={quizTimerValue} onSkip={onSkip} />
       </div>
 
       {/* Tablet View */}
       <div className={styles.tabletOnly}>
-        <TabletView quizTimerValue={quizTimerValue} />
+        <TabletView quizTimerValue={quizTimerValue} onSkip={onSkip} />
       </div>
 
       {/* Mobile View */}
       <div className={styles.mobileOnly}>
-        <MobileView quizTimerValue={quizTimerValue} />
+        <MobileView quizTimerValue={quizTimerValue} onSkip={onSkip} />
       </div>
     </>
   );

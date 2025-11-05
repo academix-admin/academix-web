@@ -370,7 +370,11 @@
   "ending_text": "ending",
   "ended_text": "ended",
   "graded_text": "graded",
-  "ranked_text": "ranked"
+  "ranked_text": "ranked",
+  "tracker_text": "Tracker",
+  "end_quiz_text": "End Quiz",
+  "question_text_count": "Question {count}",
+  "save_text": "save"
 }
 
 

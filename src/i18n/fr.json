@@ -371,5 +371,9 @@
   "ending_text": "se termine",
   "ended_text": "terminé",
   "graded_text": "noté",
-  "ranked_text": "classé"
+  "ranked_text": "classé",
+  "tracker_text": "Suivi",
+  "end_quiz_text": "Terminer le Quiz",
+  "question_text_count": "Question {count}",
+  "save_text": "sauvegarder"
 }

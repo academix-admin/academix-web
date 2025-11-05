@@ -25,6 +25,7 @@ import ErrorView from '@/components/ErrorView/ErrorView';
 import QuestionDisplay from './question-display/question-display'
 import QuizTimer from './quiz-timer/quiz-timer'
 import QuizCompletion from './quiz-completion/quiz-completion'
+import QuizTracker from './quiz-tracker/quiz-tracker'
 
 // Quiz state types
 type QuizState =
@@ -42,8 +43,13 @@ type SubmissionStatus = 'initial' | 'loading' | 'data' | 'error';
 interface SubmissionState {
   status: SubmissionStatus;
   questionId: string;
-  time?: number;
+  time?: number | null;
 }
+
+export type QuestionTrackerState = SubmissionState & {
+  question: string;
+  canResubmit: boolean;
+};
 
 interface QuizSession {
   currentQuestionId: string | null;
@@ -58,43 +64,6 @@ interface QuizResult {
   rankResults: PoolMemberModel[];
 }
 
-
-interface QuizProgressProps {
-  current: number;
-  total: number;
-  submissions: Map<string, SubmissionState>;
-  onQuestionSelect: (questionId: string) => void;
-}
-
-
-// Quiz Progress Component
-const QuizProgress = ({ current, total, submissions, onQuestionSelect }: QuizProgressProps) => {
-  return (
-    <div style={{ border: '1px solid #ccc', padding: '20px', margin: '10px' }}>
-      <h3>Progress: {current}/{total}</h3>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
-        {Array.from(submissions.entries()).map(([questionId, submission]) => (
-          <button
-            key={questionId}
-            onClick={() => onQuestionSelect(questionId)}
-            style={{
-              padding: '10px',
-              backgroundColor: submission.status === 'data' ? '#4CAF50' :
-                             submission.status === 'loading' ? '#FFC107' :
-                             submission.status === 'error' ? '#f44336' : '#e0e0e0',
-              border: '1px solid #ccc',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              minWidth: '50px'
-            }}
-          >
-            Q{questionId.slice(-3)}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-};
 
 // Main Quiz Component
 export default function Quiz({ params }: { params: Promise<{ poolsId: string }> }) {
@@ -111,6 +80,8 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
   const [closed, setClosed] = useState<boolean>(false);
   const [quizTimerValue, setQuizTimerValue] = useState<number>(0);
   const [isTimerActive, setIsTimerActive] = useState<boolean>(false);
+
+  const [endTimeFrom, setEndTimeFrom] = useState<string | null>(null);
 
   // Quiz session state
   const [quizSession, setQuizSession] = useState<QuizSession>({
@@ -177,7 +148,8 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
     const initialSubmissions = new Map(
       questions.map(q => [q.poolsQuestionId, {
         status: q.questionTime != null ? 'data' as SubmissionStatus : 'initial',
-        questionId: q.poolsQuestionId
+        questionId: q.poolsQuestionId,
+        time: q.questionTime
       }])
     );
 
@@ -405,6 +377,17 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
     [submitQuestionToBackend]
   );
 
+  // Handle question re-submission
+  const handleRetry = useCallback(
+    (questionId: string) => {
+      const question = quizSession.completedQuestions.find(q => q.poolsQuestionId === questionId);
+      if(question){
+          submitQuestionToBackend(question, question.timeTaken ?? question.timeData.questionTimeValue);
+      }
+    },
+    [quizSession.completedQuestions, submitQuestionToBackend]
+  );
+
   // Automatically submit questions that are valid but not submitted
   const automateSubmit = useCallback(async () => {
     if (closed) return;
@@ -593,7 +576,7 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
     // Check if there are questions that need automatic submission
     const hasUnsubmittedValidQuestions = completedQuestions.some(validForNotSubmitted);
 
-    if (pendingQuestions.length === 0 && hasUnsubmittedValidQuestions && completedQuestions.length === quizSession.totalQuestions) {
+    if (pendingQuestions.length === 0 && hasUnsubmittedValidQuestions && completedQuestions.length === quizSession.totalQuestions && (endTimeFrom === null || endTimeFrom !== 'timer')) {
       setQuizState('questionTrack');
       automateSubmit();
       return;
@@ -603,7 +586,7 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
     const allSubmitted = completedQuestions.filter(validForNotSubmitted).length === 0 &&
                        completedQuestions.length === quizSession.totalQuestions;
 
-    if (setupTimeLapse(quizModel) && pendingQuestions.length === 0 && allSubmitted) {
+    if (setupTimeLapse(quizModel) && pendingQuestions.length === 0 && allSubmitted && (endTimeFrom === null || endTimeFrom !== 'timer')) {
        setQuizState('quizTime');
       return;
     }
@@ -619,7 +602,7 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
         return;
     }
 
-  }, [quizSession, quizModel, checkEnd, validForNotSubmitted, automateSubmit, quizState]);
+  }, [quizSession, quizModel, checkEnd, validForNotSubmitted, automateSubmit, quizState, endTimeFrom]);
 
   // Monitor quiz session and quiz model to determine state transitions
   useEffect(() => {
@@ -711,6 +694,50 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
     return true;
   };
 
+  const getQuestionTrackers = useCallback((): QuestionTrackerState[] => {
+    const allQuestions = [
+      ...quizSession.completedQuestions,
+      ...quizSession.pendingQuestions,
+    ];
+
+    return allQuestions.map((question) => {
+      const submission = quizSession.submissions.get(question.poolsQuestionId);
+
+      // Determine status based on both submission record AND question state
+      let status: SubmissionStatus = 'initial';
+      let time = 0;
+
+      if (submission) {
+        status = submission.status;
+        time = submission.time || 0;
+      } else if (question.questionTime != null) {
+        // Question has been timed/submitted but no submission record
+        status = 'data';
+        time = question.questionTime;
+      } else if (question.optionData.some(option => option.optionSelected)) {
+        // Question has selected answers but no submission attempt
+        status = 'initial';
+        time = 0;
+      }
+
+      return {
+        status,
+        questionId: question.poolsQuestionId,
+        time,
+        question: question.questionData.questionsText,
+        canResubmit: validForNotSubmitted(question)
+      };
+    }).sort((a, b) => {
+      // Sort: completed first, then in-progress, then initial
+      const statusOrder = { 'data': 0, 'loading': 1, 'error': 2, 'initial': 3 };
+      return statusOrder[a.status] - statusOrder[b.status];
+    });
+  }, [
+    quizSession.pendingQuestions,
+    quizSession.completedQuestions,
+    quizSession.submissions,
+  ]);
+
   // Cleanup on component unmount
   useEffect(() => {
     return () => {
@@ -750,7 +777,7 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
         return (<ErrorView text="Something went wrong while loading the quiz." buttonText="Try Again" onButtonClick={()=> window.location.reload()} />);
 
       case 'quizTime':
-        return <QuizTimer quizTimerValue={quizTimerValue}/>;
+        return <QuizTimer quizTimerValue={quizTimerValue} onSkip={()=> setEndTimeFrom('timer')}/>;
 
       case 'quizPlay':
         const currentQuestion = getCurrentQuestion(quizSession.currentQuestionId);
@@ -762,33 +789,7 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
         return <QuizCompletion quizPool={quizModel}/>;
 
       case 'questionTrack':
-        return (
-          <div style={{ padding: '20px' }}>
-            <h2>Question Track</h2>
-            <p>Review your submission status for each question:</p>
-            <QuizProgress
-              current={quizSession.completedQuestions.length}
-              total={quizSession.totalQuestions}
-              submissions={quizSession.submissions}
-              onQuestionSelect={() => {}} // Could implement question review here
-            />
-            <div style={{ marginTop: '20px', textAlign: 'center' }}>
-              <button
-                onClick={fetchQuizResults}
-                style={{
-                  padding: '10px 20px',
-                  backgroundColor: '#4CAF50',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer'
-                }}
-              >
-                View Final Results
-              </button>
-            </div>
-          </div>
-        );
+        return <QuizTracker trackerState={getQuestionTrackers()} onRetry={handleRetry} onEndClick={()=> setEndTimeFrom('tracker')} />;
 
       case 'quizReward':
         return (
