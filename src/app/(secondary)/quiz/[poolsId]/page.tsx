@@ -65,6 +65,11 @@ interface QuizResult {
   rankResults: PoolMemberModel[];
 }
 
+type PendingSubmission = {
+  question: PoolQuestion;
+  timeTaken: number;
+} | null;
+
 
 // Main Quiz Component
 export default function Quiz({ params }: { params: Promise<{ poolsId: string }> }) {
@@ -84,6 +89,7 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
 
   const [endTimeFrom, setEndTimeFrom] = useState<string | null>(null);
   const [isDrawerOpen, setDrawerIsOpen] = useState<boolean>(false);
+  const [pendingSubmission, setPendingSubmission] = useState<PendingSubmission>(null);
 
   // Quiz session state
   const [quizSession, setQuizSession] = useState<QuizSession>({
@@ -371,8 +377,12 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
            time: timeTaken
         });
 
-        // Submit to backend
-        submitQuestionToBackend(currentQuestion, timeTaken, true);
+//         // Submit to backend
+//         submitQuestionToBackend(currentQuestion, timeTaken, true);
+
+         // ✅ Mark for backend submission later
+         setPendingSubmission({ question: currentQuestion, timeTaken });
+
 
         return {
           ...prev,
@@ -385,6 +395,18 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
     },
     [submitQuestionToBackend]
   );
+
+  // ✅ Trigger backend call AFTER state update
+  useEffect(() => {
+    if (pendingSubmission) {
+      submitQuestionToBackend(
+        pendingSubmission.question,
+        pendingSubmission.timeTaken,
+        true
+      );
+      setPendingSubmission(null); // clear after running
+    }
+  }, [pendingSubmission, submitQuestionToBackend]);
 
   // Handle question re-submission
   const handleRetry = useCallback(
