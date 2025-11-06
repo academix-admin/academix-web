@@ -1,3 +1,23 @@
+/* Base Styles */
+.trackerTextContainer {
+  display: flex;
+  flex: 1;
+}
+
+.trackerText {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 8px;
+}
+
+.trackerText_light {
+  color: #333333;
+}
+
+.trackerText_dark {
+  color: #ffffff;
+}
+
 /* Web Design */
 @media screen and (min-width: 801px) {
   .webOnly {
