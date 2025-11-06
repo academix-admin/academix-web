@@ -64,6 +64,7 @@ const useInjectSideDrawerStyles = (width?: SideDrawerProps['width']) => {
         will-change: transform;
         display: flex;
         flex-direction: column;
+        pointer-events: none;
       }
 
       /* Positioning */
