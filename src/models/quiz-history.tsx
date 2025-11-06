@@ -10,6 +10,7 @@ export interface BackendQuizHistory {
   pools_members_created_at: string;
   pools_members_paid_amount: number;
   pools_completed_question_tracker_time: number;
+  pools_completed_question_tracker_size: number;
 }
 
 export class QuizHistory {
@@ -24,6 +25,7 @@ export class QuizHistory {
   poolsMembersCreatedAt: string;
   poolsMembersPaidAmount: number;
   poolsCompletedQuestionTrackerTime: number;
+  poolsCompletedQuestionTrackerSize: number;
 
   constructor(data?: BackendQuizHistory | null) {
     this.poolsId = data?.pools_id ?? "";
@@ -37,6 +39,7 @@ export class QuizHistory {
     this.poolsMembersCreatedAt = data?.pools_members_created_at ?? "";
     this.poolsMembersPaidAmount = data?.pools_members_paid_amount ?? 0;
     this.poolsCompletedQuestionTrackerTime = data?.pools_completed_question_tracker_time ?? 0;
+    this.poolsCompletedQuestionTrackerSize = data?.pools_completed_question_tracker_size ?? 0;
   }
 
   copyWith(data: Partial<QuizHistory>): QuizHistory {
@@ -52,6 +55,7 @@ export class QuizHistory {
       pools_members_created_at: data.poolsMembersCreatedAt !== undefined ? data.poolsMembersCreatedAt : this.poolsMembersCreatedAt,
       pools_members_paid_amount: data.poolsMembersPaidAmount !== undefined ? data.poolsMembersPaidAmount : this.poolsMembersPaidAmount,
       pools_completed_question_tracker_time: data.poolsCompletedQuestionTrackerTime !== undefined ? data.poolsCompletedQuestionTrackerTime : this.poolsCompletedQuestionTrackerTime,
+      pools_completed_question_tracker_size: data.poolsCompletedQuestionTrackerSize !== undefined ? data.poolsCompletedQuestionTrackerSize : this.poolsCompletedQuestionTrackerSize
     });
   }
 }

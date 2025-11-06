@@ -26,6 +26,7 @@ export interface BackendPoolMemberModel {
   pools_members_paid_amount: number | null;
   pools_completed_question_tracker_size: number;
   pools_completed_question_tracker_time: number;
+  challenge_question_count: number;
 }
 
 // Frontend Models
@@ -108,6 +109,7 @@ export class PoolMemberModel {
   poolsMembersPaidAmount: number;
   poolsCompletedQuestionTrackerSize: number;
   poolsCompletedQuestionTrackerTime: number;
+  challengeQuestionCount: number;
 
   constructor(data?: BackendPoolMemberModel | null) {
     this.poolsMemberId = data?.pools_members_id ?? "";
@@ -122,6 +124,7 @@ export class PoolMemberModel {
     this.poolsMembersPaidAmount = data?.pools_members_paid_amount ?? 0;
     this.poolsCompletedQuestionTrackerSize = data?.pools_completed_question_tracker_size ?? 0;
     this.poolsCompletedQuestionTrackerTime = data?.pools_completed_question_tracker_time ?? 0;
+    this.challengeQuestionCount = data?.challenge_question_count ?? 0;
   }
 
   static from(data: any): PoolMemberModel {
@@ -139,6 +142,7 @@ export class PoolMemberModel {
       pools_members_paid_amount: data.poolsMembersPaidAmount,
       pools_completed_question_tracker_size: data.poolsCompletedQuestionTrackerSize,
       pools_completed_question_tracker_time: data.poolsCompletedQuestionTrackerTime,
+      challenge_question_count: data.challengeQuestionCount
     });
   }
 
@@ -156,6 +160,7 @@ export class PoolMemberModel {
       pools_members_paid_amount: this.poolsMembersPaidAmount,
       pools_completed_question_tracker_size: this.poolsCompletedQuestionTrackerSize,
       pools_completed_question_tracker_time: this.poolsCompletedQuestionTrackerTime,
+      challenge_question_count: this.challengeQuestionCount
     };
   }
 

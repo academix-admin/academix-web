@@ -235,7 +235,6 @@ export default function SideDrawer({
           '--sidedrawer-backdrop-opacity': backdropOpacity,
         } as React.CSSProperties}
         onClick={handleBackdropClick}
-        aria-hidden={!isOpen}
         data-testid="sidedrawer-backdrop"
       />
 
@@ -249,10 +248,10 @@ export default function SideDrawer({
         } as React.CSSProperties}
         role="dialog"
         aria-modal="true"
-        aria-hidden={!isOpen}
         aria-label="Side drawer"
         tabIndex={-1}
         data-testid="sidedrawer"
+        hidden={!isOpen}
       >
         {children}
       </div>

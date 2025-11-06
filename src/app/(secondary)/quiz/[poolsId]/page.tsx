@@ -91,6 +91,7 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
   const [endTimeFrom, setEndTimeFrom] = useState<string | null>(null);
   const [isDrawerOpen, setDrawerIsOpen] = useState<boolean>(false);
   const [pendingSubmission, setPendingSubmission] = useState<PendingSubmission>(null);
+  const [refreshLoading, setRefreshLoading] = useState<boolean>(false);
 
   // Quiz session state
   const [quizSession, setQuizSession] = useState<QuizSession>({
@@ -778,6 +779,68 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
     quizSession.submissions,
   ]);
 
+
+  const checkToRefreshOrResult = useCallback(async () => {
+    if (!quizModel || !userData) return;
+
+    if (quizModel.poolsCompletedAt) {
+      setQuizState('quizReward');
+    } else {
+      await callToRefreshQuizPool(userData, quizModel.poolsId);
+    }
+  }, [quizModel, userData]);
+
+  const callToRefreshQuizPool = async (userData: UserData, poolsId: string) => {
+    if (refreshLoading) return;
+
+    try {
+      setRefreshLoading(true);
+
+      const paramatical = await getParamatical(
+        userData.usersId,
+        lang,
+        userData.usersSex,
+        userData.usersDob
+      );
+
+      if (!paramatical) {
+        setRefreshLoading(false);
+        return;
+      }
+
+      const { data, error } = await supabaseBrowser.rpc("result_quiz_pool_update", {
+        p_user_id: userData.usersId,
+        p_locale: paramatical.locale,
+        p_country: paramatical.country,
+        p_gender: paramatical.gender,
+        p_age: paramatical.age,
+        p_pool_id: poolsId
+      });
+
+      if (error) {
+        console.error("[QuizModel] RPC error:", error);
+        setRefreshLoading(false);
+        return;
+      }
+
+      if (!data) {
+        setRefreshLoading(false);
+        return;
+      }
+      console.log(data);
+      if (data.status === 'Pool.allowed') {
+        const quizPool = new QuizPool(data.pools_quiz);
+        setQuizModel(quizPool);
+      }
+
+      setRefreshLoading(false);
+    } catch (err) {
+      console.error("[QuizModel] error:", err);
+      setRefreshLoading(false);
+    }
+  };
+
+
   // Cleanup on component unmount
   useEffect(() => {
     return () => {
@@ -826,7 +889,7 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
         return <QuestionDisplay question={currentQuestion} onAnswer={handleAnswer} onSubmit={handleSubmitQuestion} getQuestionNumber={()=> quizSession.totalQuestions - quizSession.pendingQuestions.length + 1} totalNumber={quizSession.totalQuestions} clickMenu={()=> setDrawerIsOpen(!isDrawerOpen)} clickExit={()=> console.log('clicked exit')} />;
 
       case 'quizEnd':
-        return <QuizCompletion quizPool={quizModel} clickMenu={()=> setDrawerIsOpen(!isDrawerOpen)} clickExit={()=> console.log('clicked exit')}/>;
+        return <QuizCompletion quizPool={quizModel} clickMenu={()=> setDrawerIsOpen(!isDrawerOpen)} clickExit={()=> console.log('clicked exit')} refreshLoading={refreshLoading} clickContinueRefresh={checkToRefreshOrResult}/>;
 
       case 'questionTrack':
         return <QuizTracker trackerState={getQuestionTrackers()} onRetry={handleRetry} onEndClick={()=> {setEndTimeFrom('tracker'); determineState();}} />;

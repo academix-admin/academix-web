@@ -10,6 +10,8 @@ interface QuizCompletionProps {
   quizPool: QuizPool | null;
   clickMenu: () => void;
   clickExit: () => void;
+  refreshLoading: boolean;
+  clickContinueRefresh: () => void;
 }
 
 
@@ -105,7 +107,9 @@ const StatusSection = ({
 const WebView = ({
   quizPool,
   clickMenu,
-  clickExit
+  clickExit,
+  refreshLoading,
+  clickContinueRefresh
 }: QuizCompletionProps) => {
   const { theme } = useTheme();
   const { t } = useLanguage();
@@ -146,10 +150,13 @@ const WebView = ({
         {/* Check Result Button with spacing */}
         <div className={styles.webButtonContainer}>
           <button
-            className={`${styles.webCheckResultButton}`}
-            onClick={() => console.log('Check result clicked')}
+            className={styles.webCheckResultButton}
+            onClick={clickContinueRefresh}
+            disabled={refreshLoading}
           >
-            {t('check_result_text')}
+            {refreshLoading
+              ? <div className={styles.spinner}></div>
+              : t(quizPool.poolsCompletedAt ? 'check_result_text' : 'refresh_text')}
           </button>
         </div>
       </div>
@@ -161,7 +168,9 @@ const WebView = ({
 const TabletView = ({
   quizPool,
   clickMenu,
-  clickExit
+  clickExit,
+  refreshLoading,
+  clickContinueRefresh
 }: QuizCompletionProps) => {
   const { theme } = useTheme();
   const { t } = useLanguage();
@@ -203,9 +212,12 @@ const TabletView = ({
         <div className={styles.tabletButtonContainer}>
           <button
             className={`${styles.tabletCheckResultButton}`}
-            onClick={() => console.log('Check result clicked')}
+            onClick={clickContinueRefresh}
+            disabled={refreshLoading}
           >
-            {t('check_result_text')}
+            {refreshLoading
+              ? <div className={styles.spinner}></div>
+              : t(quizPool.poolsCompletedAt ? 'check_result_text' : 'refresh_text')}
           </button>
         </div>
       </div>
@@ -217,7 +229,9 @@ const TabletView = ({
 const MobileView = ({
   quizPool,
   clickMenu,
-  clickExit
+  clickExit,
+  refreshLoading,
+  clickContinueRefresh
 }: QuizCompletionProps) => {
   const { theme } = useTheme();
   const { t } = useLanguage();
@@ -257,32 +271,35 @@ const MobileView = ({
       <div className={`${styles.mobileQuizFooter} ${styles[`mobileQuizFooter_${theme}`]}`}>
           <button
             className={`${styles.mobileCheckResultButton}`}
-            onClick={()=> console.log('')}
+            onClick={clickContinueRefresh}
+            disabled={refreshLoading}
           >
-            {t('check_result_text')}
-          </button>        
+            {refreshLoading
+              ? <div className={styles.spinner}></div>
+              : t(quizPool.poolsCompletedAt ? 'check_result_text' : 'refresh_text')}
+          </button>
       </div>
     </div>
   );
 };
 
-export default function QuizCompletion({ quizPool, clickMenu, clickExit }: QuizCompletionProps) {
+export default function QuizCompletion({ quizPool, clickMenu, clickExit, refreshLoading, clickContinueRefresh }: QuizCompletionProps) {
   if(!quizPool)return null;
   return (
     <>
       {/* Web View */}
       <div className={styles.webOnly}>
-        <WebView quizPool={quizPool} clickMenu={clickMenu} clickExit={clickExit} />
+        <WebView quizPool={quizPool} clickMenu={clickMenu} clickExit={clickExit} refreshLoading={refreshLoading} clickContinueRefresh={clickContinueRefresh} />
       </div>
 
       {/* Tablet View */}
       <div className={styles.tabletOnly}>
-        <TabletView quizPool={quizPool} clickMenu={clickMenu} clickExit={clickExit} />
+        <TabletView quizPool={quizPool} clickMenu={clickMenu} clickExit={clickExit} refreshLoading={refreshLoading} clickContinueRefresh={clickContinueRefresh} />
       </div>
 
       {/* Mobile View */}
       <div className={styles.mobileOnly}>
-        <MobileView quizPool={quizPool} clickMenu={clickMenu} clickExit={clickExit} />
+        <MobileView quizPool={quizPool} clickMenu={clickMenu} clickExit={clickExit} refreshLoading={refreshLoading} clickContinueRefresh={clickContinueRefresh} />
       </div>
     </>
   );
