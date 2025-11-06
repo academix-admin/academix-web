@@ -244,11 +244,11 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
 
 
   // Submit question to backend
-  const submitQuestionToBackend = useCallback(async (question: PoolQuestion, timeTaken: number) => {
+  const submitQuestionToBackend = useCallback(async (question: PoolQuestion, timeTaken: number, override: boolean = false ) => {
     if (!userData) throw new Error('User not authenticated');
 
     const submission = quizSession.submissions.get(question.poolsQuestionId);
-    if (submission?.status === 'loading' || submission?.status === 'data') {
+    if ((submission?.status === 'loading' || submission?.status === 'data') && !override) {
             console.log(' MAIN: Question already being processed, skipping', question.poolsQuestionId);
             return;
     }
@@ -361,18 +361,25 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
           ? prev.completedQuestions
           : [...prev.completedQuestions, currentQuestion];
 
-        // Submit to backend
-        submitQuestionToBackend(currentQuestion, timeTaken);
-
         // Get next question
         const shuffledPending = [...newPending].sort(() => Math.random() - 0.5);
         const nextQuestionId = shuffledPending.length > 0 ? shuffledPending[0].poolsQuestionId : null;
+        const newSubmissions = new Map(prev.submissions);
+        newSubmissions.set(currentQuestion.poolsQuestionId, {
+           status: 'loading',
+           questionId: currentQuestion.poolsQuestionId,
+           time: timeTaken
+        });
+
+        // Submit to backend
+        submitQuestionToBackend(currentQuestion, timeTaken, true);
 
         return {
           ...prev,
           pendingQuestions: shuffledPending,
           completedQuestions: newCompleted,
-          currentQuestionId: nextQuestionId
+          currentQuestionId: nextQuestionId,
+          submissions: newSubmissions
         };
       });
     },
@@ -790,7 +797,7 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
       case 'quizEnd':
         return <QuizCompletion quizPool={quizModel} clickMenu={()=> setDrawerIsOpen(!isDrawerOpen)} clickExit={()=> console.log('clicked exit')}/>;
 
-      case 'questionTrack':
+      case 'quizTime':
         return <QuizTracker trackerState={getQuestionTrackers()} onRetry={handleRetry} onEndClick={()=> {setEndTimeFrom('tracker'); determineState();}} />;
 
       case 'quizReward':

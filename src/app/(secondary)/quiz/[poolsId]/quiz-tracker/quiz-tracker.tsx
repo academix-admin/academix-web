@@ -119,7 +119,6 @@ const QuestionCard = ({
   return (
     <div className={`${styles.questionCard} ${styles[`questionCard_${theme}`]}`}>
       <div className={styles.questionHeader}>
-
         <div className={`${styles.questionText} ${styles[`questionText_${theme}`]}`}>
           <span className={`${styles.questionNumber} ${styles[`questionNumber_${theme}`]}`}>
             {t('question_text_count', {count: index + 1})}
