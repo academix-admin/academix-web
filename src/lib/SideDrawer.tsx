@@ -43,11 +43,13 @@ const useInjectSideDrawerStyles = (width?: SideDrawerProps['width']) => {
         transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
         z-index: 999;
         backdrop-filter: blur(2px);
+        pointer-events: none;
       }
 
       .sidedrawer-backdrop.open {
         opacity: 1;
         visibility: visible;
+        pointer-events: auto;
       }
 
       .sidedrawer {
@@ -77,6 +79,7 @@ const useInjectSideDrawerStyles = (width?: SideDrawerProps['width']) => {
 
       .sidedrawer.open.left,
       .sidedrawer.open.right {
+        pointer-events: auto;
         transform: translateX(0);
       }
 
