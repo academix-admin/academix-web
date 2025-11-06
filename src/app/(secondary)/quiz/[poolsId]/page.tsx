@@ -878,7 +878,7 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
   return (
     <>
       {renderQuizContent()}
-      <SideDrawer
+      {quizState !== 'questionTrack' && <SideDrawer
         isOpen={isDrawerOpen}
         onClose={() => setDrawerIsOpen(false)}
         position="left"
@@ -891,7 +891,7 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
         className={`${styles.sideDrawer} ${styles[`sideDrawer_${theme}`]}`}
       >
         <SideTracker trackerState={getQuestionTrackers()} onRetry={handleRetry} onExitClick={()=> setDrawerIsOpen(false)} />
-      </SideDrawer>
+      </SideDrawer>}
     </>
   );
 }
