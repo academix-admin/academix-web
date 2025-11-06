@@ -27,6 +27,7 @@ import QuizTimer from './quiz-timer/quiz-timer'
 import QuizCompletion from './quiz-completion/quiz-completion'
 import QuizTracker from './quiz-tracker/quiz-tracker'
 import SideDrawer from '@/lib/SideDrawer';
+import SideTracker from './side-tracker/side-tracker'
 
 // Quiz state types
 type QuizState =
@@ -376,9 +377,6 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
            questionId: currentQuestion.poolsQuestionId,
            time: timeTaken
         });
-
-//         // Submit to backend
-//         submitQuestionToBackend(currentQuestion, timeTaken, true);
 
          // ✅ Mark for backend submission later
          setPendingSubmission({ question: currentQuestion, timeTaken });
@@ -819,7 +817,7 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
       case 'quizEnd':
         return <QuizCompletion quizPool={quizModel} clickMenu={()=> setDrawerIsOpen(!isDrawerOpen)} clickExit={()=> console.log('clicked exit')}/>;
 
-      case 'quizTime':
+      case 'questionTrack':
         return <QuizTracker trackerState={getQuestionTrackers()} onRetry={handleRetry} onEndClick={()=> {setEndTimeFrom('tracker'); determineState();}} />;
 
       case 'quizReward':
@@ -892,67 +890,7 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
         backdropOpacity={0.7}
         className={`${styles.sideDrawer} ${styles[`sideDrawer_${theme}`]}`}
       >
-        {/* Enhanced drawer content */}
-        <div style={{ padding: '24px', height: '100%' }}>
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '24px',
-            paddingBottom: '16px',
-            borderBottom: '1px solid #e0e0e0'
-          }}>
-            <h2 style={{ margin: 0, color: theme === 'light' ? '#333' : '#fff' }}>Menu</h2>
-            <button
-              onClick={() => setDrawerIsOpen(false)}
-              aria-label="Close menu"
-              style={{
-                background: 'none',
-                border: 'none',
-                fontSize: '20px',
-                cursor: 'pointer',
-                padding: '8px',
-                borderRadius: '4px',
-                color: theme === 'light' ? '#666' : '#fff'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor =  theme === 'light' ? '#f5f5f5' : 'grey';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'transparent';
-              }}
-            >
-              ✕
-            </button>
-          </div>
-
-          <nav style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {['Profile', 'Settings', 'Help', 'About'].map((item, index) => (
-              <button
-                key={index}
-                style={{
-                  padding: '12px 16px',
-                  border: 'none',
-                  backgroundColor: 'transparent',
-                  textAlign: 'left',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  fontSize: '16px',
-                  transition: 'all 0.2s ease',
-                  color: theme === 'light' ? '#333' : '#fff'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = theme === 'light' ? '#f5f5f5' : 'grey';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'transparent';
-                }}
-              >
-                {item}
-              </button>
-            ))}
-          </nav>
-        </div>
+        <SideTracker trackerState={getQuestionTrackers()} onRetry={handleRetry} onExitClick={()=> setDrawerIsOpen(false)} />
       </SideDrawer>
     </>
   );

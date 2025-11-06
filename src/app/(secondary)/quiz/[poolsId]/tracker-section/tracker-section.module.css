@@ -1,0 +1,233 @@
+/* Tracker Section Styles */
+.mobileGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+}
+
+.tabletGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  padding: 24px;
+}
+
+.webGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  padding: 32px;
+}
+
+/* Question Card Styles */
+.questionCard {
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-sizing: border-box;
+}
+
+.questionCard_light {
+  background: rgba(248, 249, 250, 0.8);
+  border: 1px solid #e0e0e0;
+}
+
+.questionCard_dark {
+  background: rgba(45, 45, 45, 0.8);
+  border: 1px solid #404040;
+}
+
+.questionHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.questionNumber {
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+  background-color: #1C6B1E;
+  white-space: nowrap;
+  margin-right: 4px;
+}
+
+.questionText {
+  flex: 1;
+  font-size: 16px;
+  line-height: 1.4;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  white-space: normal;
+  min-width: 0;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: unset;
+  -webkit-box-orient: vertical;
+}
+
+.questionText_light {
+  color: #333333;
+}
+
+.questionText_dark {
+  color: #ffffff;
+}
+
+.questionStatus {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 40px;
+}
+
+/* Status Badge Styles */
+.statusLoading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.statusLoading_light {
+  background-color: #e3f2fd;
+  color: #1976d2;
+}
+
+.statusLoading_dark {
+  background-color: #1e3a5f;
+  color: #90caf9;
+}
+
+.loadingSpinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.retryButton {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 100%;
+  max-width: 200px;
+}
+
+.retryButton_light {
+  background-color: #1C6B1E;
+  color: white;
+}
+
+.retryButton_dark {
+  background-color: #2e7d32;
+  color: white;
+}
+
+.retryButton:hover:not(:disabled) {
+  background-color: #155c17;
+  transform: translateY(-1px);
+}
+
+.retryButtonDisabled {
+  background-color: #ccc !important;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.statusCompleted {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.statusCompleted_light {
+  color: #333333;
+}
+
+.statusCompleted_dark {
+  color: #ffffff;
+}
+
+.timeBadge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.timeBadge_light {
+  background-color: #1C6B1E;
+  color: white;
+}
+
+.timeBadge_dark {
+  background-color: #2e7d32;
+  color: white;
+}
+
+.timeIcon {
+  width: 16px;
+  height: 16px;
+}
+
+.statusInitial {
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.statusInitial_light {
+  background-color: #f5f5f5;
+  color: #666666;
+}
+
+.statusInitial_dark {
+  background-color: #404040;
+  color: #cccccc;
+}
+
+/* Base Styles */
+.trackerTextContainer {
+  display: flex;
+  flex: 1;
+}
+
+.trackerText {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 8px;
+}
+
+.trackerText_light {
+  color: #333333;
+}
+
+.trackerText_dark {
+  color: #ffffff;
+}

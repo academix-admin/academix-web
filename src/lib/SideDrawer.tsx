@@ -156,9 +156,14 @@ export default function SideDrawer({
 }: SideDrawerProps) {
   const drawerRef = useRef<HTMLDivElement>(null);
   const portalRoot = typeof window !== 'undefined' ? document.body : null;
+  const [isMounted, setIsMounted] = React.useState(false);
 
   // Inject styles with width configuration
   useInjectSideDrawerStyles(width);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Handle ESC key with useCallback
   const handleEsc = useCallback((e: KeyboardEvent) => {
@@ -213,7 +218,7 @@ export default function SideDrawer({
   };
 
   // Don't render anything during SSR
-  if (!portalRoot) {
+  if (!portalRoot || !isMounted) {
     return null;
   }
 
