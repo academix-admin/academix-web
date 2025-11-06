@@ -56,16 +56,16 @@ const StatusBadge = ({ status, time, onRetry, canResubmit, questionId }: {
   }
 
   if (status === 'error' || status === 'missed') {
-    const isEnabled = canResubmit;
+
     return (
       <button
         className={`${styles.retryButton} ${styles[`retryButton_${theme}`]} ${
-          !isEnabled ? styles.retryButtonDisabled : ''
+          !canResubmit ? styles.retryButtonDisabled : ''
         }`}
-        onClick={() => isEnabled && onRetry(questionId)}
-        disabled={!isEnabled}
+        onClick={() => canResubmit && onRetry(questionId)}
+        disabled={!canResubmit}
       >
-        {capitalize(isEnabled ? t('save_text') : t('missed_text'))}
+        {capitalize(canResubmit ? t('save_text') : t('missed_text'))}
       </button>
     );
   }

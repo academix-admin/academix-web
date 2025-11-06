@@ -337,6 +337,18 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
         });
         setClosed(true);
         determineState();
+      }else{
+
+      setQuizSession(prev => {
+        const newSubmissions = new Map(prev.submissions);
+        newSubmissions.set(question.poolsQuestionId, {
+          status: 'error',
+          questionId: question.poolsQuestionId,
+          time: timeTaken
+        });
+        return { ...prev, submissions: newSubmissions };
+      });
+
       }
     } catch (error) {
       console.error('Error submitting question:', error);
@@ -350,7 +362,6 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
         });
         return { ...prev, submissions: newSubmissions };
       });
-
     }
   }, [userData, lang, quizSession]);
 
@@ -391,7 +402,7 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
         };
       });
     },
-    [submitQuestionToBackend]
+    [setPendingSubmission]
   );
 
   // ✅ Trigger backend call AFTER state update
