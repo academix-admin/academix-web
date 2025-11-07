@@ -10,13 +10,9 @@ import { useUserData } from '@/lib/stacks/user-stack';
 import { useDemandState } from '@/lib/state-stack';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { UserData } from '@/models/user-data';
-import Image from 'next/image';
 import { checkLocation, checkFeatures, fetchUserPartialDetails, fetchUserDetails } from '@/utils/checkers';
-import { FriendsModel } from '@/models/friends-model';
-import { PaginateModel } from '@/models/paginate-model';
 import { QuizPool, BackendQuizPool } from '@/models/user-display-quiz-topic-model';
 import { BackendPoolQuestion, PoolQuestion } from '@/models/pool-question-model';
-import { BackendPoolMemberModel, PoolMemberModel } from '@/models/pool-member';
 import { StateStack } from '@/lib/state-stack';
 import { RealtimeChannel, RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 import LoadingView from '@/components/LoadingView/LoadingView'
@@ -28,6 +24,7 @@ import QuizCompletion from './quiz-completion/quiz-completion'
 import QuizTracker from './quiz-tracker/quiz-tracker'
 import SideDrawer from '@/lib/SideDrawer';
 import SideTracker from './side-tracker/side-tracker'
+import QuizResults from './quiz-results/quiz-results'
 
 // Quiz state types
 type QuizState =
@@ -61,11 +58,6 @@ interface QuizSession {
   pendingQuestions: PoolQuestion[];
 }
 
-interface QuizResult {
-  userResult: PoolMemberModel | null;
-  rankResults: PoolMemberModel[];
-}
-
 type PendingSubmission = {
   question: PoolQuestion;
   timeTaken: number;
@@ -76,14 +68,12 @@ type PendingSubmission = {
 export default function Quiz({ params }: { params: Promise<{ poolsId: string }> }) {
   const { poolsId } = use(params);
   const { theme } = useTheme();
-  const { t, lang, tNode } = useLanguage();
+  const { t, lang } = useLanguage();
   const { userData } = useUserData();
   const isMountedRef = useRef(true);
 
   // Main quiz state
   const [quizState, setQuizState] = useState<QuizState>('loading');
-  const [quizResult, setQuizResult] = useState<QuizResult | null>(null);
-  const [poolMembers, setPoolMembers] = useState<PoolMemberModel[]>([]);
   const [closed, setClosed] = useState<boolean>(false);
   const [quizTimerValue, setQuizTimerValue] = useState<number>(0);
   const [isTimerActive, setIsTimerActive] = useState<boolean>(false);
@@ -467,79 +457,6 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
     return currentQuestion || null;
   }, [quizSession.pendingQuestions]);
 
-  // Fetch quiz results
-  const fetchQuizResults = useCallback(async () => {
-    if (!userData || !poolsId) return;
-
-    try {
-      const paramatical = await getParamatical(
-        userData.usersId,
-        lang,
-        userData.usersSex,
-        userData.usersDob
-      );
-
-      const { data, error } = await supabaseBrowser.rpc("get_quiz_result", {
-        p_user_id: userData.usersId,
-        p_pool_id: poolsId,
-        p_locale: paramatical?.locale,
-        p_country: paramatical?.country,
-        p_gender: paramatical?.gender,
-        p_age: paramatical?.age
-      });
-
-      if (error) throw error;
-
-      if (data) {
-        const resultModel = data;
-        setQuizResult({
-          userResult: resultModel.user_result ? new PoolMemberModel(resultModel.user_result) : null,
-          rankResults: resultModel.rank_results?.map((r: any) => new PoolMemberModel(r)) || []
-        });
-
-      }
-    } catch (error) {
-      console.error('Error fetching quiz results:', error);
-    }
-  }, [userData, poolsId, lang]);
-
-  // Fetch pool members for leaderboard
-  const fetchPoolMembers = useCallback(async (paginate = false) => {
-    if (!userData || !poolsId) return;
-
-    try {
-      const paramatical = await getParamatical(
-        userData.usersId,
-        lang,
-        userData.usersSex,
-        userData.usersDob
-      );
-
-      const paginateModel = new PaginateModel();
-
-      const { data, error } = await supabaseBrowser.rpc("fetch_pool_members", {
-        p_user_id: userData.usersId,
-        p_pool_id: poolsId,
-        p_locale: paramatical?.locale,
-        p_country: paramatical?.country,
-        p_gender: paramatical?.gender,
-        p_age: paramatical?.age,
-        p_limit_by: 20,
-        p_for_ranking: true,
-        p_after_pool_members: paginateModel.toJson()
-      });
-
-      if (error) throw error;
-
-      if (data) {
-        const members = data.map((member: any) => new PoolMemberModel(member));
-        setPoolMembers(prev => paginate ? [...prev, ...members] : members);
-      }
-    } catch (error) {
-      console.error('Error fetching pool members:', error);
-    }
-  }, [userData, poolsId, lang]);
-
   const cleanUpQuizTimer = useCallback(() => {
     if (timerRef.current) {
       clearInterval(timerRef.current);
@@ -895,54 +812,7 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
         return <QuizTracker trackerState={getQuestionTrackers()} onRetry={handleRetry} onEndClick={()=> {setEndTimeFrom('tracker'); determineState();}} />;
 
       case 'quizReward':
-        return (
-          <div style={{ padding: '20px' }}>
-            <h2>Quiz Results</h2>
-            {quizResult?.userResult ? (
-              <div style={{
-                backgroundColor: '#f5f5f5',
-                padding: '20px',
-                borderRadius: '8px',
-                marginBottom: '20px'
-              }}>
-                <h3>Your Result</h3>
-                <p><strong>Rank:</strong> {quizResult.userResult.poolsMembersRank}</p>
-                <p><strong>Score:</strong> {quizResult.userResult.poolsMembersPrice}</p>
-                <p><strong>Correct Answers:</strong> {quizSession.completedQuestions.length}</p>
-              </div>
-            ) : (
-              <p>No results available yet.</p>
-            )}
-
-            <button
-              onClick={() => fetchPoolMembers()}
-              style={{
-                padding: '10px 20px',
-                backgroundColor: '#2196F3',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                marginRight: '10px'
-              }}
-            >
-              View Leaderboard
-            </button>
-
-            {poolMembers.length > 0 && (
-              <div style={{ marginTop: '20px' }}>
-                <h3>Top Performers</h3>
-                <ul>
-                  {poolMembers.slice(0, 5).map((member, index) => (
-                    <li key={index} style={{ padding: '5px 0' }}>
-                      {index + 1}. Score: {member.poolsMembersPrice} | Rank: {member.poolsMembersRank}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-        );
+        return <QuizResults poolsId={quizModel?.poolsId || null} clickMenu={()=> setDrawerIsOpen(!isDrawerOpen)} clickExit={()=> console.log('clicked exit')}/>;
 
       default:
         return null;

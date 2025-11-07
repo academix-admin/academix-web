@@ -374,7 +374,9 @@
   "tracker_text": "Tracker",
   "end_quiz_text": "End Quiz",
   "question_text_count": "Question {count}",
-  "save_text": "save"
+  "save_text": "save",
+  "results_text": "Results",
+  "you_text": "You"
 }
 
 

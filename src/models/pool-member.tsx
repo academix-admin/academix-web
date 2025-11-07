@@ -61,16 +61,16 @@ export class UserRoleDetails {
 
 export class UserDetails {
   userId: string;
-  image?: string | null;
-  name: string;
-  username: string;
+  userImage?: string | null;
+  userName: string;
+  userUsername: string;
   rolesDetails: UserRoleDetails;
 
   constructor(data?: BackendUserDetails | null) {
     this.userId = data?.users_id ?? "";
-    this.image = data?.users_image ?? null;
-    this.name = data?.users_names ?? "";
-    this.username = data?.users_username ?? "";
+    this.userImage = data?.users_image ?? null;
+    this.userName = data?.users_names ?? "";
+    this.userUsername = data?.users_username ?? "";
     this.rolesDetails = new UserRoleDetails(data?.roles_details ?? null);
   }
 
@@ -78,9 +78,9 @@ export class UserDetails {
     if (data instanceof UserDetails) return data;
     return new UserDetails({
       users_id: data.userId,
-      users_image: data.image,
-      users_names: data.name,
-      users_username: data.username,
+      users_image: data.userImage,
+      users_names: data.userName,
+      users_username: data.userUsername,
       roles_details: UserRoleDetails.from(data.rolesDetails).toBackend(),
     });
   }
@@ -88,9 +88,9 @@ export class UserDetails {
   toBackend(): BackendUserDetails {
     return {
       users_id: this.userId,
-      users_image: this.image ?? null,
-      users_names: this.name,
-      users_username: this.username,
+      users_image: this.userImage ?? null,
+      users_names: this.userName,
+      users_username: this.userUsername,
       roles_details: this.rolesDetails.toBackend(),
     };
   }

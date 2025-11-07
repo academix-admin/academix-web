@@ -45,11 +45,11 @@ const PoolMemberCard: React.FC<{ poolMember: PoolMemberModel }> = ({ poolMember 
     >
       <div className={styles.cardContent}>
         {/* Pool Image/Initials */}
-          {poolMember.userDetails.image && !imageError ? (
+          {poolMember.userDetails.userImage && !imageError ? (
         <div className={styles.membersImageContainer}>
             <Image
-              src={poolMember.userDetails.image}
-              alt={poolMember.userDetails.name}
+              src={poolMember.userDetails.userImage}
+              alt={poolMember.userDetails.userName}
               width={60}
               height={60}
               className={styles.membersImage}
@@ -59,7 +59,7 @@ const PoolMemberCard: React.FC<{ poolMember: PoolMemberModel }> = ({ poolMember 
           ) : (
             <div className={styles.membersInitialsContainer}>
             <div className={styles.membersInitials}>
-              {getInitials(poolMember.userDetails.name)}
+              {getInitials(poolMember.userDetails.userName)}
             </div>
             </div>
           )}
@@ -68,7 +68,7 @@ const PoolMemberCard: React.FC<{ poolMember: PoolMemberModel }> = ({ poolMember 
         <div className={styles.membersInfo}>
           <div className={styles.membersHeader}>
             <h3 className={`${styles.membersTitle} ${styles[`membersTitle_${theme}`]}`}>
-              {capitalize(poolMember.userDetails.name)}
+              {capitalize(poolMember.userDetails.userName)}
             </h3>
             <span className={`${styles.membersDate} ${styles[`membersDate_${theme}`]}`}>
               {poolMember.userDetails.rolesDetails.identity}
@@ -79,7 +79,7 @@ const PoolMemberCard: React.FC<{ poolMember: PoolMemberModel }> = ({ poolMember 
           <div className={styles.creatorInfo}>
             <div className={styles.creatorDetails}>
               <span className={`${styles.creatorName} ${styles[`creatorName_${theme}`]}`}>
-                {poolMember.userDetails.username}
+                {poolMember.userDetails.userUsername}
               </span>
             </div>
           </div>

@@ -27,7 +27,7 @@ import { PoolChangeEvent } from '@/lib/managers/PoolsQuizTopicSubscriptionManage
 export default function PaymentTransactions({ onStateChange }: ComponentStateProps) {
   const { theme } = useTheme();
   const { t, lang, tNode } = useLanguage();
-  const { userData, userData$ } = useUserData();
+  const { userData } = useUserData();
   const loaderRef = useRef<HTMLDivElement | null>(null);
   const nav = useNav();
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
