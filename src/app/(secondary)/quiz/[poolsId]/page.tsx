@@ -247,7 +247,6 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
 
     const submission = quizSession.submissions.get(question.poolsQuestionId);
     if ((submission?.status === 'loading' || submission?.status === 'data') && !override) {
-            console.log(' MAIN: Question already being processed, skipping', question.poolsQuestionId);
             return;
     }
 
@@ -284,8 +283,6 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
       });
 
       if (error) throw error;
-
-      console.log(data);
 
       if (data.status === 'Submission.success' || data.status === 'Submission.duplicate') {
         // Update submission status to successful
@@ -450,11 +447,18 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
 
   // Get current question object
   const getCurrentQuestion = useCallback((questionId: string | null): PoolQuestion | null => {
-    if (!questionId) return null;
+    if (!questionId){
+        setQuizState('quizEnd');
+        return null;
+    }
 
     // Find question in pending questions
     const currentQuestion = quizSession.pendingQuestions.find(q => q.poolsQuestionId === questionId);
-    return currentQuestion || null;
+    if(!currentQuestion){
+      setQuizState('quizEnd');
+      return null;
+    }
+    return currentQuestion;
   }, [quizSession.pendingQuestions]);
 
   const cleanUpQuizTimer = useCallback(() => {
@@ -561,6 +565,8 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
     }
 
   }, [quizSession, quizModel, checkEnd, validForNotSubmitted, automateSubmit, quizState, endTimeFrom]);
+
+
 
   // Monitor quiz session and quiz model to determine state transitions
   useEffect(() => {
@@ -744,7 +750,7 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
         setRefreshLoading(false);
         return;
       }
-      console.log(data);
+
       if (data.status === 'Pool.allowed') {
         const quizPool = new QuizPool(data.pools_quiz);
         setQuizModel(quizPool);
@@ -784,6 +790,10 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
     };
   }, []);
 
+  useEffect(() => {
+
+  }, []);
+
   // Render quiz content based on current state
   const renderQuizContent = () => {
     switch (quizState) {
@@ -799,20 +809,21 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
       case 'quizTime':
         return <QuizTimer quizTimerValue={quizTimerValue} onSkip={() => {setEndTimeFrom('timer'); setQuizState('quizEnd');}} clickMenu={()=> setDrawerIsOpen(!isDrawerOpen)} clickExit={()=> console.log('clicked exit')}/>;
 
-      case 'quizPlay':
-        const currentQuestion = getCurrentQuestion(quizSession.currentQuestionId);
-        if (!currentQuestion) return null;
-
-        return <QuestionDisplay question={currentQuestion} onAnswer={handleAnswer} onSubmit={handleSubmitQuestion} getQuestionNumber={()=> quizSession.totalQuestions - quizSession.pendingQuestions.length + 1} totalNumber={quizSession.totalQuestions} clickMenu={()=> setDrawerIsOpen(!isDrawerOpen)} clickExit={()=> console.log('clicked exit')} />;
-
-      case 'quizEnd':
-        return <QuizCompletion quizPool={quizModel} clickMenu={()=> setDrawerIsOpen(!isDrawerOpen)} clickExit={()=> console.log('clicked exit')} refreshLoading={refreshLoading} clickContinueRefresh={checkToRefreshOrResult}/>;
-
       case 'questionTrack':
         return <QuizTracker trackerState={getQuestionTrackers()} onRetry={handleRetry} onEndClick={()=> {setEndTimeFrom('tracker'); determineState();}} />;
 
       case 'quizReward':
         return <QuizResults poolsId={quizModel?.poolsId || null} clickMenu={()=> setDrawerIsOpen(!isDrawerOpen)} clickExit={()=> console.log('clicked exit')}/>;
+
+      case 'quizPlay':
+        const currentQuestion = getCurrentQuestion(quizSession.currentQuestionId);
+        if (!currentQuestion) {
+           setQuizState('quizEnd');
+        }
+        return <QuestionDisplay question={currentQuestion} onAnswer={handleAnswer} onSubmit={handleSubmitQuestion} getQuestionNumber={()=> quizSession.totalQuestions - quizSession.pendingQuestions.length + 1} totalNumber={quizSession.totalQuestions} clickMenu={()=> setDrawerIsOpen(!isDrawerOpen)} clickExit={()=> console.log('clicked exit')} />;
+
+      case 'quizEnd':
+        return <QuizCompletion quizPool={quizModel} clickMenu={()=> setDrawerIsOpen(!isDrawerOpen)} clickExit={()=> console.log('clicked exit')} refreshLoading={refreshLoading} clickContinueRefresh={checkToRefreshOrResult}/>;
 
       default:
         return null;

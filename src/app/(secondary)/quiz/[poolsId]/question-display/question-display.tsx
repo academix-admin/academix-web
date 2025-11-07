@@ -13,7 +13,7 @@ import Image from 'next/image';
 import { PoolQuestion, OptionModel } from '@/models/pool-question-model';
 
 interface QuestionDisplayProps {
-  question: PoolQuestion;
+  question: PoolQuestion | null;
   getQuestionNumber: ()=>number;
   totalNumber: number;
   onAnswer: (questionId: string, optionId: string, answer?: string) => void;
@@ -1002,8 +1002,8 @@ const MobileView = ({
 export default function QuestionDisplay({ question, onAnswer, onSubmit, getQuestionNumber, totalNumber, clickMenu, clickExit  }: QuestionDisplayProps) {
   const { theme } = useTheme();
   const { t } = useLanguage();
-  const questionId = question.poolsQuestionId;
-  const timeLimit = question.timeData.questionTimeValue;
+  const questionId = question?.poolsQuestionId || '';
+  const timeLimit = question?.timeData.questionTimeValue || 0;
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -1021,7 +1021,7 @@ export default function QuestionDisplay({ question, onAnswer, onSubmit, getQuest
   });
 
   const handleAutoSubmit = useCallback(async () => {
-    if (isSubmitting) return;
+    if (!question || isSubmitting) return;
     setIsSubmitting(true);
     const timeTaken = timeLimit - remainingTime;
     onSubmit(questionId, timeTaken);
@@ -1029,7 +1029,7 @@ export default function QuestionDisplay({ question, onAnswer, onSubmit, getQuest
   }, [questionId, timeLimit, remainingTime, onSubmit, isSubmitting]);
 
   const handleManualSubmit = useCallback(async () => {
-    if (isSubmitting) return;
+    if (!question || isSubmitting) return;
     setIsSubmitting(true);
     const timeTaken = timeLimit - remainingTime;
     onSubmit(questionId, timeTaken);
@@ -1042,10 +1042,10 @@ export default function QuestionDisplay({ question, onAnswer, onSubmit, getQuest
     };
   }, [clearTimer]);
 
-  const hasSelectedOption = question.optionData.some(o => o.optionSelected);
-  const image = question.questionData.questionsImage;
+  const hasSelectedOption = question?.optionData.some(o => o.optionSelected) || false;
 
   const renderOptionType = (type: string,displayType: DisplayType = 'mobile') => {
+    if (!question) return null;
     const commonProps = {
       optionData: question.optionData,
       displayType,
@@ -1066,6 +1066,8 @@ export default function QuestionDisplay({ question, onAnswer, onSubmit, getQuest
         return null;
     }
   };
+
+  if(!question)return null;
 
   return (
     <>
