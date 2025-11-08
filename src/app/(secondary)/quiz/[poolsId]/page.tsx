@@ -539,7 +539,7 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
     const pendingQuestions = quizSession.pendingQuestions;
 
     // Check if quiz has ended
-    if (checkEnd() || (!quizSession.currentQuestionId && pendingQuestions.length === 0)) {
+    if (checkEnd()) {
       if (quizState !== 'quizEnd') {
         setQuizState('quizEnd');
       }
@@ -567,6 +567,11 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
     // Default to quiz play state if there are pending questions
     if (pendingQuestions.length > 0 && quizState !== 'quizPlay') {
       setQuizState('quizPlay');
+      return;
+    }
+
+    if ((!quizSession.currentQuestionId && pendingQuestions.length === 0)) {
+      setQuizState('quizEnd');
       return;
     }
 
