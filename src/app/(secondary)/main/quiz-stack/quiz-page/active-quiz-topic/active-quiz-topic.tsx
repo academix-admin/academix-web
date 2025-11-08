@@ -43,7 +43,7 @@ export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) 
   const { userData, userData$, __meta } = useUserData();
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isMountedRef = useRef(true);
-  const { pushAndWait } = useAwaitableRouter();
+  const { replaceAndWait } = useAwaitableRouter();
   const isRefreshingRef = useRef(false);
 
   const [firstLoaded, setFirstLoaded] = useState(false);
@@ -355,7 +355,7 @@ export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) 
 
   const onContinueClick = async () => {
     if(!userData || !activeQuiz.quizPool?.poolsId)return;
-    await pushAndWait(`/quiz/${activeQuiz.quizPool?.poolsId}`);
+    await replaceAndWait(`/quiz/${activeQuiz.quizPool?.poolsId}`);
     await nav.popToRoot();
   };
 

@@ -68,7 +68,7 @@ export default function QuizCommitment(props: QuizChallengeProps) {
   const isTop = nav.isTop();
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isMountedRef = useRef(true);
-  const { pushAndWait } = useAwaitableRouter();
+  const { replaceAndWait } = useAwaitableRouter();
 
   const { userData, userData$ } = useUserData();
   const [userBalance] = useUserBalance(lang);
@@ -415,7 +415,7 @@ export default function QuizCommitment(props: QuizChallengeProps) {
   const onContinueClick = async () => {
     setToQuizLoading(true);
     if(!userData || !currentQuiz?.quizPool?.poolsId)return;
-    await pushAndWait(`/quiz/${currentQuiz.quizPool?.poolsId}`);
+    await replaceAndWait(`/quiz/${currentQuiz.quizPool?.poolsId}`);
     setToQuizLoading(false);
   };
 

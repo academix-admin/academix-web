@@ -33,25 +33,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { userData, __meta } = useUserData();
   const { replaceAndWait } = useAwaitableRouter();
 
-  const publicRoutes = ['/', '/login', '/signup', '/welcome'];
+  const publicRoutes = ['/rules'];
+  const internalRoutes = ['/', '/login', '/signup', '/welcome'];
   const protectedRoutes = ['/main', '/quiz'];
 
   useEffect(() => {
-    if (!__meta.isHydrated) return;
+
+    // Immediate initialization for public routes
+    if (publicRoutes.includes(pathname) && typeof window !== "undefined") {
+      setInitialized(true);
+      return;
+    }
+
+    if (!__meta.isHydrated || typeof window === "undefined") return;
 
     let unsubscribe: (() => void) | undefined;
 
     const initializeAuth = async () => {
       try {
-        const [{ data: { user: initialUser } }, { data: { session: initialSession } }] = await Promise.all([
+        const [userResult, sessionResult] = await Promise.all([
           supabaseBrowser.auth.getUser(),
           supabaseBrowser.auth.getSession(),
         ]);
 
+        if (userResult.error) console.error('getUser error', userResult.error);
+        if (sessionResult.error) console.error('getSession error', sessionResult.error);
+
+        const initialUser = userResult.data.user;
+        const initialSession = sessionResult.data.session;
         setUser(initialUser);
         setSession(initialSession);
 
-        if (initialUser && userData && publicRoutes.includes(pathname)) {
+        if (initialUser && userData && internalRoutes.includes(pathname)) {
           console.log('Redirecting authenticated user to main');
           await replaceAndWait("/main");
         }

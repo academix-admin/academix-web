@@ -188,7 +188,10 @@ export default function HomeQuizHistory({ onStateChange }: ComponentStateProps) 
   const formatTimeWithTranslation = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
-    return `${mins}m${secs}s`;
+    if(mins > 0){
+        return `${mins}m${secs}s`;
+    }
+      return `${secs}s`;
   };
 
   // Format response time with translation support

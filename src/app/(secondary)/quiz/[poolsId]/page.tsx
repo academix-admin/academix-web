@@ -247,7 +247,7 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
 
     const submission = quizSession.submissions.get(question.poolsQuestionId);
     if ((submission?.status === 'loading' || submission?.status === 'data') && !override) {
-            return;
+          return;
     }
 
     // Get user paramatical data for submission
@@ -258,7 +258,18 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
       userData.usersDob
     );
 
-    if (!paramatical) return;
+    if (!paramatical){
+      setQuizSession(prev => {
+        const newSubmissions = new Map(prev.submissions);
+        newSubmissions.set(question.poolsQuestionId, {
+          status: 'error',
+          questionId: question.poolsQuestionId,
+          time: timeTaken
+        });
+        return { ...prev, submissions: newSubmissions };
+      });
+        return;
+    }
 
     // Update submission status to loading
     setQuizSession(prev => {
@@ -496,7 +507,7 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
             setQuizTimerValue(prev => {
               const newValue = prev - 1;
 
-              if (newValue <= 0 || checkEnd()) {
+              if (newValue <= 0 || closed) {
                 cleanUpQuizTimer();
                 if (status === 'PoolJob.pool_period') {
                   determineState();
@@ -528,7 +539,7 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
     const pendingQuestions = quizSession.pendingQuestions;
 
     // Check if quiz has ended
-    if (checkEnd() || (quizSession.currentQuestionId && pendingQuestions.length === 0)) {
+    if (checkEnd() || (!quizSession.currentQuestionId && pendingQuestions.length === 0)) {
       if (quizState !== 'quizEnd') {
         setQuizState('quizEnd');
       }
@@ -559,11 +570,6 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
       return;
     }
 
-    if (!quizSession.currentQuestionId && pendingQuestions.length === 0 && quizState !== 'quizEnd') {
-        setQuizState('quizEnd');
-        return;
-    }
-
   }, [quizSession, quizModel, checkEnd, validForNotSubmitted, automateSubmit, quizState, endTimeFrom]);
 
 
@@ -576,6 +582,7 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
 
   useEffect(() => {
     if(quizSession.currentQuestionId)return;
+    setQuizState('quizEnd');
     determineState();
   }, [quizSession.currentQuestionId]);
 
@@ -790,8 +797,9 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
     };
   }, []);
 
-  useEffect(() => {
-
+  const returnToMain = useCallback(() => {
+    console.log('clicked new exit');
+    window.location.replace('/main');
   }, []);
 
   // Render quiz content based on current state
@@ -801,29 +809,29 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
         return (<LoadingView text="Please wait while we load your quiz..." />);
 
       case 'notFound':
-        return (<NoResultsView text="The quiz you're looking for doesn't exist or you don't have access to it." buttonText="Try Again" onButtonClick={()=> window.location.reload()} />);
+        return (<NoResultsView text="The quiz you're looking for doesn't exist or you don't have access to it." buttonText="Exit quiz" onButtonClick={returnToMain} />);
 
       case 'error':
         return (<ErrorView text="Something went wrong while loading the quiz." buttonText="Try Again" onButtonClick={()=> window.location.reload()} />);
 
       case 'quizTime':
-        return <QuizTimer quizTimerValue={quizTimerValue} onSkip={() => {setEndTimeFrom('timer'); setQuizState('quizEnd');}} clickMenu={()=> setDrawerIsOpen(!isDrawerOpen)} clickExit={()=> console.log('clicked exit')}/>;
+        return <QuizTimer quizTimerValue={quizTimerValue} onSkip={() => {setEndTimeFrom('timer'); setQuizState('quizEnd');}} clickMenu={()=> setDrawerIsOpen(!isDrawerOpen)} clickExit={returnToMain}/>;
 
       case 'questionTrack':
-        return <QuizTracker trackerState={getQuestionTrackers()} onRetry={handleRetry} onEndClick={()=> {setEndTimeFrom('tracker'); determineState();}} />;
+        return <QuizTracker trackerState={getQuestionTrackers()} onRetry={handleRetry} onEndClick={()=> {setEndTimeFrom('tracker'); setQuizState('quizEnd');}} />;
 
       case 'quizReward':
-        return <QuizResults poolsId={quizModel?.poolsId || null} clickMenu={()=> setDrawerIsOpen(!isDrawerOpen)} clickExit={()=> console.log('clicked exit')}/>;
+        return <QuizResults poolsId={quizModel?.poolsId || null} clickMenu={()=> setDrawerIsOpen(!isDrawerOpen)} clickExit={returnToMain}/>;
 
       case 'quizPlay':
         const currentQuestion = getCurrentQuestion(quizSession.currentQuestionId);
         if (!currentQuestion) {
            setQuizState('quizEnd');
         }
-        return <QuestionDisplay question={currentQuestion} onAnswer={handleAnswer} onSubmit={handleSubmitQuestion} getQuestionNumber={()=> quizSession.totalQuestions - quizSession.pendingQuestions.length + 1} totalNumber={quizSession.totalQuestions} clickMenu={()=> setDrawerIsOpen(!isDrawerOpen)} clickExit={()=> console.log('clicked exit')} />;
+        return <QuestionDisplay question={currentQuestion} onAnswer={handleAnswer} onSubmit={handleSubmitQuestion} getQuestionNumber={()=> quizSession.totalQuestions - quizSession.pendingQuestions.length + 1} totalNumber={quizSession.totalQuestions} clickMenu={()=> setDrawerIsOpen(!isDrawerOpen)} clickExit={returnToMain} />;
 
       case 'quizEnd':
-        return <QuizCompletion quizPool={quizModel} clickMenu={()=> setDrawerIsOpen(!isDrawerOpen)} clickExit={()=> console.log('clicked exit')} refreshLoading={refreshLoading} clickContinueRefresh={checkToRefreshOrResult}/>;
+        return <QuizCompletion quizPool={quizModel} clickMenu={()=> setDrawerIsOpen(!isDrawerOpen)} clickExit={returnToMain} refreshLoading={refreshLoading} clickContinueRefresh={checkToRefreshOrResult}/>;
 
       default:
         return null;

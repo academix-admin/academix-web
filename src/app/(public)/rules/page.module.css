@@ -1,0 +1,233 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  min-height: 100vh;
+}
+
+.container_light {
+  background-color: #ffffff;
+  color: #000;
+}
+
+.container_dark {
+  background-color: #121212;
+  color: #ffffff;
+}
+
+.header {
+  position: fixed;
+  top: 0;
+  left:0;
+  width: 100%;
+  z-index: 10;
+  display: flex;
+  backdrop-filter: blur(8px);
+  box-sizing: box-border;
+}
+
+.header_light {
+  background-color: rgba(255, 255, 255, 0.8);
+  border-bottom: 1px solid #C4C4C4;
+}
+
+.header_dark {
+  background-color: rgba(18, 18, 18, 0.8);
+  border-bottom: 1px solid #333;
+}
+
+.headerContent {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 1rem;
+  padding: 1rem 0;
+  margin: 0 20%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.innerBody{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+  max-width: 400px;
+  padding-top: 6rem;
+      width: 100%;
+    box-sizing: border-box;
+}
+
+
+.backButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-color);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  justify-content: center;
+  margin-left: -8px;
+}
+
+.backButton:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.backIcon {
+  width: 20px;
+  height: 20px;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+  flex-grow: 1;
+  text-align: start;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-sizing: box-border;
+
+}
+
+.logoContainer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  box-sizing: box-border;
+}
+
+.logo{
+  width: 35px;
+  height: 35px;
+}
+
+.welcome_wrapper{
+  width: 65%;
+}
+
+.greeting {
+  font-size: 1.25rem;
+  font-weight: 500;
+  margin-bottom: 1rem;
+}
+
+.terms {
+  font-size: 0.9rem;
+  max-width: 400px;
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+.altPrompt {
+  font-size: 0.9rem;
+  margin-bottom: 2rem;
+}
+
+.buttonGroup {
+  display: flex;
+  gap: 1rem;
+}
+
+.loginBtn,
+.signupBtn {
+  font-size: 1rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  border: none;
+  font-weight: 500;
+  transition: background 0.2s ease;
+  text-decoration: none;
+  box-sizing: border-box;
+}
+
+.loginBtn {
+  background-color: #798279;
+  color: #ffffff;
+}
+
+.signupBtn {
+  background-color: #1C6B1E;
+  color: #fff;
+}
+
+.loginBtn:hover,
+.signupBtn:hover {
+  opacity: 0.9;
+}
+
+/* Tablet */
+@media screen and (min-width: 500px) and (max-width: 800px) {
+ .headerContent {
+   padding: 1rem 0rem;
+   margin: 0 1rem;
+ }
+  .logo {
+       width: 35px;
+       height: 35px;
+     }
+  .innerBody {
+    padding: 1.5rem;
+    padding-top: 4rem;
+  }
+     .welcome_wrapper{
+       width: 75%;
+     }
+}
+
+/* Mobile */
+@media screen and (max-width: 500px) {
+
+ .headerContent {
+    margin: 0;
+   padding: 1rem 1rem;
+ }
+  .innerBody {
+    padding: 1rem;
+    padding-top: 5rem;
+  }
+
+       .welcome_wrapper{
+         width: 80%;
+       }
+
+  .backIcon {
+    width: 16px;
+    height: 16px;
+  }
+
+  .title {
+    font-size: 1.2rem;
+  }
+
+  .logo {
+      width: 28px;
+      height: 28px;
+    }
+
+  .buttonGroup {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .loginBtn,
+  .signupBtn {
+    width: 100%;
+  }
+
+  .greeting {
+    font-size: 1.1rem;
+  }
+
+  .terms,
+  .altPrompt {
+    font-size: 0.85rem;
+  }
+}
