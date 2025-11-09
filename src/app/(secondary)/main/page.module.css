@@ -15,16 +15,15 @@
 
 
 .sidebarContainer {
-  position: fixed; /* or fixed if you want it to float */
-  top: 0;
-  height: 100vh;
+  height: 100dvh;
   flex-shrink: 0;
+  z-index: 20;
 }
 
 
 .contentArea {
   flex: 1;
-  overflow: auto;
+  overflow-y: auto;
   transition: padding 0.3s ease;
   width: 100%;
 }
@@ -41,11 +40,11 @@
   }
 
   .sidebarContainer {
-    position: relative;
+
   }
 
   .contentArea{
-     max-height: 100vh;
+     max-height: 100dvh;
   }
 
 

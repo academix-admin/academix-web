@@ -1,19 +1,25 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { use, useEffect, useState } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
+import { getSupportedLang } from '@/context/LanguageContext';
 import Image from 'next/image';
 import styles from './page.module.css';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link'
 import CachedLottie from '@/components/CachedLottie';
+import { useSearchParams } from 'next/navigation';
 
 
 
 export default function Rules() {
+  const searchParams = useSearchParams();
+  const lan = searchParams.get('lan'); // 'fr' if ?lan=fr
+  const col = searchParams.get('col'); // 'dark' if ?col=dark
+  const req = searchParams.get('req'); // 'web | mobile' if ?req=web | mobile
   const { theme } = useTheme();
-  const { t } = useLanguage();
+  const { t, tNode, lang } = useLanguage();
   const router = useRouter();
   const [canGoBack, setCanGoBack] = useState(false);
 
@@ -21,10 +27,13 @@ export default function Rules() {
     setCanGoBack(window.history.length > 1);
   }, []);
 
-  return (
-    <main className={`${styles.container} ${styles[`container_${theme}`]}`}>
+  const resolvedTheme = col || theme;
+  const resolvedLang = getSupportedLang(lan) || lang;
 
-     <header className={`${styles.header} ${styles[`header_${theme}`]}`}>
+  return (
+    <main className={`${styles.container} ${styles[`container_${resolvedTheme}`]}`}>
+
+     <header className={`${styles.header} ${styles[`header_${resolvedTheme}`]}`}>
              <div className={styles.headerContent}>
                {canGoBack && (
                  <button
@@ -41,7 +50,7 @@ export default function Rules() {
                  </button>
                )}
 
-               <h1 className={styles.title}>{t('rules_text')}</h1>
+               <h1 className={styles.title}>{t('rules_text', resolvedLang)}</h1>
 
                <Link className={styles.logoContainer} href="/">
                  <Image
@@ -66,27 +75,26 @@ export default function Rules() {
                               restoreProgress
                             />
 
-            <h2 className={styles.greeting}>👋 {t('let_get_started')}</h2>
+            <h2 className={styles.greeting}>👋 {t('let_get_started',resolvedLang)}</h2>
 
             <p className={styles.terms}>
-              {t('by_creating_account')} <strong>{t('privacy_policy')}</strong> {t('and')}
-              <strong> {t('terms_of_service')}</strong>.
+              {t('by_creating_account',resolvedLang)} <strong>{t('privacy_policy',resolvedLang)}</strong> {t('and',resolvedLang)}
+              <strong> {t('terms_of_service', resolvedLang)}</strong>.
             </p>
 
             <p className={styles.altPrompt}>
-              {t('already_have_account')} <br />
-              {t('please_log_in_or_sign_up')}
+              {t('already_have_account', resolvedLang)} <br />
+              {t('please_log_in_or_sign_up', resolvedLang)}
             </p>
 
             <div className={styles.buttonGroup}>
               <Link className={styles.loginBtn} href="/login">
-                {t('login')}
+                {t('login', resolvedLang)}
               </Link>
               <Link className={styles.signupBtn} href="/signup">
-                {t('sign_up')}
+                {t('sign_up', resolvedLang)}
               </Link>
             </div>
-
       </div>
     </main>
   );

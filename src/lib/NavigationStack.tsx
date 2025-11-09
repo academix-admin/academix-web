@@ -411,7 +411,6 @@ class EnhancedLifecycleManager {
   }
 }
 
-
 // ==================== Group-Scoped Scroll Restoration ====================
 export function useGroupScopedScrollRestoration(
   api: NavStackAPI,
@@ -459,7 +458,6 @@ export function useGroupScopedScrollRestoration(
   // Smart auto-detection of scrollable container
   const findScrollableContainer = (uid: string): HTMLElement | 'window' => {
     if (typeof document === 'undefined') return 'window';
-
     // Check if we already found the container for this UID
     const cached = scrollData.scrollContainers.get(uid);
     if (cached) return cached;
@@ -502,9 +500,11 @@ export function useGroupScopedScrollRestoration(
       (style.overflowY === 'auto' || style.overflowY === 'scroll');
     const isHorizontallyScrollable = element.scrollWidth > element.clientWidth &&
       (style.overflowX === 'auto' || style.overflowX === 'scroll');
+    console.log(isVerticallyScrollable);
 
     return isVerticallyScrollable || isHorizontallyScrollable;
   };
+
 
   // Get current scroll position
   const getCurrentScrollPosition = (container: HTMLElement | 'window'): number => {
@@ -539,6 +539,7 @@ export function useGroupScopedScrollRestoration(
     if (!top) return;
 
     const container = findScrollableContainer(top.uid);
+    console.log(container);
 
     const handleScroll = () => {
       const scrollPosition = getCurrentScrollPosition(container);
@@ -614,6 +615,373 @@ export function useGroupScopedScrollRestoration(
 
   return null;
 }
+
+
+// interface ContainerData {
+//   uid: number;
+//   element: HTMLElement;
+//   level: number;
+//   maxHeight: string;
+//   overflowX: string;
+//   overflowY: string;
+//   clientHeight: number;
+//   clientWidth: number;
+//   scrollHeight: number;
+//   scrollWidth: number;
+//   score: number;
+// }
+//
+// // ==================== Group-Scoped Scroll Restoration ====================
+// export function useGroupScopedScrollRestoration(
+//   api: NavStackAPI,
+//   renders: RenderRecord[],
+//   stackSnapshot: StackEntry[],
+//   groupContext: GroupNavigationContextType | null,
+//   groupStackId: string | null
+// ) {
+//   const groupKey = groupContext ? `${groupContext.getGroupId()}:${groupStackId}` : 'root';
+//
+//   const scrollData = useRef<{
+//     groupScrollPositions: Map<string, Map<string, number>>;
+//     lastUid: string | null;
+//     lastGroupKey: string | null;
+//     lastActive: boolean;
+//     scrollContainers: Map<string, ContainerData | 'window'>;
+//     currentScrollY: number;
+//     resizeObservers: Map<string, ResizeObserver>;
+//     // NEW: Track which containers are being observed
+//     observedContainers: Set<string>;
+//   }>({
+//     groupScrollPositions: new Map(),
+//     lastUid: null,
+//     lastGroupKey: null,
+//     lastActive: true,
+//     scrollContainers: new Map(),
+//     currentScrollY: 0,
+//     resizeObservers: new Map(),
+//     observedContainers: new Set()
+//   }).current;
+//
+//   const isActiveGroup = groupContext ? groupContext.isActiveStack(groupStackId || '') : true;
+//   const [, forceUpdate] = useState(0);
+//   const triggerRerender = () => forceUpdate(x => x + 1);
+//
+//
+//   console.log(window);
+//   useEffect(() => {
+//     if (typeof window !== "undefined" && "scrollRestoration" in window.history) {
+//       window.history.scrollRestoration = "manual";
+//     }
+//   }, []);
+//
+//   // Get or create position map for current group
+//   const getGroupScrollPositions = () => {
+//     if (!scrollData.groupScrollPositions.has(groupKey)) {
+//       scrollData.groupScrollPositions.set(groupKey, new Map());
+//     }
+//     return scrollData.groupScrollPositions.get(groupKey)!;
+//   };
+//
+//   // Enhanced scrollable detection with scoring - YOUR EXISTING CODE
+//   const analyzeContainer = (uid: number, element: HTMLElement, level: number): ContainerData => {
+//     const style = getComputedStyle(element);
+//
+//     // Calculate score based on multiple factors
+//     let score = 0;
+//
+//     // Lower score for closer elements (lower level)
+//     score += level;
+//     // Bonus for max-height constraints (often indicates intentional scroll container)
+//     if (style.maxHeight && style.maxHeight !== 'none') score += 40;
+//
+//     return {
+//       uid,
+//       element,
+//       level,
+//       maxHeight: style.maxHeight,
+//       overflowX: style.overflowX,
+//       overflowY: style.overflowY,
+//       clientHeight: element.clientHeight,
+//       clientWidth: element.clientWidth,
+//       scrollHeight: element.scrollHeight,
+//       scrollWidth: element.scrollWidth,
+//       score
+//     };
+//   };
+//
+//   // FIXED: Only invalidate the specific container, not the entire group
+//   const invalidateContainerCache = (uid: string) => {
+//     // Remove only the specific container cache
+//     scrollData.scrollContainers.delete(uid);
+//
+//     // Clean up resize observer for this UID
+//     const observer = scrollData.resizeObservers.get(uid);
+//     if (observer) {
+//       observer.disconnect();
+//       scrollData.resizeObservers.delete(uid);
+//       scrollData.observedContainers.delete(uid);
+//     }
+//     triggerRerender();
+//     console.log(`Invalidated container cache for UID: ${uid}`);
+//   };
+//
+//   // FIXED: Improved resize observer with better change detection
+//   const setupResizeObserver = (uid: string, container: HTMLElement) => {
+//     // Skip if already observing this container
+//     if (scrollData.observedContainers.has(uid)) {
+//       return;
+//     }
+//
+//     // Clean up existing observer if any
+//     const existingObserver = scrollData.resizeObservers.get(uid);
+//     if (existingObserver) {
+//       existingObserver.disconnect();
+//     }
+//
+//     const observer = new ResizeObserver((entries) => {
+//       for (const entry of entries) {
+//         const { target, contentRect } = entry;
+//
+//         // Check if the container's scrollability changed
+//         const cachedContainer = scrollData.scrollContainers.get(uid);
+//         if (cachedContainer && cachedContainer !== 'window') {
+//           const currentScrollHeight = (target as HTMLElement).scrollHeight;
+//           const currentClientHeight = (target as HTMLElement).clientHeight;
+//
+//           // Invalidate if scrollability changed significantly
+//           if (cachedContainer.uid !== (contentRect.width * contentRect.height)) {
+//             console.log(`Scrollability changed for UID: ${uid}, invalidating cache`);
+//             invalidateContainerCache(uid);
+//           }
+//         }
+//       }
+//     });
+//
+//     observer.observe(container);
+//     scrollData.resizeObservers.set(uid, observer);
+//     scrollData.observedContainers.add(uid);
+//   };
+//
+//   // Enhanced scrollable container finder with intelligent selection and resize observation
+//   const findScrollableContainer = (uid: string): HTMLElement | 'window' => {
+//     if (typeof document === 'undefined') return 'window';
+//
+//     // Check cache first
+//     const cached = scrollData.scrollContainers.get(uid);
+//     if (cached) {
+//       // FIXED: Verify the cached element still exists and is in DOM
+//       if (cached === 'window' || document.contains(cached.element)) {
+//         return cached.element;
+//       } else {
+//         // Element was removed from DOM, invalidate cache
+//         invalidateContainerCache(uid);
+//       }
+//     }
+//
+//     // Find the page element
+//     const pageElement = document.querySelector(`[data-nav-uid="${uid}"]`) as HTMLElement;
+//     if (!pageElement) return 'window';
+//
+//     // Collect data for all potential containers
+//     const containerData: ContainerData[] = [];
+//     let currentElement: HTMLElement | null = pageElement;
+//     let level = 0;
+//
+//     while (currentElement && level < 50) {
+//       const data = analyzeContainer((document.body.clientHeight * document.body.clientWidth), currentElement, level);
+//       containerData.push(data);
+//       currentElement = currentElement.parentElement;
+//       level++;
+//     }
+//
+//     console.log('All container data:', containerData);
+//
+//     if (containerData.length === 0) {
+//       scrollData.scrollContainers.set(uid, 'window');
+//       return 'window';
+//     }
+//
+//     // Sort by score (highest first) and then by level (lowest first)
+//     containerData.sort((a, b) => {
+//       if (b.score !== a.score) return b.score - a.score;
+//       return a.level - b.level;
+//     });
+//
+//     const bestContainer = containerData[0];
+//     console.log('Selected container:', bestContainer);
+//
+//     if (bestContainer) {
+//       scrollData.scrollContainers.set(uid, bestContainer);
+//       setupResizeObserver(uid, document.body); // Or bestContainer.element if you want to observe the actual container
+//       return bestContainer.element;
+//     }
+//
+//     scrollData.scrollContainers.set(uid, 'window');
+//     return 'window';
+//   };
+//
+//   // Get current scroll position
+//   const getCurrentScrollPosition = (container: HTMLElement | 'window'): number => {
+//     if (container === 'window') {
+//       return typeof window !== 'undefined' ? window.scrollY : 0;
+//     }
+//     return container.scrollTop;
+//   };
+//
+//   // Set scroll position
+//   const setScrollPosition = (position: number, container: HTMLElement | 'window') => {
+//     if (container === 'window') {
+//       window.scrollTo(0, position);
+//     } else {
+//       container.scrollTop = position;
+//     }
+//   };
+//
+//   // Add scroll listener to the appropriate element
+//   const addScrollListener = (container: HTMLElement | 'window', handler: () => void) => {
+//     const target = container === 'window' ? window : container;
+//     target.addEventListener('scroll', handler, { passive: true });
+//     return () => target.removeEventListener('scroll', handler);
+//   };
+//
+//   // FIXED: Improved scroll tracking with group change handling
+//   useEffect(() => {
+//     if (!isActiveGroup) return;
+//
+//     const groupPositions = getGroupScrollPositions();
+//     const top = stackSnapshot.at(-1);
+//     if (!top) return;
+//
+//     const container = findScrollableContainer(top.uid);
+//
+//     const handleScroll = () => {
+//       const scrollPosition = getCurrentScrollPosition(container);
+//       groupPositions.set(top.uid, scrollPosition);
+//       scrollData.currentScrollY = scrollPosition;
+//       console.log(`Tracked scroll for ${top.uid} in group ${groupKey}:`, scrollPosition);
+//     };
+//
+//     const removeListener = addScrollListener(container, handleScroll);
+//
+//     // FIXED: Initialize current scroll position
+//     const initialPosition = getCurrentScrollPosition(container);
+//     groupPositions.set(top.uid, initialPosition);
+//     scrollData.currentScrollY = initialPosition;
+//
+//     return () => {
+//       removeListener();
+//     };
+//   }, [stackSnapshot, isActiveGroup, groupKey, scrollData.scrollContainers.size]);
+//
+//   // FIXED: Improved scroll restoration with better group transition handling
+//   useEffect(() => {
+//     const topEntry = stackSnapshot.at(-1);
+//     if (!topEntry) return;
+//
+//     const { uid } = topEntry;
+//     const { lastUid, lastGroupKey, lastActive, groupScrollPositions, currentScrollY } = scrollData;
+//     const currentGroupPositions = getGroupScrollPositions();
+//
+//     const groupChanged = lastGroupKey !== groupKey;
+//     const uidChanged = uid !== lastUid;
+//     const activeChanged = lastActive !== isActiveGroup;
+//
+//     console.log(`Scroll restoration: group=${groupKey}, uid=${uid}, active=${isActiveGroup}, groupChanged=${groupChanged}, uidChanged=${uidChanged}, activeChanged=${activeChanged}`);
+//
+//     // Save current position before switching away
+//     if (lastUid && lastActive && lastGroupKey && (groupChanged || uidChanged || activeChanged)) {
+//       const lastGroupPositions = groupScrollPositions.get(lastGroupKey);
+//       if (lastGroupPositions) {
+//         // Use the tracked scroll position
+//         lastGroupPositions.set(lastUid, currentScrollY);
+//         console.log(`Saved scroll for ${lastUid} in group ${lastGroupKey}:`, currentScrollY);
+//       }
+//     }
+//
+//     // Restore position when becoming active or when uid changes within active group
+//     if (isActiveGroup && (groupChanged || uidChanged || activeChanged)) {
+//       const savedPosition = currentGroupPositions.get(uid);
+//       const container = findScrollableContainer(uid);
+//
+//       console.log(`Restoring scroll for ${uid} in group ${groupKey}:`, savedPosition);
+//
+//       const restoreScroll = () => {
+//         const position = savedPosition ?? 0;
+//         setScrollPosition(position, container);
+//         // Update current scroll data
+//         scrollData.currentScrollY = position;
+//       };
+//
+//       // Multiple restoration attempts for reliability
+//       restoreScroll(); // Immediate
+//       requestAnimationFrame(() => restoreScroll());
+//       const timeoutId = setTimeout(() => restoreScroll(), 50);
+//
+//       return () => clearTimeout(timeoutId);
+//     }
+//
+//     // Update state
+//     scrollData.lastUid = uid;
+//     scrollData.lastGroupKey = groupKey;
+//     scrollData.lastActive = isActiveGroup;
+//   }, [stackSnapshot, isActiveGroup, groupKey]);
+//
+//   // FIXED: More conservative cache cleanup
+//   useEffect(() => {
+//     const currentUids = new Set(stackSnapshot.map(entry => entry.uid));
+//
+//     // Only clean up containers that are definitely gone
+//     scrollData.scrollContainers.forEach((_, uid) => {
+//       if (!currentUids.has(uid)) {
+//         // Check if this UID exists in any group's scroll positions
+//         let uidExistsInAnyGroup = false;
+//         for (const [_, groupPositions] of scrollData.groupScrollPositions) {
+//           if (groupPositions.has(uid)) {
+//             uidExistsInAnyGroup = true;
+//             break;
+//           }
+//         }
+//
+//         if (!uidExistsInAnyGroup) {
+//           invalidateContainerCache(uid);
+//         }
+//       }
+//     });
+//
+//     // Clean up observers only for completely removed UIDs
+//     scrollData.resizeObservers.forEach((observer, uid) => {
+//       if (!currentUids.has(uid)) {
+//         let uidExistsInAnyGroup = false;
+//         for (const [_, groupPositions] of scrollData.groupScrollPositions) {
+//           if (groupPositions.has(uid)) {
+//             uidExistsInAnyGroup = true;
+//             break;
+//           }
+//         }
+//
+//         if (!uidExistsInAnyGroup) {
+//           observer.disconnect();
+//           scrollData.resizeObservers.delete(uid);
+//           scrollData.observedContainers.delete(uid);
+//         }
+//       }
+//     });
+//   }, [stackSnapshot]);
+//
+//   // Cleanup all observers on unmount
+//   useEffect(() => {
+//     return () => {
+//       scrollData.resizeObservers.forEach((observer) => {
+//         observer.disconnect();
+//       });
+//       scrollData.resizeObservers.clear();
+//       scrollData.observedContainers.clear();
+//       scrollData.scrollContainers.clear();
+//     };
+//   }, []);
+//
+//   return null;
+// }
 
 // ==================== Core Functions ====================
 const NavContext = createContext<NavStackAPI | null>(null);
@@ -2290,8 +2658,8 @@ export function GroupNavigationStack({
         setActiveStackId(initialActiveStackId);
         onCurrentChange?.(initialActiveStackId);
       }else{
-          onCurrentChange?.(initialActiveStackId);
-       }
+        onCurrentChange?.(initialActiveStackId);
+      }
 
       // Mark as hydrated after a small delay to ensure all stacks are initialized
       const timer = setTimeout(() => {
@@ -2336,27 +2704,10 @@ export function GroupNavigationStack({
       return false;
     },
 
-
-
     isActiveStack: (stackId: string) => {
       return stackId === activeStackId;
     }
   }), [id, activeStackId, navStack, persist]);
-
-  // Load group state from storage on mount
-  useEffect(() => {
-    if (persist && typeof window !== 'undefined') {
-      const savedState = readGroupState(id);
-      if (savedState) {
-        // If we have a saved active stack and it's different from current activeStackId, update it
-        if (savedState.activeStack && savedState.activeStack !== activeStackId && navStack.has(savedState.activeStack)) {
-           restUrl();
-           setActiveStackId(savedState.activeStack);
-           onCurrentChange?.(savedState.activeStack);
-        }
-      }
-    }
-  }, [id, persist, navStack]);
 
   // Save group state to storage when it changes
   useEffect(() => {
@@ -2385,12 +2736,11 @@ export function GroupNavigationStack({
     return () => window.removeEventListener("popstate", handler);
   }, [navStack, hydrated]);
 
-    if (!hydrated) return navStack.get(current);
     return (
       <GroupNavigationContext.Provider value={groupContext}>
         <div className="group-navigation-stack">
           {Array.from(navStack.entries()).map(([stackId, stackEl]) => {
-            const isActive = hydrated && stackId === activeStackId;
+            const isActive = (hydrated || (!hydrated && current === stackId)) && stackId === activeStackId;
 
             return (
               <div

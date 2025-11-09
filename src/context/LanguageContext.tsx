@@ -22,11 +22,27 @@ type TranslationParams = Record<string, string | number>;
 type TranslationNodeParams = Record<string, string | number | React.ReactNode>;
 
 // Enhanced context with parameter support
+// interface LanguageContextProps {
+//   lang: SupportedLang;
+//   setLang: (lang: SupportedLang) => void;
+//   t: (key: keyof Translations | string, params?: TranslationParams) => string;
+//   tNode: (key: keyof Translations | string, params?: TranslationNodeParams) => React.ReactNode;
+// }
 interface LanguageContextProps {
   lang: SupportedLang;
   setLang: (lang: SupportedLang) => void;
-  t: (key: keyof Translations | string, params?: TranslationParams) => string;
-  tNode: (key: keyof Translations | string, params?: TranslationNodeParams) => React.ReactNode;
+  t: {
+    (key: keyof Translations | string): string;
+    (key: keyof Translations | string, params: TranslationParams): string;
+    (key: keyof Translations | string, runtimeLang: SupportedLang): string;
+    (key: keyof Translations | string, params: TranslationParams, runtimeLang: SupportedLang): string;
+  };
+  tNode: {
+    (key: keyof Translations | string): React.ReactNode;
+    (key: keyof Translations | string, params: TranslationNodeParams): React.ReactNode;
+    (key: keyof Translations | string, runtimeLang: SupportedLang): React.ReactNode;
+    (key: keyof Translations | string, params: TranslationNodeParams, runtimeLang: SupportedLang): React.ReactNode;
+  };
 }
 
 // Default context values
@@ -69,13 +85,61 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem('language', newLang);
   };
 
-  const t = (key: keyof Translations | string, params?: TranslationParams): string => {
-    const dictionary = languages[lang] ?? languages.en;
+//   const t = (key: keyof Translations | string, params?: TranslationParams, runtimeLang?: SupportedLang): string => {
+//     const dictionary = languages[runtimeLang ?? lang] ?? languages.en;
+//
+//     // Get the translation template
+//     let translation = dictionary[key as keyof Translations] ?? key;
+//
+//     // Replace parameters if provided
+//     if (params) {
+//       Object.entries(params).forEach(([param, value]) => {
+//         translation = translation.replace(new RegExp(`\\{${param}\\}`, 'g'), String(value));
+//       });
+//     }
+//
+//     return translation;
+//   };
 
-    // Get the translation template
+
+//   const tNode = (key: keyof Translations | string, params?: TranslationNodeParams, runtimeLang?: SupportedLang): React.ReactNode => {
+//     const dictionary = languages[runtimeLang ?? lang] ?? languages.en;
+//     const template = dictionary[key as keyof Translations] ?? key;
+//
+//     if (!params) return template;
+//
+//     // Split into text + placeholders like {param}
+//     const parts = template.split(/(\{.*?\})/g);
+//
+//     return parts.map((part, index) => {
+//       const match = part.match(/^\{(.*)\}$/);
+//       if (match) {
+//         const paramKey = match[1];
+//         return <React.Fragment key={index}>{params[paramKey]}</React.Fragment>;
+//       }
+//       return <React.Fragment key={index}>{part}</React.Fragment>;
+//     });
+//   };
+
+  const t: LanguageContextProps['t'] = (
+    key: keyof Translations | string,
+    paramsOrLang?: TranslationParams | SupportedLang,
+    runtimeLangMaybe?: SupportedLang
+  ): string => {
+    let params: TranslationParams | undefined;
+    let runtimeLang: SupportedLang | undefined;
+
+    // Determine if second argument is params or runtimeLang
+    if (typeof paramsOrLang === 'string') {
+      runtimeLang = paramsOrLang;
+    } else {
+      params = paramsOrLang;
+      runtimeLang = runtimeLangMaybe;
+    }
+
+    const dictionary = languages[runtimeLang ?? lang] ?? languages.en;
     let translation = dictionary[key as keyof Translations] ?? key;
 
-    // Replace parameters if provided
     if (params) {
       Object.entries(params).forEach(([param, value]) => {
         translation = translation.replace(new RegExp(`\\{${param}\\}`, 'g'), String(value));
@@ -85,13 +149,27 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
     return translation;
   };
 
-  const tNode = (key: keyof Translations | string, params?: TranslationNodeParams): React.ReactNode => {
-    const dictionary = languages[lang] ?? languages.en;
+  const tNode: LanguageContextProps['tNode'] = (
+    key: keyof Translations | string,
+    paramsOrLang?: TranslationNodeParams | SupportedLang,
+    runtimeLangMaybe?: SupportedLang
+  ): React.ReactNode => {
+    let params: TranslationNodeParams | undefined;
+    let runtimeLang: SupportedLang | undefined;
+
+    // Determine if second argument is params or runtimeLang
+    if (typeof paramsOrLang === 'string') {
+      runtimeLang = paramsOrLang;
+    } else {
+      params = paramsOrLang;
+      runtimeLang = runtimeLangMaybe;
+    }
+
+    const dictionary = languages[runtimeLang ?? lang] ?? languages.en;
     const template = dictionary[key as keyof Translations] ?? key;
 
     if (!params) return template;
 
-    // Split into text + placeholders like {param}
     const parts = template.split(/(\{.*?\})/g);
 
     return parts.map((part, index) => {
@@ -104,6 +182,7 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
+
   // Don't render children until language is initialized
   if (!isInitialized) {
     return null;
@@ -114,6 +193,12 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
       {children}
     </LanguageContext.Provider>
   );
+};
+
+export const getSupportedLang = (lang: string | null): SupportedLang => {
+  return lang && SUPPORTED_LANGUAGES.includes(lang as SupportedLang)
+    ? (lang as SupportedLang)
+    : 'en';
 };
 
 export const useLanguage = () => useContext(LanguageContext);
