@@ -22,12 +22,6 @@ type TranslationParams = Record<string, string | number>;
 type TranslationNodeParams = Record<string, string | number | React.ReactNode>;
 
 // Enhanced context with parameter support
-// interface LanguageContextProps {
-//   lang: SupportedLang;
-//   setLang: (lang: SupportedLang) => void;
-//   t: (key: keyof Translations | string, params?: TranslationParams) => string;
-//   tNode: (key: keyof Translations | string, params?: TranslationNodeParams) => React.ReactNode;
-// }
 interface LanguageContextProps {
   lang: SupportedLang;
   setLang: (lang: SupportedLang) => void;
@@ -84,42 +78,6 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
     setLangState(newLang);
     localStorage.setItem('language', newLang);
   };
-
-//   const t = (key: keyof Translations | string, params?: TranslationParams, runtimeLang?: SupportedLang): string => {
-//     const dictionary = languages[runtimeLang ?? lang] ?? languages.en;
-//
-//     // Get the translation template
-//     let translation = dictionary[key as keyof Translations] ?? key;
-//
-//     // Replace parameters if provided
-//     if (params) {
-//       Object.entries(params).forEach(([param, value]) => {
-//         translation = translation.replace(new RegExp(`\\{${param}\\}`, 'g'), String(value));
-//       });
-//     }
-//
-//     return translation;
-//   };
-
-
-//   const tNode = (key: keyof Translations | string, params?: TranslationNodeParams, runtimeLang?: SupportedLang): React.ReactNode => {
-//     const dictionary = languages[runtimeLang ?? lang] ?? languages.en;
-//     const template = dictionary[key as keyof Translations] ?? key;
-//
-//     if (!params) return template;
-//
-//     // Split into text + placeholders like {param}
-//     const parts = template.split(/(\{.*?\})/g);
-//
-//     return parts.map((part, index) => {
-//       const match = part.match(/^\{(.*)\}$/);
-//       if (match) {
-//         const paramKey = match[1];
-//         return <React.Fragment key={index}>{params[paramKey]}</React.Fragment>;
-//       }
-//       return <React.Fragment key={index}>{part}</React.Fragment>;
-//     });
-//   };
 
   const t: LanguageContextProps['t'] = (
     key: keyof Translations | string,
