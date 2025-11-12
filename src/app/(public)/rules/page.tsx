@@ -126,12 +126,13 @@ export default function Rules() {
   }, []);
 
   // Determine background style
-  const getBackgroundStyle = () => {
+  const getBackgroundStyle = (): React.CSSProperties => {
     if (config.backgroundColor && config.backgroundColor[resolvedTheme]) {
-      return { '--applied-bg': config.backgroundColor[resolvedTheme] };
+      return { '--applied-bg': config.backgroundColor[resolvedTheme] } as React.CSSProperties;
     }
     return {};
   };
+
 
 
   // Determine container class - only use CSS class when no config background
