@@ -444,7 +444,6 @@ export function useGroupScopedScrollRestoration(
     currentScrollY: number;
     // Track window dimensions for cache invalidation
     lastWindowWidth: number;
-    lastWindowHeight: number;
   }>({
     groupScrollPositions: new Map(),
     lastUid: null,
@@ -453,7 +452,6 @@ export function useGroupScopedScrollRestoration(
     scrollContainers: new Map(),
     currentScrollY: 0,
     lastWindowWidth: typeof window !== 'undefined' ? window.innerWidth : 0,
-    lastWindowHeight: typeof window !== 'undefined' ? window.innerHeight : 0,
   }).current;
 
   const isActiveGroup = groupContext ? groupContext.isActiveStack(groupStackId || '') : true;
@@ -502,15 +500,12 @@ export function useGroupScopedScrollRestoration(
     if (typeof window === 'undefined') return false;
 
     const currentWidth = window.innerWidth;
-    const currentHeight = window.innerHeight;
 
     const significantChange =
-      Math.abs(scrollData.lastWindowWidth - currentWidth) > 1 ||
-      Math.abs(scrollData.lastWindowHeight - currentHeight) > 1;
+      Math.abs(scrollData.lastWindowWidth - currentWidth) > 1;
 
     if (significantChange) {
       scrollData.lastWindowWidth = currentWidth;
-      scrollData.lastWindowHeight = currentHeight;
       return true;
     }
 

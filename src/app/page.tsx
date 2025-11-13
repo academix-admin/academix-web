@@ -12,6 +12,7 @@ import LandingRoles from '@/components/LandingRoles/LandingRoles';
 import LandingMoreAbout from '@/components/LandingMoreAbout/LandingMoreAbout';
 import LandingFeatures from '@/components/LandingFeatures/LandingFeatures';
 import LandingAcademixCalculator from '@/components/LandingAcademixCalculator/LandingAcademixCalculator';
+import Payout from './(public)/payout/page';
 
 export default function LandingPage() {
   const { theme } = useTheme();
@@ -26,7 +27,7 @@ export default function LandingPage() {
       <LandingRoles />
       <LandingMoreAbout />
       <LandingFeatures />
-      <LandingAcademixCalculator />
+      <Payout searchParams={Promise.resolve({ req: 'landing' })} />
       <LandingFooter />
     </div>
   );
