@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { use, useEffect, useState } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { getSupportedLang } from '@/context/LanguageContext';
@@ -9,6 +9,7 @@ import Link from 'next/link';
 import styles from './page.module.css';
 import { useRouter } from 'next/navigation';
 import { useSearchParams } from 'next/navigation';
+
 
 interface Config {
   showHeader: boolean;
@@ -106,11 +107,55 @@ const rulesData = {
   }
 };
 
-export default function Rules() {
+type StringOrNull = string | null;
+
+interface Params {
+  col: StringOrNull;
+  lan: StringOrNull;
+  req: StringOrNull;
+  [key: string]: string | null;
+}
+
+const useAppParams = <
+  T extends Record<string, StringOrNull> = Params
+>(
+  fallbackParams?: Partial<T>
+): T => {
   const searchParams = useSearchParams();
-  const lan = searchParams.get('lan');
-  const col = searchParams.get('col');
-  const req = searchParams.get('req');
+
+  // ✅ Start with a clean object that only has string | null values
+  const params: Record<string, StringOrNull> = {};
+
+  if (fallbackParams) {
+    for (const key in fallbackParams) {
+      const value = fallbackParams[key];
+      params[key] = value ?? null; // ✅ ensure no undefined
+    }
+  }
+
+  // ✅ Merge URL search params
+  searchParams.forEach((value, key) => {
+    params[key] = value;
+  });
+
+  // ✅ Ensure all fallback keys exist
+  if (fallbackParams) {
+    for (const key of Object.keys(fallbackParams)) {
+      if (!(key in params)) params[key] = null;
+    }
+  }
+
+  return params as T;
+};
+
+
+interface RulesPageProps {
+  searchParams: Promise<Partial<Params>>;
+}
+
+export default function Rules({ searchParams }: RulesPageProps) {
+  const resolvedSearchParams = use(searchParams);
+  const { col, lan, req } = useAppParams(resolvedSearchParams);
   const { theme } = useTheme();
   const { t, tNode, lang } = useLanguage();
   const router = useRouter();
@@ -125,33 +170,34 @@ export default function Rules() {
     setCanGoBack(window.history.length > 1);
   }, []);
 
-  // Determine background style
+  // Determine background style - SIMPLIFIED APPROACH
   const getBackgroundStyle = (): React.CSSProperties => {
     if (config.backgroundColor && config.backgroundColor[resolvedTheme]) {
-      return { '--applied-bg': config.backgroundColor[resolvedTheme] } as React.CSSProperties;
+      return {
+        background: config.backgroundColor[resolvedTheme],
+        color: resolvedTheme === 'dark' ? '#ffffff' : '#000000'
+      } as React.CSSProperties;
     }
     return {};
   };
 
-
-
-  // Determine container class - only use CSS class when no config background
+  // Determine container class
   const getContainerClass = () => {
     const baseClass = styles.container;
     if (config.backgroundColor) {
       return baseClass; // Don't apply CSS class when using config background
     }
-    return `${baseClass} ${styles[`container_default_${resolvedTheme}`]}`;
+    return `${baseClass} ${styles[`container_${resolvedTheme}`]}`;
   };
+
 
   return (
     <main
       className={getContainerClass()}
-      data-config-bg={config.backgroundColor ? "true" : "false"}
       style={getBackgroundStyle()}
     >
       {config.showHeader && (
-        <header className={`${styles.header} ${styles[`header_default_${resolvedTheme}`]}`}>
+        <header className={`${styles.header} ${styles[`header_${resolvedTheme}`]}`}>
           <div className={styles.headerContent}>
             {canGoBack && (
               <button
@@ -203,7 +249,7 @@ export default function Rules() {
                     )}
                   </div>
                 ) : (
-                  <div className={styles.sectionCard}>
+                  <div className={`${styles.sectionCard} ${styles[`sectionCard_${resolvedTheme}`]}`}>
                     <h3 className={styles.sectionTitle}>{section.title}</h3>
                     <ul className={styles.sectionList}>
                       {section.items?.map((item, itemIndex) => (

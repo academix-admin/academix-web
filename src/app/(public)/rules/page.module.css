@@ -7,18 +7,15 @@
   transition: background-color 0.3s ease;
 }
 
-.container_default_light {
+/* Default theme backgrounds - only applied when no config background */
+.container_light {
   background-color: #ffffff;
   color: #000;
 }
 
-.container_default_dark {
+.container_dark {
   background-color: #121212;
   color: #ffffff;
-}
-
-.container[data-config-bg="true"] {
-  background-color: var(--applied-bg) !important;
 }
 
 .header {
@@ -32,12 +29,12 @@
   box-sizing: border-box;
 }
 
-.header_default_light {
+.header_light {
   background-color: rgba(255, 255, 255, 0.92);
   border-bottom: 1px solid #E5E5E5;
 }
 
-.header_default_dark {
+.header_dark {
   background-color: rgba(18, 18, 18, 0.92);
   border-bottom: 1px solid #333;
 }
@@ -161,6 +158,7 @@
   text-align: center;
 }
 
+/* Section Cards - Theme Specific */
 .sectionCard {
   padding: 1.5rem;
   border-radius: 12px;
@@ -169,14 +167,16 @@
   text-align: left;
 }
 
-.container_default_light .sectionCard {
+.sectionCard_light {
   background: #ffffff;
   border: 1px solid #e2e8f0;
+  color: #000000;
 }
 
-.container_default_dark .sectionCard {
+.sectionCard_dark {
   background: #1e1e1e;
   border: 1px solid #333;
+  color: #ffffff;
 }
 
 .sectionCard:hover {
@@ -216,7 +216,7 @@
   background: none;
   border: none;
   cursor: pointer;
-  color: var(--text-color);
+  color: inherit;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -229,7 +229,7 @@
   background-color: rgba(0, 0, 0, 0.05);
 }
 
-.container_default_dark .backButton:hover {
+.container_dark .backButton:hover {
   background-color: rgba(255, 255, 255, 0.1);
 }
 
@@ -305,7 +305,7 @@
 
   .innerBody {
     padding: 1.5rem;
-    padding-top: 4rem;
+    padding-top: 6rem;
   }
 
   .innerBody_ios{
