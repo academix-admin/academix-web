@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useState, useEffect, useRef, useMemo } from 'react';
+import { use, useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { getSupportedLang } from '@/context/LanguageContext';
@@ -11,8 +11,13 @@ import 'swiper/css/navigation';
 import styles from './page.module.css';
 import Image from 'next/image';
 import Link from 'next/link';
+import { supabaseBrowser } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import { useSearchParams } from 'next/navigation';
+import { BackendChallengeConfig, ChallengeConfig, ChallengeOption } from '@/models/challenge-config';
+import LoadingView from '@/components/LoadingView/LoadingView'
+import NoResultsView from '@/components/NoResultsView/NoResultsView';
+import ErrorView from '@/components/ErrorView/ErrorView';
 
 
 interface Config {
@@ -52,6 +57,7 @@ const getConfig = (req: string | null): Config => {
 type StringOrNull = string | null;
 
 interface Params {
+  challengeId: StringOrNull;
   col: StringOrNull;
   lan: StringOrNull;
   req: StringOrNull;
@@ -90,55 +96,8 @@ const useAppParams = <
   return params as T;
 };
 
-
 interface PayoutPageProps {
   searchParams: Promise<Partial<Params>>;
-}
-
-// Types
-interface RoleRevenue {
-  'Roles.creator'?: number;
-  'Roles.reviewer'?: number;
-  'Roles.celebrity'?: number;
-  'Roles.organization'?: number;
-  [key: string]: number | undefined;
-}
-
-interface QuestionOption {
-  count: number;
-  entryFees: number;
-  developmentCharge: number;
-  roleRevenue: RoleRevenue;
-  winnerPayout: number;
-  loserPayout: number;
-  creatorShare: number;
-  reviewerShare: number;
-}
-
-interface ChallengeOption {
-  name: string;
-  min: number;
-  max: number;
-  top: number;
-  mid: number;
-  bot: number;
-  questions: number;
-  entryFee: number;
-  developmentCharge: number;
-  roleRevenue: RoleRevenue;
-  creatorShare: number;
-  reviewerShare: number;
-}
-
-interface CalculatorMode {
-  '1v1': {
-    title: string;
-    questionOptions: QuestionOption[];
-  };
-  multiplayer: {
-    title: string;
-    challengeOptions: ChallengeOption[];
-  };
 }
 
 interface MoreReward {
@@ -152,32 +111,7 @@ interface SimpleReward {
   amount: number;
 }
 
-// Constants
-const calculatorData: CalculatorMode = {
-  '1v1': {
-    title: '1v1',
-    questionOptions: [
-      { count: 3, entryFees: 300, developmentCharge: 20, creatorShare: 20, reviewerShare: 20, roleRevenue: { 'Roles.creator': 0, 'Roles.reviewer': 0, 'Roles.celebrity': 5 }, winnerPayout: 450,  loserPayout: 100 },
-      { count: 5, entryFees: 500, developmentCharge: 40, creatorShare: 40, reviewerShare: 40,  roleRevenue: { 'Roles.creator': 0, 'Roles.reviewer': 0, 'Roles.celebrity': 5 }, winnerPayout: 750, loserPayout: 150 },
-      { count: 8, entryFees: 800, developmentCharge: 20, creatorShare: 80, reviewerShare: 80,  roleRevenue: { 'Roles.creator': 0, 'Roles.reviewer': 0,' Roles.celebrity': 5 },  winnerPayout: 1200,loserPayout: 200 },
-    ],
-  },
-  'multiplayer': {
-    title: 'Multiplayer',
-    challengeOptions: [
-      { name: 'Mini Challenge', min: 6, max: 1000, top: 1400, mid: 1200, bot: 1000, questions: 10, entryFee: 700, developmentCharge: 20, creatorShare: 5, reviewerShare: 5, roleRevenue: { 'Roles.creator': 2, 'Roles.reviewer': 2, 'Roles.celebrity': 5 },},
-      { name: 'Extended Challenge', min: 10, max: 300, top: 1960, mid: 1680, bot: 1400, questions: 20, entryFee: 980, developmentCharge: 20, creatorShare: 10, reviewerShare: 10, roleRevenue: { 'Roles.creator': 3, 'Roles.reviewer': 3, 'Roles.celebrity': 7 }, },
-      { name: 'Standard Challenge', min: 20, max: 500, top: 3920, mid: 3360, bot: 2800, questions: 15, entryFee: 980, developmentCharge: 20, creatorShare: 20, reviewerShare: 20, roleRevenue: { 'Roles.creator': 0, 'Roles.reviewer': 0, 'Roles.organization': 10 }, },
-      { name: 'Advanced Challenge', min: 20, max: 200, top: 4800, mid: 4114, bot: 3429, questions: 20, entryFee: 1200, developmentCharge: 20, creatorShare: 20, reviewerShare: 20, roleRevenue: { 'Roles.creator': 0, 'Roles.reviewer': 0, 'Roles.organization': 10 }, },
-      { name: 'Pro Challenge', min: 30, max: 100, top: 7200, mid: 6171, bot: 5143, questions: 20, entryFee: 1200, developmentCharge: 20, creatorShare: 20, reviewerShare: 20, roleRevenue: { 'Roles.creator': 0, 'Roles.reviewer': 0, 'Roles.organization': 10 }, },
-      { name: 'Premium Challenge', min: 30, max: 50, top: 8400, mid: 7200, bot: 6000, questions: 20, entryFee: 1400, developmentCharge: 20, creatorShare: 20, reviewerShare: 20, roleRevenue: { 'Roles.creator': 0, 'Roles.reviewer': 0, 'Roles.organization': 10 }, },
-    ]
-  },
-};
-
 const allRoles = ['Roles.creator', 'Roles.reviewer', 'Roles.organization', 'Roles.teacher', 'Roles.celebrity', 'Roles.parent', 'Roles.institution'];
-
-
 
 // Utility Functions
 const calculateMoreRewards = (
@@ -187,8 +121,10 @@ const calculateMoreRewards = (
   topPrize: number,
   midPrize: number,
   botPrize: number,
-  devChargePct: number
+  devChargePct: number,
+  studentText: string
 ): MoreReward => {
+
   const devChargeList: Record<number, number> = {
     6: 2.38,
     7: 4.76,
@@ -243,7 +179,7 @@ const calculateMoreRewards = (
     } else {
       amount = botPrize;
     }
-    rewards.push({ rank: `Student ${rank}`, amount });
+    rewards.push({ rank: `${studentText} ${rank}`, amount });
     totalDistributed += amount;
   }
 
@@ -256,7 +192,7 @@ const calculateMoreRewards = (
     for (let rank = winnersSize + 1; rank <= size; rank++) {
       const weight = size - rank + 1;
       const amount = remainingForRank * (weight / totalWeight);
-      rewards.push({ rank: `Student ${rank}`, amount: Number(amount.toFixed(2)) });
+      rewards.push({ rank: `${studentText} ${rank}`, amount: Number(amount.toFixed(2)) });
     }
   }
 
@@ -267,7 +203,8 @@ const calculateMoreRewards = (
 const RoleSelector = ({
   roles,
   selectedRole,
-  onSelect}: {
+  onSelect
+}: {
   roles: string[];
   selectedRole: string;
   onSelect: (role: string) => void;
@@ -319,24 +256,425 @@ const RoleSelector = ({
   );
 };
 
-const OneVsOneView = ({ data, roles }: { data: CalculatorMode['1v1']; roles: string[] }) => {
+// const OneVsOneView = ({ data, roles }: { data: ChallengeConfig; roles: string[] }) => {
+//   const { theme } = useTheme();
+//   const { t } = useLanguage();
+//   const [selectedQuestion, setSelectedQuestion] = useState(data.challengeOptions[0]);
+//   const [selectedRole, setSelectedRole] = useState('Roles.creator');
+//
+//   const calculateCharge = (
+//     entryFee: number,
+//     top: number,
+//     mid: number,
+//     questionsCount: number,
+//     roleWeight: number,
+//     devChargePct: number,
+//     share: number
+//   ) => {
+//     const totalPool = entryFee * 2;
+//     const payout = (top + mid);
+//     const remainder = totalPool - payout;
+//     const devCharge = remainder * (devChargePct / 100);
+//     const roleExtra = devCharge * (roleWeight / 100);
+//     return ((share + roleExtra) / questionsCount).toFixed(2);
+//   };
+//
+//   return (
+//     <div className={`${styles.card} ${styles[`card_${theme}`]}`}>
+//       <h4 className={`${styles.revenue_role} ${styles[`revenue_role_${theme}`]}`}>{t('revenue_role')}</h4>
+//       <RoleSelector
+//         roles={roles}
+//         selectedRole={selectedRole}
+//         onSelect={setSelectedRole}
+//       />
+//
+//       <div className={styles.carouselContainer}>
+//         <div className={`${styles.navButton} ${styles.navPrev} ${styles[`navButton_${theme}`]}`}>
+//           <svg viewBox="0 0 24 24" width="24" height="24">
+//             <path fill="currentColor" d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6z"/>
+//           </svg>
+//         </div>
+//         <div className={`${styles.navButton} ${styles.navNext} ${styles[`navButton_${theme}`]}`}>
+//           <svg viewBox="0 0 24 24" width="24" height="24">
+//             <path fill="currentColor" d="M8.59 16.59L13.17 12l-4.58-4.59L10 6l6 6-6 6z"/>
+//           </svg>
+//         </div>
+//         <Swiper
+//           modules={[Navigation]}
+//           loop={data.challengeOptions.length > 3}
+//           slidesPerView={1}
+//           spaceBetween={20}
+//           navigation={{
+//             nextEl: `.${styles.navNext}`,
+//             prevEl: `.${styles.navPrev}`,
+//           }}
+//           breakpoints={{
+//             640: { slidesPerView: 1, spaceBetween: 20 },
+//             768: { slidesPerView: 2, spaceBetween: 24 },
+//             1024: { slidesPerView: 3, spaceBetween: 32 },
+//           }}
+//           className={styles.swiper}
+//         >
+//           {data.challengeOptions.map((option, idx) => (
+//             <SwiperSlide key={idx}>
+//               <button
+//                 className={`${styles.q_button} ${selectedQuestion.challengeIdentity === option.challengeIdentity ? styles.q_selected : ''} ${styles[`q_button_${theme}`]}`}
+//                 onClick={() => setSelectedQuestion(option)}
+//               >
+//                 {option.challengeIdentity}
+//               </button>
+//             </SwiperSlide>
+//           ))}
+//         </Swiper>
+//       </div>
+//
+//       <div className={styles.matchup}>
+//         <button className={`${styles.player_button} ${styles[`player_button_${theme}`]}`}>{t('player')} 1</button>
+//         <span className={`${styles.vs} ${styles[`vs_${theme}`]}`}>vs</span>
+//         <button className={`${styles.player_button} ${styles[`player_button_${theme}`]}`}>{t('player')} 2</button>
+//       </div>
+//       <div className={`${styles.score} ${styles[`score_${theme}`]}`}>
+//         <span>{selectedQuestion.challengePrice}</span>
+//         <span>+</span>
+//         <span>{selectedQuestion.challengePrice}</span>
+//       </div>
+//
+//       <div className={`${styles.payout_breakdown} ${styles[`payout_breakdown_${theme}`]}`}>
+//         <div className={styles.payout_row}>
+//           <span>{t('winner')}:</span>
+//           <span className={styles.payout_value}>{selectedQuestion.challengeTopShare}</span>
+//         </div>
+//         <div className={styles.payout_row}>
+//           <span>{t('loser')}:</span>
+//           <span className={styles.payout_value}>{selectedQuestion.challengeMidShare}</span>
+//         </div>
+//         {selectedRole !== 'Roles.reviewer' && (
+//           <div className={styles.payout_row}>
+//             <span>{t(selectedRole)}:</span>
+//             <span className={styles.payout_value}>
+//               {calculateCharge(
+//                 selectedQuestion.challengePrice,
+//                 selectedQuestion.challengeTopShare,
+//                 selectedQuestion.challengeMidShare,
+//                 selectedQuestion.challengeQuestionCount,
+//                 (selectedQuestion.challengeRoleShare.roles[selectedRole] || 0),
+//                 selectedQuestion.challengeDevelopmentCharge,
+//                 selectedQuestion.challengeCreatorShare
+//               )} {t('per_question')}
+//             </span>
+//           </div>
+//         )}
+//         {selectedRole === 'Roles.reviewer' && (
+//           <div className={styles.payout_row}>
+//             <span>{t('Roles.creator')}:</span>
+//             <span className={styles.payout_value}>
+//               {calculateCharge(
+//                 selectedQuestion.challengePrice,
+//                 selectedQuestion.challengeTopShare,
+//                 selectedQuestion.challengeMidShare,
+//                 selectedQuestion.challengeQuestionCount,
+//                 (selectedQuestion.challengeRoleShare.roles['Roles.creator'] || 0),
+//                 selectedQuestion.challengeDevelopmentCharge,
+//                 selectedQuestion.challengeCreatorShare
+//               )} {t('per_question')}
+//             </span>
+//           </div>
+//         )}
+//         <div className={styles.payout_row}>
+//           <span>{t('Roles.reviewer')}:</span>
+//           <span className={styles.payout_value}>
+//             {calculateCharge(
+//               selectedQuestion.challengePrice,
+//               selectedQuestion.challengeTopShare,
+//               selectedQuestion.challengeMidShare,
+//               selectedQuestion.challengeQuestionCount,
+//               (selectedQuestion.challengeRoleShare.roles['Roles.reviewer'] || 0),
+//               selectedQuestion.challengeDevelopmentCharge,
+//               selectedQuestion.challengeReviewerShare
+//             )} {t('per_question')}
+//           </span>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// };
+//
+// const MultiplayerView = ({ data, roles }: { data: ChallengeConfig; roles: string[] }) => {
+//   const { theme } = useTheme();
+//   const { t } = useLanguage();
+//   const [selectedChallenge, setSelectedChallenge] = useState(data.challengeOptions[0]);
+//   const [minPlayers, setMinPlayers] = useState(selectedChallenge.challengeMinParticipants);
+//   const [selectedRole, setSelectedRole] = useState('Roles.creator');
+//   const [currentPage, setCurrentPage] = useState(1);
+//   const itemsPerPage = 10;
+//
+//   const moreRewards = useMemo(() => calculateMoreRewards(
+//     minPlayers,
+//     selectedChallenge.challengeMinParticipants,
+//     selectedChallenge.challengePrice,
+//     selectedChallenge.challengeTopShare,
+//     selectedChallenge.challengeMidShare,
+//     selectedChallenge.challengeBotShare,
+//     selectedChallenge.challengeDevelopmentCharge,
+//     t('student')
+//   ), [minPlayers, selectedChallenge]);
+//
+//   const paginatedRewards = moreRewards.rewards.slice(
+//     (currentPage - 1) * itemsPerPage,
+//     currentPage * itemsPerPage
+//   );
+//
+//   const totalPages = Math.ceil(moreRewards.rewards.length / itemsPerPage);
+//
+//   const handleChallengeChange = (challenge: ChallengeOption) => {
+//     setSelectedChallenge(challenge);
+//     setMinPlayers(challenge.challengeMinParticipants);
+//     setCurrentPage(1);
+//   };
+//
+//   const devChargeList: Record<number, number> = {
+//     6: 2.38,
+//     7: 4.76,
+//     8: 9.52,
+//     9: 14.28
+//   };
+//
+//   const calculateCharge = (
+//     entryFee: number,
+//     minPlayers: number,
+//     questionsCount: number,
+//     roleWeight: number,
+//     devChargePct: number,
+//     share: number
+//   ) => {
+//     const totalPool = minPlayers * entryFee;
+//     let devCharge: number;
+//     let rolePool: number;
+//     let roleExtra: number;
+//
+//     if (minPlayers > 9) {
+//       devCharge = totalPool * (devChargePct / 100);
+//       rolePool = devCharge * 0.5;
+//       roleExtra = rolePool * (roleWeight / 100);
+//     } else {
+//       const chargePct = devChargeList[minPlayers] || devChargePct;
+//       devCharge = totalPool * (chargePct / 100);
+//       rolePool = devCharge - ((minPlayers / 6) - 1);
+//       roleExtra = (devCharge - rolePool) * (roleWeight / 100);
+//     }
+//     return ((share + roleExtra)).toFixed(2);
+//   };
+//
+//   return (
+//     <div className={`${styles.card} ${styles[`card_${theme}`]}`}>
+//       <h4 className={`${styles.revenue_role} ${styles[`revenue_role_${theme}`]}`}>{t('revenue_role')}</h4>
+//       <RoleSelector
+//         roles={roles}
+//         selectedRole={selectedRole}
+//         onSelect={setSelectedRole}
+//       />
+//
+//       <div className={styles.carouselContainer}>
+//         <div className={`${styles.navButton} ${styles.navPrev} ${styles[`navButton_${theme}`]}`}>
+//           <svg viewBox="0 0 24 24" width="24" height="24">
+//             <path fill="currentColor" d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6z"/>
+//           </svg>
+//         </div>
+//         <div className={`${styles.navButton} ${styles.navNext} ${styles[`navButton_${theme}`]}`}>
+//           <svg viewBox="0 0 24 24" width="24" height="24">
+//             <path fill="currentColor" d="M8.59 16.59L13.17 12l-4.58-4.59L10 6l6 6-6 6z"/>
+//           </svg>
+//         </div>
+//         <Swiper
+//           modules={[Navigation]}
+//           loop={data.challengeOptions.length > 3}
+//           slidesPerView={1}
+//           spaceBetween={20}
+//           navigation={{
+//             nextEl: `.${styles.navNext}`,
+//             prevEl: `.${styles.navPrev}`,
+//           }}
+//           breakpoints={{
+//             640: { slidesPerView: 1, spaceBetween: 20 },
+//             768: { slidesPerView: 2, spaceBetween: 24 },
+//             1024: { slidesPerView: 3, spaceBetween: 32 },
+//           }}
+//           className={styles.swiper}
+//         >
+//           {data.challengeOptions.map((challenge) => (
+//             <SwiperSlide key={challenge.challengeIdentity}>
+//               <button
+//                 className={`${styles.q_button} ${selectedChallenge.challengeIdentity === challenge.challengeIdentity ? styles.q_selected : ''} ${styles[`q_button_${theme}`]}`}
+//                 onClick={() => handleChallengeChange(challenge)}
+//               >
+//                 {challenge.challengeIdentity}
+//               </button>
+//             </SwiperSlide>
+//           ))}
+//         </Swiper>
+//       </div>
+//
+//       <div className={`${styles.entry_fee} ${styles[`entry_fee_${theme}`]}`}>
+//         <strong>{t('entry_fee')}:</strong> {selectedChallenge.challengePrice}
+//       </div>
+//
+//       <div className={styles.slider_container}>
+//         <label className={`${styles.slider_label} ${styles[`slider_label_${theme}`]}`}>
+//           {t('minimum_players')}: {minPlayers}
+//         </label>
+//         <input
+//           type="range"
+//           min={selectedChallenge.challengeMinParticipants}
+//           max={selectedChallenge.challengeMaxParticipants}
+//           value={minPlayers}
+//           onChange={(e) => {
+//             setMinPlayers(Number(e.target.value));
+//             setCurrentPage(1);
+//           }}
+//           className={`${styles.slider} ${styles[`slider_${theme}`]}`}
+//         />
+//       </div>
+//
+//       <div className={`${styles.payout_table} ${styles[`payout_table_${theme}`]}`}>
+//         <div className={`${styles.table_header} ${styles[`table_header_${theme}`]}`}>
+//           <span>#</span>
+//           <span>{t('rank')}</span>
+//           <span>{t('amount')}</span>
+//         </div>
+//         {paginatedRewards.map((payout, index) => (
+//           <div
+//             key={index}
+//             className={`${styles.table_row} ${styles[`table_row_${theme}`]} ${
+//               (currentPage - 1) * itemsPerPage + index < moreRewards.winnersSize ? styles.top_winner : ''
+//             }`}
+//           >
+//             <span>{(currentPage - 1) * itemsPerPage + index + 1}</span>
+//             <span>{payout.rank}</span>
+//             <span>{payout.amount}</span>
+//           </div>
+//         ))}
+//       </div>
+//
+//       {totalPages > 1 && (
+//         <div className={styles.pagination}>
+//           <button
+//             className={`${styles.page_button} ${styles[`page_button_${theme}`]}`}
+//             onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+//             disabled={currentPage === 1}
+//           >
+//             {t('previous')}
+//           </button>
+//           {Array.from({ length: Math.min(3, totalPages) }, (_, i) => {
+//             let pageNum;
+//             if (totalPages <= 3) {
+//               pageNum = i + 1;
+//             } else if (currentPage <= 2) {
+//               pageNum = i + 1;
+//             } else if (currentPage >= totalPages - 1) {
+//               pageNum = totalPages - 2 + i;
+//             } else {
+//               pageNum = currentPage - 1 + i;
+//             }
+//             return (
+//               <button
+//                 key={pageNum}
+//                 className={`${styles.page_button} ${
+//                   currentPage === pageNum ? styles.page_button_active : ''
+//                 } ${styles[`page_button_${theme}`]}`}
+//                 onClick={() => setCurrentPage(pageNum)}
+//               >
+//                 {pageNum}
+//               </button>
+//             );
+//           })}
+//           {totalPages > 3 && currentPage < totalPages - 1 && (
+//             <span className={`${styles.page_dots} ${styles[`page_dots_${theme}`]}`}>...</span>
+//           )}
+//           <button
+//             className={`${styles.page_button} ${styles[`page_button_${theme}`]}`}
+//             onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+//             disabled={currentPage === totalPages}
+//           >
+//             {t('next')}
+//           </button>
+//         </div>
+//       )}
+//
+//       <div className={`${styles.creator_info} ${styles[`creator_info_${theme}`]}`}>
+//         {selectedRole !== 'Roles.reviewer' && (
+//           <div className={styles.payout_row}>
+//             <span>{t(selectedRole)}:</span>
+//             <span className={styles.payout_value}>
+//               {calculateCharge(
+//                 selectedChallenge.challengePrice,
+//                 minPlayers,
+//                 selectedChallenge.challengeQuestionCount,
+//                 selectedChallenge.challengeRoleShare.roles[selectedRole] || 0,
+//                 selectedChallenge.challengeDevelopmentCharge,
+//                 selectedChallenge.challengeCreatorShare
+//               )} {t('per_question')}
+//             </span>
+//           </div>
+//         )}
+//         {selectedRole === 'Roles.reviewer' && (
+//           <div className={styles.payout_row}>
+//             <span>{t('Roles.creator')}:</span>
+//             <span className={styles.payout_value}>
+//               {calculateCharge(
+//                 selectedChallenge.challengePrice,
+//                 minPlayers,
+//                 selectedChallenge.challengeQuestionCount,
+//                 selectedChallenge.challengeRoleShare.roles['Roles.creator'] || 0,
+//                 selectedChallenge.challengeDevelopmentCharge,
+//                 selectedChallenge.challengeCreatorShare
+//               )} {t('per_question')}
+//             </span>
+//           </div>
+//         )}
+//         <div className={styles.payout_row}>
+//           <span>{t('Roles.reviewer')}:</span>
+//           <span className={styles.payout_value}>
+//             {calculateCharge(
+//               selectedChallenge.challengePrice,
+//               minPlayers,
+//               selectedChallenge.challengeQuestionCount,
+//               selectedChallenge.challengeRoleShare.roles['Roles.reviewer'] || 0,
+//               selectedChallenge.challengeDevelopmentCharge,
+//               selectedChallenge.challengeReviewerShare
+//             )} {t('per_question')}
+//           </span>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// };
+
+const OneVsOneView = ({ data, roles }: { data: ChallengeConfig; roles: string[] }) => {
   const { theme } = useTheme();
   const { t } = useLanguage();
-  const [selectedQuestion, setSelectedQuestion] = useState(data.questionOptions[0]);
+  const [selectedQuestion, setSelectedQuestion] = useState(data.challengeOptions[0]);
   const [selectedRole, setSelectedRole] = useState('Roles.creator');
 
-  const calculateCharge = (entryFee: number, winnerPayout: number, loserPayout: number, questionsCount: number, roleWeight: number, devChargePct: number, share: number) => {
-      const totalPool = entryFee * 2;
-      const payout = (winnerPayout + loserPayout);
-      const remainder = totalPool - payout;
-      const devCharge = remainder * (devChargePct/100);
-      const roleExtra = devCharge * (roleWeight/ 100);
-      return ((share + roleExtra)/questionsCount).toFixed(2);
-  }
+  const calculateCharge = (
+    entryFee: number,
+    top: number,
+    mid: number,
+    questionsCount: number,
+    roleWeight: number,
+    devChargePct: number,
+    share: number
+  ) => {
+    const totalPool = entryFee * 2;
+    const payout = (top + mid);
+    const remainder = totalPool - payout;
+    const devCharge = remainder * (devChargePct / 100);
+    const roleExtra = devCharge * (roleWeight / 100);
+    return ((share + roleExtra) / questionsCount).toFixed(2);
+  };
 
   return (
     <div className={`${styles.card} ${styles[`card_${theme}`]}`}>
-      <h4 className={`${styles.revenue_role} ${styles[`revenue_role_${theme}`]}`}>Revenue Role</h4>
+      <h4 className={`${styles.revenue_role} ${styles[`revenue_role_${theme}`]}`}>{t('revenue_role')}</h4>
       <RoleSelector
         roles={roles}
         selectedRole={selectedRole}
@@ -356,7 +694,7 @@ const OneVsOneView = ({ data, roles }: { data: CalculatorMode['1v1']; roles: str
         </div>
         <Swiper
           modules={[Navigation]}
-          loop={data.questionOptions.length > 3}
+          loop={data.challengeOptions.length > 3}
           slidesPerView={1}
           spaceBetween={20}
           navigation={{
@@ -370,76 +708,115 @@ const OneVsOneView = ({ data, roles }: { data: CalculatorMode['1v1']; roles: str
           }}
           className={styles.swiper}
         >
-          {data.questionOptions.map((option, idx) => (
+          {data.challengeOptions.map((option, idx) => (
             <SwiperSlide key={idx}>
               <button
-                className={`${styles.q_button} ${selectedQuestion.count === option.count ? styles.q_selected : ''} ${styles[`q_button_${theme}`]}`}
+                className={`${styles.q_button} ${selectedQuestion.challengeIdentity === option.challengeIdentity ? styles.q_selected : ''} ${styles[`q_button_${theme}`]}`}
                 onClick={() => setSelectedQuestion(option)}
               >
-                {option.count} Questions
+                {option.challengeIdentity}
               </button>
             </SwiperSlide>
           ))}
         </Swiper>
       </div>
 
+      {/* Add Question Count Display */}
+      <div className={`${styles.question_count} ${styles[`question_count_${theme}`]}`}>
+        <strong>{t('questions_text')}:</strong> {selectedQuestion.challengeQuestionCount}
+      </div>
+
       <div className={styles.matchup}>
-        <button className={`${styles.player_button} ${styles[`player_button_${theme}`]}`}>Player 1</button>
+        <button className={`${styles.player_button} ${styles[`player_button_${theme}`]}`}>{t('player')} 1</button>
         <span className={`${styles.vs} ${styles[`vs_${theme}`]}`}>vs</span>
-        <button className={`${styles.player_button} ${styles[`player_button_${theme}`]}`}>Player 2</button>
+        <button className={`${styles.player_button} ${styles[`player_button_${theme}`]}`}>{t('player')} 2</button>
       </div>
       <div className={`${styles.score} ${styles[`score_${theme}`]}`}>
-        <span>{selectedQuestion.entryFees}</span>
+        <span>{selectedQuestion.challengePrice}</span>
         <span>+</span>
-        <span>{selectedQuestion.entryFees}</span>
+        <span>{selectedQuestion.challengePrice}</span>
       </div>
 
       <div className={`${styles.payout_breakdown} ${styles[`payout_breakdown_${theme}`]}`}>
         <div className={styles.payout_row}>
-          <span>Winner:</span>
-          <span className={styles.payout_value}>{selectedQuestion.winnerPayout}</span>
+          <span>{t('winner')}:</span>
+          <span className={styles.payout_value}>{selectedQuestion.challengeTopShare}</span>
         </div>
         <div className={styles.payout_row}>
-          <span>Loser:</span>
-          <span className={styles.payout_value}>{selectedQuestion.loserPayout}</span>
+          <span>{t('loser')}:</span>
+          <span className={styles.payout_value}>{selectedQuestion.challengeMidShare}</span>
         </div>
-        { selectedRole != 'Roles.Reviewer' && (<div className={styles.payout_row}>
-          <span>{t(selectedRole)}:</span>
-          <span className={styles.payout_value}>{calculateCharge(selectedQuestion.entryFees, selectedQuestion.winnerPayout, selectedQuestion.loserPayout,
-              selectedQuestion.count, (selectedQuestion.roleRevenue[selectedRole] || 0), selectedQuestion.developmentCharge, selectedQuestion.creatorShare)} /question</span>
-        </div>)}
-        { selectedRole == 'Roles.Reviewer' && (<div className={styles.payout_row}>
-          <span>Creator:</span>
-          <span className={styles.payout_value}>{calculateCharge(selectedQuestion.entryFees, selectedQuestion.winnerPayout, selectedQuestion.loserPayout,
-              selectedQuestion.count, (selectedQuestion.roleRevenue['Roles.creator'] || 0), selectedQuestion.developmentCharge, selectedQuestion.creatorShare)} /question</span>
-        </div>)}
+        {selectedRole !== 'Roles.reviewer' && (
+          <div className={styles.payout_row}>
+            <span>{t(selectedRole)}:</span>
+            <span className={styles.payout_value}>
+              {calculateCharge(
+                selectedQuestion.challengePrice,
+                selectedQuestion.challengeTopShare,
+                selectedQuestion.challengeMidShare,
+                selectedQuestion.challengeQuestionCount,
+                (selectedQuestion.challengeRoleShare.roles[selectedRole] || 0),
+                selectedQuestion.challengeDevelopmentCharge,
+                selectedQuestion.challengeCreatorShare
+              )} {t('per_question')}
+            </span>
+          </div>
+        )}
+        {selectedRole === 'Roles.reviewer' && (
+          <div className={styles.payout_row}>
+            <span>{t('Roles.creator')}:</span>
+            <span className={styles.payout_value}>
+              {calculateCharge(
+                selectedQuestion.challengePrice,
+                selectedQuestion.challengeTopShare,
+                selectedQuestion.challengeMidShare,
+                selectedQuestion.challengeQuestionCount,
+                (selectedQuestion.challengeRoleShare.roles['Roles.creator'] || 0),
+                selectedQuestion.challengeDevelopmentCharge,
+                selectedQuestion.challengeCreatorShare
+              )} {t('per_question')}
+            </span>
+          </div>
+        )}
         <div className={styles.payout_row}>
-          <span>Reviewer:</span>
-          <span className={styles.payout_value}>{calculateCharge(selectedQuestion.entryFees, selectedQuestion.winnerPayout, selectedQuestion.loserPayout,
-              selectedQuestion.count, (selectedQuestion.roleRevenue['Roles.reviewer'] || 0), selectedQuestion.developmentCharge, selectedQuestion.reviewerShare)} /question</span>
+          <span>{t('Roles.reviewer')}:</span>
+          <span className={styles.payout_value}>
+            {calculateCharge(
+              selectedQuestion.challengePrice,
+              selectedQuestion.challengeTopShare,
+              selectedQuestion.challengeMidShare,
+              selectedQuestion.challengeQuestionCount,
+              (selectedQuestion.challengeRoleShare.roles['Roles.reviewer'] || 0),
+              selectedQuestion.challengeDevelopmentCharge,
+              selectedQuestion.challengeReviewerShare
+            )} {t('per_question')}
+          </span>
         </div>
       </div>
     </div>
   );
 };
 
-const MultiplayerView = ({ data, roles }: { data: CalculatorMode['multiplayer']; roles: string[] }) => {
+const MultiplayerView = ({ data, roles }: { data: ChallengeConfig; roles: string[] }) => {
   const { theme } = useTheme();
   const { t } = useLanguage();
   const [selectedChallenge, setSelectedChallenge] = useState(data.challengeOptions[0]);
-  const [minPlayers, setMinPlayers] = useState(selectedChallenge.min);
+  const [minPlayers, setMinPlayers] = useState(selectedChallenge.challengeMinParticipants);
   const [selectedRole, setSelectedRole] = useState('Roles.creator');
   const [currentPage, setCurrentPage] = useState(1);
+  const [positionInput, setPositionInput] = useState('');
+  const [positionAmount, setPositionAmount] = useState<number | null>(null);
   const itemsPerPage = 10;
 
   const moreRewards = useMemo(() => calculateMoreRewards(
     minPlayers,
-    selectedChallenge.min,
-    selectedChallenge.entryFee,
-    selectedChallenge.top,
-    selectedChallenge.mid,
-    selectedChallenge.bot,
-    selectedChallenge.developmentCharge
+    selectedChallenge.challengeMinParticipants,
+    selectedChallenge.challengePrice,
+    selectedChallenge.challengeTopShare,
+    selectedChallenge.challengeMidShare,
+    selectedChallenge.challengeBotShare,
+    selectedChallenge.challengeDevelopmentCharge,
+    t('student')
   ), [minPlayers, selectedChallenge]);
 
   const paginatedRewards = moreRewards.rewards.slice(
@@ -449,10 +826,47 @@ const MultiplayerView = ({ data, roles }: { data: CalculatorMode['multiplayer'];
 
   const totalPages = Math.ceil(moreRewards.rewards.length / itemsPerPage);
 
+  // Effect to update position amount when minPlayers or moreRewards changes
+  useEffect(() => {
+    if (positionInput) {
+      const position = Number(positionInput);
+      if (!isNaN(position) && position >= 1 && position <= moreRewards.rewards.length) {
+        const reward = moreRewards.rewards[position - 1];
+        setPositionAmount(reward.amount);
+      } else {
+        setPositionAmount(null);
+      }
+    }
+  }, [moreRewards, positionInput]);
+
   const handleChallengeChange = (challenge: ChallengeOption) => {
     setSelectedChallenge(challenge);
-    setMinPlayers(Number(challenge.min));
+    setMinPlayers(challenge.challengeMinParticipants);
     setCurrentPage(1);
+    setPositionInput('');
+    setPositionAmount(null);
+  };
+
+  const handlePositionInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setPositionInput(value);
+
+    const position = Number(value);
+
+    // Clear amount if input is empty or invalid
+    if (value === '' || isNaN(position)) {
+      setPositionAmount(null);
+      return;
+    }
+
+    // If position is beyond current minPlayers, update minPlayers to show that position
+    if (position >= 1 && position <= selectedChallenge.challengeMaxParticipants) {
+      if (position >= minPlayers) {
+        setMinPlayers(position);
+      }
+    } else {
+      setPositionAmount(null);
+    }
   };
 
   const devChargeList: Record<number, number> = {
@@ -462,30 +876,35 @@ const MultiplayerView = ({ data, roles }: { data: CalculatorMode['multiplayer'];
     9: 14.28
   };
 
+  const calculateCharge = (
+    entryFee: number,
+    minPlayers: number,
+    questionsCount: number,
+    roleWeight: number,
+    devChargePct: number,
+    share: number
+  ) => {
+    const totalPool = minPlayers * entryFee;
+    let devCharge: number;
+    let rolePool: number;
+    let roleExtra: number;
 
-
-  const calculateCharge = (entryFee: number, minPlayers: number, questionsCount: number, roleWeight: number, devChargePct: number, share: number) => {
-        const totalPool = minPlayers * entryFee;
-        let devCharge: number;
-        let rolePool: number;
-        let roleExtra: number;
-
-        if (minPlayers > 9) {
-          devCharge = totalPool * (devChargePct / 100);
-          rolePool = devCharge * 0.5;
-          roleExtra = rolePool * (roleWeight/ 100);
-        } else {
-          const chargePct = devChargeList[minPlayers] || devChargePct;
-          devCharge = totalPool * (chargePct / 100);
-          rolePool = devCharge - ((minPlayers/6) - 1);
-          roleExtra = (devCharge - rolePool) * (roleWeight/ 100);
-        }
-        return ((share + roleExtra)).toFixed(2);
-  }
+    if (minPlayers > 9) {
+      devCharge = totalPool * (devChargePct / 100);
+      rolePool = devCharge * 0.5;
+      roleExtra = rolePool * (roleWeight / 100);
+    } else {
+      const chargePct = devChargeList[minPlayers] || devChargePct;
+      devCharge = totalPool * (chargePct / 100);
+      rolePool = devCharge - ((minPlayers / 6) - 1);
+      roleExtra = (devCharge - rolePool) * (roleWeight / 100);
+    }
+    return ((share + roleExtra)).toFixed(2);
+  };
 
   return (
     <div className={`${styles.card} ${styles[`card_${theme}`]}`}>
-      <h4 className={`${styles.revenue_role} ${styles[`revenue_role_${theme}`]}`}>Revenue Role</h4>
+      <h4 className={`${styles.revenue_role} ${styles[`revenue_role_${theme}`]}`}>{t('revenue_role')}</h4>
       <RoleSelector
         roles={roles}
         selectedRole={selectedRole}
@@ -520,48 +939,94 @@ const MultiplayerView = ({ data, roles }: { data: CalculatorMode['multiplayer'];
           className={styles.swiper}
         >
           {data.challengeOptions.map((challenge) => (
-            <SwiperSlide key={challenge.name}>
+            <SwiperSlide key={challenge.challengeIdentity}>
               <button
-                className={`${styles.q_button} ${selectedChallenge.name === challenge.name ? styles.q_selected : ''} ${styles[`q_button_${theme}`]}`}
+                className={`${styles.q_button} ${selectedChallenge.challengeIdentity === challenge.challengeIdentity ? styles.q_selected : ''} ${styles[`q_button_${theme}`]}`}
                 onClick={() => handleChallengeChange(challenge)}
               >
-                {challenge.name}
+                {challenge.challengeIdentity}
               </button>
             </SwiperSlide>
           ))}
         </Swiper>
       </div>
 
+      {/* Add Question Count Display */}
+      <div className={`${styles.question_count} ${styles[`question_count_${theme}`]}`}>
+        <strong>{t('questions_text')}:</strong> {selectedChallenge.challengeQuestionCount}
+      </div>
+
       <div className={`${styles.entry_fee} ${styles[`entry_fee_${theme}`]}`}>
-        <strong>Entry Fee:</strong> {selectedChallenge.entryFee}
+        <strong>{t('entry_fee')}:</strong> {selectedChallenge.challengePrice}
       </div>
 
       <div className={styles.slider_container}>
-        <label className={`${styles.slider_label} ${styles[`slider_label_${theme}`]}`}>Minimum Player: {minPlayers}</label>
+        <label className={`${styles.slider_label} ${styles[`slider_label_${theme}`]}`}>
+          {t('minimum_players')}: {minPlayers}
+        </label>
+
         <input
           type="range"
-          min={selectedChallenge.min}
-          max={selectedChallenge.max}
+          min={selectedChallenge.challengeMinParticipants}
+          max={selectedChallenge.challengeMaxParticipants}
           value={minPlayers}
           onChange={(e) => {
-            setMinPlayers(Number(e.target.value));
+            const newMinPlayers = Number(e.target.value);
+            setMinPlayers(newMinPlayers);
             setCurrentPage(1);
+
+            // Clear position input if it's now invalid
+            if (positionInput) {
+              const position = Number(positionInput);
+              if (position > newMinPlayers) {
+                setPositionInput('');
+                setPositionAmount(null);
+              }
+            }
           }}
           className={`${styles.slider} ${styles[`slider_${theme}`]}`}
         />
       </div>
 
+      {/* Position Input Field */}
+      <div className={styles.position_input_container}>
+        <label className={`${styles.position_label} ${styles[`position_label_${theme}`]}`}>
+          {t('enter_position')} (1 - {moreRewards.rewards.length}):
+        </label>
+        <div className={styles.position_input_wrapper}>
+          <input
+            type="number"
+            min="1"
+            max={moreRewards.rewards.length}
+            value={positionInput}
+            onChange={handlePositionInputChange}
+            placeholder={t('position_placeholder')}
+            className={`${styles.position_input} ${styles[`position_input_${theme}`]}`}
+          />
+        </div>
+        {positionAmount !== null && (
+          <div className={`${styles.position_result} ${styles[`position_result_${theme}`]}`}>
+            {t('amount_for_position')} {positionInput}: <strong>{positionAmount}</strong>
+          </div>
+        )}
+        {positionInput && positionAmount === null && (
+          <div className={`${styles.position_error} ${styles[`position_error_${theme}`]}`}>
+            {t('position_invalid')} {moreRewards.rewards.length}
+          </div>
+        )}
+      </div>
+
       <div className={`${styles.payout_table} ${styles[`payout_table_${theme}`]}`}>
         <div className={`${styles.table_header} ${styles[`table_header_${theme}`]}`}>
           <span>#</span>
-          <span>Rank</span>
-          <span>Amount</span>
+          <span>{t('rank')}</span>
+          <span>{t('amount')}</span>
         </div>
         {paginatedRewards.map((payout, index) => (
           <div
             key={index}
             className={`${styles.table_row} ${styles[`table_row_${theme}`]} ${
-              (currentPage - 1) * itemsPerPage + index  < moreRewards.winnersSize ? styles.top_winner : ''
+              (currentPage - 1) * itemsPerPage + index < moreRewards.winnersSize ? styles.top_winner : ''
             }`}
           >
             <span>{(currentPage - 1) * itemsPerPage + index + 1}</span>
@@ -578,7 +1043,7 @@ const MultiplayerView = ({ data, roles }: { data: CalculatorMode['multiplayer'];
             onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
             disabled={currentPage === 1}
           >
-            Previous
+            {t('previous')}
           </button>
           {Array.from({ length: Math.min(3, totalPages) }, (_, i) => {
             let pageNum;
@@ -611,23 +1076,54 @@ const MultiplayerView = ({ data, roles }: { data: CalculatorMode['multiplayer'];
             onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
             disabled={currentPage === totalPages}
           >
-            Next
+            {t('next')}
           </button>
         </div>
       )}
 
       <div className={`${styles.creator_info} ${styles[`creator_info_${theme}`]}`}>
-        {selectedRole != 'Roles.Reviewer' && <div className={styles.payout_row}>
-          <span>{t(selectedRole)}:</span>
-          <span className={styles.payout_value}>{calculateCharge(selectedChallenge.entryFee,minPlayers, selectedChallenge.questions, selectedChallenge.roleRevenue[selectedRole] || 0, selectedChallenge.developmentCharge, selectedChallenge.creatorShare)} /question</span>
-        </div>}
-        {selectedRole == 'Roles.Reviewer' && <div className={styles.payout_row}>
-          <span>Creator:</span>
-          <span className={styles.payout_value}>{calculateCharge(selectedChallenge.entryFee,minPlayers, selectedChallenge.questions, selectedChallenge.roleRevenue['Roles.creator'] || 0, selectedChallenge.developmentCharge, selectedChallenge.creatorShare)} /question</span>
-        </div>}
+        {selectedRole !== 'Roles.reviewer' && (
+          <div className={styles.payout_row}>
+            <span>{t(selectedRole)}:</span>
+            <span className={styles.payout_value}>
+              {calculateCharge(
+                selectedChallenge.challengePrice,
+                minPlayers,
+                selectedChallenge.challengeQuestionCount,
+                selectedChallenge.challengeRoleShare.roles[selectedRole] || 0,
+                selectedChallenge.challengeDevelopmentCharge,
+                selectedChallenge.challengeCreatorShare
+              )} {t('per_question')}
+            </span>
+          </div>
+        )}
+        {selectedRole === 'Roles.reviewer' && (
+          <div className={styles.payout_row}>
+            <span>{t('Roles.creator')}:</span>
+            <span className={styles.payout_value}>
+              {calculateCharge(
+                selectedChallenge.challengePrice,
+                minPlayers,
+                selectedChallenge.challengeQuestionCount,
+                selectedChallenge.challengeRoleShare.roles['Roles.creator'] || 0,
+                selectedChallenge.challengeDevelopmentCharge,
+                selectedChallenge.challengeCreatorShare
+              )} {t('per_question')}
+            </span>
+          </div>
+        )}
         <div className={styles.payout_row}>
-          <span>Reviewer:</span>
-          <span className={styles.payout_value}>{calculateCharge(selectedChallenge.entryFee,minPlayers, selectedChallenge.questions, selectedChallenge.roleRevenue['Roles.reviewer'] || 0, selectedChallenge.developmentCharge, selectedChallenge.reviewerShare)} /question</span>
+          <span>{t('Roles.reviewer')}:</span>
+          <span className={styles.payout_value}>
+            {calculateCharge(
+              selectedChallenge.challengePrice,
+              minPlayers,
+              selectedChallenge.challengeQuestionCount,
+              selectedChallenge.challengeRoleShare.roles['Roles.reviewer'] || 0,
+              selectedChallenge.challengeDevelopmentCharge,
+              selectedChallenge.challengeReviewerShare
+            )} {t('per_question')}
+          </span>
         </div>
       </div>
     </div>
@@ -637,9 +1133,9 @@ const MultiplayerView = ({ data, roles }: { data: CalculatorMode['multiplayer'];
 // Main Component
 export default function Payout({ searchParams }: PayoutPageProps) {
   const resolvedSearchParams = use(searchParams);
-  const { col, lan, req } = useAppParams(resolvedSearchParams);
+  const { challengeId, col, lan, req } = useAppParams(resolvedSearchParams);
   const { theme } = useTheme();
-  const { t, tNode, lang  } = useLanguage();
+  const { t, tNode, lang } = useLanguage();
 
   const router = useRouter();
   const [canGoBack, setCanGoBack] = useState(false);
@@ -647,14 +1143,51 @@ export default function Payout({ searchParams }: PayoutPageProps) {
   const config = getConfig(req);
   const resolvedTheme = col || theme;
   const resolvedLang = getSupportedLang(lan) || lang;
-  
-  const [activeTab, setActiveTab] = useState<'1v1' | 'multiplayer'>('1v1');
-  
+
+  const [challengeData, setChallengeData] = useState<ChallengeConfig[]>([]);
+  const [activeTab, setActiveTab] = useState<string | null>(null);
+  const [payoutState, setPayoutState] = useState('initial');
+
   useEffect(() => {
     setCanGoBack(window.history.length > 1);
   }, []);
 
-  // Determine background style - SIMPLIFIED APPROACH
+  const fetchPayoutData = useCallback(async () => {
+    if (payoutState != 'initial') return;
+    setPayoutState('loading');
+    try {
+      const { data, error } = await supabaseBrowser.rpc("fetch_payout_data", {
+        p_challenge_id: challengeId,
+        p_locale: lang
+      });
+
+      if (error) {
+        console.error("[ChallengeConfig] error:", error);
+        setPayoutState('error');
+        return;
+      }
+
+      if (data) {
+        const challenges = data.map((row: BackendChallengeConfig) => new ChallengeConfig(row));
+        setChallengeData(challenges);
+        // Set active tab to 1v1 if available, otherwise first challenge
+        const oneVOneChallenge = challenges.find((e: ChallengeConfig) => e.gameModeChecker === 'GameMode.1v1');
+        setActiveTab(oneVOneChallenge?.gameModeChecker || challenges[0]?.gameModeChecker || null);
+        setPayoutState('data');
+      } else {
+        setPayoutState('empty');
+      }
+    } catch (error) {
+      console.error('Error fetching payout data:', error);
+      setPayoutState('error');
+    }
+  }, [challengeId, lang, payoutState]);
+
+  useEffect(() => {
+      fetchPayoutData();
+  }, [fetchPayoutData]);
+
+  // Determine background style
   const getBackgroundStyle = (): React.CSSProperties => {
     if (config.backgroundColor && config.backgroundColor[resolvedTheme]) {
       return {
@@ -669,17 +1202,31 @@ export default function Payout({ searchParams }: PayoutPageProps) {
   const getContainerClass = () => {
     const baseClass = styles.container;
     if (config.backgroundColor) {
-      return `${baseClass} ${styles[`container_${req}`]}`; // Don't apply CSS class when using config background
+      return `${baseClass} ${styles[`container_${req}`]}`;
     }
     return `${baseClass} ${styles[`container_${resolvedTheme}`]} ${styles[`container_${req}`]}`;
   };
 
+  const renderTabContent = () => {
+    if (!activeTab) return null;
 
+    const data = challengeData.find((e: ChallengeConfig) => e.gameModeChecker === activeTab);
+    if (!data) return null;
+
+    switch (activeTab) {
+      case 'GameMode.1v1':
+        return <OneVsOneView data={data} roles={allRoles} />;
+      case 'GameMode.Multiplayer':
+        return <MultiplayerView data={data} roles={allRoles} />;
+      default:
+        return null;
+    }
+  };
 
   return (
     <div
-       className={getContainerClass()}
-       style={getBackgroundStyle()}
+      className={getContainerClass()}
+      style={getBackgroundStyle()}
     >
       {config.showHeader && (
         <header className={`${styles.header} ${styles[`header_${resolvedTheme}`]}`}>
@@ -688,7 +1235,7 @@ export default function Payout({ searchParams }: PayoutPageProps) {
               <button
                 className={styles.backButton}
                 onClick={() => router.back()}
-                aria-label="Go back"
+                aria-label={t('go_back')}
               >
                 <svg className={styles.backIcon} viewBox="0 0 16 22" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path
@@ -713,38 +1260,49 @@ export default function Payout({ searchParams }: PayoutPageProps) {
             </Link>
           </div>
         </header>
-      ) }
+      )}
 
-      <h1 className={`${styles.bigTitle} ${styles[`bigTitle_${theme}`]}`}>Academix Calculator</h1>
+      <h1 className={`${styles.bigTitle} ${styles[`bigTitle_${theme}`]}`}>{t('academix_calculator')}</h1>
       <h4 className={`${styles.description} ${styles[`description_${theme}`]}`}>
-        Academix uses a smart, scalable reward system that adjusts prize distribution based on the number of players in a quiz.
+        {t('academix_description')}
       </h4>
 
-      <div className={`${styles.innerBody} ${styles[`innerBody_${theme}`]}`}>
-        <h4 className={`${styles.game_mode} ${styles[`game_mode_${theme}`]}`}>Game Mode</h4>
-        <div className={styles.tab_switcher}>
-          <button
-            className={`${styles.tab} ${activeTab === '1v1' ? styles.tab_active : ''} ${styles[`tab_${theme}`]}`}
-            onClick={() => setActiveTab('1v1')}
-          >
-            1v1
-          </button>
-          <button
-            className={`${styles.tab} ${activeTab === 'multiplayer' ? styles.tab_active : ''} ${styles[`tab_${theme}`]}`}
-            onClick={() => setActiveTab('multiplayer')}
-          >
-            Multiplayer
-          </button>
-        </div>
+      {activeTab && payoutState === 'data' && (
+        <div className={`${styles.innerBody} ${styles[`innerBody_${theme}`]}`}>
+          <h4 className={`${styles.game_mode} ${styles[`game_mode_${theme}`]}`}>{t('game_mode')}</h4>
+          <div className={styles.tab_switcher}>
+            {challengeData.map((challenge, index) => (
+              <button
+                key={challenge.gameModeChecker}
+                className={`${styles.tab} ${activeTab === challenge.gameModeChecker ? styles.tab_active : ''} ${styles[`tab_${theme}`]}`}
+                onClick={() => setActiveTab(challenge.gameModeChecker)}
+              >
+                {challenge.gameModeIdentity}
+              </button>
+            ))}
+          </div>
 
-        <div className={styles.lac_content}>
-          {activeTab === '1v1' ? (
-            <OneVsOneView data={calculatorData['1v1']} roles={allRoles} />
-          ) : (
-            <MultiplayerView data={calculatorData['multiplayer']} roles={allRoles} />
-          )}
+          <div className={styles.lac_content}>
+            {renderTabContent()}
+          </div>
         </div>
-      </div>
+      )}
+
+      {payoutState === 'loading' && <LoadingView text={t('loading_text')} />}
+      {payoutState === 'error' && (
+        <ErrorView
+          text={t('error_text')}
+          buttonText={t('try_again')}
+          onButtonClick={fetchPayoutData}
+        />
+      )}
+      {payoutState === 'empty' && (
+        <NoResultsView
+          text={t('no_results')}
+          buttonText={t('try_again')}
+          onButtonClick={fetchPayoutData}
+        />
+      )}
     </div>
   );
 }
