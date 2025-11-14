@@ -1113,10 +1113,6 @@
     padding: 0.8rem;
   }
 
-  .position_input_wrapper {
-    flex-direction: column;
-  }
-
   .position_button {
     width: 100%;
   }
