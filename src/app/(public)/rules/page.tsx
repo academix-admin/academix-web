@@ -9,6 +9,7 @@ import Link from 'next/link';
 import styles from './page.module.css';
 import { useRouter } from 'next/navigation';
 import { useSearchParams } from 'next/navigation';
+import { useAuthContext } from '@/providers/AuthProvider'
 
 
 interface Config {
@@ -158,6 +159,7 @@ export default function Rules({ searchParams }: RulesPageProps) {
   const { col, lan, req } = useAppParams(resolvedSearchParams);
   const { theme } = useTheme();
   const { t, tNode, lang } = useLanguage();
+  const { initialized } = useAuthContext();
   const router = useRouter();
   const [canGoBack, setCanGoBack] = useState(false);
 
@@ -216,7 +218,7 @@ export default function Rules({ searchParams }: RulesPageProps) {
 
             <h1 className={styles.title}>{t('rules_text', resolvedLang)}</h1>
 
-            <Link className={styles.logoContainer} href="/">
+            {!initialized && <Link className={styles.logoContainer} href="/">
               <Image
                 className={styles.logo}
                 src="/assets/image/academix-logo.png"
@@ -225,7 +227,7 @@ export default function Rules({ searchParams }: RulesPageProps) {
                 height={40}
                 priority
               />
-            </Link>
+            </Link>}
           </div>
         </header>
       )}

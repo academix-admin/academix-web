@@ -7,6 +7,7 @@ interface LayoutProps {
   handleColor?: string;
   handleWidth?: string;
   maxHeight?: string;
+  maxWidth?: string; // Added maxWidth to LayoutProps
 }
 
 interface CancelButtonProps {
@@ -79,7 +80,7 @@ const styles = `
 .bottom-viewer-cancel-btn.right { right: 0px; }
 .react-modal-sheet-container {
   max-height: calc(var(--vh, 1vh) * 100);
-  max-width: 500px;
+  max-width: 500px; /* Default max-width */
   margin: 0 auto;
   border-top-left-radius: 16px;
   border-top-right-radius: 16px;
@@ -96,6 +97,16 @@ const styles = `
   flex-direction: column;
 }
 @media (max-width: 500px) {
+  .react-modal-sheet-container {
+    max-width: 100%;
+    border-radius: 0;
+    margin-left: env(safe-area-inset-left, 0px);
+    margin-right: env(safe-area-inset-right, 0px);
+    width: calc(100% - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px));
+  }
+}
+/* Dynamic media query for custom max-width */
+@media (max-width: var(--bottom-viewer-max-width, 500px)) {
   .react-modal-sheet-container {
     max-width: 100%;
     border-radius: 0;
@@ -191,24 +202,33 @@ const BottomViewer = React.forwardRef<any, BottomViewerProps>(({
       };
     }, []);
 
-
-//     // Calculate max safe height
-//     const calculateSafeHeight = useCallback(() => {
-//       const maxHeight = layoutProp?.maxHeight || 'auto';
+//     const calculateSafeMaxHeight = useCallback(() => {
+//       const maxHeight = layoutProp?.maxHeight || '100dvh';
 //       if (typeof window !== 'undefined' && window.innerWidth <= 500) {
-//         return `min(${maxHeight}, calc(100vh - env(safe-area-inset-top, 0px) - 60px))`;
+//         return `calc(var(--vh, 1vh) * 100 - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))`;
 //       }
 //       return maxHeight;
 //     }, [layoutProp?.maxHeight]);
 
     const calculateSafeMaxHeight = useCallback(() => {
-      const maxHeight = layoutProp?.maxHeight || '100vh';
-      if (typeof window !== 'undefined' && window.innerWidth <= 500) {
-        return `calc(var(--vh, 1vh) * 100 - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))`;
-      }
-      return maxHeight;
+      const fallback = 'calc(var(--vh, 1vh) * 100 - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))';
+      const maxHeight = layoutProp?.maxHeight || '100dvh';
+
+//       if (typeof window !== 'undefined' && window.innerWidth <= 500) {
+        // If user provided a maxHeight, apply the safe-area subtract only to the safe formula
+        return layoutProp?.maxHeight
+          ? `calc(${layoutProp.maxHeight} - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))`
+          : fallback;
+//       }
+//
+//       return maxHeight;
     }, [layoutProp?.maxHeight]);
 
+
+    // Get the max width with 500px as default
+    const getMaxWidth = useCallback(() => {
+      return layoutProp?.maxWidth || '500px';
+    }, [layoutProp?.maxWidth]);
 
     // Body scroll and focus management
     useEffect(() => {
@@ -216,6 +236,13 @@ const BottomViewer = React.forwardRef<any, BottomViewerProps>(({
         previousActiveElement.current = document.activeElement;
         document.body.classList.add('body-bottom-sheet-open');
         setContentHeight(calculateSafeMaxHeight());
+
+        // Set CSS variable for dynamic media query
+        const maxWidth = getMaxWidth();
+        if (maxWidth !== '500px') {
+          document.documentElement.style.setProperty('--bottom-viewer-max-width', maxWidth);
+        }
+
         setTimeout(() => contentRef.current?.focus(), 100);
       } else {
         document.body.classList.remove('body-bottom-sheet-open');
@@ -224,9 +251,15 @@ const BottomViewer = React.forwardRef<any, BottomViewerProps>(({
         }
         // FIX: Reset control state when closed
         isControlledInternally.current = false;
+
+        // Reset CSS variable when closed
+        document.documentElement.style.removeProperty('--bottom-viewer-max-width');
       }
-      return () => document.body.classList.remove('body-bottom-sheet-open');
-    }, [isOpen, calculateSafeMaxHeight]);
+      return () => {
+        document.body.classList.remove('body-bottom-sheet-open');
+        document.documentElement.style.removeProperty('--bottom-viewer-max-width');
+      };
+    }, [isOpen, calculateSafeMaxHeight, getMaxWidth]);
 
     // ResizeObserver for dynamic content height
     useEffect(() => {
@@ -236,11 +269,15 @@ const BottomViewer = React.forwardRef<any, BottomViewerProps>(({
       return () => observer.disconnect();
     }, [calculateSafeMaxHeight]);
 
-    const handleBackdropTap = useCallback(() => {
+    const handleBackdropTap = useCallback((event: MouseEvent | PointerEvent | TouchEvent | any) => {
+      if (event && typeof event.stopPropagation === 'function') {
+         event.stopPropagation();
+      }
       if (backDrop) onClose();
     }, [backDrop, onClose]);
 
-    const handleCancelClick = useCallback(() => {
+    const handleCancelClick = useCallback((e: React.MouseEvent) => {
+      e.stopPropagation(); // Prevent event from bubbling up
       if (cancelButton?.onClick) cancelButton.onClick();
       else onClose();
     }, [cancelButton, onClose]);
@@ -262,8 +299,29 @@ const BottomViewer = React.forwardRef<any, BottomViewerProps>(({
       resetContent: () => {
         isControlledInternally.current = false;
         setCurrentContent(initialChildrenRef.current);
+      },
+      // NEW: Function to check if event target is inside the sheet
+      isEventFromSheet: (event: React.MouseEvent | MouseEvent) => {
+        const target = event.target as HTMLElement;
+        return !!(
+          target.closest('.react-modal-sheet-container') ||
+          target.closest('.react-modal-sheet-backdrop') ||
+          target.closest('.bottom-viewer-container')
+        );
       }
     }));
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if ((e.target as HTMLElement).classList.contains("bottom-viewer-container")) {
+        e.stopPropagation(); // <-- stops DOM bubbling
+        e.stopImmediatePropagation(); // <-- stops DOM bubbling
+      }
+    };
+    document.addEventListener("click", handler, true); // capture phase
+    return () => document.removeEventListener("click", handler, true);
+  }, []);
+
 
   if (!isOpen && unmountOnClose) return null;
 
@@ -282,7 +340,7 @@ const BottomViewer = React.forwardRef<any, BottomViewerProps>(({
         style={{
           height: "auto",
           maxHeight: calculateSafeMaxHeight(),
-          maxWidth: "500px",
+          maxWidth: getMaxWidth(), // Use the customizable maxWidth
           margin: "0 auto",
           width: "100%",
           left: 0,
@@ -348,8 +406,12 @@ const BottomViewer = React.forwardRef<any, BottomViewerProps>(({
       </Sheet.Container>
 
       <Sheet.Backdrop
-        onTap={handleBackdropTap}
+        {...({
+            onTap: handleBackdropTap,
+            onClick: handleBackdropTap, // allowed at runtime
+        } as any)}
         style={{ cursor: backDrop ? 'pointer' : 'default' }}
+        onClick={handleBackdropTap}
       />
     </Sheet>
   );
@@ -363,6 +425,7 @@ interface Operation {
   updateContent: (content: React.ReactNode) => void;
   replaceContent: (content: React.ReactNode) => void;
   clearContent: () => void;
+  isEventFromSheet: (event: React.MouseEvent | MouseEvent) => boolean; // NEW
 }
 
 const useBottomController = (): [
@@ -405,6 +468,14 @@ const useBottomController = (): [
       if (sheetRef.current?.clearContent) {
         sheetRef.current.clearContent();
       }
+    }, []),
+
+    // NEW: Expose the event checking function
+    isEventFromSheet: useCallback((event: React.MouseEvent | MouseEvent) => {
+      if (sheetRef.current?.isEventFromSheet) {
+        return sheetRef.current.isEventFromSheet(event);
+      }
+      return false;
     }, []),
   };
 
@@ -467,6 +538,7 @@ const useBottomSheet = (initialContent?: React.ReactNode) => {
     updateContent: enhancedOps.updateContent,
     replaceContent: enhancedOps.replaceContent,
     clearContent: enhancedOps.clearContent,
+    isEventFromSheet: operations.isEventFromSheet, // NEW: Expose the event checker
     BottomViewer: BottomViewerWrapper,
     currentContent: internalContent,
   };
