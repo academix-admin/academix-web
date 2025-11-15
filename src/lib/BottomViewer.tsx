@@ -345,9 +345,9 @@ const BottomViewer = React.forwardRef<any, BottomViewerProps>(({
           width: "100%",
           left: 0,
           right: 0,
-          paddingBottom: "env(safe-area-inset-bottom, 0px)",
+//           paddingBottom: "env(safe-area-inset-bottom, 0px)",
           background: layoutProp?.backgroundColor || "#fff",
-          bottom: "env(safe-area-inset-bottom, 0px)",
+//           bottom: "env(safe-area-inset-bottom, 0px)",
         }}
         className="bottom-viewer-container"
       >
