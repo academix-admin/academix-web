@@ -55,13 +55,13 @@ const styles = `
 }
 .bottom-viewer-content {
   height: 100%;
-  overflow-y: auto;
   padding: 0 0px 0px 0px;
   -webkit-overflow-scrolling: touch;
   display: flex;
   flex-direction: column;
   flex: 1;
   gap: 8px;
+  box-sizing: border-box;
 }
 .bottom-viewer-cancel-btn {
   position: absolute;
@@ -202,26 +202,13 @@ const BottomViewer = React.forwardRef<any, BottomViewerProps>(({
       };
     }, []);
 
-//     const calculateSafeMaxHeight = useCallback(() => {
-//       const maxHeight = layoutProp?.maxHeight || '100dvh';
-//       if (typeof window !== 'undefined' && window.innerWidth <= 500) {
-//         return `calc(var(--vh, 1vh) * 100 - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))`;
-//       }
-//       return maxHeight;
-//     }, [layoutProp?.maxHeight]);
-
     const calculateSafeMaxHeight = useCallback(() => {
       const fallback = 'calc(var(--vh, 1vh) * 100 - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))';
       const maxHeight = layoutProp?.maxHeight || '100dvh';
 
-//       if (typeof window !== 'undefined' && window.innerWidth <= 500) {
-        // If user provided a maxHeight, apply the safe-area subtract only to the safe formula
         return layoutProp?.maxHeight
           ? `calc(${layoutProp.maxHeight} - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))`
           : fallback;
-//       }
-//
-//       return maxHeight;
     }, [layoutProp?.maxHeight]);
 
 
@@ -345,9 +332,7 @@ const BottomViewer = React.forwardRef<any, BottomViewerProps>(({
           width: "100%",
           left: 0,
           right: 0,
-//           paddingBottom: "env(safe-area-inset-bottom, 0px)",
           background: layoutProp?.backgroundColor || "#fff",
-//           bottom: "env(safe-area-inset-bottom, 0px)",
         }}
         className="bottom-viewer-container"
       >
