@@ -55,11 +55,10 @@ const styles = `
 }
 .bottom-viewer-content {
   height: 100%;
+  overflow-y: auto;
   padding: 0 0px 0px 0px;
   -webkit-overflow-scrolling: touch;
-  display: flex;
   flex-direction: column;
-  flex: 1;
   gap: 8px;
   box-sizing: border-box;
 }
@@ -375,8 +374,7 @@ const BottomViewer = React.forwardRef<any, BottomViewerProps>(({
         <Sheet.Content
           style={{
             flex: 1,
-            overflowY: "auto",
-            WebkitOverflowScrolling: "touch",
+            overflow: "hidden",
             height: '100%',
           }}
         >
