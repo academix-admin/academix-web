@@ -4,7 +4,9 @@
   align-items: center;
   text-align: center;
   min-height: 100vh;
+  height: auto;
   transition: background-color 0.3s ease;
+  overflow: visible;
 }
 
 /* Default theme backgrounds - only applied when no config background */
@@ -59,6 +61,8 @@
   max-width: 800px;
   padding-top: 6rem;
   width: 100%;
+  height: auto !important; /* Force auto height */
+  min-height: auto !important; /* Remove min-height constraint */
   box-sizing: border-box;
 }
 
@@ -77,6 +81,8 @@
 .rulesContainer {
   width: 100%;
   max-width: 600px;
+  height: auto !important; /* Remove fixed height */
+  min-height: auto !important;
   animation: fadeInUp 0.6s ease-out;
 }
 
@@ -376,4 +382,9 @@
     gap: 1rem;
     margin-bottom: 2rem;
   }
+}
+
+/* Ensure no parent has overflow: hidden */
+.container, .innerBody, .rulesContainer, .rulesContent {
+  overflow: visible !important;
 }
