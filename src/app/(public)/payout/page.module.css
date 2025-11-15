@@ -23,7 +23,6 @@
 .container {
   padding-top: 6rem;
     padding-bottom: 4rem;
-    justify-content: center;
 }
 
 .container_ios {
@@ -45,7 +44,8 @@
 
 .container_quiz {
    padding-top: 1rem;
-    justify-content: center;
+   padding-bottom: 1rem;
+   min-height: 100vh;
 }
 
 .header {

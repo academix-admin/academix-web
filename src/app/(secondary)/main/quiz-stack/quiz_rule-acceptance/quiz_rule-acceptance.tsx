@@ -28,7 +28,10 @@ export default function QuizRuleAcceptance({ onAcceptanceChange, initialValue = 
     if (bottomController.isEventFromSheet(e)) {
         return; // Ignore clicks from the sheet
     }
-    if (!canChange) return;
+    if(!canChange){
+       if(initialValue)setBottomIsOpen(true);
+       return;
+    }
 
     const newAcceptance = !acceptance;
     setAcceptance(newAcceptance);

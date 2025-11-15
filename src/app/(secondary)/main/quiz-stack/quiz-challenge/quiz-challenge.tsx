@@ -276,7 +276,7 @@ export default function QuizChallenge(props: QuizChallengeProps) {
           />
         )}
         {currentQuiz && selectedChallengeModel && <QuizRuleAcceptance onAcceptanceChange={setSelectedRule} />}
-        {currentQuiz && selectedChallengeModel && <QuizPayoutAcceptance onAcceptanceChange={setSelectedPayout} />}
+        {currentQuiz && selectedChallengeModel && <QuizPayoutAcceptance onAcceptanceChange={setSelectedPayout} challengeId={selectedChallengeModel.challengeId} />}
         {currentQuiz && selectedChallengeModel && selectedRule && selectedPayout && (
           <QuizRedeemCode
             onRedeemCodeSelect={setSelectedRedeemCodeModel}

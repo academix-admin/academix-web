@@ -11,10 +11,11 @@ import DialogCancel from '@/components/DialogCancel';
 interface QuizPayoutAcceptanceProps {
   initialValue?: boolean;
   canChange?: boolean;
+  challengeId: string;
   onAcceptanceChange: (acceptance: boolean) => void;
 }
 
-export default function QuizPayoutAcceptance({ onAcceptanceChange, initialValue = false, canChange = true }: QuizPayoutAcceptanceProps) {
+export default function QuizPayoutAcceptance({ onAcceptanceChange, initialValue = false, canChange = true, challengeId }: QuizPayoutAcceptanceProps) {
   const { theme } = useTheme();
   const { t, lang, tNode } = useLanguage();
   const [acceptance, setAcceptance] = useState(initialValue);
@@ -22,8 +23,14 @@ export default function QuizPayoutAcceptance({ onAcceptanceChange, initialValue 
   const [bottomViewerId, bottomController, bottomIsOpen, setBottomIsOpen, bottomRef] = useBottomController();
 
     // Handle acceptance click
-    const handleAcceptanceClick = useCallback(() => {
-       if(!canChange)return;
+    const handleAcceptanceClick = useCallback((e: React.MouseEvent) => {
+       if (bottomController.isEventFromSheet(e)) {
+         return; // Ignore clicks from the sheet
+       }
+       if(!canChange){
+           if(initialValue)setBottomIsOpen(true);
+           return;
+       }
       const newAcceptance = !acceptance;
       setAcceptance(newAcceptance);
       onAcceptanceChange(newAcceptance);
@@ -98,7 +105,7 @@ export default function QuizPayoutAcceptance({ onAcceptanceChange, initialValue 
         closeThreshold={0.2}
         zIndex={1000}
       >
-        <Payout searchParams={Promise.resolve({ req: 'quiz' })} />
+        <Payout searchParams={Promise.resolve({ req: 'quiz', challengeId })} />
       </BottomViewer>
 
     </div>

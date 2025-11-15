@@ -501,8 +501,8 @@ export default function QuizCommitment(props: QuizChallengeProps) {
         {currentQuiz  && <QuizDetailsViewer topicsModel={currentQuiz} />}
         {currentQuiz  && <QuizChallengeDetails poolsId={currentQuiz?.quizPool?.poolsId || ''} membersCount={membersCount || currentQuiz?.quizPool?.poolsMembersCount || 0} minimumMembers={ currentQuiz?.quizPool?.challengeModel?.challengeMinParticipant || 0} maximumMembers={currentQuiz?.quizPool?.challengeModel?.challengeMaxParticipant || 0} fee={currentQuiz?.quizPool?.challengeModel?.challengePrice || 0} status={currentQuiz?.quizPool?.poolsJob || ''} jobEndAt={currentQuiz?.quizPool?.poolsJobEndAt || ''} />}
         {currentQuiz  && <QuizStatusInfo status={formatStatus(currentQuiz?.quizPool?.poolsJob || '')} />}
-        {currentQuiz  && <QuizRuleAcceptance onAcceptanceChange={setSelectedRule} canChange={action != 'active'} initialValue={action === 'active'} />}
-        {currentQuiz  && <QuizPayoutAcceptance onAcceptanceChange={setSelectedPayout} canChange={action != 'active'} initialValue={action === 'active'} />}
+        {currentQuiz  && <QuizRuleAcceptance onAcceptanceChange={setSelectedRule} canChange={action != 'active'} initialValue={action === 'active'}  />}
+        {currentQuiz  && <QuizPayoutAcceptance onAcceptanceChange={setSelectedPayout} canChange={action != 'active'} initialValue={action === 'active'} challengeId={currentQuiz?.quizPool?.challengeModel?.challengeId || ''} />}
         {currentQuiz && action != 'active' && selectedRule && selectedPayout && (
           <QuizRedeemCode
             onRedeemCodeSelect={setSelectedRedeemCodeModel}

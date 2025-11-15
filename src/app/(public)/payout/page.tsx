@@ -836,7 +836,7 @@ export default function Payout({ searchParams }: PayoutPageProps) {
         return null;
     }
   };
-
+  if(req === 'landing' && !activeTab)return;
   return (
     <div
       className={getContainerClass()}
