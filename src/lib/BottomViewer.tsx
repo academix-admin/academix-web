@@ -217,7 +217,7 @@ const BottomViewer = React.forwardRef<any, BottomViewerProps>(({
 //       if (typeof window !== 'undefined' && window.innerWidth <= 500) {
         // If user provided a maxHeight, apply the safe-area subtract only to the safe formula
         return layoutProp?.maxHeight
-          ? `calc(${layoutProp.maxHeight})`
+          ? `calc(${layoutProp.maxHeight} - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))`
           : fallback;
 //       }
 //
