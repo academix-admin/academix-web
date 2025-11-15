@@ -399,6 +399,7 @@ const BottomViewer = React.forwardRef<any, BottomViewerProps>(({
             ref={contentRef}
             tabIndex={-1}
             className="bottom-viewer-content bottom-viewer-content-dynamic"
+            onClick={e => e.stopPropagation()}
           >
             {currentContent}
           </div>
@@ -411,7 +412,6 @@ const BottomViewer = React.forwardRef<any, BottomViewerProps>(({
             onClick: handleBackdropTap, // allowed at runtime
         } as any)}
         style={{ cursor: backDrop ? 'pointer' : 'default' }}
-        onClick={handleBackdropTap}
       />
     </Sheet>
   );

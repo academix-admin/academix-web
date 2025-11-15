@@ -43,6 +43,11 @@
     justify-content: center;
 }
 
+.container_quiz {
+   padding-top: 1rem;
+    justify-content: center;
+}
+
 .header {
   position: fixed;
   top: 0;
@@ -997,6 +1002,9 @@
   .container_landing {
      padding-top: 4rem;
   }
+  .container_quiz {
+     padding-top: 1rem;
+  }
 
   .card {
     min-height: 340px;
@@ -1026,8 +1034,13 @@
      padding-top: 1rem;
      padding-bottom: 1rem;
   }
+
   .container_landing {
      padding-top: 4rem;
+  }
+
+  .container_quiz {
+     padding-top: 1rem;
   }
 
   .bigTitle {
