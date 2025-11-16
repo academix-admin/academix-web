@@ -865,7 +865,7 @@ export default function Payout({ searchParams }: PayoutPageProps) {
             {(canGoBack || initialized) && (
               <button
                 className={styles.backButton}
-                onClick={() => }
+                onClick={goBack}
                 aria-label={t('go_back')}
               >
                 <svg className={styles.backIcon} viewBox="0 0 16 22" fill="none" xmlns="http://www.w3.org/2000/svg">
