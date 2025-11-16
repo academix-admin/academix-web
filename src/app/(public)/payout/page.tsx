@@ -836,6 +836,23 @@ export default function Payout({ searchParams }: PayoutPageProps) {
         return null;
     }
   };
+
+
+  const goBack = () => {
+    if (initialized) {
+      router.replace('/main');
+      return;
+    }
+
+    // fallback if no history
+    if (window.history.length <= 1) {
+      router.replace('/main');
+    } else {
+      router.back();
+    }
+  };
+
+
   if(req === 'landing' && !activeTab)return;
   return (
     <div
@@ -845,10 +862,10 @@ export default function Payout({ searchParams }: PayoutPageProps) {
       {config.showHeader && (
         <header className={`${styles.header} ${styles[`header_${resolvedTheme}`]}`}>
           <div className={styles.headerContent}>
-            {canGoBack && (
+            {(canGoBack || initialized) && (
               <button
                 className={styles.backButton}
-                onClick={() => router.back()}
+                onClick={() => }
                 aria-label={t('go_back')}
               >
                 <svg className={styles.backIcon} viewBox="0 0 16 22" fill="none" xmlns="http://www.w3.org/2000/svg">

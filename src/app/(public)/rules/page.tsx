@@ -192,6 +192,20 @@ export default function Rules({ searchParams }: RulesPageProps) {
     return `${baseClass} ${styles[`container_${resolvedTheme}`]}`;
   };
 
+  const goBack = () => {
+    if (initialized) {
+      router.replace('/main');
+      return;
+    }
+
+    // fallback if no history
+    if (window.history.length <= 1) {
+      router.replace('/main');
+    } else {
+      router.back();
+    }
+  };
+
 
   return (
     <main
@@ -201,10 +215,10 @@ export default function Rules({ searchParams }: RulesPageProps) {
       {config.showHeader && (
         <header className={`${styles.header} ${styles[`header_${resolvedTheme}`]}`}>
           <div className={styles.headerContent}>
-            {canGoBack && (
+            {(canGoBack || initialized) && (
               <button
                 className={styles.backButton}
-                onClick={() => router.back()}
+                onClick={goBack}
                 aria-label="Go back"
               >
                 <svg className={styles.backIcon} viewBox="0 0 16 22" fill="none" xmlns="http://www.w3.org/2000/svg">
