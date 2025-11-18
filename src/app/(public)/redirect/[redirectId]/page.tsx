@@ -2,7 +2,6 @@
 
 import { use, useState, useEffect, useCallback } from "react";
 import styles from "./page.module.css";
-import Link from "next/link";
 
 import { useUserData } from "@/lib/stacks/user-stack";
 import { useAwaitableRouter } from "@/hooks/useAwaitableRouter";
@@ -144,7 +143,6 @@ export default function Redirect({
           <div className={styles.error}>
             <h2>{t("invalid_redirect_title")}</h2>
             <p>{t("invalid_redirect_message")}</p>
-            <Link href="/">{t("return_home")}</Link>
           </div>
         );
 
@@ -153,7 +151,6 @@ export default function Redirect({
           <div className={styles.error}>
             <h2>{t("generic_error_title")}</h2>
             <p>{t("generic_error_message")}</p>
-            <Link href="/">{t("return_home")}</Link>
           </div>
         );
 
