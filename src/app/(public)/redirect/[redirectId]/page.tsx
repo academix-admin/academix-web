@@ -84,7 +84,7 @@ export default function Redirect({
        * Try opening the new window immediately.
        * This WILL be popup-blocked on most auto flows.
        */
-      const target = 'http://192.168.1.196:3000/main?group=payment-stack&nav=payment-stack%3A1.a1.b1'; //result.redirectTo;
+      const target = result.redirectTo;
       const navigation = await newWindowCloseCurrentWait(
         target,
         "_blank"
