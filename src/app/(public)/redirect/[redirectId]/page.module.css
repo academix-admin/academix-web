@@ -1,19 +1,57 @@
+.container {
+  display: flex;
+  height: 100vh;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
 
+.container_light {
+  background: #ffffff;
+  color: #000000;
+}
 
+.container_dark {
+  background: #121212;
+  color: #ffffff;
+}
 
+.loading {
+  font-size: 1.3rem;
+  font-weight: 500;
+}
 
+.error {
+  text-align: center;
+  max-width: 400px;
+}
 
-/* Web Design */
+.retryBtn {
+  padding: 10px 16px;
+  margin-top: 15px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+/* Web */
 @media screen and (min-width: 801px) {
-
+  .container {
+    padding: 40px;
+  }
 }
 
-/* Tablet Design */
+/* Tablet */
 @media screen and (max-width: 800px) and (min-width: 501px) {
-
+  .container {
+    padding: 30px;
+  }
 }
 
-/* Mobile Design */
+/* Mobile */
 @media screen and (max-width: 500px) {
-
+  .container {
+    padding: 20px;
+  }
 }

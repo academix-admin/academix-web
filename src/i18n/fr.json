@@ -406,5 +406,15 @@
   "position_placeholder": "Numéro de position",
   "get_amount": "Obtenir le montant",
   "amount_for_position": "Montant pour la position",
-  "position_invalid": "Position invalide. La position maximale est"
+  "position_invalid": "Position invalide. La position maximale est",
+  "processing_redirect": "Traitement de la redirection...",
+  "starting_redirect": "Démarrage de la redirection...",
+  "invalid_redirect_title": "Redirection invalide",
+  "invalid_redirect_message": "Ce lien de redirection est invalide ou expiré.",
+  "generic_error_title": "Erreur",
+  "generic_error_message": "Une erreur s'est produite. Veuillez réessayer.",
+  "return_home": "Retour à l'accueil",
+  "popup_blocked_title": "Popup bloquée",
+  "popup_blocked_message": "Votre navigateur a bloqué la fenêtre requise. Veuillez l’ouvrir manuellement.",
+  "open_window_manually": "Ouvrir manuellement"
 }

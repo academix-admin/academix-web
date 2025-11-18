@@ -11,6 +11,8 @@ import { UserData } from '@/models/user-data';
 import { useUserData } from '@/lib/stacks/user-stack';
 import { StateStack } from '@/lib/state-stack';
 
+export type RoutePattern = string | RegExp;
+
 interface AuthContextType {
   initialized: boolean;
   session: Session | null;
@@ -25,6 +27,30 @@ export function useAuthContext() {
   return context;
 }
 
+function matchesRoutePattern(
+  pathname: string,
+  patterns: RoutePattern[],
+  matchType: 'exact' | 'startsWith' | 'endsWith' = 'startsWith'
+): boolean {
+  return patterns.some(pattern => {
+    if (typeof pattern === 'string') {
+      switch (matchType) {
+        case 'exact':
+          return pathname === pattern;
+        case 'startsWith':
+          return pathname.startsWith(pattern);
+        case 'endsWith':
+          return pathname.endsWith(pattern);
+        default:
+          return pathname.startsWith(pattern);
+      }
+    } else if (pattern instanceof RegExp) {
+      return pattern.test(pathname);
+    }
+    return false;
+  });
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [initialized, setInitialized] = useState(false);
@@ -33,14 +59,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { userData, __meta } = useUserData();
   const { replaceAndWait } = useAwaitableRouter();
 
-  const publicRoutes = ['/rules', '/payout', '/redirect'];
+  const publicRoutes = ['/rules', '/payout', 'redirect', /^\/redirect\/[a-f0-9-]+$/];
   const internalRoutes = ['/', '/login', '/signup', '/welcome'];
-  const protectedRoutes = ['/main', '/quiz'];
+  const protectedRoutes = ['/main', '/quiz', /^\/quiz\/[a-f0-9-]+$/];
 
   useEffect(() => {
-
     // Immediate initialization for public routes
-    if (publicRoutes.includes(pathname) && typeof window !== "undefined") {
+    if (matchesRoutePattern(pathname, publicRoutes) && typeof window !== "undefined") {
       setInitialized(true);
       return;
     }
@@ -64,7 +89,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(initialUser);
         setSession(initialSession);
 
-        if (initialUser && userData && internalRoutes.includes(pathname)) {
+        if (initialUser && userData && matchesRoutePattern(pathname, internalRoutes) ) {
           console.log('Redirecting authenticated user to main');
           await replaceAndWait("/main");
         }
@@ -82,7 +107,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 StateStack.core.clearScope('secondary_flow'),
               ]);
               sessionStorage.clear();
-              if (protectedRoutes.some(route => pathname.startsWith(route))) {
+              if (matchesRoutePattern(pathname, protectedRoutes)) {
                 console.log('Returning to home');
                 await replaceAndWait("/");
               }

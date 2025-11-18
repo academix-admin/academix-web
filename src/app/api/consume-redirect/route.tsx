@@ -32,7 +32,7 @@ const generateSession = (userId: string) => {
       role: "authenticated",
     },
     secret,
-    { expiresIn: "1h" }
+    { expiresIn: "1h", algorithm: 'HS256' }
   );
 
   const refresh_token = jwt.sign(
@@ -42,7 +42,7 @@ const generateSession = (userId: string) => {
       type: "refresh",
     },
     secret,
-    { expiresIn: "30d" }
+    { expiresIn: "30d", algorithm: 'HS256' }
   );
 
   return { access_token, refresh_token };

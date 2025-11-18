@@ -1,130 +1,170 @@
-'use client';
-import { use, useState, useEffect, useCallback } from 'react';
-import styles from './page.module.css';
-import Link from 'next/link';
-import { useUserData } from '@/lib/stacks/user-stack';
+"use client";
+
+import { use, useState, useEffect, useCallback } from "react";
+import styles from "./page.module.css";
+import Link from "next/link";
+
+import { useUserData } from "@/lib/stacks/user-stack";
 import { useAwaitableRouter } from "@/hooks/useAwaitableRouter";
-import { StateStack } from '@/lib/state-stack';
-import { supabaseBrowser } from '@/lib/supabase/client';
+import { StateStack } from "@/lib/state-stack";
+import { supabaseBrowser } from "@/lib/supabase/client";
 import { fetchUserData } from "@/utils/checkers";
 
-type RedirectState = 'initial' | 'loading' | 'invalid' | 'error';
+import { useTheme } from "@/context/ThemeContext";
+import { useLanguage } from "@/context/LanguageContext";
 
-export default function Redirect({ params }: { params: Promise<{ redirectId: string }> }) {
-    const { redirectId } = use(params);
-    const { userData$ } = useUserData();
-    const { replaceAndWait } = useAwaitableRouter();
-    const [redirectState, setRedirectState] = useState<RedirectState>('initial');
+type RedirectState =
+  | "initial"
+  | "loading"
+  | "popup_blocked"
+  | "invalid"
+  | "error";
 
-    const clearClientState = useCallback(async (): Promise<void> => {
-        await Promise.all([
-            StateStack.core.clearScope('mission_flow'),
-            StateStack.core.clearScope('achievements_flow'),
-            StateStack.core.clearScope('payment_flow'),
-            StateStack.core.clearScope('secondary_flow'),
-        ]);
-        sessionStorage.clear();
-    }, []);
+export default function Redirect({
+  params,
+}: {
+  params: Promise<{ redirectId: string }>;
+}) {
+  const { redirectId } = use(params);
+  const { userData$ } = useUserData();
+  const { newWindowCloseCurrentWait } = useAwaitableRouter();
 
-    const processRedirect = useCallback(async (): Promise<void> => {
-        // Prevent multiple simultaneous executions
-        if (redirectState === 'loading') return;
+  const { theme } = useTheme();
+  const { t } = useLanguage();
 
-        try {
-            setRedirectState('loading');
+  const [redirectState, setRedirectState] = useState<RedirectState>("initial");
+  const [fallbackUrl, setFallbackUrl] = useState<string>("");
 
-            const response = await fetch('/api/consume-redirect', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ redirectId }),
-            });
+  /** Clears all local state */
+  const clearClientState = useCallback(async (): Promise<void> => {
+    await Promise.all([
+      StateStack.core.clearScope("mission_flow"),
+      StateStack.core.clearScope("achievements_flow"),
+      StateStack.core.clearScope("payment_flow"),
+      StateStack.core.clearScope("secondary_flow"),
+    ]);
+    sessionStorage.clear();
+  }, []);
 
-            // Check if response is JSON before parsing
-            const contentType = response.headers.get('content-type');
-            if (!contentType || !contentType.includes('application/json')) {
-                const text = await response.text();
-                console.error('Non-JSON response:', text.substring(0, 200));
-                throw new Error('Server returned non-JSON response');
-            }
+  /** Main redirect processor */
+  const processRedirect = useCallback(async () => {
+    if (redirectState === "loading") return;
 
-            const result = await response.json();
-           console.log(result);
-            if (!response.ok) {
-                throw new Error(result.error || `HTTP error! status: ${response.status}`);
-            }
+    try {
+      setRedirectState("loading");
 
-            if (result.status === 'success') {
-                const { data: sessionData, error: sessionError } = await supabaseBrowser.auth.setSession({
-                    access_token: result.session.access_token,
-                    refresh_token: result.session.refresh_token,
-                });
+      const response = await fetch("/api/consume-redirect", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ redirectId }),
+      });
 
-                if (sessionError) {
-                    throw sessionError;
-                }
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error);
 
-                await clearClientState();
+      if (result.status !== "success") {
+        setRedirectState("invalid");
+        return;
+      }
 
-                const userObj = await fetchUserData(result.userId);
-                await userData$.set(userObj);
+      /** Set Supabase session */
+      const { error: sessionError } = await supabaseBrowser.auth.setSession({
+        access_token: result.session.access_token,
+        refresh_token: result.session.refresh_token,
+      });
 
-                await replaceAndWait(result.redirectTo);
-            } else {
-                setRedirectState('invalid');
-            }
-        } catch (error) {
-            console.error('Redirect error:', error);
-            setRedirectState('error');
-        }
-    }, [redirectId, userData$, replaceAndWait, clearClientState, redirectState]);
+      if (sessionError) throw sessionError;
 
-    useEffect(() => {
-        let isMounted = true;
+      /** Clear stale state */
+      await clearClientState();
 
-        const executeRedirect = async () => {
-            if (isMounted && redirectState === 'initial') {
-                await processRedirect();
-            }
-        };
+      const userObj = await fetchUserData(result.userId);
+      await userData$.set(userObj);
 
-        executeRedirect();
+      /**
+       * Try opening the new window immediately.
+       * This WILL be popup-blocked on most auto flows.
+       */
+      const target = 'http://192.168.1.196:3000/main?group=payment-stack&nav=payment-stack%3A1.a1.b1'; //result.redirectTo;
+      const navigation = await newWindowCloseCurrentWait(
+        target,
+        "_blank"
+      );
 
-        return () => {
-            isMounted = false;
-        };
-    }, [processRedirect, redirectState]);
+      if (!navigation.success) {
+        // Store fallback URL and show manual button
+        setFallbackUrl(target);
+        setRedirectState("popup_blocked");
+        return;
+      }
 
-    const renderContent = (): JSX.Element => {
-        switch (redirectState) {
-            case 'loading':
-                return <div className={styles.loading}>Processing redirect...</div>;
-            case 'invalid':
-                return (
-                    <div className={styles.error}>
-                        <h2>Invalid Redirect</h2>
-                        <p>This redirect link is invalid or has expired.</p>
-                        <Link href="/">Return to Home</Link>
-                    </div>
-                );
-            case 'error':
-                return (
-                    <div className={styles.error}>
-                        <h2>Error</h2>
-                        <p>Something went wrong. Please try again.</p>
-                        <Link href="/">Return to Home</Link>
-                    </div>
-                );
-            case 'initial':
-            default:
-                return <div className={styles.loading}>Starting redirect...</div>;
-        }
-    };
+      // All good
+      setRedirectState("initial");
+    } catch (err) {
+      console.error("Redirect error:", err);
+      setRedirectState("error");
+    }
+  }, [redirectId, redirectState, clearClientState, userData$, newWindowCloseCurrentWait]);
 
-    return (
-        <div className={styles.container}>
-            {renderContent()}
-        </div>
-    );
+  /** Trigger redirect on mount */
+  useEffect(() => {
+    if (redirectState === "initial") {
+      processRedirect();
+    }
+  }, [processRedirect, redirectState]);
+
+  /** Try again only via user gesture */
+  const handleManualOpen = async () => {
+    const nav = await newWindowCloseCurrentWait(fallbackUrl, "_blank");
+    if (nav.success) {
+      setRedirectState("initial");
+    }
+  };
+
+  /** Render UI depending on state */
+  const renderContent = () => {
+    switch (redirectState) {
+      case "loading":
+        return <div className={styles.loading}>{t("processing_redirect")}</div>;
+
+      case "popup_blocked":
+        return (
+          <div className={styles.error}>
+            <h2>{t("popup_blocked_title")}</h2>
+            <p>{t("popup_blocked_message")}</p>
+
+            <button className={styles.retryBtn} onClick={handleManualOpen}>
+              {t("open_window_manually")}
+            </button>
+          </div>
+        );
+
+      case "invalid":
+        return (
+          <div className={styles.error}>
+            <h2>{t("invalid_redirect_title")}</h2>
+            <p>{t("invalid_redirect_message")}</p>
+            <Link href="/">{t("return_home")}</Link>
+          </div>
+        );
+
+      case "error":
+        return (
+          <div className={styles.error}>
+            <h2>{t("generic_error_title")}</h2>
+            <p>{t("generic_error_message")}</p>
+            <Link href="/">{t("return_home")}</Link>
+          </div>
+        );
+
+      default:
+        return <div className={styles.loading}>{t("starting_redirect")}</div>;
+    }
+  };
+
+  return (
+    <div className={`${styles.container} ${styles[`container_${theme}`]}`}>
+      {renderContent()}
+    </div>
+  );
 }

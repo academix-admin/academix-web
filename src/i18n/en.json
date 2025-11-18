@@ -405,7 +405,17 @@
   "position_placeholder": "Position number",
   "get_amount": "Get Amount",
   "amount_for_position": "Amount for position",
-  "position_invalid": "Invalid position. Maximum position is"
+  "position_invalid": "Invalid position. Maximum position is",
+  "processing_redirect": "Processing redirect...",
+  "starting_redirect": "Starting redirect...",
+  "invalid_redirect_title": "Invalid Redirect",
+  "invalid_redirect_message": "This redirect link is invalid or expired.",
+  "generic_error_title": "Error",
+  "generic_error_message": "Something went wrong. Please try again.",
+  "return_home": "Return to Home",
+  "popup_blocked_title": "Popup Blocked",
+  "popup_blocked_message": "Your browser blocked the required window. Please open it manually.",
+  "open_window_manually": "Open Manually"
 }
 
 
