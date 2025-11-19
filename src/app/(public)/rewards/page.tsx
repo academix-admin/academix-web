@@ -49,9 +49,6 @@ const getConfig = (req: string | null): Config => {
 // Educational content data
 const rewardData = {
   en: {
-    title: "Rewards System",
-    subtitle: "Learn how to earn ADC through various activities",
-
     academixRatio: {
       title: "Academix Ratio",
       description: "Your overall engagement score that determines how you rank with others",
@@ -223,8 +220,6 @@ export default function Rewards({ searchParams }: RewardsPageProps) {
   const scrollToSection = (sectionId: string) => {
     const el = document.getElementById(sectionId);
     if (!el) return;
-
-    console.log('sectionId sss', sectionId);
     el.scrollIntoView({
       behavior: "smooth",
       block: "start"
@@ -285,13 +280,6 @@ export default function Rewards({ searchParams }: RewardsPageProps) {
       )}
 
       <div className={`${styles.innerBody} ${styles[`innerBody_${req}`]}`}>
-        {/* Hero Section */}
-        <section className={styles.heroSection}>
-          <div className={styles.heroContent}>
-            <h1 className={styles.heroTitle}>{content.title}</h1>
-            <p className={styles.heroSubtitle}>{content.subtitle}</p>
-          </div>
-        </section>
 
         {/* Quick Navigation */}
         <nav className={styles.quickNav}>
