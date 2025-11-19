@@ -7,12 +7,14 @@ import NavigationStack from "@/lib/NavigationStack";
 import RewardsPage from "./rewards-page/rewards-page";
 import MissionPage from "./mission-page/mission-page";
 import AchievementsPage from "./achievements-page/achievements-page";
+import RewardsInfo from "./rewards-info/rewards-info";
 
 
 const rewardsStackNavLink = {
   reward_page: RewardsPage,
   mission_page: MissionPage,
   achievements_page: AchievementsPage,
+  rewards_info: RewardsInfo,
 };
 
 export const RewardsStack = () => (
