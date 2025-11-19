@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useEffect, useState, useMemo } from 'react';
+import { use, useEffect, useState, useMemo, useLayoutEffect } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { getSupportedLang } from '@/context/LanguageContext';
@@ -227,11 +227,29 @@ export default function Rewards({ searchParams }: RewardsPageProps) {
 
   };
 
-  useEffect(() => {
-    if(!to)return;
-    if(calledFind)return;
-    scrollToSection(to);
-  }, [to, scrollToSection, calledFind]);
+  useLayoutEffect(() => {
+    if (calledFind) return;
+
+    const targetSection = to || window.location.hash.replace('#', '');
+
+    if (targetSection) {
+      setCalledFind(true);
+      setActiveSection(targetSection);
+
+      // Small delay to ensure the next paint cycle
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          const element = document.getElementById(targetSection);
+          if (element) {
+            element.scrollIntoView({
+              behavior: 'smooth',
+              block: 'start'
+            });
+          }
+        });
+      });
+    }
+  }, [to, calledFind]);
 
   const navigation = {
         academix: t('academix_ratio'),
