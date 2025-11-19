@@ -228,9 +228,9 @@ export default function Rewards({ searchParams }: RewardsPageProps) {
   };
 
   useEffect(() => {
-    if(!to || calledFind)return;
+    if(!to)return;
+    if(calledFind)return;
     scrollToSection(to);
-    setCalledFind(true)
   }, [to, scrollToSection, calledFind]);
 
   const navigation = {
@@ -286,7 +286,7 @@ export default function Rewards({ searchParams }: RewardsPageProps) {
           {Object.entries(navigation).map(([key, label]) => (
             <button
               key={key}
-              onClick={() => {scrollToSection(key === 'academix' ? 'academix-ratio' : key); setActiveSection(key);}}
+              onClick={() => {scrollToSection(key === 'academix' ? 'academix-ratio' : key); setActiveSection(key); setCalledFind(true);}}
               className={`${styles.navButton} ${
                 activeSection === (key === 'academix' ? 'academix-ratio' : key) ? styles.navButtonActive : ''
               }`}
