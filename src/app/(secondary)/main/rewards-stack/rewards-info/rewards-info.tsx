@@ -9,11 +9,15 @@ import { useNav } from "@/lib/NavigationStack";
 import { capitalize } from '@/utils/textUtils';
 import Rewards from '@/app/(public)/rewards/page';
 
-export default function RewardsInfo() {
+interface RewardsInfoProps {
+  sectionId?: string | null;
+}
+
+export default function RewardsInfo(props: RewardsInfoProps) {
   const { theme } = useTheme();
   const { t, lang } = useLanguage();
   const nav = useNav();
-
+  const { sectionId } = props;
 
   const goBack = async () => {
     await nav.pop();
@@ -42,7 +46,7 @@ export default function RewardsInfo() {
       </header>
 
       <Suspense>
-        <Rewards searchParams={Promise.resolve({ req: 'reward' })} />
+        <Rewards searchParams={Promise.resolve({ req: 'reward', to: sectionId })} />
       </Suspense>
     </main>
   );

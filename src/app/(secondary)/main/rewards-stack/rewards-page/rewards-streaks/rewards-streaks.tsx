@@ -14,6 +14,7 @@ import { BackendDailyStreaksModel } from '@/models/daily-streaks';
 import { DailyStreaksModel } from '@/models/daily-streaks';
 import { ComponentStateProps } from '@/hooks/use-component-state';
 import { useAcademixRatio } from '@/lib/stacks/academix-ratio-stack';
+import { useNav } from "@/lib/NavigationStack";
 
 
 // Types
@@ -233,6 +234,7 @@ export default function RewardsStreaks({ onStateChange }: ComponentStateProps) {
   const { theme } = useTheme();
   const { t, lang } = useLanguage();
   const { userData } = useUserData();
+  const nav = useNav();
 
   const [academixRatioData, demandAcademixRatio, setAcademixRatio] = useAcademixRatio(lang);
 
@@ -417,9 +419,13 @@ export default function RewardsStreaks({ onStateChange }: ComponentStateProps) {
 
   if (!dailyStreaks || dailyStreaks.length === 0) return null;
 
+  const openRewardInfo = () =>{
+      nav.push('rewards_info', {sectionId: 'streaks'});
+  }
+
   return (
     <div className={styles.dailyStreaksContainer}>
-      <h2 className={`${styles.dailyStreaksTitle} ${styles[`dailyStreaksTitle_${theme}`]}`}>
+      <h2 onClick={openRewardInfo} className={`${styles.dailyStreaksTitle} ${styles[`dailyStreaksTitle_${theme}`]}`}>
         {t('streaks_text')}
       </h2>
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useEffect, useState } from 'react';
+import { use, useEffect, useState, useMemo } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { getSupportedLang } from '@/context/LanguageContext';
@@ -110,6 +110,7 @@ interface Params {
   col: StringOrNull;
   lan: StringOrNull;
   req: StringOrNull;
+  to: StringOrNull;
   [key: string]: string | null;
 }
 
@@ -152,12 +153,13 @@ interface RewardsPageProps {
 
 export default function Rewards({ searchParams }: RewardsPageProps) {
   const resolvedSearchParams = use(searchParams);
-  const { col, lan, req } = useAppParams(resolvedSearchParams);
+  const { col, lan, req, to } = useAppParams(resolvedSearchParams);
   const { theme } = useTheme();
   const { t, tNode, lang } = useLanguage();
   const { initialized } = useAuthContext();
   const router = useRouter();
   const [canGoBack, setCanGoBack] = useState(false);
+  const [calledFind, setCalledFind] = useState(false);
   const [activeSection, setActiveSection] = useState('academix-ratio');
 
   const config = getConfig(req);
@@ -186,6 +188,7 @@ export default function Rewards({ searchParams }: RewardsPageProps) {
   useEffect(() => {
     setCanGoBack(window.history.length > 1);
   }, []);
+
 
   const getBackgroundStyle = (): React.CSSProperties => {
     if (config.backgroundColor && config.backgroundColor[resolvedTheme]) {
@@ -218,18 +221,22 @@ export default function Rewards({ searchParams }: RewardsPageProps) {
   };
 
   const scrollToSection = (sectionId: string) => {
-    const element = document.getElementById(sectionId);
-    if (element) {
-      const headerOffset = (config.showHeader || req === 'reward') ? 80 : 20;
-      const elementPosition = element.getBoundingClientRect().top;
-      const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+    const el = document.getElementById(sectionId);
+    if (!el) return;
 
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: 'smooth'
-      });
-    }
+    console.log('sectionId sss', sectionId);
+    el.scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+
   };
+
+  useEffect(() => {
+    if(!to || calledFind)return;
+    scrollToSection(to);
+    setCalledFind(true)
+  }, [to, scrollToSection, calledFind]);
 
   const navigation = {
         academix: t('academix_ratio'),
@@ -261,7 +268,7 @@ export default function Rewards({ searchParams }: RewardsPageProps) {
               </button>
             )}
 
-            <h1 className={styles.title}>{t('rewards_text')}</h1>
+            <h1 className={styles.title}>{t('reward_text')}</h1>
 
             {!initialized && <Link className={styles.logoContainer} href="/">
               <Image

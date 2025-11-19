@@ -11,11 +11,13 @@ import { useAcademixRatio } from '@/lib/stacks/academix-ratio-stack';
 import { useDemandState } from '@/lib/state-stack';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { ComponentStateProps } from '@/hooks/use-component-state';
+import { useNav } from "@/lib/NavigationStack";
 
 export default function AcademixRatio({ onStateChange }: ComponentStateProps) {
   const { theme } = useTheme();
   const { t, lang, tNode } = useLanguage();
   const { userData, userData$ } = useUserData();
+  const nav = useNav();
 
   const [academixRatioData, demandAcademixRatio, setAcademixRatio] = useAcademixRatio(lang);
 
@@ -64,6 +66,10 @@ export default function AcademixRatio({ onStateChange }: ComponentStateProps) {
 
   if (!academixRatioData) return null;
 
+  const openRewardInfo = () =>{
+      nav.push('rewards_info', {sectionId: 'academix'});
+  }
+
  return (
   <div className={styles.academixRatioContainer}>
     <h2
@@ -72,7 +78,7 @@ export default function AcademixRatio({ onStateChange }: ComponentStateProps) {
       {t('academix_ratio')}
     </h2>
 
-    <div className={styles.academixRatioSection}>
+    <div onClick={openRewardInfo} className={styles.academixRatioSection}>
       <div className={styles.academixRatioValueContainer}>
         <div className={styles.academixRatioIconWrapper}>
           <svg

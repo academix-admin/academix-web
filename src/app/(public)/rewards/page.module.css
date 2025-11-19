@@ -546,6 +546,7 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1rem;
+  max-width: 100%;
 }
 
 .milestoneHeader h3 {
@@ -553,6 +554,9 @@
   font-size: 1.3rem;
   font-weight: 600;
   color: inherit;
+  word-wrap: break-word;
+  max-width: 100%;
+  margin: 0;
 }
 
 .rewardTag {
@@ -759,6 +763,27 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+/* Web/Desktop specific styles */
+@media screen and (min-width: 801px) {
+  .contentGrid {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 1rem; /* Add horizontal padding */
+    box-sizing: border-box;
+  }
+
+  .sectionCard {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .innerBody {
+    padding-left: 2rem;
+    padding-right: 2rem;
+    box-sizing: border-box;
   }
 }
 
