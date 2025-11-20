@@ -304,7 +304,12 @@ export default function Rewards({ searchParams }: RewardsPageProps) {
           {Object.entries(navigation).map(([key, label]) => (
             <button
               key={key}
-              onClick={() => {scrollToSection(key === 'academix' ? 'academix-ratio' : key); setActiveSection(key); setCalledFind(true);}}
+              onClick={() => {
+                const id = key === 'academix' ? 'academix-ratio' : key;
+                scrollToSection(id);
+                setActiveSection(id);
+                setCalledFind(true);
+              }}
               className={`${styles.navButton} ${
                 activeSection === (key === 'academix' ? 'academix-ratio' : key) ? styles.navButtonActive : ''
               }`}
