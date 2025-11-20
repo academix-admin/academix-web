@@ -144,13 +144,11 @@
 .quickNav {
   display: flex;
   gap: 0.75rem;
-  margin-bottom: 3rem;
+  margin-bottom: 2rem;
   flex-wrap: wrap;
   justify-content: center;
   animation: fadeInUp 0.8s ease-out 0.2s both;
   width: 100%;
-  position: sticky;
-  top: 80px;
   z-index: 5;
   background: inherit;
   padding: 1rem 0;
