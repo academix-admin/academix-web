@@ -17,6 +17,9 @@
   font-weight: bold;
   margin: 0px;
   margin-bottom: 12px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
 }
 
 .dailyStreaksTitle_light {
@@ -245,14 +248,34 @@
   background-color: rgba(0, 0, 0, 0.3);
 }
 
+.infoIcon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+
 /* Responsive Styles */
 @media screen and (min-width: 801px) {
+
+  /* Web styles - default is already set */
+  .infoIcon {
+    width: 16px;  /* 24px */
+    height: 16px;   /* 32px */
+  }
+
   .dailyStreaksTitle {
     font-size: 20px;
   }
 }
 
 @media screen and (max-width: 800px) {
+
+  .infoIcon {
+    width: 14px;  /* 22px */
+    height: 14px; /* 30px */
+  }
+
   .dailyStreaksContainer {
     padding: 0 24px 0 24px;
   }
@@ -267,6 +290,13 @@
 }
 
 @media screen and (max-width: 500px) {
+
+  /* Mobile styles */
+  .infoIcon {
+    width: 12px;  /* 20px */
+    height: 12px; /* 28px */
+  }
+
   .dailyStreaksContainer {
     padding: 0 16px 0 16px;
   }
@@ -301,5 +331,12 @@
   .rewardCode,
   .rewardExpiry {
     font-size: 14px;
+  }
+}
+
+/* Reduced motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .svgSection {
+    transition: none;
   }
 }
