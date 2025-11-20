@@ -1,0 +1,231 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  min-height: 100vh;
+  height: auto;
+  transition: background-color 0.3s ease;
+  overflow: visible;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+/* Default theme backgrounds - only applied when no config background */
+.container_light {
+  background-color: #ffffff;
+  color: #000;
+}
+
+.container_dark {
+  background-color: #121212;
+  color: #ffffff;
+}
+
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 10;
+  display: flex;
+  backdrop-filter: blur(8px);
+  box-sizing: border-box;
+}
+
+.header_light {
+  background-color: rgba(255, 255, 255, 0.92);
+  border-bottom: 1px solid #E5E5E5;
+}
+
+.header_dark {
+  background-color: rgba(18, 18, 18, 0.92);
+  border-bottom: 1px solid #333;
+}
+
+.headerContent {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 1rem;
+  padding: 1rem 0;
+  margin: 0 20%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.innerBody {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+  max-width: 1200px;
+  padding-top: 6rem;
+  width: 100%;
+  height: auto;
+  min-height: auto;
+  box-sizing: border-box;
+}
+
+.innerBody_ios{
+   padding-top: 2rem;
+}
+
+.innerBody_android{
+   padding-top: 2rem;
+}
+
+.innerBody_payment {
+   padding-top: 6rem;
+}
+
+.backButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  justify-content: center;
+  transition: background-color 0.2s ease;
+}
+
+.backButton:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.container_dark .backButton:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.backIcon {
+  width: 20px;
+  height: 20px;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+  flex-grow: 1;
+  text-align: start;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-sizing: border-box;
+}
+
+.logoContainer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  box-sizing: border-box;
+  transition: transform 0.2s ease;
+}
+
+.logoContainer:hover {
+  transform: scale(1.05);
+}
+
+.logo {
+  width: 35px;
+  height: 35px;
+  border-radius: 8px;
+}
+
+
+/* Web/Desktop specific styles */
+@media screen and (min-width: 801px) {
+
+  .innerBody {
+    padding-left: 2rem;
+    padding-right: 2rem;
+    box-sizing: border-box;
+  }
+}
+
+/* Tablet */
+@media screen and (min-width: 501px) and (max-width: 930px) {
+  .headerContent {
+    padding: 1rem;
+    margin: 0;
+    max-width: 100%;
+  }
+
+  .logo {
+    width: 35px;
+    height: 35px;
+  }
+
+  .innerBody {
+    padding: 1.5rem;
+    padding-top: 6rem;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .innerBody_ios,
+  .innerBody_android {
+    padding: 16px;
+  }
+
+  .innerBody_payment {
+    padding: 1rem;
+    padding-top: 6rem;
+  }
+
+}
+
+/* Mobile */
+@media screen and (max-width: 500px) {
+  .headerContent {
+    margin: 0;
+    padding: 1rem;
+    max-width: 100%;
+    gap: 0.5rem;
+  }
+
+  .innerBody {
+    padding: 1rem;
+    padding-top: 5rem;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .innerBody_ios,
+  .innerBody_android {
+    padding: 16px;
+  }
+
+  .innerBody_payment {
+    padding: 16px;
+    padding-top: 5rem;
+    box-sizing: border-box;
+  }
+
+  .backIcon {
+    width: 16px;
+    height: 16px;
+  }
+
+  .title {
+    font-size: 1.2rem;
+    max-width: 60%;
+    word-wrap: break-word;
+  }
+
+  .logo {
+    width: 28px;
+    height: 28px;
+  }
+
+}
+
+/* Ensure no parent has overflow: hidden */
+.container, .innerBody {
+  overflow: visible !important;
+}
+
