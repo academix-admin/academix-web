@@ -782,8 +782,7 @@
 
   .innerBody_ios,
   .innerBody_android {
-    padding: 1rem;
-    padding-top: 2rem;
+    padding: 16px;
   }
 
   .innerBody_reward {
@@ -884,7 +883,6 @@
   .innerBody_ios,
   .innerBody_android {
     padding: 16px;
-    padding-top: 2rem;
   }
 
   .innerBody_reward {
