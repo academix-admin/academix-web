@@ -58,8 +58,8 @@ const quizConfig: Config = {
 
 const defaultConfig: Config = {
   showHeader: true,
-  showTitle: true,
-  showDescription: true,
+  showTitle: false,
+  showDescription: false,
   backgroundColor: null
 };
 

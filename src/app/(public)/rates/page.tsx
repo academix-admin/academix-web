@@ -60,8 +60,8 @@ const paymentConfig: Config = {
 
 const defaultConfig: Config = {
   showHeader: true,
-  showTitle: true,
-  showDescription: true,
+  showTitle: false,
+  showDescription: false,
   backgroundColor: null
 };
 
@@ -724,9 +724,9 @@ export default function Rates({ searchParams }: RatesPageProps) {
         </header>
       )}
 
-      {config.showTitle && (<h1 className={`${styles.bigTitle} ${styles[`bigTitle_${resolvedTheme}`]}`}>{t('academix_calculator')}</h1>)}
+      {config.showTitle && (<h1 className={`${styles.bigTitle} ${styles[`bigTitle_${resolvedTheme}`]}`}>{t('academix_rates')}</h1>)}
       {config.showDescription && (<h4 className={`${styles.description} ${styles[`description_${resolvedTheme}`]}`}>
-        {t('academix_description')}
+        {t('rates_description')}
       </h4>)}
 
       <div className={`${styles.innerBody} ${styles[`innerBody_${req}`]}`}>
