@@ -25,26 +25,43 @@ import DialogCancel from '@/components/DialogCancel';
 
 interface Config {
   showHeader: boolean;
+  showTitle: boolean;
+  showDescription: boolean;
   backgroundColor: Record<string, string> | null;
 }
 
 const iosConfig: Config = {
   showHeader: false,
+  showTitle: false,
+  showDescription: false,
   backgroundColor: { 'light': '#fff', 'dark': '#212121' }
 };
 
 const androidConfig: Config = {
   showHeader: false,
+  showTitle: false,
+  showDescription: false,
   backgroundColor: { 'light': '#fff', 'dark': '#232323' }
+};
+
+const landingConfig: Config = {
+  showHeader: false,
+  showTitle: true,
+  showDescription: true,
+  backgroundColor: null
 };
 
 const paymentConfig: Config = {
   showHeader: false,
+  showTitle: false,
+  showDescription: false,
   backgroundColor: null
 };
 
 const defaultConfig: Config = {
   showHeader: true,
+  showTitle: true,
+  showDescription: true,
   backgroundColor: null
 };
 
@@ -52,7 +69,8 @@ const getConfig = (req: string | null): Config => {
   const configMap: Record<string, Config> = {
     'ios': iosConfig,
     'android': androidConfig,
-    'payment': paymentConfig
+    'payment': paymentConfig,
+    'landing': landingConfig
   };
   return configMap[req || ''] || defaultConfig;
 };
@@ -222,7 +240,7 @@ export default function Rates({ searchParams }: RatesPageProps) {
   const [paymentAmount, setPaymentAmount] = useState(0);
   const [walletAmount, setWalletAmount] = useState('');
   const [academixAmount, setAcademixAmount] = useState('');
-  const [paymentSwitch, setPaymentSwitch] = useState<'wallet' | 'academix'>('wallet');
+  const [flipped, setFlipped] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const walletInputRef = useRef<HTMLInputElement>(null);
   const academixInputRef = useRef<HTMLInputElement>(null);
@@ -276,9 +294,9 @@ export default function Rates({ searchParams }: RatesPageProps) {
   const getContainerClass = () => {
     const baseClass = styles.container;
     if (config.backgroundColor) {
-      return baseClass;
+      return `${baseClass} ${styles[`container_${req}`]}`;
     }
-    return `${baseClass} ${styles[`container_${resolvedTheme}`]}`;
+    return `${baseClass} ${styles[`container_${resolvedTheme}`]} ${styles[`container_${req}`]}`;
   };
 
   const goBack = () => {
@@ -412,12 +430,7 @@ export default function Rates({ searchParams }: RatesPageProps) {
     limitBy: number,
     paginateModel: PaginateModel
   ): Promise<PaymentMethodModel[]> => {
-      console.log({
-                            p_locale: resolvedLang,
-                            p_limit_by: limitBy,
-                            p_wallet_id: walletData?.paymentWalletId || '',
-                            p_after_methods: paginateModel.toJson(),
-                          });
+
     try {
       const { data, error } = await supabaseBrowser.rpc(
         isBuyMode ? "fetch_top_up_methods" : "fetch_withdraw_methods",
@@ -433,7 +446,7 @@ export default function Rates({ searchParams }: RatesPageProps) {
         console.error("[PaymentMethodModel] error:", error);
         return [];
       }
-      console.log('data',data);
+
       return (data || []).map((row: BackendPaymentMethodModel) => new PaymentMethodModel(row));
     } catch (err) {
       console.error("[PaymentMethodModel] error:", err);
@@ -568,39 +581,30 @@ export default function Rates({ searchParams }: RatesPageProps) {
     const value = e.target.value;
     if (/^\d*\.?\d*$/.test(value) || value === '') {
       setWalletAmount(value);
-      if (paymentSwitch === 'wallet' && walletData?.paymentWalletRate) {
+      if (walletData?.paymentWalletRate) {
         const numValue = parseFloat(value) || 0;
         setPaymentAmount(numValue);
-        // For buy: wallet amount * rate = academix amount
-        // For sell: wallet amount / rate = academix amount
-        const academixValue = isBuyMode
-          ? numValue * walletData.paymentWalletRate
-          : numValue / walletData.paymentWalletRate;
-        setAcademixAmount(parseFloat(academixValue.toFixed(6)).toString());
+        setAcademixAmount(parseFloat((numValue * walletData.paymentWalletRate).toFixed(2)).toString());
       }
     }
-  }, [paymentSwitch, walletData?.paymentWalletRate, isBuyMode]);
+  }, [ walletData?.paymentWalletRate]);
 
   const handleAcademixAmountChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     if (/^\d*\.?\d*$/.test(value) || value === '') {
       setAcademixAmount(value);
-      if (paymentSwitch === 'academix' && walletData?.paymentWalletRate) {
+      if (walletData?.paymentWalletRate) {
         const numValue = parseFloat(value) || 0;
         setPaymentAmount(numValue);
-        // For buy: academix amount / rate = wallet amount
-        // For sell: academix amount * rate = wallet amount
-        const walletValue = isBuyMode
-          ? numValue / walletData.paymentWalletRate
-          : numValue * walletData.paymentWalletRate;
-        if (numValue > 0) setWalletAmount(parseFloat(walletValue.toFixed(2)).toString());
+        if(numValue > 0)setWalletAmount((numValue / walletData.paymentWalletRate).toString());
         if (numValue <= 0) setWalletAmount('');
       }
     }
-  }, [paymentSwitch, walletData?.paymentWalletRate, isBuyMode]);
+  }, [walletData?.paymentWalletRate]);
 
   const switchPaymentMode = useCallback(() => {
-    setPaymentSwitch(prev => prev === 'wallet' ? 'academix' : 'wallet');
+    // flip conversion input
+    setFlipped(prev=> !prev);
   }, []);
 
   const calculateFee = useCallback((value: number) => {
@@ -618,24 +622,14 @@ export default function Rates({ searchParams }: RatesPageProps) {
       feeValue = feeValue * walletData.paymentWalletRate;
     }
 
-    return parseFloat(feeValue.toFixed(6)).toString();
+    return parseFloat(feeValue.toFixed(2)).toString();
   }, [walletData, isBuyMode]);
 
   const calculateTotal = useCallback((value: number) => {
     if (!walletData) return '0';
 
     const fee = parseFloat(calculateFee(value));
-    let total = 0;
-
-    if (isBuyMode) {
-      // For buy: user pays amount + fee, receives academix
-      total = value + fee;
-    } else {
-      // For sell: user receives amount - fee, sends academix
-      total = Math.max(0, value - fee);
-    }
-
-    return parseFloat(total.toFixed(6)).toString();
+    return parseFloat((value + fee).toFixed(2)).toString();
   }, [walletData, isBuyMode, calculateFee]);
 
   // Filtered data
@@ -730,6 +724,11 @@ export default function Rates({ searchParams }: RatesPageProps) {
         </header>
       )}
 
+      {config.showTitle && (<h1 className={`${styles.bigTitle} ${styles[`bigTitle_${resolvedTheme}`]}`}>{t('academix_calculator')}</h1>)}
+      {config.showDescription && (<h4 className={`${styles.description} ${styles[`description_${resolvedTheme}`]}`}>
+        {t('academix_description')}
+      </h4>)}
+
       <div className={`${styles.innerBody} ${styles[`innerBody_${req}`]}`}>
         {/* Tab Switcher */}
         <div className={`${styles.tabSwitcher} ${styles[`tabSwitcher_${resolvedTheme}`]}`}>
@@ -749,13 +748,9 @@ export default function Rates({ searchParams }: RatesPageProps) {
 
         {/* Conversion Section */}
         <div className={`${styles.conversionSection} ${styles[`conversionSection_${resolvedTheme}`]}`}>
-          <h2 className={styles.sectionTitle}>
-            {isBuyMode ? t('top_up_text') : t('withdraw_text')}
-          </h2>
-
           {/* Wallet Selection */}
           <div className={styles.selectionCard}>
-            <label className={styles.selectionLabel}>{t('select_wallet')}</label>
+            <label className={styles.selectionLabel}>{t('payment_wallet_text')}</label>
             <div
               className={`${styles.selectionButton} ${styles[`selectionButton_${resolvedTheme}`]}`}
               onClick={openWalletSelector}
@@ -778,7 +773,7 @@ export default function Rates({ searchParams }: RatesPageProps) {
                 </div>
               ) : (
                 <div className={styles.placeholderText}>
-                  {t('select_wallet_placeholder')}
+                  {t('select_payment_wallet')}
                 </div>
               )}
               <div className={styles.dropdownArrow}>
@@ -792,14 +787,15 @@ export default function Rates({ searchParams }: RatesPageProps) {
           {/* Conversion Inputs */}
           {walletData && (
             <div className={styles.conversionCard}>
-              <div className={styles.conversionHeader}>
-                <span>{isBuyMode ? t('you_pay') : t('you_receive')}</span>
-                <span>{isBuyMode ? t('you_receive') : t('you_pay')}</span>
-              </div>
 
-              <div className={styles.conversionInputs}>
+
+              <div  className={`${styles.conversionInputs} ${flipped ? styles.conversionInputsFlipped : ''}`}>
                 <div className={styles.inputGroup}>
+                  <div className={`${styles.conversionHeader} ${flipped ? styles.conversionRightHeader : styles.conversionLeftHeader}`}>
+                      <span>{isBuyMode ? t('you_pay') : t('you_receive')}</span>
+                  </div>
                   <div className={styles.inputWrapper}>
+
                     <input
                       ref={walletInputRef}
                       type="text"
@@ -819,6 +815,9 @@ export default function Rates({ searchParams }: RatesPageProps) {
                 </div>
 
                 <div className={styles.inputGroup}>
+                  <div className={`${styles.conversionHeader} ${ flipped ? styles.conversionLeftHeader : styles.conversionRightHeader}`}>
+                      <span>{isBuyMode ? t('you_receive') : t('you_pay')}</span>
+                  </div>
                   <div className={styles.inputWrapper}>
                     <input
                       ref={academixInputRef}
@@ -844,12 +843,16 @@ export default function Rates({ searchParams }: RatesPageProps) {
               {(parseFloat(walletAmount) > 0 || parseFloat(academixAmount) > 0) && (
                 <div className={styles.feeBreakdown}>
                   <div className={styles.feeRow}>
-                    <span>{t('fee')}:</span>
+                    <span>{t('min_text')}:</span>
+                    <span>{walletData.paymentWalletMin} {walletData.paymentWalletCurrency}</span>
+                  </div>
+                  <div className={styles.feeRow}>
+                    <span>{t('fee_text')}:</span>
                     <span>{calculateFee(parseFloat(walletAmount) || 0)} {isBuyMode ? walletData.paymentWalletCurrency : 'ADC'}</span>
                   </div>
                   <div className={styles.feeRow}>
-                    <span>{t('total')}:</span>
-                    <span>{calculateTotal(parseFloat(walletAmount) || 0)} {isBuyMode ? walletData.paymentWalletCurrency : 'ADC'}</span>
+                    <span>{t('charged_text')}:</span>
+                    <span>{calculateTotal(parseFloat(isBuyMode ? walletAmount : academixAmount) || 0)} {isBuyMode ? walletData.paymentWalletCurrency : 'ADC'}</span>
                   </div>
                 </div>
               )}
@@ -860,7 +863,7 @@ export default function Rates({ searchParams }: RatesPageProps) {
           {walletData && (
             <div className={styles.selectionCard}>
               <label className={styles.selectionLabel}>
-                {isBuyMode ? t('select_payment_method') : t('select_withdrawal_method')}
+                {t('payment_method_text')}
               </label>
               <div
                 className={`${styles.selectionButton} ${styles[`selectionButton_${resolvedTheme}`]} ${!walletData ? styles.disabled : ''}`}
@@ -885,7 +888,7 @@ export default function Rates({ searchParams }: RatesPageProps) {
                 ) : (
                   <div className={styles.placeholderText}>
                     {methodsModel.length > 0
-                      ? t('select_method_placeholder')
+                      ? t('select_payment_method')
                       : t('no_methods_available')
                     }
                   </div>
@@ -920,7 +923,7 @@ export default function Rates({ searchParams }: RatesPageProps) {
           view: <DialogCancel />
         }}
         searchProp={{
-          text: "Search...",
+          text: t('search'),
           onChange: handleWalletSearch,
           background: theme === 'light' ?  "#f5f5f5" : "#272727",
           textColor: theme === 'light' ?  "#000" : "#fff",
@@ -970,7 +973,7 @@ export default function Rates({ searchParams }: RatesPageProps) {
         onClose={methodSelectController.close}
         onPaginate={loadMoreMethods}
         titleProp={{
-          text: isBuyMode ? t('select_payment_method') : t('select_withdrawal_method'),
+          text: t('select_payment_method'),
           textColor: theme === 'light' ? "#000" : "#fff"
         }}
         cancelButton={{
@@ -979,7 +982,7 @@ export default function Rates({ searchParams }: RatesPageProps) {
           view: <DialogCancel />
         }}
         searchProp={{
-          text: t('search_methods'),
+          text: t('search'),
           onChange: handleMethodSearch,
           background: theme === 'light' ? "#f5f5f5" : "#272727",
           textColor: theme === 'light' ? "#000" : "#fff",

@@ -23,31 +23,43 @@ import { useAuthContext } from '@/providers/AuthProvider'
 
 interface Config {
   showHeader: boolean;
+  showTitle: boolean;
+  showDescription: boolean;
   backgroundColor: Record<string, string> | null;
 }
 
 const iosConfig: Config = {
   showHeader: false,
+  showTitle: false,
+  showDescription: false,
   backgroundColor: { 'light': '#fff', 'dark': '#212121' }
 };
 
 const androidConfig: Config = {
   showHeader: false,
+  showTitle: false,
+  showDescription: false,
   backgroundColor: { 'light': '#fff', 'dark': '#232323' }
 };
 
 const landingConfig: Config = {
   showHeader: false,
+  showTitle: true,
+  showDescription: true,
   backgroundColor: null
 };
 
 const quizConfig: Config = {
   showHeader: false,
+  showTitle: false,
+  showDescription: false,
   backgroundColor: null
 };
 
 const defaultConfig: Config = {
   showHeader: true,
+  showTitle: true,
+  showDescription: true,
   backgroundColor: null
 };
 
@@ -893,14 +905,14 @@ export default function Payout({ searchParams }: PayoutPageProps) {
         </header>
       )}
 
-      <h1 className={`${styles.bigTitle} ${styles[`bigTitle_${theme}`]}`}>{t('academix_calculator')}</h1>
-      <h4 className={`${styles.description} ${styles[`description_${theme}`]}`}>
+      {config.showTitle && (<h1 className={`${styles.bigTitle} ${styles[`bigTitle_${resolvedTheme}`]}`}>{t('academix_calculator')}</h1>)}
+      {config.showDescription && (<h4 className={`${styles.description} ${styles[`description_${resolvedTheme}`]}`}>
         {t('academix_description')}
-      </h4>
+      </h4>)}
 
       {activeTab && payoutState === 'data' && (
-        <div className={`${styles.innerBody} ${styles[`innerBody_${theme}`]}`}>
-          <h4 className={`${styles.game_mode} ${styles[`game_mode_${theme}`]}`}>{t('game_mode')}</h4>
+        <div className={`${styles.innerBody} ${styles[`innerBody_${resolvedTheme}`]}`}>
+          <h4 className={`${styles.game_mode} ${styles[`game_mode_${resolvedTheme}`]}`}>{t('game_mode')}</h4>
           <div className={styles.tab_switcher}>
             {challengeData.map((challenge, index) => (
               <button

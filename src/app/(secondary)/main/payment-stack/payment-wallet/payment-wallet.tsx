@@ -280,7 +280,7 @@ export default function PaymentWallet({ profileType, onWalletData, onWalletAmoun
       if (paymentSwitch === 'academix' && walletData?.paymentWalletRate) {
         const numValue = parseFloat(value) || 0;
         setPaymentAmount(numValue);
-        if(numValue > 0)setWalletAmount(parseFloat((numValue / walletData.paymentWalletRate).toFixed(2)).toString());
+        if(numValue > 0)setWalletAmount((numValue / walletData.paymentWalletRate).toString());
         if(numValue <= 0)setWalletAmount('');
       }
     }
@@ -567,7 +567,7 @@ export default function PaymentWallet({ profileType, onWalletData, onWalletAmoun
           view: <DialogCancel />
         }}
         searchProp={{
-          text: "Search...",
+          text: t('search'),
           onChange: handleWalletSearch,
           background: theme === 'light' ?  "#f5f5f5" : "#272727",
           textColor: theme === 'light' ?  "#000" : "#fff",

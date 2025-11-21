@@ -2,13 +2,11 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  text-align: center;
-  min-height: 100vh;
-  height: auto;
-  transition: background-color 0.3s ease;
-  overflow: visible;
+  transition: all 0.3s ease;
   box-sizing: border-box;
+  padding: 0 1rem;
   width: 100%;
+  margin: 0 auto;
 }
 
 /* Default theme backgrounds - only applied when no config background */
@@ -56,27 +54,50 @@
 }
 
 .innerBody {
+  margin: 0 auto;
+  width: 60%;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  padding: 2rem;
-  max-width: 1200px;
-  padding-top: 6rem;
-  width: 100%;
-  height: auto;
-  min-height: auto;
   box-sizing: border-box;
+  border-radius: 12px;
+  transition: all 0.3s ease;
 }
 
-.innerBody_ios{
-   padding-top: 2rem;
+.innerBody_light {
+  border: 1px solid #e0e0e0;
+  background-color: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
-.innerBody_android{
-   padding-top: 2rem;
+.innerBody_dark {
+  border: 1px solid #444444;
+  background-color: #2d2d2d;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-.innerBody_payment {
+.container {
+  padding-top: 6rem;
+    padding-bottom: 4rem;
+}
+
+.container_ios {
+   padding-top: 1rem;
+   padding-bottom: 1rem;
+   min-height: 100vh;
+}
+
+.container_android{
+   padding-top: 1rem;
+   padding-bottom: 1rem;
+   min-height: 100vh;
+}
+
+.container_landing {
+   padding-top: 8rem;
+    justify-content: center;
+}
+
+.container_payment {
    padding-top: 6rem;
 }
 
@@ -136,6 +157,41 @@
   border-radius: 8px;
 }
 
+.bigTitle {
+  font-size: 2.5rem;
+  text-align: center;
+  margin-bottom: 1rem;
+  font-weight: 700;
+  transition: color 0.3s ease;
+}
+
+.bigTitle_light {
+  color: #2c3e50;
+}
+
+.bigTitle_dark {
+  color: #f5f5f5;
+}
+
+.description {
+  text-align: center;
+  font-size: 1.2rem;
+  margin-bottom: 2rem;
+  font-weight: normal;
+  max-width: 800px;
+  line-height: 1.6;
+  padding: 0 1rem;
+  transition: color 0.3s ease;
+}
+
+.description_light {
+  color: #555555;
+}
+
+.description_dark {
+  color: #cccccc;
+}
+
 /* Tab Switcher */
 .tabSwitcher {
   display: flex;
@@ -144,7 +200,12 @@
   padding: 4px;
   margin-bottom: 2rem;
   width: 100%;
-  max-width: 500px;
+  max-width: 60%;
+  align-items: center;
+  left: 50%;
+  position: relative;
+  box-sizing: border-box;
+  transform: translateX(-50%);
 }
 
 .tabSwitcher_light {
@@ -254,20 +315,13 @@
   color: #fff;
 }
 
-.sectionTitle {
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin-bottom: 2rem;
-  text-align: center;
-}
-
 /* Selection Cards */
 .selectionCard {
   margin-bottom: 1.5rem;
 }
 
 .selectionLabel {
-  display: block;
+  display: flex;
   font-size: 0.9rem;
   font-weight: 500;
   margin-bottom: 0.5rem;
@@ -400,17 +454,28 @@
 
 .conversionHeader {
   display: flex;
-  justify-content: space-between;
   margin-bottom: 1rem;
   font-size: 0.9rem;
   opacity: 0.8;
 }
 
+.conversionLeftHeader {
+}
+
+.conversionRightHeader {
+  justify-content: flex-end;
+}
+
 .conversionInputs {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   gap: 1rem;
+  width: 100%;
   margin-bottom: 1rem;
+}
+
+.conversionInputsFlipped{
+  flex-direction: row-reverse;
 }
 
 .inputGroup {
@@ -484,6 +549,7 @@
 
 .rateInfo {
   text-align: center;
+  margin-top: 1rem;
   margin-bottom: 1rem;
 }
 
@@ -495,20 +561,22 @@
 .feeBreakdown {
   border-top: 1px solid var(--border-color);
   padding-top: 1rem;
+  margin-top: 1rem;
 }
 
 .feeRow {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 0.5rem;
+  align-items: center;
+  padding: 0.5rem 0;
   font-size: 0.9rem;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .feeRow:last-child {
-  margin-bottom: 0;
+  border-bottom: none;
   font-weight: 600;
-  border-top: 1px solid var(--border-color);
-  padding-top: 0.5rem;
+  padding-bottom: 0; /* cleaner look */
 }
 
 /* Method Networks */
@@ -533,36 +601,23 @@
 .methodItem {
   display: flex;
   align-items: center;
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
+  padding: 8px 16px;
+  border-radius: 12px;
   cursor: pointer;
-  transition: all 0.2s ease;
-  margin-bottom: 0.5rem;
+  transition: background-color 0.2s ease;
 }
 
 .walletItem_light,
 .methodItem_light {
-  background: #f8f9fa;
   color: #000;
 }
 
 .walletItem_dark,
 .methodItem_dark {
-  background: #2d2d2d;
   color: #fff;
 }
 
-.walletItem:hover,
-.methodItem:hover {
-  background: #3b82f6;
-  color: white;
-}
 
-.walletItem.selected,
-.methodItem.selected {
-  background: #3b82f6;
-  color: white;
-}
 
 .walletItemImage,
 .methodItemImage {
@@ -631,22 +686,26 @@
   height: 20px;
 }
 
+
 /* Web/Desktop specific styles */
+@media (max-width: 1024px) {
+  .innerBody {
+    width: 80%;
+  }
+  .tabSwitcher{
+    max-width: 80%;
+  }
+}
+
 @media screen and (min-width: 801px) {
 
-  .innerBody {
-    padding-left: 2rem;
-    padding-right: 2rem;
-    box-sizing: border-box;
-  }
 }
 
 /* Tablet */
 @media screen and (min-width: 501px) and (max-width: 930px) {
   .headerContent {
-    padding: 1rem;
-    margin: 0;
-    max-width: 100%;
+    padding: 1rem 0rem;
+    margin: 0 1rem;
   }
 
   .logo {
@@ -654,50 +713,71 @@
     height: 35px;
   }
 
-  .innerBody {
-    padding: 1.5rem;
+  .container {
+     padding-top: 4rem;
+     padding-bottom: 2rem;
+  }
+  .container_ios {
+     padding-top: 1rem;
+     padding-bottom: 1rem;
+  }
+  .container_android{
+     padding-top: 1rem;
+     padding-bottom: 1rem;
+  }
+  .container_landing {
+     padding-top: 4rem;
+  }
+
+  .container_payment {
     padding-top: 6rem;
+  }
+
+  .innerBody, .tabSwitcher {
     width: 100%;
-    box-sizing: border-box;
   }
 
-  .innerBody_ios,
-  .innerBody_android {
-    padding: 16px;
-  }
-
-  .innerBody_payment {
-    padding: 1rem;
-    padding-top: 6rem;
+  .tabSwitcher{
+    max-width: 90%;
   }
 
 }
 
 /* Mobile */
 @media screen and (max-width: 500px) {
-  .headerContent {
-    margin: 0;
-    padding: 1rem;
-    max-width: 100%;
-    gap: 0.5rem;
+
+
+  .container {
+     padding-top: 4rem;
+     padding-bottom: 2rem;
+  }
+
+  .container_ios {
+     padding-top: 1rem;
+     padding-bottom: 1rem;
+  }
+  .container_android{
+     padding-top: 1rem;
+     padding-bottom: 1rem;
+  }
+
+  .container_landing {
+     padding-top: 4rem;
+  }
+
+  .container_payment {
+    padding: 16px;
+    padding-top: 5rem;
+    box-sizing: border-box;
   }
 
   .innerBody {
-    padding: 1rem;
-    padding-top: 5rem;
     width: 100%;
-    box-sizing: border-box;
   }
 
-  .innerBody_ios,
-  .innerBody_android {
-    padding: 16px;
-  }
-
-  .innerBody_payment {
-    padding: 16px;
-    padding-top: 5rem;
-    box-sizing: border-box;
+  .headerContent {
+    margin: 0;
+    padding: 1rem;
   }
 
   .backIcon {
@@ -707,8 +787,6 @@
 
   .title {
     font-size: 1.2rem;
-    max-width: 60%;
-    word-wrap: break-word;
   }
 
   .logo {
@@ -716,8 +794,18 @@
     height: 28px;
   }
 
+  .bigTitle {
+    font-size: 1.8rem;
+  }
+
+  .description {
+    font-size: 1rem;
+    max-width: 85%;
+  }
+
   .tabSwitcher {
     margin-bottom: 1.5rem;
+    max-width: none;
   }
 
   .tabButton {
@@ -752,18 +840,30 @@
     padding: 1rem 0;
   }
 
+
   .conversionInputs {
     flex-direction: column;
+    align-items: center;
+    width: 100%;
     gap: 0.75rem;
+    margin-bottom: 8px;
+  }
+
+  .conversionInputsFlipped{
+    flex-direction: column-reverse;
+  }
+
+  .inputGroup{
+    flex: none;
+    width: 100%;
+  }
+
+  .conversionRightHeader {
+    justify-content: flex-start;
   }
 
   .swapButton {
-    order: 3;
     transform: rotate(90deg);
-  }
-
-  .sectionTitle {
-    font-size: 1.25rem;
   }
 
   .amountInput {
@@ -779,7 +879,3 @@
 
 }
 
-/* Ensure no parent has overflow: hidden */
-.container, .innerBody {
-  overflow: visible !important;
-}
