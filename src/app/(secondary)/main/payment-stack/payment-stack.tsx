@@ -9,13 +9,15 @@ import TopUpPage from "./top-up-page/top-up-page";
 import WithdrawPage from "./withdraw-page/withdraw-page";
 import ViewTransactionPage from "./view-transaction-page/view-transaction-page";
 import NewProfilePage from "./new-profile-page/new-profile-page";
+import RatesPage from "./rates-page/rates-page";
 
 const paymentStackNavLink = {
   payment_page: PaymentPage,
   top_up_page: TopUpPage,
   view_transaction: ViewTransactionPage,
   new_profile: NewProfilePage,
-  withdraw_page: WithdrawPage
+  withdraw_page: WithdrawPage,
+  rates_page: RatesPage
 };
 
 export const PaymentStack = () => (
