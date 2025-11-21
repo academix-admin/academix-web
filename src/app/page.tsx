@@ -1,5 +1,6 @@
 'use client';
 
+import {  Suspense } from 'react';
 import styles from './page.module.css';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
@@ -13,6 +14,7 @@ import LandingMoreAbout from '@/components/LandingMoreAbout/LandingMoreAbout';
 import LandingFeatures from '@/components/LandingFeatures/LandingFeatures';
 import LandingAcademixCalculator from '@/components/LandingAcademixCalculator/LandingAcademixCalculator';
 import Payout from './(public)/payout/page';
+import Rates from './(public)/rates/page';
 
 export default function LandingPage() {
   const { theme } = useTheme();
@@ -28,6 +30,9 @@ export default function LandingPage() {
       <LandingMoreAbout />
       <LandingFeatures />
       <Payout searchParams={Promise.resolve({ req: 'landing' })} />
+      <Suspense>
+        <Rates searchParams={Promise.resolve({ req: 'landing'})} />
+      </Suspense>
       <LandingFooter />
     </div>
   );
