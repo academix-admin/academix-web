@@ -96,11 +96,11 @@ const useAppParams = <
 };
 
 
-interface RewardsPageProps {
+interface AboutPageProps {
   searchParams: Promise<Partial<Params>>;
 }
 
-export default function Rewards({ searchParams }: RewardsPageProps) {
+export default function About({ searchParams }: AboutPageProps) {
   const resolvedSearchParams = use(searchParams);
   const { col, lan, req, to } = useAppParams(resolvedSearchParams);
   const { theme } = useTheme();

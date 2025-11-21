@@ -22,7 +22,8 @@ export default function ProfileLinks({ onStateChange }: ComponentStateProps) {
       { id: 1, label: t('rules_text'), icon: 'rules' },
       { id: 2, label: t('payout_text'), icon: 'payout' },
       { id: 3, label: t('rates_text'), icon: 'rates' },
-      { id: 4, label: t('reward_text'), icon: 'reward' }
+      { id: 4, label: t('reward_text'), icon: 'reward' },
+      { id: 5, label: t('instructions_text'), icon: 'instructions' }
     ]);
 
   const handleItemClick = (itemId: number) => {
@@ -39,6 +40,9 @@ export default function ProfileLinks({ onStateChange }: ComponentStateProps) {
               break;
             case 4:
                 nav.push('rewards_info');
+              break;
+            case 5:
+                nav.push('instructions_page');
               break;
             default:
               break;
@@ -113,6 +117,17 @@ export default function ProfileLinks({ onStateChange }: ComponentStateProps) {
             {/* star (reward / achievement) */}
             <path
               d="M12 2.5l2.6 5.27L20.8 8.6l-4 3.9.95 6.2L12 17.9l-5.75 1.8L7.2 12.5 3.2 8.6l6.2-.83L12 2.5z"
+              fill="currentColor"
+            />
+          </svg>
+        );
+
+      case "instructions":
+        return (
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <circle cx="10" cy="10" r="8" stroke="currentColor" strokeWidth="1.6" />
+            <path
+              d="M10 6.5a.75.75 0 110-1.5.75.75 0 010 1.5zM9.25 8.5h1.5v6h-1.5v-6z"
               fill="currentColor"
             />
           </svg>

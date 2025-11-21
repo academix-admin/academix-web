@@ -12,6 +12,8 @@ import RewardsInfo from "../shared/rewards-info/rewards-info";
 import RatesPage from "../shared/rates-page/rates-page";
 import RulesPage from "../shared/rules-page/rules-page";
 import PayoutPage from "../shared/payout-page/payout-page";
+import InstructionsPage from "../shared/instructions-page/instructions-page";
+
 
 const profileStackNavLink = {
   profile_page: ProfilePage,
@@ -22,7 +24,8 @@ const profileStackNavLink = {
   rates_page: RatesPage,
   rules_page: RulesPage,
   payout_page: PayoutPage,
-  help_page: HelpPage
+  help_page: HelpPage,
+  instructions_page: InstructionsPage
 };
 
 export const ProfileStack = () => (

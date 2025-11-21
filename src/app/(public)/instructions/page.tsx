@@ -96,11 +96,11 @@ const useAppParams = <
 };
 
 
-interface HelpPageProps {
+interface InstructionsPageProps {
   searchParams: Promise<Partial<Params>>;
 }
 
-export default function Help({ searchParams }: HelpPageProps) {
+export default function Instructions({ searchParams }: InstructionsPageProps) {
   const resolvedSearchParams = use(searchParams);
   const { col, lan, req, to } = useAppParams(resolvedSearchParams);
   const { theme } = useTheme();
@@ -210,7 +210,7 @@ export default function Help({ searchParams }: HelpPageProps) {
               </button>
             )}
 
-            <h1 className={styles.title}>{t('help_text')}</h1>
+            <h1 className={styles.title}>{t('instructions_text')}</h1>
 
             {!initialized && <Link className={styles.logoContainer} href="/">
               <Image
