@@ -15,6 +15,7 @@ import ProfileTitle from './profile-title/profile-title'
 import ProfileOverview from './profile-overview/profile-overview'
 import ProfileAccounts from './profile-accounts/profile-accounts'
 import ProfileContacts from './profile-contacts/profile-contacts'
+import ProfileLinks from './profile-links/profile-links'
 import LoadingView from '@/components/LoadingView/LoadingView'
 import NoResultsView from '@/components/NoResultsView/NoResultsView';
 import ErrorView from '@/components/ErrorView/ErrorView';
@@ -47,6 +48,7 @@ export default function ProfilePage() {
       {show && (<ProfileTitle onStateChange={(state) => handleStateChange('profileTitle', state)}/>)}
       {show && (<ProfileOverview onStateChange={(state) => handleStateChange('profileOverview', state)}/>)}
       {show && (<ProfileAccounts onStateChange={(state) => handleStateChange('profileAccounts', state)}/>)}
+      {show && (<ProfileLinks onStateChange={(state) => handleStateChange('profileLinks', state)}/>)}
       {show && (<ProfileContacts onStateChange={(state) => handleStateChange('profileContacts', state)}/>)}
 
                  <div>

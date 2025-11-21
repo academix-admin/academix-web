@@ -7,7 +7,7 @@ import NavigationStack from "@/lib/NavigationStack";
 import RewardsPage from "./rewards-page/rewards-page";
 import MissionPage from "./mission-page/mission-page";
 import AchievementsPage from "./achievements-page/achievements-page";
-import RewardsInfo from "./rewards-info/rewards-info";
+import RewardsInfo from "../shared/rewards-info/rewards-info";
 
 
 const rewardsStackNavLink = {

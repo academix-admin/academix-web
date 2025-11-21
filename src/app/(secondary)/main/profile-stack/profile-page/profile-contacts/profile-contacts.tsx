@@ -24,16 +24,13 @@ export default function ProfileAccounts({ onStateChange }: ComponentStateProps) 
     ]);
 
   const handleItemClick = (itemId: number) => {
-    console.log(`Clicked on item ${itemId}`);
     // Add your click handling logic here
           switch(itemId) {
             case 1:
+              nav.push('help_page');
               break;
             case 2:
-              break;
-            case 3:
-              break;
-            case 4:
+                nav.push('about_page');
               break;
             default:
               break;

@@ -49,6 +49,13 @@ const landingConfig: Config = {
   backgroundColor: null
 };
 
+const profileConfig: Config = {
+  showHeader: false,
+  showTitle: false,
+  showDescription: false,
+  backgroundColor: null
+};
+
 const quizConfig: Config = {
   showHeader: false,
   showTitle: false,
@@ -68,6 +75,7 @@ const getConfig = (req: string | null): Config => {
     'ios': iosConfig,
     'android': androidConfig,
     'quiz': quizConfig,
+    'profile': profileConfig,
     'landing': landingConfig
   };
   return configMap[req || ''] || defaultConfig;

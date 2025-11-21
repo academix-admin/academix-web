@@ -42,6 +42,11 @@
     justify-content: center;
 }
 
+.container_profile {
+  padding-top: 6rem;
+  padding-bottom: 4rem;
+}
+
 .container_quiz {
    padding-top: 1rem;
    padding-bottom: 1rem;
@@ -1003,6 +1008,12 @@
   .container_landing {
      padding-top: 4rem;
   }
+
+  .container_profile {
+     padding-top: 4rem;
+     padding-bottom: 2rem;
+  }
+
   .container_quiz {
      padding-top: 1rem;
   }
@@ -1038,6 +1049,11 @@
 
   .container_landing {
      padding-top: 4rem;
+  }
+
+  .container_profile {
+     padding-top: 4rem;
+     padding-bottom: 2rem;
   }
 
   .container_quiz {

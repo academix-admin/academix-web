@@ -9,7 +9,7 @@ import TopUpPage from "./top-up-page/top-up-page";
 import WithdrawPage from "./withdraw-page/withdraw-page";
 import ViewTransactionPage from "./view-transaction-page/view-transaction-page";
 import NewProfilePage from "./new-profile-page/new-profile-page";
-import RatesPage from "./rates-page/rates-page";
+import RatesPage from "../shared/rates-page/rates-page";
 
 const paymentStackNavLink = {
   payment_page: PaymentPage,

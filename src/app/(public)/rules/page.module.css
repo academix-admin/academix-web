@@ -74,6 +74,11 @@
    padding-top: 2rem;
 }
 
+.innerBody_profile {
+   padding-top: 6rem;
+}
+
+
 .innerBody_quiz {
    padding-top: 2rem;
 }
@@ -321,6 +326,10 @@
      padding: 1rem;
   }
 
+  .innerBody_profile {
+     padding: 6rem;
+  }
+
   .innerBody_quiz {
      padding: 1rem;
   }
@@ -348,6 +357,10 @@
 
   .innerBody_android{
      padding: 16px;
+  }
+
+  .innerBody_profile {
+     padding-top: 5rem;
   }
 
   .innerBody_quiz {

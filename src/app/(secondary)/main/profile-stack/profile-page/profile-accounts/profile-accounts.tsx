@@ -20,7 +20,7 @@ export default function ProfileAccounts({ onStateChange }: ComponentStateProps) 
   // Menu items data
   const [accountItems, setAccountItems] = useState([
     { id: 1, label: t('edit_profile'), icon: 'edit' },
-    { id: 2, label: t('friends_text'), icon: 'family' },
+//     { id: 2, label: t('friends_text'), icon: 'family' },
     { id: 3, label: t('security'), icon: 'security' },
     { id: 4, label: t('redeem_codes'), icon: 'redeem' }
   ]);

@@ -1,0 +1,192 @@
+/* profile-accounts.module.css */
+.container {
+    padding: 0 20px;
+}
+
+.title {
+  font-size: 18px;
+  font-weight: bold;
+  margin: 0px;
+  margin-bottom: 12px;
+}
+
+.title_light {
+    color: #1a1a1a;
+}
+
+.title_dark {
+    color: #ffffff;
+}
+
+.accountsSection {
+    border-radius: 16px;
+    padding: 8px 0;
+}
+
+.accountsSection_light {
+  border: 1px solid #CECECE;
+  background-color: #F7F6F6;
+}
+
+.accountsSection_dark {
+   border: 1px solid #424242;
+   background-color: #1c1c1c;
+ }
+
+.menuList {
+    display: flex;
+    flex-direction: column;
+}
+
+.menuItem {
+    display: flex;
+    align-items: center;
+    padding: 16px 20px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.menuItem_light:hover, .menuItem_dark:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.iconContainer {
+    margin-right: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.iconBackground {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.menuLabel {
+    flex: 1;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.menuLabel_light{
+    color: #000;
+}
+
+.menuLabel_dark{
+    color: #fff;
+}
+
+.menuArrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.arrow {
+    width: 9px;
+    height: 15px;
+}
+
+
+.arrow_light{
+  color:  #CECECE;
+}
+
+.arrow_dark{
+  color: #424242;
+}
+
+.divider {
+    height: 1px;
+    margin: 0 20px;
+}
+
+.divider_light{
+  background-color:  #CECECE;
+}
+
+.divider_dark{
+  background-color: #424242;
+}
+
+/* Responsive Styles */
+@media screen and (min-width: 801px) {
+    .container {
+        padding: 0 28px;
+    }
+
+    .title {
+        font-size: 20px;
+    }
+
+    .accountsSection {
+        border-radius: 18px;
+    }
+
+    .menuItem {
+        padding: 18px 24px;
+    }
+
+    .menuLabel {
+        font-size: 17px;
+    }
+
+    .iconBackground {
+        width: 36px;
+        height: 36px;
+    }
+}
+
+@media screen and (max-width: 800px) {
+    .container {
+        padding: 0 20px;
+    }
+
+    .menuItem {
+        padding: 14px 18px;
+    }
+}
+
+@media screen and (max-width: 500px) {
+    .container {
+        padding: 0 16px;
+    }
+
+    .title {
+        font-size: 16px;
+    }
+
+    .accountsSection {
+        border-radius: 12px;
+    }
+
+    .menuItem {
+        padding: 12px 16px;
+    }
+
+    .menuLabel {
+        font-size: 15px;
+    }
+
+    .iconContainer {
+        margin-right: 14px;
+    }
+
+    .iconBackground {
+        width: 30px;
+        height: 30px;
+    }
+
+    .arrow {
+        width: 7px;
+        height: 12px;
+    }
+
+    .divider {
+        margin: 0 16px;
+    }
+}
