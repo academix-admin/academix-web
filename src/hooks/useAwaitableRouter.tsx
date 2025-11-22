@@ -161,6 +161,51 @@ export function useAwaitableRouter(timeout = 10000) {
   );
 
   /* ---------------------------------------------------------
+   *  Redirect the current window (_self) and wait for load
+   * --------------------------------------------------------- */
+  const redirectSelfAndWait = useCallback(
+    async (url: string): Promise<NavResult> => {
+      return new Promise((resolve) => {
+        let settled = false;
+
+        const complete = (success: boolean, error?: string) => {
+          if (settled) return;
+          settled = true;
+          cleanup();
+          resolve({ success, error });
+        };
+
+        const cleanup = () => {
+          window.removeEventListener("load", handleLoad);
+          window.removeEventListener("error", handleErr);
+          clearTimeout(tid);
+        };
+
+        const handleLoad = () => complete(true);
+        const handleErr = () => complete(false, "Redirect failed");
+
+        // Timeout safety
+        const tid = setTimeout(
+          () => complete(false, `Redirect timeout after ${timeout}ms`),
+          timeout
+        );
+
+        window.addEventListener("load", handleLoad);
+        window.addEventListener("error", handleErr);
+
+        try {
+          // This cannot be blocked by browsers
+          window.location.href = url;
+        } catch (err) {
+          complete(false, err instanceof Error ? err.message : "Unknown redirect error");
+        }
+      });
+    },
+    [timeout]
+  );
+
+
+  /* ---------------------------------------------------------
    *  Back navigation (SPA popstate)
    * --------------------------------------------------------- */
   const backAndWait = useCallback(
@@ -324,6 +369,7 @@ export function useAwaitableRouter(timeout = 10000) {
     backAndWait,
     pushWithStateAndWait,
     newWindowCloseCurrentWait,
+    redirectSelfAndWait,
     reloadAndWait,
     prefetchAndWait,
     hasPendingNavigation: () => pendingRef.current != null,

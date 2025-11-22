@@ -26,7 +26,7 @@ export default function Redirect({
 }) {
   const { redirectId } = use(params);
   const { userData$ } = useUserData();
-  const { newWindowCloseCurrentWait } = useAwaitableRouter();
+  const { newWindowCloseCurrentWait, redirectSelfAndWait } = useAwaitableRouter();
 
   const { theme } = useTheme();
   const { t } = useLanguage();
@@ -85,9 +85,8 @@ export default function Redirect({
        * This WILL be popup-blocked on most auto flows.
        */
       const target = result.redirectTo;
-      const navigation = await newWindowCloseCurrentWait(
-        target,
-        "_blank"
+      const navigation = await redirectSelfAndWait(
+        target
       );
 
       if (!navigation.success) {
@@ -103,7 +102,7 @@ export default function Redirect({
       console.error("Redirect error:", err);
       setRedirectState("error");
     }
-  }, [redirectId, redirectState, clearClientState, userData$, newWindowCloseCurrentWait]);
+  }, [redirectId, redirectState, clearClientState, userData$, redirectSelfAndWait]);
 
   /** Trigger redirect on mount */
   useEffect(() => {
