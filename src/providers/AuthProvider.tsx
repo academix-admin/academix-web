@@ -59,7 +59,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { userData, __meta } = useUserData();
   const { replaceAndWait } = useAwaitableRouter();
 
-  const publicRoutes = ['/rules', '/payout', '/redirect', /^\/redirect\/[a-f0-9-]+$/, '/rewards', '/rates', '/about', '/help'];
+  const publicRoutes = ['/rules', '/payout', '/redirect', /^\/redirect\/[a-f0-9-]+$/, '/rewards', '/rates', '/about', '/help', '/instructions'];
   const internalRoutes = ['/', '/login', '/signup', '/welcome'];
   const protectedRoutes = ['/main', '/quiz', /^\/quiz\/[a-f0-9-]+$/];
 
