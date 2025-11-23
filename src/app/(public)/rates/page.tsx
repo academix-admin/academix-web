@@ -349,7 +349,6 @@ export default function Rates({ searchParams }: RatesPageProps) {
     // Reset all state when switching tabs
     const oldWallet = walletData;
     setWalletData(null);
-    setWalletData(oldWallet);
     setMethodData(null);
     setWalletAmount('');
     setAcademixAmount('');
