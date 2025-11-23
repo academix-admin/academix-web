@@ -415,7 +415,15 @@
   "return_home": "Return to Home",
   "popup_blocked_title": "Popup Blocked",
   "popup_blocked_message": "Your browser blocked the required window. Please open it manually.",
-  "open_window_manually": "Open Manually"
+  "open_window_manually": "Open Manually",
+  "academix_rates":  "Academix Rates",
+  "rates_description": "Top up and withdraw fait conversion rates to academix coin (ADC)",
+  "select_payment_wallet": "Select Payment Wallet",
+  "you_receive": "You receive",
+  "you_pay": "You pay",
+  "charged_text": "Charged",
+  "rates_text": "Rates",
+  "links_text": "Links"
 }
 
 

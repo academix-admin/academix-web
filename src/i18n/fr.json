@@ -416,5 +416,13 @@
   "return_home": "Retour à l'accueil",
   "popup_blocked_title": "Popup bloquée",
   "popup_blocked_message": "Votre navigateur a bloqué la fenêtre requise. Veuillez l’ouvrir manuellement.",
-  "open_window_manually": "Ouvrir manuellement"
+  "open_window_manually": "Ouvrir manuellement",
+  "academix_rates": "Taux Academix",
+  "rates_description": "Taux de conversion fiat pour recharger et retirer en pièce Academix (ADC)",
+  "select_payment_wallet": "Sélectionner le portefeuille de paiement",
+  "you_receive": "Vous recevez",
+  "you_pay": "Vous payez",
+  "charged_text": "Facturé",
+  "rates_text": "Taux",
+  "links_text": "Liens"
 }
