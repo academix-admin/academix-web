@@ -347,7 +347,9 @@ export default function Rates({ searchParams }: RatesPageProps) {
   const handleTabChange = useCallback((tab: 'buy' | 'sell') => {
     setActiveTab(tab);
     // Reset all state when switching tabs
-    setWalletData(prev => prev);
+    const oldWallet = walletData;
+    setWalletData(null);
+    setWalletData(oldWallet);
     setMethodData(null);
     setWalletAmount('');
     setAcademixAmount('');
