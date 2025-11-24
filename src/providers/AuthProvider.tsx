@@ -81,16 +81,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           supabaseBrowser.auth.getSession(),
         ]);
 
-        if (userResult.error) console.error('getUser error', userResult.error);
-        if (sessionResult.error) console.error('getSession error', sessionResult.error);
-
         const initialUser = userResult.data.user;
         const initialSession = sessionResult.data.session;
         setUser(initialUser);
         setSession(initialSession);
 
         if (initialUser && userData && matchesRoutePattern(pathname, internalRoutes) ) {
-          console.log('Redirecting authenticated user to main');
           await replaceAndWait("/main");
         }
 
@@ -108,7 +104,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               ]);
               sessionStorage.clear();
               if (matchesRoutePattern(pathname, protectedRoutes)) {
-                console.log('Returning to home');
                 await replaceAndWait("/");
               }
             }
@@ -120,7 +115,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         unsubscribe = () => subscription.unsubscribe();
         setInitialized(true);
       } catch (error) {
-        console.error('Auth initialization error:', error);
         setInitialized(true);
       }
     };
