@@ -1,13 +1,18 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
   eslint: {
     ignoreDuringBuilds: true,
   },
   output: 'standalone',
   images: {
-    domains: ['iewqfmkngcgayxbbnpiz.supabase.co'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'iewqfmkngcgayxbbnpiz.supabase.co',
+        // optional: pathPattern: '/**',
+      },
+    ],
   },
 };
 

@@ -10,7 +10,7 @@ export type UserRegistrationData = {
   country_id: string;
   language_id: string;
   users_referred_id: string | null;
-  role: Role;
+  roles_id: string;
   users_pin: number;
   users_login_type: 'UserLoginType.email' | 'UserLoginType.phone';
   users_password: string;

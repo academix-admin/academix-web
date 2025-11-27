@@ -1415,66 +1415,59 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
         const newEntry: StackEntry = { uid: generateStableUid(key, p), key, params: p, metadata };
 
         const previousStack = regEntry.stack.slice();
-        let i = regEntry.stack.length - 1;
-        while (i >= 0 && !predicate(regEntry.stack[i], i, regEntry.stack)) i--;
-
-        const poppedEntries = i < regEntry.stack.length - 1 ? regEntry.stack.slice(i + 1) : [];
-        const targetEntry = i >= 0 ? regEntry.stack[i] : undefined;
-
-        // Before lifecycle for popped entries
-        for (const poppedEntry of poppedEntries) {
-          await lifecycleManager.trigger('onBeforePop', {
-            stack: previousStack,
-            current: poppedEntry,
-            previous: newEntry,
-            action: { type: 'pushAndPopUntil', target: poppedEntry }
-          });
-        }
+        const lastTop = regEntry.stack[regEntry.stack.length - 1];
 
         // Before push lifecycle
         await lifecycleManager.trigger('onBeforePush', {
           stack: previousStack,
-          current: regEntry.stack[regEntry.stack.length - 1],
+          current: lastTop,
           previous: undefined,
           action: { type: 'pushAndPopUntil', target: newEntry }
         });
 
         const action = {
           type: "push" as const,
-          from: regEntry.stack[regEntry.stack.length - 1],
+          from: lastTop,
           to: newEntry,
           stackSnapshot: previousStack
         };
 
         const ok = await runGuards(action);
-        if (!ok) return false;
-
-        if (i < regEntry.stack.length - 1) {
-          regEntry.stack.splice(i + 1);
-        }
+        if (!ok)return false;
 
         regEntry.stack.push(newEntry);
 
         runMiddlewares(action);
+
         emit(previousStack, { type: 'pushAndPopUntil', target: newEntry });
 
-        // After lifecycle
+        // Now pop everything above the first match for predicate
+        let i = regEntry.stack.length - 2; // start below newEntry
+        const poppedEntries: StackEntry[] = [];
+
+        while (i >= 0 && !predicate(regEntry.stack[i], i, regEntry.stack)) {
+          poppedEntries.push(regEntry.stack[i]);
+          regEntry.stack.splice(i, 1);
+          i--;
+        }
+
+        // After push lifecycle
         lifecycleManager.trigger('onAfterPush', {
           stack: regEntry.stack.slice(),
           current: newEntry,
-          previous: action.from,
+          previous: lastTop,
           action: { type: 'pushAndPopUntil', target: newEntry }
         });
 
         // Trigger onExit for popped entries
-        poppedEntries.forEach((poppedEntry: StackEntry) => {
+        for (const poppedEntry of poppedEntries) {
           lifecycleManager.trigger('onExit', {
             stack: regEntry.stack.slice(),
             current: newEntry,
             previous: poppedEntry,
             action: { type: 'pushAndPopUntil', target: poppedEntry }
           });
-        });
+        }
 
         return true;
       });

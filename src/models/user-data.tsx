@@ -10,7 +10,7 @@ interface BackendRoleData {
   roles_checker: string;
 }
 
-interface BackendUserData {
+export interface BackendUserData {
   users_id: string;
   users_username: string;
   users_names: string;

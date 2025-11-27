@@ -13,9 +13,15 @@ import { StateStack } from '@/lib/state-stack';
 import { useNav } from "@/lib/NavigationStack";
 import { treatSpaces } from '@/utils/textUtils';
 import { formatDateToDBString } from '@/utils/textUtils';
-import { UserData } from '@/models/user-data';
+import { UserData, BackendUserData } from '@/models/user-data';
 import { checkLocation, checkFeatures } from '@/utils/checkers';
 import { useOtp } from '@/lib/stacks/otp-stack';
+
+interface AccountCreationResponse {
+  success: boolean;
+  message: string;
+  user: BackendUserData;
+}
 
 export default function Verification() {
   const { theme } = useTheme();
@@ -77,11 +83,29 @@ export default function Verification() {
       country_id: signup.country.country_id,
       language_id: signup.language.language_id,
       users_referred_id: signup.referral?.users_id || null,
-      role: signup.role,
+      roles_id: signup.role.roles_id,
       users_pin: signup.sixDigitPin,
       users_login_type: signup.verification === 'email' ? 'UserLoginType.email' : 'UserLoginType.phone',
       users_password: signup.password
     };
+  };
+
+  const createAccount = async (data: any): Promise<AccountCreationResponse> => {
+    const proxyUrl = '/api/create-user';
+
+    try {
+      const response = await fetch(proxyUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+      return await response.json();
+    } catch (error) {
+      console.error("Create User API error:", error);
+      throw error;
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -91,205 +115,51 @@ export default function Verification() {
     const signUpData = getSignupData();
     if(!signUpData){
        console.error('Something is wrong');
-                  setError(t('error_occurred'));
-
+       setError(t('error_occurred'));
        return;
     }
 
     setContinueLoading(true);
-           setError('');
+    setError('');
 
-    if(signUpData.users_login_type === 'UserLoginType.email'){
-      // Handle email
-      const userObj = await signUpWithEmail(signUpData);
-      if(userObj){
-        handleCreatedUser(signUpData.users_login_type,signUpData.users_email,userObj);
-        setContinueLoading(false);
-      } else {
-        console.error('Failed to create user');
-        setContinueLoading(false);
-      }
-    } else if(signUpData.users_login_type === 'UserLoginType.phone'){
-      // Handle phone
-      const userObj = await signUpWithPhone(signUpData);
-      if(userObj){
-          handleCreatedUser(signUpData.users_login_type,signUpData.users_phone,userObj);
-          setContinueLoading(false);
-      } else {
-          console.error('Failed to create user');
-          setContinueLoading(false);
-      }
-    }
-  };
-
-  const signUpWithEmail = async (signUpData: UserRegistrationData): Promise<UserData | null> => {
-    try {
-      const location = await checkLocation();
-      if(!location){
-        console.log('location not determined');
-                   setError(t('error_occurred'));
-
-        return null;
-      }
-
-      const feature = await checkFeatures(
-        'Features.sign_up_email',
-        lang,
-        location.country_code,
-        signUpData.users_sex,
-        signUpData.users_dob
-      );
-
-      if(!feature){
-        console.log('feature not available');
-                   setError(t('feature_unavailable'));
-
-        return null;
-      }
-
-      const { data: result, error } = await supabaseBrowser.auth.signUp({
-        email: signUpData.users_email,
-        password: signUpData.users_password,
-        options: {
-          data: {
-            users_email: signUpData.users_email,
-            users_phone: signUpData.users_phone,
-            users_dob: signUpData.users_dob,
-            users_sex: signUpData.users_sex,
-            users_username: signUpData.users_username,
-            users_names: signUpData.users_names,
-            country_id: signUpData.country_id,
-            language_id: signUpData.language_id,
-            users_referred_id: signUpData.users_referred_id,
-            roles_id: signUpData.role.roles_id,
-            users_pin: signUpData.users_pin,
-            users_login_type: signUpData.users_login_type
+        try {
+          const location = await checkLocation();
+          if(!location){
+            console.log('location not determined');
+            setError(t('error_occurred'));
+            return;
           }
-        }
-      });
 
-      if (error) {
-        throw error;
-      }
+          const feature = await checkFeatures(
+            signUpData.users_login_type === 'UserLoginType.email' ? 'Features.sign_up_email' : 'Features.sign_up_phone',
+            lang,
+            location.country_code,
+            signUpData.users_sex,
+            signUpData.users_dob
+          );
 
-      if (!result.user) {
-                   setError(t('unable_to_create_account'));
-                   return null;
-      }
-
-      return new UserData({
-               users_id: result.user.id,
-               users_username: signUpData.users_username,
-               users_names: signUpData.users_names,
-               users_email: result.user.email!,
-               users_phone: signUpData.users_phone,
-               users_dob: signUpData.users_dob,
-               users_sex: signUpData.users_sex,
-               users_image: null,
-               users_referred_id: signUpData.users_referred_id,
-               users_verified: false,
-               country_id: signUpData.country_id,
-               language_id: signUpData.language_id,
-               users_created_at: result.user.created_at,
-               roles_table: {
-                 roles_id: signUpData.role.roles_id,
-                 roles_level: signUpData.role.roles_level,
-                 roles_checker: signUpData.role.roles_type
-               }
-             });
-
-    } catch (err) {
-      console.error('Signup error:', err);
-                         setError(t('error_occurred'));
-
-      return null;
-    }
-  };
-
-
-  const signUpWithPhone = async (signUpData: UserRegistrationData): Promise<UserData | null> => {
-    try {
-      const location = await checkLocation();
-      if(!location){
-        console.log('location not determined');
-                   setError(t('error_occurred'));
-
-        return null;
-      }
-
-      const feature = await checkFeatures(
-        'Features.sign_up_phone',
-        lang,
-        location.country_code,
-        signUpData.users_sex,
-        signUpData.users_dob
-      );
-
-      if(!feature){
-        console.log('feature not available');
-                   setError(t('feature_unavailable'));
-
-        return null;
-      }
-
-      const { data: result, error } = await supabaseBrowser.auth.signUp({
-        phone: signUpData.users_phone,
-        password: signUpData.users_password,
-        options: {
-          data: {
-            users_email: signUpData.users_email,
-            users_phone: signUpData.users_phone,
-            users_dob: signUpData.users_dob,
-            users_sex: signUpData.users_sex,
-            users_username: signUpData.users_username,
-            users_names: signUpData.users_names,
-            country_id: signUpData.country_id,
-            language_id: signUpData.language_id,
-            users_referred_id: signUpData.users_referred_id,
-            roles_id: signUpData.role.roles_id,
-            users_pin: signUpData.users_pin,
-            users_login_type: signUpData.users_login_type
+          if(!feature){
+            console.log('feature not available');
+            setError(t('feature_unavailable'));
+            return null;
           }
+
+          const result = await createAccount(signUpData);
+
+          if (!result.user) {
+             setError(t('unable_to_create_account'));
+             return null;
+          }
+
+          handleCreatedUser(signUpData.users_login_type, signUpData.users_login_type === 'UserLoginType.email' ? signUpData.users_email : signUpData.users_phone,new UserData(result.user));
+
+        } catch (err) {
+          console.error('Signup error:', err);
+          setError(t('error_occurred'));
+          return null;
         }
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      if (!result.user) {
-                           setError(t('unable_to_create_account'));
-                           return  null;
-      }
-
-      return new UserData({
-               users_id: result.user.id,
-               users_username: signUpData.users_username,
-               users_names: signUpData.users_names,
-               users_email: signUpData.users_email,
-               users_phone: result.user.phone!,
-               users_dob: signUpData.users_dob,
-               users_sex: signUpData.users_sex,
-               users_image: null,
-               users_referred_id: signUpData.users_referred_id,
-               users_verified: false,
-               country_id: signUpData.country_id,
-               language_id: signUpData.language_id,
-               users_created_at: result.user.created_at,
-               roles_table: {
-                 roles_id: signUpData.role.roles_id,
-                 roles_level: signUpData.role.roles_level,
-                 roles_checker: signUpData.role.roles_type
-               }
-             });
-
-    } catch (err) {
-      console.error('Signup error:', err);
-                         setError(t('error_occurred'));
-
-      return null;
-    }
   };
+
 
   const handleCreatedUser = async (type: string, value: string, userObj: UserData) => {
     // Navigate to otp screen

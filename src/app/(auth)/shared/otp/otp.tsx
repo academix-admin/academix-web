@@ -14,6 +14,7 @@ import { useAwaitableRouter } from "@/hooks/useAwaitableRouter";
 import { UserData } from '@/models/user-data';
 import { useUserData } from '@/lib/stacks/user-stack';
 import {  fetchUserData } from '@/utils/checkers';
+import { useRouter } from "next/navigation";
 
 // Define types for OTPInput props
 interface OTPInputProps {
@@ -169,6 +170,7 @@ export default function Otp(props: OtpProps) {
   const nav = useNav();
   const isTop = nav.isTop();
   const { replaceAndWait } = useAwaitableRouter();
+  const router = useRouter();
 
   const [otpValue, setOtpValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -273,6 +275,7 @@ export default function Otp(props: OtpProps) {
         setError(t('incorrect_code'));
         // Vibrate on error
         if (navigator.vibrate) navigator.vibrate(200);
+        setIsLoading(false);
       } else {
         // OTP verified successfully
         if(verificationRequest === 'SignUp'){
@@ -285,26 +288,35 @@ export default function Otp(props: OtpProps) {
                 await userData$.set(userObj);
                 __meta.clear();
                 nav.dispose();
-                await replaceAndWait("/main");
-                return;
+                const navResult = await replaceAndWait("/main");
+
+                if (!navResult.success) {
+                    router.replace("/main");
+                    setIsLoading(false);
+                }else{
+
+                 setIsLoading(false);
+                 }
              }else{
                __meta.clear();
                await nav.popToRoot();
+               setIsLoading(false);
              }
           }else{
-                 setError(t('error_occurred'));
+             setError(t('error_occurred'));
+             setIsLoading(false);
           }
 
 
         }else{
           __meta.clear();
           await nav.pushAndPopUntil('reset_password',(entry) => entry.key === 'login',{names});
+          setIsLoading(false);
         }
       }
     } catch (error) {
       console.error("OTP verification error:", error);
       setError(t('network_error'));
-    } finally {
       setIsLoading(false);
     }
   };
