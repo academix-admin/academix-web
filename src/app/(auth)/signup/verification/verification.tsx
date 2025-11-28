@@ -127,6 +127,7 @@ export default function Verification() {
           if(!location){
             console.log('location not determined');
             setError(t('error_occurred'));
+            setContinueLoading(false);
             return;
           }
 
@@ -141,6 +142,7 @@ export default function Verification() {
           if(!feature){
             console.log('feature not available');
             setError(t('feature_unavailable'));
+            setContinueLoading(false);
             return null;
           }
 
@@ -148,14 +150,16 @@ export default function Verification() {
 
           if (!result.user) {
              setError(t('unable_to_create_account'));
+             setContinueLoading(false);
              return null;
           }
 
           handleCreatedUser(signUpData.users_login_type, signUpData.users_login_type === 'UserLoginType.email' ? signUpData.users_email : signUpData.users_phone,new UserData(result.user));
-
+          setContinueLoading(false);
         } catch (err) {
           console.error('Signup error:', err);
           setError(t('error_occurred'));
+          setContinueLoading(false);
           return null;
         }
   };
