@@ -151,7 +151,10 @@ const OTPInput: React.FC<OTPInputProps> = ({
 
     // Clear current char and update parent state
     const otpArray = value.split("");
-    otpArray[index] = "";
+//     otpArray[index] = "";
+    for (let i = index; i < otpArray.length; i++) {
+      otpArray[i] = "";
+    }
     onChange(otpArray.join(""));
   };
 
