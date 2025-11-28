@@ -67,12 +67,7 @@ const OTPInput: React.FC<OTPInputProps> = ({
      onChange(nextValue);
 
      // ---- FIX: compute allowed index from the new value ---- //
-     const allowedIndex = (() => {
-       for (let i = 0; i < length; i++) {
-         if (!nextValue[i]) return i;
-       }
-       return length - 1;
-     })();
+     const allowedIndex = getFirstInvalidIndex(nextValue);
 
      // Auto-advance only if digit is valid and index < allowed position
      if (digit && index < length - 1 && index < allowedIndex) {
@@ -82,51 +77,84 @@ const OTPInput: React.FC<OTPInputProps> = ({
    };
 
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
-//     if (e.key === "Backspace") {
+//   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
+// //     if (e.key === "Backspace") {
+// //       if (!!error && value.length === length) {
+// //         // Clear all if error
+// //         onChange("");
+// //         return;
+// //       }
+// //       const otpArray = value.split("");
+// //
+// //      if (!otpArray[index] && index > 0) {
+// //        const input = e.target as HTMLInputElement;
+// //        const prev = input.previousElementSibling;
+// //        if (prev instanceof HTMLInputElement) {
+// //          prev.focus();
+// //        }
+// //      }
+// //
+// //
+// //       otpArray[index] = "";
+// //       onChange(otpArray.join(""));
+// //     }
+//      if (e.key === "Backspace") {
 //       if (!!error && value.length === length) {
 //         // Clear all if error
 //         onChange("");
+//         const inputs = e.currentTarget.parentElement!.querySelectorAll("input");
+//         (inputs[0] as HTMLInputElement).focus();
 //         return;
 //       }
-//       const otpArray = value.split("");
+//        const otpArray = value.split("");
 //
-//      if (!otpArray[index] && index > 0) {
-//        const input = e.target as HTMLInputElement;
-//        const prev = input.previousElementSibling;
-//        if (prev instanceof HTMLInputElement) {
-//          prev.focus();
+//        if (!otpArray[index] && index > 0) {
+//          // Backward movement allowed only if previous fields are filled
+//          const allowedIndex = getFirstInvalidIndex(value);
+//          const prevIndex = index - 1;
+//
+//          if (prevIndex === allowedIndex || prevIndex === allowedIndex - 1) {
+//            const input = e.target as HTMLInputElement;
+//            const prev = input.previousElementSibling as HTMLInputElement;
+//            prev?.focus();
+//          }
 //        }
+//
+//        otpArray[index] = "";
+//        onChange(otpArray.join(""));
 //      }
-//
-//
-//       otpArray[index] = "";
-//       onChange(otpArray.join(""));
-//     }
-     if (e.key === "Backspace") {
-      if (!!error && value.length === length) {
-        // Clear all if error
-        onChange("");
-        return;
-      }
-       const otpArray = value.split("");
+//   };
 
-       if (!otpArray[index] && index > 0) {
-         // Backward movement allowed only if previous fields are filled
-         const allowedIndex = getFirstInvalidIndex();
-         const prevIndex = index - 1;
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
+    if (e.key !== "Backspace") return;
 
-         if (prevIndex === allowedIndex || prevIndex === allowedIndex - 1) {
-           const input = e.target as HTMLInputElement;
-           const prev = input.previousElementSibling as HTMLInputElement;
-           prev?.focus();
-         }
-       }
+    // Error mode: clear everything
+    if (error && value.length === length) {
+      onChange("");
+      const inputs = e.currentTarget.parentElement!.querySelectorAll("input");
+      (inputs[0] as HTMLInputElement).focus();
+      return;
+    }
 
-       otpArray[index] = "";
-       onChange(otpArray.join(""));
-     }
+    const inputs = e.currentTarget.parentElement!.querySelectorAll("input");
+
+    // Build a snapshot of the current actual values from DOM, not from state.
+    const domValues = Array.from(inputs).map(
+      (input) => (input as HTMLInputElement).value
+    );
+
+    // If current field already empty → move back
+    if (!domValues[index] && index > 0) {
+      const prev = inputs[index - 1] as HTMLInputElement;
+      prev.focus();
+    }
+
+    // Clear current char and update parent state
+    const otpArray = value.split("");
+    otpArray[index] = "";
+    onChange(otpArray.join(""));
   };
+
 
   const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
     e.preventDefault();
@@ -136,22 +164,41 @@ const OTPInput: React.FC<OTPInputProps> = ({
     }
   };
 
-  const getFirstInvalidIndex = () => {
+  const getFirstInvalidIndex = (value: string) => {
     for (let i = 0; i < length; i++) {
       if (!value[i]) return i;
     }
     return length - 1; // all full → last field
   };
 
+//   const handleFocus = (e: React.FocusEvent<HTMLInputElement>, index: number) => {
+//     const allowedIndex = getFirstInvalidIndex(value);
+//
+//     if (index > allowedIndex) {
+//       // skip forward focus — force correct focus location
+//       const inputs = e.currentTarget.parentElement!.querySelectorAll("input");
+//       (inputs[allowedIndex] as HTMLInputElement).focus();
+//     }
+//   };
   const handleFocus = (e: React.FocusEvent<HTMLInputElement>, index: number) => {
-    const allowedIndex = getFirstInvalidIndex();
+    const inputs = e.currentTarget.parentElement!.querySelectorAll("input");
 
+    // Determine focusable index based on ACTUAL input values
+    let allowedIndex = 0;
+    for (let i = 0; i < length; i++) {
+      if ((inputs[i] as HTMLInputElement).value === "") {
+        allowedIndex = i;
+        break;
+      }
+      if (i === length - 1) allowedIndex = length - 1;
+    }
+
+    // Prevent skipping ahead
     if (index > allowedIndex) {
-      // skip forward focus — force correct focus location
-      const inputs = e.currentTarget.parentElement!.querySelectorAll("input");
       (inputs[allowedIndex] as HTMLInputElement).focus();
     }
   };
+
 
 
   return (
