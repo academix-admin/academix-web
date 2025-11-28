@@ -13,7 +13,7 @@ import { useUserData } from '@/lib/stacks/user-stack';
 import PaymentWallet from '../payment-wallet/payment-wallet';
 import PaymentMethod from '../payment-method/payment-method';
 import PaymentProfile from '../payment-profile/payment-profile';
-import PaymentRedirect from '../payment-redirect/payment-redirect';
+import PaymentRedirect, { useRedirectController } from '../payment-redirect/payment-redirect';
 import { PaymentWalletModel } from '@/models/payment-wallet-model';
 import { PaymentMethodModel } from '@/models/payment-method-model';
 import { PaymentProfileModel } from '@/models/payment-profile-model';
@@ -61,7 +61,7 @@ export default function TopUpPage() {
   const [error, setError] = useState('');
   const [continueState, setContinueState] = useState('initial');
   const [topUpLoading, setTopUpLoading] = useState(false);
-  const [redirectLink, setRedirectLink] = useState<string | null>(null);
+  const redirectController = useRedirectController();
 
   /** amount handler */
   const handleAmount = useCallback((newAmount: number) => {
@@ -189,11 +189,7 @@ export default function TopUpPage() {
     if (paymentCompletionMode === 'PaymentCompletion.redirect') {
       const link = paymentCompletionData?.link;
       if (link) {
-       const popup = window.open(link, '_blank');
-             if (!popup) {
-               // If popup is blocked, store link in state to show fallback
-               setRedirectLink(link);
-       }
+        await redirectController.open(link);
       }
     }
 
@@ -228,6 +224,7 @@ Expires: ${expire}`);
     if (!userData || !selectedWalletProfileData || !academixProfileData) return;
 
     try {
+
         setTopUpLoading(true);
         setError('');
       const location = await checkLocation();
@@ -292,14 +289,14 @@ Expires: ${expire}`);
       if (payment.transaction_details) {
         setTransactionModels([transaction,...transactionModels]);
 
-        await nav.pushAndPopUntil('view_transaction',(entry) => entry.key === 'payment_page', {transactionId: transaction.transactionId})
-
         if (completionMode) {
           await handlePaymentCompletion(completionMode, completionData, transaction);
         }
+
+        await nav.pushAndPopUntil('view_transaction',(entry) => entry.key === 'payment_page', {transactionId: transaction.transactionId})
       }
      setTopUpLoading(false);
-
+     topUpBottomController.close();
     } catch (error: any) {
       console.error("Top up error:", error);
       setTopUpLoading(false);
@@ -579,10 +576,9 @@ Expires: ${expire}`);
           )}
         </div>
       </BottomViewer>
-      {redirectLink && (
+      {(
         <PaymentRedirect
-          link={redirectLink}
-          onClose={() => setRedirectLink(null)}
+          controller={redirectController}
         />
       )}
     </main>

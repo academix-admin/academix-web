@@ -1,35 +1,72 @@
 'use client';
 
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useState } from 'react';
 import styles from './payment-redirect.module.css';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 
-interface PaymentRedirectProps {
+export interface RedirectController {
+  open: (link: string) => Promise<void>;
+  close: () => void;
+  isOpen: boolean;
   link: string;
-  onClose: () => void;
 }
 
-const PaymentRedirect: React.FC<PaymentRedirectProps> = ({ link, onClose }) => {
+export const useRedirectController = (): RedirectController => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [link, setLink] = useState('');
+  const resolver = React.useRef<((value: void) => void) | null>(null);
+
+  const open = useCallback((paymentLink: string) => {
+    setLink(paymentLink);
+    setIsOpen(true);
+
+    return new Promise<void>((resolve) => {
+      resolver.current = resolve;
+    });
+  }, []);
+
+  const close = useCallback(() => {
+    if (resolver.current) resolver.current();
+    resolver.current = null;
+    setIsOpen(false);
+    setLink('');
+  }, []);
+
+  return {
+    open,
+    close,
+    isOpen,
+    link,
+  };
+};
+
+interface PaymentRedirectProps {
+  controller: RedirectController;
+}
+
+const PaymentRedirect: React.FC<PaymentRedirectProps> = ({ controller }) => {
   const { theme } = useTheme();
   const { t } = useLanguage();
 
-  // Attempt to open link and handle popup blocked
   const handleOpenLink = useCallback(() => {
-    const popup = window.open(link, '_blank');
-    if (!popup) {
-      alert(t('popup_blocked'));
-    }
-  }, [link, t]);
+    // OPEN POPUP INSTANTLY — required for popup safety
+    window.open(controller.link, '_blank', 'noopener,noreferrer');
+
+    // Optional: close modal after successful open
+    controller.close();
+  }, [controller, t]);
 
   // Close modal on Escape key
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') controller.close();
     };
     window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
-  }, [onClose]);
+  }, [controller]);
+
+  if (!controller.isOpen) return null;
 
   return (
     <div
@@ -52,7 +89,7 @@ const PaymentRedirect: React.FC<PaymentRedirectProps> = ({ link, onClose }) => {
 
           <button
             className={`${styles.exitButton} ${styles[`button_${theme}`]}`}
-            onClick={onClose}
+            onClick={controller.close}
           >
             {t('exit_text')}
           </button>

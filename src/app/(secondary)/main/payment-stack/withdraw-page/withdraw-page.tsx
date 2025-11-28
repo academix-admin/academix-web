@@ -222,6 +222,7 @@ Expires: ${expire}`);
     if (!userData || !selectedWalletProfileData || !academixProfileData) return;
 
     try {
+
         setWithdrawLoading(true);
         setError('');
       const location = await checkLocation();
@@ -282,18 +283,19 @@ Expires: ${expire}`);
       const transaction = new TransactionModel(payment.transaction_details);
       const completionMode = payment.payment_completion_mode;
       const completionData = new PaymentCompletionData(payment.payment_completion_data);
-      console.log(payment);
+
       if (payment.transaction_details) {
         setTransactionModels([transaction,...transactionModels]);
 
-        await nav.pushAndPopUntil('view_transaction',(entry) => entry.key === 'payment_page', {transactionId: transaction.transactionId})
 
         if (completionMode) {
           await handlePaymentCompletion(completionMode, completionData, transaction);
         }
+
+        await nav.pushAndPopUntil('view_transaction',(entry) => entry.key === 'payment_page', {transactionId: transaction.transactionId})
       }
      setWithdrawLoading(false);
-
+     withdrawBottomController.close();
     } catch (error: any) {
       console.error("Withdraw error:", error);
       setWithdrawLoading(false);

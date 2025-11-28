@@ -38,6 +38,12 @@
   color: #fff;
 }
 
+.buttonGroup{
+  gap: 16px;
+  display: flex;
+  justify-content: center;
+}
+
 /* Buttons */
 .openButton {
   background-color: #0070f3;
