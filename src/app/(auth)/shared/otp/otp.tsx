@@ -35,28 +35,6 @@ const OTPInput: React.FC<OTPInputProps> = ({
 }) => {
   const inputs = Array(length).fill(0);
 
-//   const handleChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
-//     const digit = e.target.value.replace(/\D/g, "").slice(-1); // only 1 digit
-//
-//     const otpArray = value.split("");
-//     otpArray[index] = digit || "";
-//     onChange(otpArray.join(""));
-//
-// //     if (digit && index < length - 1) {
-// //       const next = e.target.nextElementSibling as HTMLInputElement;
-// //       if (next) next.focus();
-// //     }
-//     if (digit && index < length - 1) {
-//       const nextIndex = index + 1;
-//       const allowedIndex = getFirstInvalidIndex();
-//
-//       if (nextIndex <= allowedIndex) {
-//         const next = e.target.nextElementSibling as HTMLInputElement;
-//         next?.focus();
-//       }
-//     }
-//   };
-
    const handleChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
      const digit = e.target.value.replace(/\D/g, "").slice(-1);
 
@@ -75,55 +53,6 @@ const OTPInput: React.FC<OTPInputProps> = ({
        next?.focus();
      }
    };
-
-
-//   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
-// //     if (e.key === "Backspace") {
-// //       if (!!error && value.length === length) {
-// //         // Clear all if error
-// //         onChange("");
-// //         return;
-// //       }
-// //       const otpArray = value.split("");
-// //
-// //      if (!otpArray[index] && index > 0) {
-// //        const input = e.target as HTMLInputElement;
-// //        const prev = input.previousElementSibling;
-// //        if (prev instanceof HTMLInputElement) {
-// //          prev.focus();
-// //        }
-// //      }
-// //
-// //
-// //       otpArray[index] = "";
-// //       onChange(otpArray.join(""));
-// //     }
-//      if (e.key === "Backspace") {
-//       if (!!error && value.length === length) {
-//         // Clear all if error
-//         onChange("");
-//         const inputs = e.currentTarget.parentElement!.querySelectorAll("input");
-//         (inputs[0] as HTMLInputElement).focus();
-//         return;
-//       }
-//        const otpArray = value.split("");
-//
-//        if (!otpArray[index] && index > 0) {
-//          // Backward movement allowed only if previous fields are filled
-//          const allowedIndex = getFirstInvalidIndex(value);
-//          const prevIndex = index - 1;
-//
-//          if (prevIndex === allowedIndex || prevIndex === allowedIndex - 1) {
-//            const input = e.target as HTMLInputElement;
-//            const prev = input.previousElementSibling as HTMLInputElement;
-//            prev?.focus();
-//          }
-//        }
-//
-//        otpArray[index] = "";
-//        onChange(otpArray.join(""));
-//      }
-//   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
     if (e.key !== "Backspace") return;
@@ -151,7 +80,6 @@ const OTPInput: React.FC<OTPInputProps> = ({
 
     // Clear current char and update parent state
     const otpArray = value.split("");
-//     otpArray[index] = "";
     for (let i = index; i < otpArray.length; i++) {
       otpArray[i] = "";
     }
@@ -174,15 +102,6 @@ const OTPInput: React.FC<OTPInputProps> = ({
     return length - 1; // all full → last field
   };
 
-//   const handleFocus = (e: React.FocusEvent<HTMLInputElement>, index: number) => {
-//     const allowedIndex = getFirstInvalidIndex(value);
-//
-//     if (index > allowedIndex) {
-//       // skip forward focus — force correct focus location
-//       const inputs = e.currentTarget.parentElement!.querySelectorAll("input");
-//       (inputs[allowedIndex] as HTMLInputElement).focus();
-//     }
-//   };
   const handleFocus = (e: React.FocusEvent<HTMLInputElement>, index: number) => {
     const inputs = e.currentTarget.parentElement!.querySelectorAll("input");
 
