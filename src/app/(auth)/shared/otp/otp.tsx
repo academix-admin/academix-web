@@ -35,27 +35,52 @@ const OTPInput: React.FC<OTPInputProps> = ({
 }) => {
   const inputs = Array(length).fill(0);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
-    const digit = e.target.value.replace(/\D/g, "").slice(-1); // only 1 digit
-
-    const otpArray = value.split("");
-    otpArray[index] = digit || "";
-    onChange(otpArray.join(""));
-
+//   const handleChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+//     const digit = e.target.value.replace(/\D/g, "").slice(-1); // only 1 digit
+//
+//     const otpArray = value.split("");
+//     otpArray[index] = digit || "";
+//     onChange(otpArray.join(""));
+//
+// //     if (digit && index < length - 1) {
+// //       const next = e.target.nextElementSibling as HTMLInputElement;
+// //       if (next) next.focus();
+// //     }
 //     if (digit && index < length - 1) {
-//       const next = e.target.nextElementSibling as HTMLInputElement;
-//       if (next) next.focus();
+//       const nextIndex = index + 1;
+//       const allowedIndex = getFirstInvalidIndex();
+//
+//       if (nextIndex <= allowedIndex) {
+//         const next = e.target.nextElementSibling as HTMLInputElement;
+//         next?.focus();
+//       }
 //     }
-    if (digit && index < length - 1) {
-      const nextIndex = index + 1;
-      const allowedIndex = getFirstInvalidIndex();
+//   };
 
-      if (nextIndex <= allowedIndex) {
-        const next = e.target.nextElementSibling as HTMLInputElement;
-        next?.focus();
-      }
-    }
-  };
+   const handleChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+     const digit = e.target.value.replace(/\D/g, "").slice(-1);
+
+     const otpArray = value.split("");
+     otpArray[index] = digit || "";
+     const nextValue = otpArray.join("");
+
+     onChange(nextValue);
+
+     // ---- FIX: compute allowed index from the new value ---- //
+     const allowedIndex = (() => {
+       for (let i = 0; i < length; i++) {
+         if (!nextValue[i]) return i;
+       }
+       return length - 1;
+     })();
+
+     // Auto-advance only if digit is valid and index < allowed position
+     if (digit && index < length - 1 && index < allowedIndex) {
+       const next = e.target.nextElementSibling as HTMLInputElement | null;
+       next?.focus();
+     }
+   };
+
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
 //     if (e.key === "Backspace") {
