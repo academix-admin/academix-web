@@ -994,7 +994,7 @@
   }
 
   .container {
-     padding-top: 4rem;
+     padding-top: 6rem;
      padding-bottom: 2rem;
   }
   .container_ios {
@@ -1035,7 +1035,7 @@
 @media (max-width: 500px) {
 
   .container {
-     padding-top: 4rem;
+     padding-top: 6rem;
      padding-bottom: 2rem;
   }
   .container_ios {
