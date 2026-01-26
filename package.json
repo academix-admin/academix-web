@@ -19,7 +19,7 @@
     "i": "^0.3.7",
     "jsonwebtoken": "^9.0.2",
     "lottie-react": "^2.4.1",
-    "next": "15.3.5",
+    "next": "^15.5.9",
     "qrcode.react": "^4.2.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

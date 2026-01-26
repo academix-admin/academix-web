@@ -29,8 +29,8 @@ export default function LandingPage() {
       <LandingRoles />
       <LandingMoreAbout />
       <LandingFeatures />
-      <Payout searchParams={Promise.resolve({ req: 'landing' })} />
       <Suspense>
+        <Payout searchParams={Promise.resolve({ req: 'landing' })} />
         <Rates searchParams={Promise.resolve({ req: 'landing'})} />
       </Suspense>
       <LandingFooter />
