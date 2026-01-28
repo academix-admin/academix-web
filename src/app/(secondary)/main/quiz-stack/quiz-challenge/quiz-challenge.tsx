@@ -183,7 +183,8 @@ export default function QuizChallenge(props: QuizChallengeProps) {
         locale: paramatical.locale,
         country: paramatical.country,
         gender: paramatical.gender,
-        age: paramatical.age
+        age: paramatical.age,
+        userPin: '111111'
       };
 
       const engagement = await engageQuiz(jwt, requestData);
@@ -209,6 +210,8 @@ export default function QuizChallenge(props: QuizChallengeProps) {
           poolsId: poolsId,
           action: 'active'
         });
+      }else{
+        //
       }
 
       setQuizLoading(false);
