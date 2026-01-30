@@ -69,7 +69,7 @@ export type NavStackAPI = {
 
   provideObject: <T>(
     key: string,
-    getter: () => T | Promise<T>,
+    getter: () => T,
     options?: ObjectOptions
   ) => () => void;
 
@@ -290,7 +290,7 @@ class ObjectReferenceRegistry {
   register<T>(
     stackId: string,
     key: string,
-    getter: () => T | Promise<T>,
+    getter: () => T,
     scopeId?: string
   ): () => void {
     return this.registerWithOptions(stackId, key, getter, {
@@ -473,6 +473,7 @@ class ObjectReferenceRegistry {
   // ============ Enhanced Methods ============
 
   // Enhanced register with options
+  // Priority: global > stack > custom scope > page scope (default)
   registerWithOptions<T>(
     stackId: string,
     key: string,
@@ -494,16 +495,20 @@ class ObjectReferenceRegistry {
     let finalKey: string;
     let finalScopeId: string | undefined;
 
+    // Priority: global wins over all
     if (isGlobal) {
       finalKey = `global:${key}`;
       finalScopeId = 'global';
     } else if (isStackScoped) {
+      // Stack scope is second priority
       finalKey = `${stackId}:${key}`;
       finalScopeId = stackId;
     } else if (typeof scopeId === 'string' && scopeId) {
-      finalKey = `${stackId}:${scopeId}k:${key}`;
+      // Custom scope is third priority - ✅ FIXED: removed typo 'k'
+      finalKey = `${stackId}:${scopeId}:${key}`;
       finalScopeId = scopeId;
     } else {
+      // Default to page scope
       finalKey = `${stackId}:${key}`;
       finalScopeId = scopeId;
     }
@@ -3655,7 +3660,7 @@ interface UseObjectOptions {
  */
 export function useProvideObject<T>(
   key: string,
-  getter: () => T | Promise<T>,
+  getter: () => T,
   options?: UseObjectOptions & { dependencies?: any[] }
 ): void {
   const nav = useContext(NavContext);
@@ -3682,7 +3687,7 @@ export function useProvideObject<T>(
 
 type UseObjectResult<T> =
   | { isProvided: false; getter: undefined }
-  | { isProvided: true; getter: () => T | Promise<T> };
+  | { isProvided: true; getter: () => T };
 
 export function useObject<T>(
   key: string,
@@ -3690,7 +3695,7 @@ export function useObject<T>(
 ): UseObjectResult<T> {
   const nav = useContext(NavContext);
   const currentPageUid = useContext(CurrentPageContext);
-  const [getter, setGetter] = useState<(() => T | Promise<T>) | undefined>(undefined);
+  const [getter, setGetter] = useState<(() => T) | undefined>(undefined);
   const [isProvided, setIsProvided] = useState(false);
   const unsubscribeRef = useRef<(() => void) | null>(null);
   const isMountedRef = useRef(true);
@@ -3726,7 +3731,7 @@ export function useObject<T>(
     if (!nav) return;
 
     // Try to get the getter
-    const foundGetter = nav.getObject<() => T | Promise<T>>(key, finalOptions);
+    const foundGetter = nav.getObject<() => T>(key, finalOptions);
 
     if (!foundGetter) {
       // Getter not yet provided - wait for it
@@ -3915,32 +3920,11 @@ export function useObjectWithFallback<T>(
     resolutionRef.current = { key, strategies: strategiesKey };
 
     for (const strategy of fallbackStrategies) {
-      const getter = nav.getObject<T | Promise<T>>(key, strategy);
+      const getter = nav.getObject<T>(key, strategy);
       
       if (getter !== undefined) {
         // Check if it's a promise
-        if (getter && typeof getter === 'object' && 'then' in getter) {
-          setIsProvided(false);
-          let isMounted = true;
-
-          (getter as Promise<T>)
-            .then((resolved) => {
-              if (isMounted) {
-                setData(resolved);
-                setIsProvided(true);
-              }
-            })
-            .catch((err) => {
-              if (isMounted) {
-                console.warn(`Error resolving object ${key}:`, err);
-                setIsProvided(false);
-              }
-            });
-
-          return () => {
-            isMounted = false;
-          };
-        } else {
+        if (getter && typeof getter === 'object' && 'then' in getter) {} else {
           setData(getter as T);
           setIsProvided(true);
         }

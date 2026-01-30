@@ -6,7 +6,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import Image from 'next/image';
 import styles from './quiz-challenge.module.css';
 import { supabaseBrowser } from '@/lib/supabase/client';
-import { useNav } from "@/lib/NavigationStack";
+import { useNav, useProvideObject } from "@/lib/NavigationStack";
 import { capitalizeWords } from '@/utils/textUtils';
 import { getParamatical } from '@/utils/checkers';
 import { useUserData } from '@/lib/stacks/user-stack';
@@ -38,6 +38,7 @@ import { BottomViewer, useBottomController } from "@/lib/BottomViewer";
 import { useUserBalance } from '@/lib/stacks/user-balance-stack';
 import { poolsSubscriptionManager } from '@/lib/managers/PoolsQuizTopicSubscriptionManager';
 import { useActiveQuiz } from "@/lib/stacks/active-quiz-stack";
+import { PinData } from '@/models/pin-data';
 
 interface QuizChallengeProps {
   topicsId: string;
@@ -73,9 +74,20 @@ export default function QuizChallenge(props: QuizChallengeProps) {
   const [quizLoading, setQuizLoading] = useState(false);
   const [error, setError] = useState('');
 
+
   const [withdrawBottomViewerId, withdrawBottomController, withdrawBottomIsOpen,,withdrawBottomRef] = useBottomController();
 
   const [activeQuiz, , setActiveQuizTopicModel] = useActiveQuiz(lang);
+
+  useProvideObject<PinData>('pin_controller', () => {
+    return { 
+      inUse: selectedPayout && selectedRule, 
+      action: async (pin: string) => {
+        console.log('PIN entered for quiz engagement:', pin);
+        // handleEngage
+      }
+    };
+  }, {scope: 'pin_scope'});
 
   useEffect(() => {
     if(!isHydrated) return;
@@ -128,6 +140,11 @@ export default function QuizChallenge(props: QuizChallengeProps) {
       throw error;
     }
   };
+
+  const getUserPin = () =>{
+     withdrawBottomController.close();
+     nav.pushWith('pin', {requireObjects: ['pin_controller']});
+  }
 
   const handleEngage = async () => {
     if (!userData || !selectedGameModeModel || !selectedChallengeModel || !selectedRule || !selectedPayout) return;
@@ -205,7 +222,7 @@ export default function QuizChallenge(props: QuizChallengeProps) {
         });
 
         setActiveQuizTopicModel(quizModel);
-        withdrawBottomController.close();
+        // withdrawBottomController.close();
         await nav.pushAndPopUntil('quiz_commitment', (entry) => entry.key === 'quiz_page', {
           poolsId: poolsId,
           action: 'active'
@@ -416,7 +433,7 @@ export default function QuizChallenge(props: QuizChallengeProps) {
 
             {/* Pay Button */}
             <button
-              onClick={handleEngage}
+              onClick={getUserPin}
               type="button"
               className={styles.continueButton}
               disabled={quizLoading || !bothCheck}
