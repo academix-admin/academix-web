@@ -3310,8 +3310,8 @@ export function usePageLifecycle(
   const groupStackId = useContext(GroupStackIdContext);
   const isMounted = useRef(false);
   const hasTriggeredInitialEnter = useRef(false);
+  const hasOnEnterBeenCalled = useRef(false); // Track if onEnter has EVER been called for this page
   const isStackActive = useRef(true);
-  const isResumingFromGroupPause = useRef(false);
 
   // Helper to check if stack is active in its group
   const isStackCurrentlyActive = () => {
@@ -3341,8 +3341,8 @@ export function usePageLifecycle(
       context.current?.uid === currentPageUid;
 
     // Handle initial page load - only for the current page and only if stack is active
-    if (isCurrentPageActive && currentEntry && stableCallbacks.onEnter && !hasTriggeredInitialEnter.current && stackIsActive && !isResumingFromGroupPause.current) {
-      hasTriggeredInitialEnter.current = true;
+    if (isCurrentPageActive && currentEntry && stableCallbacks.onEnter && !hasOnEnterBeenCalled.current && stackIsActive) {
+      hasOnEnterBeenCalled.current = true;
 
       const initialContext = {
         stack: nav.getStack(),
@@ -3365,16 +3365,28 @@ export function usePageLifecycle(
     if (stableCallbacks.onEnter) {
       const handler = (context: any) => {
         if (!isMounted.current) return;
-        // Skip if resuming from group pause - use onResume instead
-        if (isResumingFromGroupPause.current) {
-          isResumingFromGroupPause.current = false;
+        
+        // CRITICAL CHECK: onEnter can only fire ONCE per page lifecycle
+        // Once it has been called, it NEVER fires again
+        if (hasOnEnterBeenCalled.current) {
           return;
         }
-        // Only fire if stack is active in its group
-        if (!isStackCurrentlyActive()) return;
-        if (isOurPageEntering(context)) {
-          stableCallbacks.onEnter!(context);
+        
+        // Stack must be CURRENTLY active in group
+        if (!isStackCurrentlyActive()) {
+          return;
         }
+        
+        // This must be our page entering
+        if (!isOurPageEntering(context)) {
+          return;
+        }
+        
+        // Mark that onEnter has been called - permanently
+        hasOnEnterBeenCalled.current = true;
+        
+        // Now fire onEnter - and it will never fire again for this page
+        stableCallbacks.onEnter!(context);
       };
       cleanupFunctions.push(nav.addOnEnter(handler));
     }
@@ -3526,8 +3538,6 @@ export function usePageLifecycle(
     // Stack became active (returned to this stack in group)
     if (!wasActive && isCurrentlyActive && stableCallbacks.onResume) {
       isStackActive.current = true;
-      // Flag to prevent onEnter from firing when resuming from group pause
-      isResumingFromGroupPause.current = true;
       stableCallbacks.onResume({
         stack: nav.getStack(),
         current: currentTopPage,
