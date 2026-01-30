@@ -80,6 +80,8 @@ export default function QuizChallenge(props: QuizChallengeProps) {
   const [activeQuiz, , setActiveQuizTopicModel] = useActiveQuiz(lang);
 
   useProvideObject<PinData>('pin_controller', () => {
+    console.log('selectedRule', selectedRule);
+    console.log('selectedPayout', selectedRule);
     return { 
       inUse: selectedPayout && selectedRule, 
       action: async (pin: string) => {
@@ -87,7 +89,7 @@ export default function QuizChallenge(props: QuizChallengeProps) {
         // handleEngage
       }
     };
-  }, {scope: 'pin_scope'});
+  }, {scope: 'pin_scope', dependencies: [selectedRule, selectedPayout]});
 
   useEffect(() => {
     if(!isHydrated) return;
@@ -143,7 +145,7 @@ export default function QuizChallenge(props: QuizChallengeProps) {
 
   const getUserPin = () =>{
      withdrawBottomController.close();
-     nav.pushWith('pin', {requireObjects: ['pin_controller']});
+     nav.pushWith('pin', { requireObjects: ['pin_controller']});
   }
 
   const handleEngage = async () => {
