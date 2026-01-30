@@ -40,7 +40,7 @@ export default function PaymentTransactions({ onStateChange }: ComponentStatePro
   const [transactionModels, demandTransactionModels, setTransactionModels] = useTransactionModel(lang);
 
   useProvideObject('test-passing', async () => {
-    // await new Promise(resolve => setTimeout(resolve, 10000));
+    await new Promise(resolve => setTimeout(resolve, 10000));
     return { phone: '08080733030' };
   }, {global: true});
 
