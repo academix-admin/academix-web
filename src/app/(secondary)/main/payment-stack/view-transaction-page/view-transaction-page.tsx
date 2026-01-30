@@ -23,7 +23,10 @@ export default function ViewTransactionPage(props: ViewTransactionProps) {
   const testResult = useObject('test-passing', {global: true});
 
   useEffect(() => {
+          console.log('tested before');
+
     if (!testResult.isProvided) return;
+          console.log('tested after');
 
     // testResult.getter is guaranteed to be defined here - no extra checks!
     const handleTest = async () => {
