@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import styles from './view-transaction-page.module.css';
-import { useNav, usePageLifecycle } from "@/lib/NavigationStack";
+import { useNav, usePageLifecycle, useObject  } from "@/lib/NavigationStack";
 import { TransactionModel } from '@/models/transaction-model';
 import { useTransactionModel } from '@/lib/stacks/transactions-stack';
 import { PaymentDetails } from '@/models/payment-details';
@@ -20,6 +20,21 @@ export default function ViewTransactionPage(props: ViewTransactionProps) {
   const isTop = nav.isTop();
   const { transactionId } = props;
 
+  const testResult = useObject('test-passing', {global: true});
+
+  useEffect(() => {
+    if (!testResult.isProvided) return;
+
+    // testResult.getter is guaranteed to be defined here - no extra checks!
+    const handleTest = async () => {
+      const result = await testResult.getter();
+      console.log('tested passing', result);
+    };
+    
+    handleTest();
+  }, [testResult.isProvided, testResult.getter]);
+  
+ 
   const [currentTransaction, setCurrentTransaction] = useState<TransactionModel | null>(null);
   const [transactionModels,,, { isHydrated }] = useTransactionModel(lang);
 

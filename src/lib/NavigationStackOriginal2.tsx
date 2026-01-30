@@ -3283,7 +3283,6 @@ export function useDebugObjects() {
 
 /**
  * Hook for managing page lifecycle events
- * Supports both stack-level events (push, pop, replace) and group-level events (pause, resume)
  * @param nav - The navigation stack API
  * @param callbacks - Object containing lifecycle callback functions
  * @param dependencies - Additional dependencies for the callbacks
@@ -3306,20 +3305,8 @@ export function usePageLifecycle(
 ) {
   const stableCallbacks = useMemo(() => callbacks, dependencies);
   const currentPageUid = useContext(CurrentPageContext);
-  const groupContext = useContext(GroupNavigationContext);
-  const groupStackId = useContext(GroupStackIdContext);
   const isMounted = useRef(false);
   const hasTriggeredInitialEnter = useRef(false);
-  const isStackActive = useRef(true);
-  const isResumingFromGroupPause = useRef(false);
-
-  // Helper to check if stack is active in its group
-  const isStackCurrentlyActive = () => {
-    if (!groupContext || !groupStackId) {
-      return true; // Not in a group, always active
-    }
-    return groupContext.isActiveStack(groupStackId);
-  };
 
   useEffect(() => {
     isMounted.current = true;
@@ -3328,7 +3315,6 @@ export function usePageLifecycle(
     // Get current page info
     const currentEntry = nav.peek();
     const isCurrentPageActive = currentEntry?.uid === currentPageUid;
-    const stackIsActive = isStackCurrentlyActive();
 
     // Helper to check if context belongs to current page
     const isOurPageEntering = (context: any) =>
@@ -3340,8 +3326,8 @@ export function usePageLifecycle(
     const isOurPageCurrent = (context: any) =>
       context.current?.uid === currentPageUid;
 
-    // Handle initial page load - only for the current page and only if stack is active
-    if (isCurrentPageActive && currentEntry && stableCallbacks.onEnter && !hasTriggeredInitialEnter.current && stackIsActive && !isResumingFromGroupPause.current) {
+    // Handle initial page load - only for the current page
+    if (isCurrentPageActive && currentEntry && stableCallbacks.onEnter && !hasTriggeredInitialEnter.current) {
       hasTriggeredInitialEnter.current = true;
 
       const initialContext = {
@@ -3365,13 +3351,6 @@ export function usePageLifecycle(
     if (stableCallbacks.onEnter) {
       const handler = (context: any) => {
         if (!isMounted.current) return;
-        // Skip if resuming from group pause - use onResume instead
-        if (isResumingFromGroupPause.current) {
-          isResumingFromGroupPause.current = false;
-          return;
-        }
-        // Only fire if stack is active in its group
-        if (!isStackCurrentlyActive()) return;
         if (isOurPageEntering(context)) {
           stableCallbacks.onEnter!(context);
         }
@@ -3382,8 +3361,6 @@ export function usePageLifecycle(
     if (stableCallbacks.onExit) {
       const handler = (context: any) => {
         if (!isMounted.current) return;
-        // Only fire if stack was active when exiting
-        if (!isStackCurrentlyActive()) return;
         if (isOurPageExiting(context)) {
           stableCallbacks.onExit!(context);
         }
@@ -3395,8 +3372,6 @@ export function usePageLifecycle(
     if (stableCallbacks.onPause) {
       const handler = (context: any) => {
         if (!isMounted.current) return;
-        // Only if stack is active (not paused by group switch) and page is on top
-        if (!isStackCurrentlyActive()) return;
         const currentTopPage = nav.peek();
         if (currentTopPage?.uid === currentPageUid) {
           stableCallbacks.onPause!(context);
@@ -3408,8 +3383,6 @@ export function usePageLifecycle(
     if (stableCallbacks.onResume) {
       const handler = (context: any) => {
         if (!isMounted.current) return;
-        // Only if stack is active (not paused by group switch) and page is on top
-        if (!isStackCurrentlyActive()) return;
         const currentTopPage = nav.peek();
         if (currentTopPage?.uid === currentPageUid) {
           stableCallbacks.onResume!(context);
@@ -3491,57 +3464,6 @@ export function usePageLifecycle(
       cleanupFunctions.forEach(cleanup => cleanup());
     };
   }, [nav, stableCallbacks, currentPageUid]);
-
-  // Track group-level visibility changes (pause/resume when stack becomes inactive/active)
-  useEffect(() => {
-    if (!groupContext || !groupStackId || !stableCallbacks.onPause && !stableCallbacks.onResume) {
-      return; // Not in a group or no pause/resume callbacks
-    }
-
-    if (!isMounted.current) return;
-
-    // Check if the page is currently visible in its group
-    const wasActive = isStackActive.current;
-    const isCurrentlyActive = groupContext.isActiveStack(groupStackId);
-
-    // Only fire events if page is the active page in its stack
-    const currentTopPage = nav.peek();
-    const isTopPage = currentTopPage?.uid === currentPageUid;
-
-    if (!isTopPage) {
-      return; // Only fire group events for the top page
-    }
-
-    // Stack became inactive (switched to another stack in group)
-    if (wasActive && !isCurrentlyActive && stableCallbacks.onPause) {
-      isStackActive.current = false;
-      stableCallbacks.onPause({
-        stack: nav.getStack(),
-        current: currentTopPage,
-        reason: 'group-switch',
-        action: { type: 'group-paused' }
-      });
-    }
-
-    // Stack became active (returned to this stack in group)
-    if (!wasActive && isCurrentlyActive && stableCallbacks.onResume) {
-      isStackActive.current = true;
-      // Flag to prevent onEnter from firing when resuming from group pause
-      isResumingFromGroupPause.current = true;
-      stableCallbacks.onResume({
-        stack: nav.getStack(),
-        current: currentTopPage,
-        reason: 'group-switch',
-        action: { type: 'group-resumed' }
-      });
-    }
-  }, [
-    groupContext, // Watch for all group context changes (including activeStackId changes)
-    groupStackId,
-    nav,
-    stableCallbacks,
-    currentPageUid
-  ]);
 }
 
 /**

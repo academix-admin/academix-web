@@ -266,7 +266,6 @@ type ObjectMetadata = {
   isStackScoped?: boolean;
   isGlobal?: boolean;
   originalKey?: string;
-  createdAt?: number; // For memory leak detection
 };
 
 class ObjectReferenceRegistry {
@@ -279,10 +278,6 @@ class ObjectReferenceRegistry {
   // Request/Response pattern support
   private requestHandlers = new Map<string, (request: any) => any | Promise<any>>();
   private waitingRequestHandlers = new Map<string, Set<() => void>>();
-
-  // Memory management
-  private cleanupTimers = new Map<string, NodeJS.Timeout>();
-  private readonly CLEANUP_TIMEOUT = 1000 * 60 * 10; // 10 minutes
 
   // ============ Backward Compatible Methods ============
 
@@ -398,76 +393,6 @@ class ObjectReferenceRegistry {
     this.waitingCallbacks.clear();
     this.requestHandlers.clear();
     this.waitingRequestHandlers.clear();
-    this.cleanupTimers.forEach(timer => clearTimeout(timer));
-    this.cleanupTimers.clear();
-  }
-
-  // ============ Memory Management & Cleanup ============
-
-  /**
-   * Schedule auto-cleanup for a getter to prevent memory leaks
-   * Useful for page-scoped or temporary getters
-   */
-  scheduleCleanup(fullKey: string, timeoutMs?: number): void {
-    // Clear any existing timer
-    const existingTimer = this.cleanupTimers.get(fullKey);
-    if (existingTimer) {
-      clearTimeout(existingTimer);
-    }
-
-    const timeout = timeoutMs || this.CLEANUP_TIMEOUT;
-    const timer = setTimeout(() => {
-      if (this.getters.has(fullKey)) {
-        console.log(`[Registry] Auto-cleanup: removing "${fullKey}" due to timeout`);
-        this.getters.delete(fullKey);
-        this.metadata.delete(fullKey);
-        this.waitingCallbacks.delete(fullKey);
-        this.requestHandlers.delete(fullKey);
-        this.waitingRequestHandlers.delete(fullKey);
-      }
-      this.cleanupTimers.delete(fullKey);
-    }, timeout);
-
-    this.cleanupTimers.set(fullKey, timer);
-  }
-
-  /**
-   * Cancel scheduled cleanup for a getter
-   */
-  cancelCleanup(fullKey: string): void {
-    const timer = this.cleanupTimers.get(fullKey);
-    if (timer) {
-      clearTimeout(timer);
-      this.cleanupTimers.delete(fullKey);
-    }
-  }
-
-  /**
-   * Get memory stats for debugging
-   */
-  getMemoryStats(): {
-    gettersCount: number;
-    callbacksCount: number;
-    handlersCount: number;
-    pendingCleanups: number;
-  } {
-    let callbacksCount = 0;
-    let handlersCount = 0;
-
-    this.waitingCallbacks.forEach(set => {
-      callbacksCount += set.size;
-    });
-
-    this.waitingRequestHandlers.forEach(set => {
-      handlersCount += set.size;
-    });
-
-    return {
-      gettersCount: this.getters.size,
-      callbacksCount,
-      handlersCount,
-      pendingCleanups: this.cleanupTimers.size
-    };
   }
 
   // ============ Enhanced Methods ============
@@ -791,26 +716,11 @@ class ObjectReferenceRegistry {
       const callbacks = this.waitingCallbacks.get(fullKey);
       if (callbacks) {
         callbacks.delete(callback);
-        // Clean up empty callback set immediately
         if (callbacks.size === 0) {
           this.waitingCallbacks.delete(fullKey);
         }
       }
-      // Also perform periodic cleanup of any empty sets
-      this.cleanupEmptyCallbackSets();
     };
-  }
-
-  /**
-   * Clean up any empty callback sets from waitingCallbacks
-   * Called automatically after callback removal to prevent memory accumulation
-   */
-  private cleanupEmptyCallbackSets(): void {
-    for (const [key, callbacks] of this.waitingCallbacks.entries()) {
-      if (callbacks.size === 0) {
-        this.waitingCallbacks.delete(key);
-      }
-    }
   }
 
   // ============ Request/Response Pattern (Optional) ============
@@ -964,145 +874,33 @@ function useGroupStackId() {
 class TransitionManager {
   private activeTransitions = new Map<string, any>();
   private completedTransitions = new Set<string>();
-  private interruptSignals = new Map<string, { interrupted: boolean; reason?: string }>();
-  private onError: ((error: Error, uid: string) => void) | null = null;
 
-  start(uid: string, duration: number, onComplete: () => void, onError?: (error: Error) => void) {
-    // Cancel any existing transition for this uid
+  start(uid: string, duration: number, onComplete: () => void) {
     this.cancel(uid);
-    this.interruptSignals.delete(uid);
-
     const timer = setTimeout(() => {
-      try {
-        const signal = this.interruptSignals.get(uid);
-        
-        if (signal?.interrupted) {
-          // Transition was interrupted, skip completion
-          console.debug(`Transition ${uid} was interrupted: ${signal.reason || 'unknown reason'}`);
-        } else {
-          this.activeTransitions.delete(uid);
-          this.completedTransitions.add(uid);
-          onComplete();
-        }
-      } catch (error) {
-        const err = error instanceof Error ? error : new Error(String(error));
-        console.error(`Error completing transition ${uid}:`, err);
-        if (onError) {
-          try { onError(err); } catch (e) { console.error("onError callback failed:", e); }
-        }
-        if (this.onError) {
-          try { this.onError(err, uid); } catch (e) { console.error("Global onError handler failed:", e); }
-        }
-      }
+      this.activeTransitions.delete(uid);
+      this.completedTransitions.add(uid);
+      try { onComplete(); } catch (e) { /* swallow */ }
     }, duration) as any;
-    
     this.activeTransitions.set(uid, timer);
   }
 
-  /**
-   * Cancel a transition and optionally interrupt ongoing completions
-   */
-  cancel(uid: string, reason?: string) {
+  cancel(uid: string) {
     const timer = this.activeTransitions.get(uid);
     if (timer) {
       clearTimeout(timer);
       this.activeTransitions.delete(uid);
-      
-      // Mark as interrupted if reason provided
-      if (reason) {
-        this.interruptSignals.set(uid, { interrupted: true, reason });
-      }
     }
-  }
-
-  /**
-   * Interrupt a transition that's currently completing
-   */
-  interrupt(uid: string, reason?: string) {
-    this.interruptSignals.set(uid, { interrupted: true, reason });
-    this.cancel(uid, reason);
   }
 
   isComplete(uid: string): boolean {
     return this.completedTransitions.has(uid);
   }
 
-  isInterrupted(uid: string): boolean {
-    const signal = this.interruptSignals.get(uid);
-    return signal?.interrupted || false;
-  }
-
-  /**
-   * Set global error handler for all transitions
-   */
-  setErrorHandler(handler: ((error: Error, uid: string) => void) | null) {
-    this.onError = handler;
-  }
-
-  /**
-   * Get active transition count for monitoring
-   */
-  getActiveCount(): number {
-    return this.activeTransitions.size;
-  }
-
-  /**
-   * Wait for all active transitions to complete or be interrupted
-   */
-  awaitAllComplete(timeoutMs: number = 5000): Promise<void> {
-    return new Promise((resolve) => {
-      if (this.activeTransitions.size === 0) {
-        resolve();
-        return;
-      }
-
-      const startTime = Date.now();
-      const completedPromises: Promise<void>[] = [];
-
-      // Create a promise for each active transition
-      for (const uid of this.activeTransitions.keys()) {
-        const transitionPromise = new Promise<void>((transitionResolve) => {
-          const checkTransition = () => {
-            // Transition completed or was interrupted
-            if (!this.activeTransitions.has(uid) || 
-                this.completedTransitions.has(uid) ||
-                this.isInterrupted(uid)) {
-              transitionResolve();
-              return;
-            }
-
-            // Timeout check
-            if (Date.now() - startTime > timeoutMs) {
-              this.interrupt(uid, 'timeout');
-              transitionResolve();
-              return;
-            }
-
-            // Still waiting, check again
-            setTimeout(checkTransition, 10);
-          };
-          checkTransition();
-        });
-        completedPromises.push(transitionPromise);
-      }
-
-      // Wait for all transition promises to resolve
-      Promise.all(completedPromises).then(() => {
-        resolve();
-      });
-    });
-  }
-
   dispose() {
-    // Interrupt all active transitions before cleanup
-    const uids = Array.from(this.activeTransitions.keys());
-    uids.forEach(uid => this.interrupt(uid, 'disposal'));
-
     this.activeTransitions.forEach(timer => clearTimeout(timer));
     this.activeTransitions.clear();
     this.completedTransitions.clear();
-    this.interruptSignals.clear();
-    this.onError = null;
   }
 }
 
@@ -1999,57 +1797,18 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
     return true;
   }
 
-  // ============ Improved Lock Mechanism (Race Condition Prevention) ============
   let actionLock = false;
-  let pendingOperations = 0;
-
   async function withLock<T>(fn: () => Promise<T>): Promise<T | false> {
-    if (actionLock) {
-      console.warn('[NavStack] Lock already acquired, operation rejected to prevent race condition');
-      return false as unknown as T;
-    }
-
+    if (actionLock) return false as unknown as T;
     actionLock = true;
-    pendingOperations++;
-
     try {
-      const result = await fn();
-      return result;
-    } catch (err) {
-      console.error('[NavStack] Operation failed:', err);
-      throw err;
-    } finally {
-      pendingOperations--;
+      const out = await fn();
       actionLock = false;
+      return out;
+    } catch (err) {
+      actionLock = false;
+      throw err;
     }
-  }
-
-  /**
-   * Wait for all pending navigation operations to complete
-   * Useful for ensuring state stability before cleanup
-   */
-  function awaitPendingOperations(timeoutMs: number = 5000): Promise<void> {
-    return new Promise((resolve) => {
-      if (pendingOperations === 0) {
-        resolve();
-        return;
-      }
-
-      const startTime = Date.now();
-      const checkInterval = setInterval(() => {
-        if (pendingOperations === 0) {
-          clearInterval(checkInterval);
-          resolve();
-          return;
-        }
-
-        if (Date.now() - startTime > timeoutMs) {
-          clearInterval(checkInterval);
-          console.warn('[NavStack] Timeout waiting for pending operations', { pendingOperations });
-          resolve();
-        }
-      }, 50);
-    });
   }
 
   const api: NavStackAPI = {
@@ -3154,94 +2913,6 @@ function FadeTransitionRenderer({
   );
 }
 
-// ==================== Error Boundary & Safety Utilities ====================
-
-/**
- * Error Boundary Component for lazy-loaded components and navigation
- * Prevents crashes from propagating up the component tree
- */
-export class NavigationErrorBoundary extends React.Component<
-  { children: ReactNode; fallback?: ReactNode; onError?: (error: Error) => void },
-  { hasError: boolean; error: Error | null }
-> {
-  constructor(props: any) {
-    super(props);
-    this.state = { hasError: false, error: null };
-  }
-
-  static getDerivedStateFromError(error: Error) {
-    return { hasError: true, error };
-  }
-
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('[NavigationErrorBoundary] Error caught:', error, errorInfo);
-    this.props.onError?.(error);
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return (
-        this.props.fallback || (
-          <div
-            style={{
-              padding: '20px',
-              textAlign: 'center',
-              color: '#d32f2f',
-              fontFamily: 'system-ui, -apple-system, sans-serif',
-            }}
-          >
-            <h2>Something went wrong</h2>
-            <p>{this.state.error?.message}</p>
-            <button
-              onClick={() => {
-                this.setState({ hasError: false, error: null });
-                window.location.reload();
-              }}
-              style={{
-                padding: '8px 16px',
-                backgroundColor: '#d32f2f',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-              }}
-            >
-              Reload
-            </button>
-          </div>
-        )
-      );
-    }
-
-    return this.props.children;
-  }
-}
-
-/**
- * Check if code is running in browser (not SSR)
- */
-export function isBrowser(): boolean {
-  return typeof window !== 'undefined' && typeof document !== 'undefined';
-}
-
-/**
- * Safe window access for SSR-safe code
- */
-export function safeWindow<T>(
-  callback: (win: Window) => T,
-  fallback?: T
-): T | undefined {
-  if (!isBrowser()) {
-    return fallback;
-  }
-  try {
-    return callback(window);
-  } catch (err) {
-    console.warn('[SafeWindow] Error accessing window:', err);
-    return fallback;
-  }
-}
-
 export function useNav() {
   const context = useContext(NavContext);
   if (!context) throw new Error("useNav must be used within a NavigationStack");
@@ -3283,7 +2954,6 @@ export function useDebugObjects() {
 
 /**
  * Hook for managing page lifecycle events
- * Supports both stack-level events (push, pop, replace) and group-level events (pause, resume)
  * @param nav - The navigation stack API
  * @param callbacks - Object containing lifecycle callback functions
  * @param dependencies - Additional dependencies for the callbacks
@@ -3306,20 +2976,8 @@ export function usePageLifecycle(
 ) {
   const stableCallbacks = useMemo(() => callbacks, dependencies);
   const currentPageUid = useContext(CurrentPageContext);
-  const groupContext = useContext(GroupNavigationContext);
-  const groupStackId = useContext(GroupStackIdContext);
   const isMounted = useRef(false);
   const hasTriggeredInitialEnter = useRef(false);
-  const isStackActive = useRef(true);
-  const isResumingFromGroupPause = useRef(false);
-
-  // Helper to check if stack is active in its group
-  const isStackCurrentlyActive = () => {
-    if (!groupContext || !groupStackId) {
-      return true; // Not in a group, always active
-    }
-    return groupContext.isActiveStack(groupStackId);
-  };
 
   useEffect(() => {
     isMounted.current = true;
@@ -3328,7 +2986,6 @@ export function usePageLifecycle(
     // Get current page info
     const currentEntry = nav.peek();
     const isCurrentPageActive = currentEntry?.uid === currentPageUid;
-    const stackIsActive = isStackCurrentlyActive();
 
     // Helper to check if context belongs to current page
     const isOurPageEntering = (context: any) =>
@@ -3340,8 +2997,8 @@ export function usePageLifecycle(
     const isOurPageCurrent = (context: any) =>
       context.current?.uid === currentPageUid;
 
-    // Handle initial page load - only for the current page and only if stack is active
-    if (isCurrentPageActive && currentEntry && stableCallbacks.onEnter && !hasTriggeredInitialEnter.current && stackIsActive && !isResumingFromGroupPause.current) {
+    // Handle initial page load - only for the current page
+    if (isCurrentPageActive && currentEntry && stableCallbacks.onEnter && !hasTriggeredInitialEnter.current) {
       hasTriggeredInitialEnter.current = true;
 
       const initialContext = {
@@ -3365,13 +3022,6 @@ export function usePageLifecycle(
     if (stableCallbacks.onEnter) {
       const handler = (context: any) => {
         if (!isMounted.current) return;
-        // Skip if resuming from group pause - use onResume instead
-        if (isResumingFromGroupPause.current) {
-          isResumingFromGroupPause.current = false;
-          return;
-        }
-        // Only fire if stack is active in its group
-        if (!isStackCurrentlyActive()) return;
         if (isOurPageEntering(context)) {
           stableCallbacks.onEnter!(context);
         }
@@ -3382,8 +3032,6 @@ export function usePageLifecycle(
     if (stableCallbacks.onExit) {
       const handler = (context: any) => {
         if (!isMounted.current) return;
-        // Only fire if stack was active when exiting
-        if (!isStackCurrentlyActive()) return;
         if (isOurPageExiting(context)) {
           stableCallbacks.onExit!(context);
         }
@@ -3395,8 +3043,6 @@ export function usePageLifecycle(
     if (stableCallbacks.onPause) {
       const handler = (context: any) => {
         if (!isMounted.current) return;
-        // Only if stack is active (not paused by group switch) and page is on top
-        if (!isStackCurrentlyActive()) return;
         const currentTopPage = nav.peek();
         if (currentTopPage?.uid === currentPageUid) {
           stableCallbacks.onPause!(context);
@@ -3408,8 +3054,6 @@ export function usePageLifecycle(
     if (stableCallbacks.onResume) {
       const handler = (context: any) => {
         if (!isMounted.current) return;
-        // Only if stack is active (not paused by group switch) and page is on top
-        if (!isStackCurrentlyActive()) return;
         const currentTopPage = nav.peek();
         if (currentTopPage?.uid === currentPageUid) {
           stableCallbacks.onResume!(context);
@@ -3491,57 +3135,6 @@ export function usePageLifecycle(
       cleanupFunctions.forEach(cleanup => cleanup());
     };
   }, [nav, stableCallbacks, currentPageUid]);
-
-  // Track group-level visibility changes (pause/resume when stack becomes inactive/active)
-  useEffect(() => {
-    if (!groupContext || !groupStackId || !stableCallbacks.onPause && !stableCallbacks.onResume) {
-      return; // Not in a group or no pause/resume callbacks
-    }
-
-    if (!isMounted.current) return;
-
-    // Check if the page is currently visible in its group
-    const wasActive = isStackActive.current;
-    const isCurrentlyActive = groupContext.isActiveStack(groupStackId);
-
-    // Only fire events if page is the active page in its stack
-    const currentTopPage = nav.peek();
-    const isTopPage = currentTopPage?.uid === currentPageUid;
-
-    if (!isTopPage) {
-      return; // Only fire group events for the top page
-    }
-
-    // Stack became inactive (switched to another stack in group)
-    if (wasActive && !isCurrentlyActive && stableCallbacks.onPause) {
-      isStackActive.current = false;
-      stableCallbacks.onPause({
-        stack: nav.getStack(),
-        current: currentTopPage,
-        reason: 'group-switch',
-        action: { type: 'group-paused' }
-      });
-    }
-
-    // Stack became active (returned to this stack in group)
-    if (!wasActive && isCurrentlyActive && stableCallbacks.onResume) {
-      isStackActive.current = true;
-      // Flag to prevent onEnter from firing when resuming from group pause
-      isResumingFromGroupPause.current = true;
-      stableCallbacks.onResume({
-        stack: nav.getStack(),
-        current: currentTopPage,
-        reason: 'group-switch',
-        action: { type: 'group-resumed' }
-      });
-    }
-  }, [
-    groupContext, // Watch for all group context changes (including activeStackId changes)
-    groupStackId,
-    nav,
-    stableCallbacks,
-    currentPageUid
-  ]);
 }
 
 /**
@@ -3670,6 +3263,33 @@ export function useProvideObject<T>(
   }, [nav, key, currentPageUid, ...dependencies]);
 }
 
+/**
+ * Message Bus Hook: Get the getter function and link status
+ * Returns true discriminated union for automatic type narrowing
+ * 
+ * Usage:
+ * const result = useObject<User>('user-data')
+ * 
+ * if (result.isProvided) {
+ *   // TypeScript automatically knows getter is defined - no extra checks!
+ *   const user = await result.getter()
+ * }
+ * 
+ * Semantics:
+ * - isProvided = true: provider has established the getter link
+ *   - getter is guaranteed to be the function (() => T | Promise<T>)
+ * - isProvided = false: waiting for provider to link the getter
+ *   - getter is guaranteed to be undefined
+ * 
+ * Message Bus Flow:
+ * 1. Consumer requests getter by key
+ * 2. If getter exists: set getter and isProvided=true
+ * 3. If getter missing: subscribe for registration, set isProvided=false
+ * 4. When getter registers: callback fires, effect reruns, now isProvided=true
+ * 
+ * Library responsibility: link getter + notify callbacks
+ * Consumer responsibility: call getter, handle sync/async results
+ */
 type UseObjectResult<T> =
   | { isProvided: false; getter: undefined }
   | { isProvided: true; getter: () => T | Promise<T> };
@@ -3684,22 +3304,13 @@ export function useObject<T>(
   const [isProvided, setIsProvided] = useState(false);
   const unsubscribeRef = useRef<(() => void) | null>(null);
   const isMountedRef = useRef(true);
-  const optionsRef = useRef(options);
 
   if (!nav) {
     throw new Error("useObject must be used within a NavigationStack");
   }
 
-  // Memoize string representation of options to detect actual changes
-  const optionsString = useMemo(() => JSON.stringify(options), [options]);
-
-  // Update ref when options actually change
-  useEffect(() => {
-    optionsRef.current = options;
-  }, [optionsString]);
-
   const finalOptions = useMemo(() => {
-    const opts = { ...optionsRef.current };
+    const opts = { ...options };
 
     // If requesting stack-scoped without explicit scope, use current stack
     if (opts.stack && !opts.scope && !opts.global) {
@@ -3707,7 +3318,7 @@ export function useObject<T>(
     }
 
     return opts;
-  }, [nav.id, optionsString]);
+  }, [options, nav.id]);
 
   useEffect(() => {
     // Reset mounted flag when effect runs
@@ -4293,92 +3904,6 @@ export function GroupNavigationStack({
     );
 }
 
-// ==================== Component Aggregation Utilities ====================
-
-/**
- * Aggregate multiple navigation maps into a single map
- * Later maps override earlier ones for duplicate keys
- */
-export function aggregateNavigationMaps(...maps: NavigationMap[]): NavigationMap {
-  const result: NavigationMap = {};
-  
-  for (const map of maps) {
-    Object.assign(result, map);
-  }
-  
-  return result;
-}
-
-/**
- * Extract components for a specific tag from a tag registry
- * Returns a navigation map containing only components tagged with the given tag
- */
-export function getComponentsByTag(
-  componentTags: Record<string, NavigationMap>,
-  tag: string
-): NavigationMap | undefined {
-  return componentTags[tag];
-}
-
-/**
- * Get all available tags in a component tag registry
- */
-export function getAvailableTags(componentTags: Record<string, NavigationMap>): string[] {
-  return Object.keys(componentTags);
-}
-
-/**
- * Merge a component tag registry with a primary navigation map
- * Tags provide additional organization without affecting primary routing
- */
-export function createTaggedNavigation(
-  primary: NavigationMap,
-  componentTags: Record<string, NavigationMap>,
-  tagsToInclude?: string[]
-): {
-  primary: NavigationMap;
-  tags: Record<string, NavigationMap>;
-  merged: NavigationMap;
-} {
-  let merged = { ...primary };
-  const filteredTags = tagsToInclude 
-    ? Object.fromEntries(
-        Object.entries(componentTags).filter(([tag]) => tagsToInclude.includes(tag))
-      )
-    : componentTags;
-
-  // Merge all tagged components (primary takes precedence)
-  for (const tagMap of Object.values(filteredTags)) {
-    for (const [key, value] of Object.entries(tagMap)) {
-      if (!(key in primary)) {
-        merged[key] = value;
-      }
-    }
-  }
-
-  return { primary, tags: filteredTags, merged };
-}
-
-/**
- * Hook to retrieve components by a specific tag
- * Returns the navigation map for that tag and a function to navigate to a component in it
- */
-export function useComponentsByTag(tag: string) {
-  const nav = useContext(NavContext);
-  
-  if (!nav) {
-    throw new Error("useComponentsByTag must be used within a NavigationStack");
-  }
-
-  // This would require storing component tags in the API
-  // For now, return a placeholder that components can use
-  return {
-    tag,
-    available: true,
-    components: {},
-  };
-}
-
 // ==================== Main NavigationStack Component ====================
 export default function NavigationStack(props: {
   id: string;
@@ -4397,18 +3922,6 @@ export default function NavigationStack(props: {
   missingRouteConfig?: MissingRouteConfig;
   persist?: boolean;
   enableScrollRestoration?: boolean;
-  /**
-   * Additional navLinks to merge with the primary navLink
-   * Useful for component aggregation from multiple sources
-   * Lower priority than main navLink - will be overridden if keys conflict
-   */
-  additionalNavLinks?: NavigationMap[];
-  /**
-   * Tag-based component registry for organizing components
-   * Maps tag names to collections of navigation links
-   * Allows retrieving related components by tag
-   */
-  componentTags?: Record<string, NavigationMap>;
 }) {
   const {
     id,
@@ -4427,41 +3940,7 @@ export default function NavigationStack(props: {
     missingRouteConfig,
     persist = false,
     enableScrollRestoration = true,
-    additionalNavLinks = [],
-    componentTags = {},
   } = props;
-
-  // Memoize additional navlinks to prevent unnecessary recalculations
-  const additionalNavLinksString = useMemo(() => JSON.stringify(additionalNavLinks), [additionalNavLinks]);
-  const componentTagsString = useMemo(() => JSON.stringify(componentTags), [componentTags]);
-
-  // Merge navLinks with additionalNavLinks and componentTags
-  // Primary navLink takes precedence, then additionalNavLinks, then componentTags
-  const mergedNavLink = useMemo(() => {
-    const merged = { ...navLink };
-    
-    // Apply additional navLinks in order (later ones override earlier)
-    for (const additionalMap of additionalNavLinks) {
-      Object.entries(additionalMap).forEach(([key, value]) => {
-        // Only add if not already in primary navLink
-        if (!(key in navLink)) {
-          merged[key] = value;
-        }
-      });
-    }
-
-    // Apply tagged components (only if not already defined)
-    for (const tagMap of Object.values(componentTags)) {
-      Object.entries(tagMap).forEach(([key, value]) => {
-        // Only add if not already defined
-        if (!(key in navLink) && !(key in merged)) {
-          merged[key] = value;
-        }
-      });
-    }
-
-    return merged;
-  }, [navLink, additionalNavLinksString, componentTagsString]);
 
   // Auto-detect parent navigation context
   const parentApi = findParentNavContext();
@@ -4470,17 +3949,17 @@ export default function NavigationStack(props: {
 
   const [isInitialized, setInitialized] = useState(false);
   const [stackSnapshot, setStackSnapshot] = useState<StackEntry[]>([]);
-  const currentPathRef = useRef(
-    typeof window !== 'undefined' ? window.location.pathname : ''
-  );
+  const [currentPath, setCurrentPath] = useState(
+      typeof window !== 'undefined' ? window.location.pathname : ''
+    );
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    currentPathRef.current = window.location.pathname;
-  }, []);
+      if (typeof window === 'undefined') return;
+        setCurrentPath(window.location.pathname);
+    }, []);
 
   const api = useMemo(() => {
-    const newApi = createApiFor(id, mergedNavLink, syncHistory || false, parentApi, currentPathRef.current, groupContext, groupStackId);
+    const newApi = createApiFor(id, navLink, syncHistory || false, parentApi, currentPath, groupContext, groupStackId);
 
     if (parentApi) {
       const parentReg = globalRegistry.get(parentApi.id);
@@ -4490,7 +3969,7 @@ export default function NavigationStack(props: {
     }
 
     return newApi;
-  }, [id, mergedNavLink, syncHistory, parentApi, groupContext]);
+  }, [id, navLink, syncHistory, parentApi, currentPath, groupContext]);
 
  // Trigger onCreate lifecycle when API is created
   useEffect(() => {
@@ -4521,13 +4000,13 @@ export default function NavigationStack(props: {
     return cleanupAppState;
   }, [api, id]);
 
-  // Update the registry with the current path reference
-  useEffect(() => {
-    const regEntry = globalRegistry.get(id);
-    if (regEntry) {
-      regEntry.currentPath = currentPathRef.current;
-    }
-  }, [id]);
+  // Update the registry with the current path
+    useEffect(() => {
+      const regEntry = globalRegistry.get(id);
+      if (regEntry) {
+        regEntry.currentPath = currentPath;
+      }
+    }, [id, currentPath]);
 
   useIsomorphicLayoutEffect(() => {
     let regEntry = globalRegistry.get(id);
@@ -4629,7 +4108,7 @@ export default function NavigationStack(props: {
       if (persist ) writePersistedStack(id, stack);
     });
     return unsub;
-  }, [api, persist, id]);
+  }, [api, persist, id, groupContext]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;

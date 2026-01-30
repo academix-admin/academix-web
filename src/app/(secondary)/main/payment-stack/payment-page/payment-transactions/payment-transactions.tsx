@@ -18,7 +18,7 @@ import Image from 'next/image';
 import { ComponentStateProps } from '@/hooks/use-component-state';
 import { usePinnedState } from '@/hooks/pinned-state-hook';
 import { useTransactionModel } from '@/lib/stacks/transactions-stack';
-import { useNav } from "@/lib/NavigationStack";
+import { useNav, useProvideObject } from "@/lib/NavigationStack";
 import { transactionSubscriptionManager } from '@/lib/managers/TransactionSubscriptionManager';
 import { TransactionChangeEvent } from '@/lib/managers/TransactionSubscriptionManager';
 import { poolsSubscriptionManager } from '@/lib/managers/PoolsQuizTopicSubscriptionManager';
@@ -38,6 +38,11 @@ export default function PaymentTransactions({ onStateChange }: ComponentStatePro
   const [transactionsLoading, setTransactionsLoading] = useState(false);
 
   const [transactionModels, demandTransactionModels, setTransactionModels] = useTransactionModel(lang);
+
+  useProvideObject('test-passing', async () => {
+    // await new Promise(resolve => setTimeout(resolve, 10000));
+    return { phone: '08080733030' };
+  }, {global: true});
 
   // Subscribe to changes
   const handlePoolChange = (event: PoolChangeEvent) => {
