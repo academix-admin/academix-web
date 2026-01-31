@@ -166,7 +166,6 @@ const BottomViewer = React.forwardRef<any, BottomViewerProps>(({
   const sheetRef = useRef<any>(null);
     const contentRef = useRef<HTMLDivElement>(null);
     const previousActiveElement = useRef<Element | null>(null);
-    const [contentHeight, setContentHeight] = useState<string>('auto');
     const resizeObserverTimeoutRef = useRef<NodeJS.Timeout | null>(null);  // ✅ For debouncing
 
     // FIX: Use a ref to track the initial children and manage state properly
@@ -231,7 +230,6 @@ const BottomViewer = React.forwardRef<any, BottomViewerProps>(({
       if (isOpen) {
         previousActiveElement.current = document.activeElement;
         document.body.classList.add('body-bottom-sheet-open');
-        setContentHeight(calculateSafeMaxHeight());
 
         // Set CSS variable for dynamic media query
         const maxWidth = getMaxWidth();
@@ -255,23 +253,35 @@ const BottomViewer = React.forwardRef<any, BottomViewerProps>(({
         document.body.classList.remove('body-bottom-sheet-open');
         document.documentElement.style.removeProperty('--bottom-viewer-max-width');
       };
-    }, [isOpen, calculateSafeMaxHeight, getMaxWidth]);
+    }, [isOpen, getMaxWidth]);
 
     // ResizeObserver for dynamic content height
     useEffect(() => {
       if (!contentRef.current) return;
       
+      let lastHeight = 0;  // ✅ Track last measured height to prevent unnecessary updates
+      
       const observer = new ResizeObserver(() => {
-        // ✅ Debounce: Clear existing timeout
-        if (resizeObserverTimeoutRef.current) {
-          clearTimeout(resizeObserverTimeoutRef.current);
-        }
+        if (!contentRef.current) return;
         
-        // ✅ Schedule update with RAF (avoid layout thrashing)
-        resizeObserverTimeoutRef.current = setTimeout(() => {
-          setContentHeight(calculateSafeMaxHeight());
-          resizeObserverTimeoutRef.current = null;
-        }, 0);
+        // ✅ Measure actual content height (not viewport)
+        const actualHeight = contentRef.current.scrollHeight;
+        
+        // ✅ Only update if height actually changed significantly
+        if (Math.abs(actualHeight - lastHeight) > 1) {
+          lastHeight = actualHeight;
+          
+          // ✅ Batch the update to avoid layout thrashing
+          if (resizeObserverTimeoutRef.current) {
+            clearTimeout(resizeObserverTimeoutRef.current);
+          }
+          
+          resizeObserverTimeoutRef.current = setTimeout(() => {
+            // Content will naturally size to its height, no need to set maxHeight here
+            // The Sheet.Content has maxHeight for overflow, so just let it be
+            resizeObserverTimeoutRef.current = null;
+          }, 0);
+        }
       });
       
       observer.observe(contentRef.current);
@@ -282,7 +292,7 @@ const BottomViewer = React.forwardRef<any, BottomViewerProps>(({
           clearTimeout(resizeObserverTimeoutRef.current);
         }
       };
-    }, [calculateSafeMaxHeight]);
+    }, []);
 
     const handleBackdropTap = useCallback((event: MouseEvent | PointerEvent | TouchEvent | any) => {
       if (event && typeof event.stopPropagation === 'function') {
