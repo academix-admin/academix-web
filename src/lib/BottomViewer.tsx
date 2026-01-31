@@ -61,6 +61,8 @@ const styles = `
   flex-direction: column;
   gap: 8px;
   box-sizing: border-box;
+  /* ✅ Prevent layout thrashing during measurement */
+  contain: layout style paint;
 }
 .bottom-viewer-cancel-btn {
   position: absolute;
@@ -94,6 +96,8 @@ const styles = `
   height: 100%;
   display: flex;
   flex-direction: column;
+  /* ✅ Prevent layout thrashing on large screens */
+  contain: layout style;
 }
 @media (max-width: 500px) {
   .react-modal-sheet-container {
@@ -163,6 +167,7 @@ const BottomViewer = React.forwardRef<any, BottomViewerProps>(({
     const contentRef = useRef<HTMLDivElement>(null);
     const previousActiveElement = useRef<Element | null>(null);
     const [contentHeight, setContentHeight] = useState<string>('auto');
+    const resizeObserverTimeoutRef = useRef<NodeJS.Timeout | null>(null);  // ✅ For debouncing
 
     // FIX: Use a ref to track the initial children and manage state properly
     const initialChildrenRef = useRef<React.ReactNode>(children);
@@ -250,9 +255,28 @@ const BottomViewer = React.forwardRef<any, BottomViewerProps>(({
     // ResizeObserver for dynamic content height
     useEffect(() => {
       if (!contentRef.current) return;
-      const observer = new ResizeObserver(() => setContentHeight(calculateSafeMaxHeight()));
+      
+      const observer = new ResizeObserver(() => {
+        // ✅ Debounce: Clear existing timeout
+        if (resizeObserverTimeoutRef.current) {
+          clearTimeout(resizeObserverTimeoutRef.current);
+        }
+        
+        // ✅ Schedule update with RAF (avoid layout thrashing)
+        resizeObserverTimeoutRef.current = setTimeout(() => {
+          setContentHeight(calculateSafeMaxHeight());
+          resizeObserverTimeoutRef.current = null;
+        }, 0);
+      });
+      
       observer.observe(contentRef.current);
-      return () => observer.disconnect();
+      
+      return () => {
+        observer.disconnect();
+        if (resizeObserverTimeoutRef.current) {
+          clearTimeout(resizeObserverTimeoutRef.current);
+        }
+      };
     }, [calculateSafeMaxHeight]);
 
     const handleBackdropTap = useCallback((event: MouseEvent | PointerEvent | TouchEvent | any) => {
@@ -376,6 +400,7 @@ const BottomViewer = React.forwardRef<any, BottomViewerProps>(({
             flex: 1,
             overflow: "hidden",
             height: '100%',
+            willChange: 'transform',  // ✅ Hint browser to use GPU
           }}
         >
           <div
@@ -383,6 +408,9 @@ const BottomViewer = React.forwardRef<any, BottomViewerProps>(({
             tabIndex={-1}
             className="bottom-viewer-content bottom-viewer-content-dynamic"
             onClick={e => e.stopPropagation()}
+            style={{
+              contain: 'layout style paint',  // ✅ Explicit contain for safety
+            }}
           >
             {currentContent}
           </div>
