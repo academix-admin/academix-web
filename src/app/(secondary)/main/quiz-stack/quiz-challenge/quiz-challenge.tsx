@@ -64,7 +64,7 @@ export default function QuizChallenge(props: QuizChallengeProps) {
   const [transactionModels, demandTransactionModels, setTransactionModels] = useTransactionModel(lang);
 
   const [currentQuiz, setCurrentQuiz] = useState<UserDisplayQuizTopicModel | null>(null);
-  const [quizModels,,, { isHydrated }] = useAvailableQuiz(lang, pType);
+  const [quizModels, , , { isHydrated }] = useAvailableQuiz(lang, pType);
   const [selectedGameModeModel, setSelectedGameModeModel] = useState<GameModeModel | null>(null);
   const [selectedChallengeModel, setSelectedChallengeModel] = useState<ChallengeModel | null>(null);
   const [selectedRule, setSelectedRule] = useState(false);
@@ -75,50 +75,53 @@ export default function QuizChallenge(props: QuizChallengeProps) {
   const [error, setError] = useState('');
 
 
-  const [withdrawBottomViewerId, withdrawBottomController, withdrawBottomIsOpen,,withdrawBottomRef] = useBottomController();
+  const [withdrawBottomViewerId, withdrawBottomController, withdrawBottomIsOpen, , withdrawBottomRef] = useBottomController();
 
   const [activeQuiz, , setActiveQuizTopicModel] = useActiveQuiz(lang);
 
   useProvideObject<PinData>('pin_controller', () => {
-    return { 
-      inUse: selectedPayout && selectedRule, 
+    return {
+      inUse: selectedPayout && selectedRule,
       action: async (pin: string) => {
-        withdrawBottomController.open();
+        await new Promise<void>(resolve =>
+          requestAnimationFrame(() => resolve())
+        );
+        withdrawBottomController.open(); 
         await handleEngage(pin);
       }
     };
-  }, {scope: 'pin_scope', dependencies: [selectedRule, selectedPayout]});
+  }, { scope: 'pin_scope', dependencies: [selectedRule, selectedPayout] });
 
   useEffect(() => {
-    if(!isHydrated) return;
+    if (!isHydrated) return;
     const getQuiz = quizModels.find((e) => e.topicsId === topicsId);
 
     if (getQuiz) {
       setCurrentQuiz(getQuiz);
-    } else if(isTop) {
+    } else if (isTop) {
       nav.popToRoot();
     }
   }, [quizModels, topicsId, isHydrated, isTop]);
 
 
   useEffect(() => {
-      setSelectedChallengeModel(null);
-      setSelectedRule(false);
-      setSelectedPayout(false);
-      setSelectedRedeemCodeModel(null);
-      setSelectedSkip(false);
+    setSelectedChallengeModel(null);
+    setSelectedRule(false);
+    setSelectedPayout(false);
+    setSelectedRedeemCodeModel(null);
+    setSelectedSkip(false);
   }, [selectedGameModeModel]);
 
   useEffect(() => {
-      if(selectedRule)return;
-      setSelectedRedeemCodeModel(null);
-      setSelectedSkip(false);
+    if (selectedRule) return;
+    setSelectedRedeemCodeModel(null);
+    setSelectedSkip(false);
   }, [selectedRule]);
 
   useEffect(() => {
-      if(selectedPayout)return;
-      setSelectedRedeemCodeModel(null);
-      setSelectedSkip(false);
+    if (selectedPayout) return;
+    setSelectedRedeemCodeModel(null);
+    setSelectedSkip(false);
   }, [selectedPayout]);
 
   // Function to engage quiz API call
@@ -141,9 +144,9 @@ export default function QuizChallenge(props: QuizChallengeProps) {
     }
   };
 
-  const getUserPin = () =>{
-     withdrawBottomController.close();
-     nav.pushWith('pin', { requireObjects: ['pin_controller']});
+  const getUserPin = () => {
+    withdrawBottomController.close();
+    nav.pushWith('pin', { requireObjects: ['pin_controller'] });
   }
 
   const handleEngage = async (userPin: string) => {
@@ -214,10 +217,10 @@ export default function QuizChallenge(props: QuizChallengeProps) {
         const quizModel = new UserDisplayQuizTopicModel(engagement.quiz_pool);
         const transaction = new TransactionModel(engagement.transaction_details);
 
-        if(engagement.transaction_details) setTransactionModels([transaction,...transactionModels]);
+        if (engagement.transaction_details) setTransactionModels([transaction, ...transactionModels]);
         const poolsId = quizModel?.quizPool?.poolsId;
         // Add specific pools to monitor
-        if(poolsId)poolsSubscriptionManager.addQuizTopicPool({
+        if (poolsId) poolsSubscriptionManager.addQuizTopicPool({
           poolsId: poolsId,
           poolsSubscriptionType: 'active'
         });
@@ -228,7 +231,7 @@ export default function QuizChallenge(props: QuizChallengeProps) {
           poolsId: poolsId,
           action: 'active'
         });
-      }else{
+      } else {
         //
       }
 
@@ -256,8 +259,8 @@ export default function QuizChallenge(props: QuizChallengeProps) {
   const balanceSufficient = balance >= (selectedChallengeModel?.challengePrice || 0);
   const codeSufficient = codeBalance >= (selectedChallengeModel?.challengePrice || 0);
   const bothSufficient = (balance < (selectedChallengeModel?.challengePrice || 0)) &&
-                        (codeBalance < (selectedChallengeModel?.challengePrice || 0)) &&
-                        (balance + codeBalance) >= (selectedChallengeModel?.challengePrice || 0);
+    (codeBalance < (selectedChallengeModel?.challengePrice || 0)) &&
+    (balance + codeBalance) >= (selectedChallengeModel?.challengePrice || 0);
   const codeCheck = codeSufficient || bothSufficient;
   const balanceCheck = codeSufficient ? false : (balanceSufficient || bothSufficient);
   const bothCheck = codeCheck || balanceCheck;
@@ -315,7 +318,7 @@ export default function QuizChallenge(props: QuizChallengeProps) {
         )}
       </div>
 
-      { showBottom && <BottomViewer
+      {showBottom && <BottomViewer
         ref={withdrawBottomRef}
         id={withdrawBottomViewerId}
         isOpen={withdrawBottomIsOpen}
