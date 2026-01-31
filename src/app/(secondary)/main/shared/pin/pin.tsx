@@ -222,8 +222,8 @@ export default function Otp() {
   // Handle Pin completion
   const verifyOTP = async () => {
     if (pinValue.length !== 6 || !pinController.isProvided) return;
+    await pinController.getter().action(pinValue);
     await nav.pop();
-    pinController.getter().action(pinValue);
   };
 
   // Auto-submit when OTP is complete
@@ -235,7 +235,7 @@ export default function Otp() {
 
   useEffect(() => {
     if (!pinController.isProvided) return;
-    console.log(pinController.getter())
+    
     if(!pinController.getter().inUse){
       nav.pop();
     }
