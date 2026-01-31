@@ -135,6 +135,11 @@ const PinInput: React.FC<PinInputProps> = ({
           className={styles.otpInput}
           autoFocus={index === 0 && !error}
           onFocus={(e) => handleFocus(e, index)}
+          autoComplete={showPin ? "off" : `password-${index}`}
+          spellCheck="false"
+          data-lpignore="true"
+          data-1p-ignore
+          data-bitwarden-ignore
         />
       ))}
     </div>
