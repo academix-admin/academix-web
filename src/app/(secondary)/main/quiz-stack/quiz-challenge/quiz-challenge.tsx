@@ -330,6 +330,7 @@ export default function QuizChallenge(props: QuizChallengeProps) {
           backgroundColor: theme === 'light' ? "#fff" : "#121212",
           handleColor: "#888",
           handleWidth: "48px",
+          maxHeight: '92dvh'
         }}
         closeThreshold={0.2}
         zIndex={1000}

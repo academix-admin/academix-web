@@ -268,7 +268,7 @@ export default function Otp() {
   const verifyOTP = async () => {
     if (pinValue.length !== 6 || !pinController.isProvided) return;
     await nav.pop();
-     requestAnimationFrame( async () => {
+     requestAnimationFrame( async() => {
           await pinController.getter().action(pinValue);
         });
     
@@ -295,7 +295,6 @@ export default function Otp() {
 
       <header className={`${styles.header} ${styles[`header_${theme}`]}`}>
         <div className={styles.headerContent}>
-          {canGoBack && (
             <button
               className={styles.backButton}
               onClick={() => nav.pop()}
@@ -308,7 +307,7 @@ export default function Otp() {
                 />
               </svg>
             </button>
-          )}
+          
           <h1 className={styles.title}>{t('pin_text')}</h1>
         </div>
       </header>

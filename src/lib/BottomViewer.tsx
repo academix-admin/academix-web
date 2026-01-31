@@ -54,8 +54,7 @@ const styles = `
   flex-shrink: 0;
 }
 .bottom-viewer-content {
-  height: auto;
-  max-height: 100%;
+  height: 100%;
   overflow-y: auto;
   padding: 0 0px 0px 0px;
   -webkit-overflow-scrolling: touch;
@@ -64,7 +63,6 @@ const styles = `
   box-sizing: border-box;
   /* ✅ Prevent layout thrashing during measurement */
   contain: layout style paint;
-  will-change: auto;
 }
 .bottom-viewer-cancel-btn {
   position: absolute;
@@ -206,17 +204,6 @@ const BottomViewer = React.forwardRef<any, BottomViewerProps>(({
       };
     }, []);
 
-    const calculateSafeMaxHeight = useCallback(() => {
-      const fallback = 'calc(var(--vh, 1vh) * 100 - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))';
-      const maxHeight = layoutProp?.maxHeight || '100dvh';
-
-        return layoutProp?.maxHeight
-          ? `calc(${layoutProp.maxHeight} - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))`
-          : fallback;
-    }, [layoutProp?.maxHeight]);
-
-
-    // Get the max width with 500px as default
     const getMaxWidth = useCallback(() => {
       return layoutProp?.maxWidth || '500px';
     }, [layoutProp?.maxWidth]);
@@ -250,6 +237,7 @@ const BottomViewer = React.forwardRef<any, BottomViewerProps>(({
         document.documentElement.style.removeProperty('--bottom-viewer-max-width');
       };
     }, [isOpen, getMaxWidth]);
+
 
     const handleBackdropTap = useCallback((event: MouseEvent | PointerEvent | TouchEvent | any) => {
       if (event && typeof event.stopPropagation === 'function') {
@@ -312,23 +300,19 @@ const BottomViewer = React.forwardRef<any, BottomViewerProps>(({
       ref={sheetRef}
       isOpen={isOpen}
       onClose={onClose}
-      snapPoints={[1]}
-      initialSnap={1}
-      modalEffectRootId="root"
+      snapPoints={[0, 0.5, 1]}
+      initialSnap={2}
+      detent="content"
       style={{ zIndex }}
       disableDrag={disableDrag}
+      avoidKeyboard={avoidKeyboard}
     >
       <Sheet.Container
         style={{
-          height: "auto",
-          maxHeight: calculateSafeMaxHeight(),
-          maxWidth: getMaxWidth(), // Use the customizable maxWidth
+          maxWidth: getMaxWidth(),
           margin: "0 auto",
           width: "100%",
-          left: 0,
-          right: 0,
           background: layoutProp?.backgroundColor || "#fff",
-          contain: 'layout style paint',
         }}
         className="bottom-viewer-container"
       >
@@ -372,8 +356,8 @@ const BottomViewer = React.forwardRef<any, BottomViewerProps>(({
           style={{
             flex: 1,
             overflow: "hidden",
-            height: 'auto',
-            willChange: 'auto',
+            height: '100%',
+            willChange: 'transform',  // ✅ Hint browser to use GPU
           }}
         >
           <div
