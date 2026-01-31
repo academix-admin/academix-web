@@ -54,7 +54,8 @@ const styles = `
   flex-shrink: 0;
 }
 .bottom-viewer-content {
-  height: 100%;
+  height: auto;
+  max-height: 100%;
   overflow-y: auto;
   padding: 0 0px 0px 0px;
   -webkit-overflow-scrolling: touch;
@@ -63,6 +64,7 @@ const styles = `
   box-sizing: border-box;
   /* ✅ Prevent layout thrashing during measurement */
   contain: layout style paint;
+  will-change: auto;
 }
 .bottom-viewer-cancel-btn {
   position: absolute;
@@ -166,7 +168,6 @@ const BottomViewer = React.forwardRef<any, BottomViewerProps>(({
   const sheetRef = useRef<any>(null);
     const contentRef = useRef<HTMLDivElement>(null);
     const previousActiveElement = useRef<Element | null>(null);
-    const resizeObserverTimeoutRef = useRef<NodeJS.Timeout | null>(null);  // ✅ For debouncing
 
     // FIX: Use a ref to track the initial children and manage state properly
     const initialChildrenRef = useRef<React.ReactNode>(children);
@@ -214,11 +215,6 @@ const BottomViewer = React.forwardRef<any, BottomViewerProps>(({
           : fallback;
     }, [layoutProp?.maxHeight]);
 
-    // ✅ Get the max height for overflow scrolling (not container sizing)
-    const getScrollableMaxHeight = useCallback(() => {
-      return layoutProp?.maxHeight || 'calc(var(--vh, 1vh) * 90)';  // Cap at 90vh for scrolling
-    }, [layoutProp?.maxHeight]);
-
 
     // Get the max width with 500px as default
     const getMaxWidth = useCallback(() => {
@@ -254,45 +250,6 @@ const BottomViewer = React.forwardRef<any, BottomViewerProps>(({
         document.documentElement.style.removeProperty('--bottom-viewer-max-width');
       };
     }, [isOpen, getMaxWidth]);
-
-    // ResizeObserver for dynamic content height
-    useEffect(() => {
-      if (!contentRef.current) return;
-      
-      let lastHeight = 0;  // ✅ Track last measured height to prevent unnecessary updates
-      
-      const observer = new ResizeObserver(() => {
-        if (!contentRef.current) return;
-        
-        // ✅ Measure actual content height (not viewport)
-        const actualHeight = contentRef.current.scrollHeight;
-        
-        // ✅ Only update if height actually changed significantly
-        if (Math.abs(actualHeight - lastHeight) > 1) {
-          lastHeight = actualHeight;
-          
-          // ✅ Batch the update to avoid layout thrashing
-          if (resizeObserverTimeoutRef.current) {
-            clearTimeout(resizeObserverTimeoutRef.current);
-          }
-          
-          resizeObserverTimeoutRef.current = setTimeout(() => {
-            // Content will naturally size to its height, no need to set maxHeight here
-            // The Sheet.Content has maxHeight for overflow, so just let it be
-            resizeObserverTimeoutRef.current = null;
-          }, 0);
-        }
-      });
-      
-      observer.observe(contentRef.current);
-      
-      return () => {
-        observer.disconnect();
-        if (resizeObserverTimeoutRef.current) {
-          clearTimeout(resizeObserverTimeoutRef.current);
-        }
-      };
-    }, []);
 
     const handleBackdropTap = useCallback((event: MouseEvent | PointerEvent | TouchEvent | any) => {
       if (event && typeof event.stopPropagation === 'function') {
@@ -364,13 +321,14 @@ const BottomViewer = React.forwardRef<any, BottomViewerProps>(({
       <Sheet.Container
         style={{
           height: "auto",
-          maxHeight: "none",  // ✅ Let it size to content naturally on large screens
-          maxWidth: getMaxWidth(),
+          maxHeight: calculateSafeMaxHeight(),
+          maxWidth: getMaxWidth(), // Use the customizable maxWidth
           margin: "0 auto",
           width: "100%",
           left: 0,
           right: 0,
           background: layoutProp?.backgroundColor || "#fff",
+          contain: 'layout style paint',
         }}
         className="bottom-viewer-container"
       >
@@ -414,9 +372,8 @@ const BottomViewer = React.forwardRef<any, BottomViewerProps>(({
           style={{
             flex: 1,
             overflow: "hidden",
-            height: '100%',
-            maxHeight: getScrollableMaxHeight(),  // ✅ Max height for scrollable content
-            willChange: 'transform',
+            height: 'auto',
+            willChange: 'auto',
           }}
         >
           <div
