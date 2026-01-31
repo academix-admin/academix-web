@@ -215,11 +215,6 @@ const BottomViewer = React.forwardRef<any, BottomViewerProps>(({
           : fallback;
     }, [layoutProp?.maxHeight]);
 
-    // ✅ Get the max height for overflow scrolling (not container sizing)
-    const getScrollableMaxHeight = useCallback(() => {
-      return layoutProp?.maxHeight || 'calc(var(--vh, 1vh) * 90)';  // Cap at 90vh for scrolling
-    }, [layoutProp?.maxHeight]);
-
 
     // Get the max width with 500px as default
     const getMaxWidth = useCallback(() => {
@@ -354,8 +349,8 @@ const BottomViewer = React.forwardRef<any, BottomViewerProps>(({
       <Sheet.Container
         style={{
           height: "auto",
-          maxHeight: "none",  // ✅ Let it size to content naturally on large screens
-          maxWidth: getMaxWidth(),
+          maxHeight: calculateSafeMaxHeight(),
+          maxWidth: getMaxWidth(), // Use the customizable maxWidth
           margin: "0 auto",
           width: "100%",
           left: 0,
@@ -405,8 +400,7 @@ const BottomViewer = React.forwardRef<any, BottomViewerProps>(({
             flex: 1,
             overflow: "hidden",
             height: '100%',
-            maxHeight: getScrollableMaxHeight(),  // ✅ Max height for scrollable content
-            willChange: 'transform',
+            willChange: 'transform',  // ✅ Hint browser to use GPU
           }}
         >
           <div
