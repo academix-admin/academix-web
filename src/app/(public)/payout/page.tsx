@@ -310,7 +310,7 @@ const OneVsOneView = ({ data, roles }: { data: ChallengeConfig; roles: string[] 
     <div className={`${styles.card} ${styles[`card_${theme}`]}`}>
 
         <h4 className={`${styles.revenue_role} ${styles[`revenue_role_${theme}`]}`}>{t('challenge_text')}</h4>
-      <div className={styles.carouselContainer}>
+      <div className={`${styles.carouselContainer} ${styles[`carouselContainer_quiz`]}`}>
        { data.challengeOptions.length > 3 && <div className={`${styles.navButton} ${styles.navPrev} ${styles[`navButton_${theme}`]}`}>
           <svg viewBox="0 0 24 24" width="24" height="24">
             <path fill="currentColor" d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6z"/>
@@ -336,7 +336,7 @@ const OneVsOneView = ({ data, roles }: { data: ChallengeConfig; roles: string[] 
             768: { slidesPerView: 2, spaceBetween: 24 },
             1024: { slidesPerView: 3, spaceBetween: 32 },
           }}
-          className={styles.swiper}
+          className={`${styles.swiper} ${styles[`swiper_quiz`]}`}
         >
           {data.challengeOptions.map((option, idx) => (
             <SwiperSlide key={idx}>

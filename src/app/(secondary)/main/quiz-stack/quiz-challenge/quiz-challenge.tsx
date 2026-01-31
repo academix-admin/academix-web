@@ -83,6 +83,7 @@ export default function QuizChallenge(props: QuizChallengeProps) {
     return {
       inUse: selectedPayout && selectedRule,
       action: async (pin: string) => {
+       
         requestAnimationFrame(() => {
           withdrawBottomController.open();
         });

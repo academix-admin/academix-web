@@ -16,6 +16,7 @@ interface PinInputProps {
   onChange: (value: string) => void;
   disabled?: boolean;
   error?: boolean;
+  showPin?: boolean;  // ✅ New prop for visibility toggle
 }
 
 // Pin Input Component
@@ -24,7 +25,8 @@ const PinInput: React.FC<PinInputProps> = ({
   value,
   onChange,
   disabled = false,
-  error = false
+  error = false,
+  showPin = false  // ✅ Defaults to hidden
 }) => {
   const inputs = Array(length).fill(0);
 
@@ -121,7 +123,7 @@ const PinInput: React.FC<PinInputProps> = ({
       {inputs.map((_, index) => (
         <input
           key={index}
-          type="text"
+          type={showPin ? "text" : "password"}  // ✅ Toggle between text and password
           inputMode="numeric"
           pattern="[0-9]*"
           maxLength={1}
@@ -145,10 +147,19 @@ interface KeypadProps {
   onChange: (value: string) => void;
   disabled?: boolean;
   error?: boolean;
+  showPin?: boolean;  // ✅ New prop
+  onShowPinToggle?: (show: boolean) => void;  // ✅ Callback for toggle
 }
 
 // Keypad Component
-const Keypad: React.FC<KeypadProps> = ({ value, onChange, disabled = false, error }) => {
+const Keypad: React.FC<KeypadProps> = ({ 
+  value, 
+  onChange, 
+  disabled = false, 
+  error,
+  showPin = false,  // ✅ Defaults to hidden
+  onShowPinToggle  // ✅ Handle toggle
+}) => {
   const digits = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0];
 
   const handleDigitInput = (digit: number) => {
@@ -187,6 +198,39 @@ const Keypad: React.FC<KeypadProps> = ({ value, onChange, disabled = false, erro
         >
           ✕
         </button>
+        <button
+          onClick={() => onShowPinToggle?.(!showPin)}  // ✅ Toggle visibility
+          disabled={disabled}
+          className={`${styles.keypadButton} ${styles.eyeButton}`}
+          title={showPin ? "Hide PIN" : "Show PIN"}
+          aria-label={showPin ? "Hide PIN" : "Show PIN"}
+        >
+          {showPin ? (
+            // Eye open icon
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" />
+            </svg>
+          ) : (
+            // Eye closed/hidden icon
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <line x1="1" y1="1" x2="23" y2="23" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          )}
+        </button>
       </div>
     </div>
   );
@@ -205,6 +249,7 @@ export default function Otp() {
   const [remainingSeconds, setRemainingSeconds] = useState(0);
   const [isRequesting, setIsRequesting] = useState(false);
   const [canGoBack, setCanGoBack] = useState(false);
+  const [showPin, setShowPin] = useState(false);  // ✅ PIN visibility state, default hidden
 
   const disableOperation = isLoading || isRequesting ;
 
@@ -223,7 +268,10 @@ export default function Otp() {
   const verifyOTP = async () => {
     if (pinValue.length !== 6 || !pinController.isProvided) return;
     await nav.pop();
-    await pinController.getter().action(pinValue);
+     requestAnimationFrame( async () => {
+          await pinController.getter().action(pinValue);
+        });
+    
   };
 
   // Auto-submit when OTP is complete
@@ -277,6 +325,7 @@ export default function Otp() {
               onChange={setOtpValue}
               disabled={isLoading}
               error={!!error}
+              showPin={showPin}  // ✅ Pass visibility state
             />
           )}
 
@@ -297,6 +346,8 @@ export default function Otp() {
             onChange={setOtpValue}
             disabled={isLoading}
             error={!!error}
+            showPin={showPin}  // ✅ Pass visibility state
+            onShowPinToggle={setShowPin}  // ✅ Pass callback
           />
         </div>
       </div>
