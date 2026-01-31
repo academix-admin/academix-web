@@ -123,11 +123,11 @@ const PinInput: React.FC<PinInputProps> = ({
       {inputs.map((_, index) => (
         <input
           key={index}
-          type={showPin ? "text" : "password"}  // ✅ Toggle between text and password
+          type="text"
           inputMode="numeric"
           pattern="[0-9]*"
           maxLength={1}
-          value={(value[index] || "")}
+          value={showPin ? (value[index] || "") : (value[index] ? '*' : "")}
           onChange={(e) => handleChange(e, index)}
           onKeyDown={(e) => handleKeyDown(e, index)}
           onPaste={handlePaste}
@@ -135,7 +135,7 @@ const PinInput: React.FC<PinInputProps> = ({
           className={styles.otpInput}
           autoFocus={index === 0 && !error}
           onFocus={(e) => handleFocus(e, index)}
-          autoComplete={showPin ? "off" : `password-${index}`}
+          autoComplete="off"
           spellCheck="false"
           data-lpignore="true"
           data-1p-ignore

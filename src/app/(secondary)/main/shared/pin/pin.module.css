@@ -135,10 +135,6 @@
   font-size: clamp(16px, 6vw, 28px);
   font-weight: 600;
   box-sizing: border-box;
-  /* Ensure password masking works correctly */
-  -webkit-text-security: disc;
-  font-family: 'Courier New', monospace;
-  letter-spacing: 0.2em;
 }
 
 .container_light .otpInput {
@@ -150,11 +146,6 @@
   background-color: #1E1E1E;
   color: #FFFFFF;
   border-color: #333;
-}
-
-/* When input type is text (showPin = true), remove masking */
-.otpInput[type="text"] {
-  -webkit-text-security: none;
 }
 
 .otpSection {
