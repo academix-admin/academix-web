@@ -83,6 +83,7 @@ export default function QuizChallenge(props: QuizChallengeProps) {
     return { 
       inUse: selectedPayout && selectedRule, 
       action: async (pin: string) => {
+        withdrawBottomController.open();
         await handleEngage(pin);
       }
     };
@@ -308,9 +309,8 @@ export default function QuizChallenge(props: QuizChallengeProps) {
             onClick={() => withdrawBottomController.open()}
             type="button"
             className={styles.continueButton}
-            aria-disabled={quizLoading}
           >
-            {quizLoading ? <span className={styles.spinner}></span> : t('engage_text')}
+            {t('engage_text')}
           </button>
         )}
       </div>
@@ -437,9 +437,10 @@ export default function QuizChallenge(props: QuizChallengeProps) {
               onClick={getUserPin}
               type="button"
               className={styles.continueButton}
-              disabled={!bothCheck}
+              disabled={!bothCheck || quizLoading}
+              aria-disabled={!quizLoading}
             >
-              {t('pay_text')}
+              {quizLoading ? <span className={styles.spinner}></span> : t('pay_text')}
             </button>
           </div>
         </div>
