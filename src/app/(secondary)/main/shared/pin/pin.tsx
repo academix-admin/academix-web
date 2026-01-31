@@ -222,7 +222,7 @@ export default function Otp() {
   // Handle Pin completion
   const verifyOTP = async () => {
     if (pinValue.length !== 6 || !pinController.isProvided) return;
-    nav.pop();
+    await nav.pop();
     pinController.getter().action(pinValue);
   };
 
