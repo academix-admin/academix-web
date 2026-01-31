@@ -262,16 +262,6 @@ export default function Otp() {
             </button>
           )}
           <h1 className={styles.title}>{t('pin_text')}</h1>
-          <Link className={styles.logoContainer} href="/">
-            <Image
-              className={styles.logo}
-              src="/assets/image/academix-logo.png"
-              alt="Academix Logo"
-              width={40}
-              height={40}
-              priority
-            />
-          </Link>
         </div>
       </header>
 
