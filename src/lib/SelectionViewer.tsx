@@ -324,7 +324,7 @@ const SelectionViewer: React.FC<SelectionViewerProps> = ({
   const handleSearchFocus = () => {
     setIsSearchFocused(true);
     if (sheetRef.current) {
-      sheetRef.current.snapTo(snapPoints.length - 1); // Snap to max height
+      sheetRef.current.snapTo(snapPoints.length - 1); // Snap to max height (last index)
     }
     searchProp?.onFocus?.();
   };
@@ -383,7 +383,7 @@ const SelectionViewer: React.FC<SelectionViewerProps> = ({
       snapPoints={snapPoints}
       initialSnap={initialSnap}
       onSnap={setActiveSnap}
-      modalEffectRootId="root"
+      detent="content"
       style={{ zIndex }}
     >
       <Sheet.Container

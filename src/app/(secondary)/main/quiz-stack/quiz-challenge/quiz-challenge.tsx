@@ -91,7 +91,7 @@ export default function QuizChallenge(props: QuizChallengeProps) {
 
   useEffect(() => {
     if (!isHydrated) return;
-    const getQuiz = quizModels.find((e) => e.topicsId === topicsId);
+    const getQuiz = quizModels.find((e: UserDisplayQuizTopicModel) => e.topicsId === topicsId);
 
     if (getQuiz) {
       setCurrentQuiz(getQuiz);
@@ -224,7 +224,7 @@ export default function QuizChallenge(props: QuizChallengeProps) {
 
         setActiveQuizTopicModel(quizModel);
         // withdrawBottomController.close();
-        await nav.pushAndPopUntil('quiz_commitment', (entry) => entry.key === 'quiz_page', {
+        await nav.pushAndPopUntil('quiz_commitment', (entry: any) => entry.key === 'quiz_page', {
           poolsId: poolsId,
           action: 'active'
         });
@@ -329,8 +329,7 @@ export default function QuizChallenge(props: QuizChallengeProps) {
         layoutProp={{
           backgroundColor: theme === 'light' ? "#fff" : "#121212",
           handleColor: "#888",
-          handleWidth: "48px",
-          maxHeight: '92dvh'
+          handleWidth: "48px"
         }}
         closeThreshold={0.2}
         zIndex={1000}

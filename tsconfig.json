@@ -37,7 +37,9 @@
   ],
   "exclude": [
     "node_modules",
-    "src/lib/*copy*.tsx",
-    "src/lib/*copy*.ts"
+    "**/*copy*.tsx",
+    "**/*copy*.ts",
+    "**/*Original*.tsx",
+    "**/*Original*.ts"
   ]
 }
