@@ -249,7 +249,7 @@ const RoleSelector = ({
 
   return (
     <div className={styles.role_scroll_container}>
-      <button
+     <button
         className={`${styles.scroll_button} ${styles[`scroll_button_${theme}`]}`}
         onClick={() => scroll('left')}
         aria-label="Scroll roles left"
@@ -308,24 +308,20 @@ const OneVsOneView = ({ data, roles }: { data: ChallengeConfig; roles: string[] 
 
   return (
     <div className={`${styles.card} ${styles[`card_${theme}`]}`}>
-      <h4 className={`${styles.revenue_role} ${styles[`revenue_role_${theme}`]}`}>{t('revenue_role')}</h4>
-      <RoleSelector
-        roles={roles}
-        selectedRole={selectedRole}
-        onSelect={setSelectedRole}
-      />
 
+        <h4 className={`${styles.revenue_role} ${styles[`revenue_role_${theme}`]}`}>{t('challenge_text')}</h4>
       <div className={styles.carouselContainer}>
-        <div className={`${styles.navButton} ${styles.navPrev} ${styles[`navButton_${theme}`]}`}>
+       { data.challengeOptions.length > 3 && <div className={`${styles.navButton} ${styles.navPrev} ${styles[`navButton_${theme}`]}`}>
           <svg viewBox="0 0 24 24" width="24" height="24">
             <path fill="currentColor" d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6z"/>
           </svg>
-        </div>
-        <div className={`${styles.navButton} ${styles.navNext} ${styles[`navButton_${theme}`]}`}>
+        </div>}
+        { data.challengeOptions.length > 3 && <div className={`${styles.navButton} ${styles.navNext} ${styles[`navButton_${theme}`]}`}>
           <svg viewBox="0 0 24 24" width="24" height="24">
             <path fill="currentColor" d="M8.59 16.59L13.17 12l-4.58-4.59L10 6l6 6-6 6z"/>
           </svg>
-        </div>
+        </div>}
+
         <Swiper
           modules={[Navigation]}
           loop={data.challengeOptions.length > 3}
@@ -427,6 +423,12 @@ const OneVsOneView = ({ data, roles }: { data: ChallengeConfig; roles: string[] 
           </span>
         </div>
       </div>
+            <h4 className={`${styles.revenue_role} ${styles[`revenue_role_${theme}`]}`}>{t('revenue_role')}</h4>
+      <RoleSelector
+        roles={roles}
+        selectedRole={selectedRole}
+        onSelect={setSelectedRole}
+      />
     </div>
   );
 };
@@ -538,24 +540,20 @@ const MultiplayerView = ({ data, roles }: { data: ChallengeConfig; roles: string
 
   return (
     <div className={`${styles.card} ${styles[`card_${theme}`]}`}>
-      <h4 className={`${styles.revenue_role} ${styles[`revenue_role_${theme}`]}`}>{t('revenue_role')}</h4>
-      <RoleSelector
-        roles={roles}
-        selectedRole={selectedRole}
-        onSelect={setSelectedRole}
-      />
 
-      <div className={styles.carouselContainer}>
-        <div className={`${styles.navButton} ${styles.navPrev} ${styles[`navButton_${theme}`]}`}>
+        <h4 className={`${styles.revenue_role} ${styles[`revenue_role_${theme}`]}`}>{t('challenge_text')}</h4>
+
+      <div className={`${styles.carouselContainer} ${styles[`carouselContainer_quiz`]}`}>
+        { data.challengeOptions.length > 3 && <div className={`${styles.navButton} ${styles.navPrev} ${styles[`navButton_${theme}`]}`}>
           <svg viewBox="0 0 24 24" width="24" height="24">
             <path fill="currentColor" d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6z"/>
           </svg>
-        </div>
-        <div className={`${styles.navButton} ${styles.navNext} ${styles[`navButton_${theme}`]}`}>
+        </div>}
+        { data.challengeOptions.length > 3 && <div className={`${styles.navButton} ${styles.navNext} ${styles[`navButton_${theme}`]}`}>
           <svg viewBox="0 0 24 24" width="24" height="24">
             <path fill="currentColor" d="M8.59 16.59L13.17 12l-4.58-4.59L10 6l6 6-6 6z"/>
           </svg>
-        </div>
+        </div>}
         <Swiper
           modules={[Navigation]}
           loop={data.challengeOptions.length > 3}
@@ -570,7 +568,7 @@ const MultiplayerView = ({ data, roles }: { data: ChallengeConfig; roles: string
             768: { slidesPerView: 2, spaceBetween: 24 },
             1024: { slidesPerView: 3, spaceBetween: 32 },
           }}
-          className={styles.swiper}
+          className= {`${styles.swiper} ${styles[`swiper_quiz`]}`}
         >
           {data.challengeOptions.map((challenge) => (
             <SwiperSlide key={challenge.challengeIdentity}>
@@ -760,6 +758,12 @@ const MultiplayerView = ({ data, roles }: { data: ChallengeConfig; roles: string
           </span>
         </div>
       </div>
+            <h4 className={`${styles.revenue_role} ${styles[`revenue_role_${theme}`]}`}>{t('revenue_role')}</h4>
+      <RoleSelector
+        roles={roles}
+        selectedRole={selectedRole}
+        onSelect={setSelectedRole}
+      />
     </div>
   );
 };
@@ -919,7 +923,7 @@ export default function Payout({ searchParams }: PayoutPageProps) {
       </h4>)}
 
       {activeTab && payoutState === 'data' && (
-        <div className={`${styles.innerBody} ${styles[`innerBody_${resolvedTheme}`]}`}>
+        <div className={`${styles.innerBody} ${styles[`innerBody_${resolvedTheme}`]}  ${styles[`innerBody_quiz`]}`}>
           <h4 className={`${styles.game_mode} ${styles[`game_mode_${resolvedTheme}`]}`}>{t('game_mode')}</h4>
           <div className={styles.tab_switcher}>
             {challengeData.map((challenge, index) => (

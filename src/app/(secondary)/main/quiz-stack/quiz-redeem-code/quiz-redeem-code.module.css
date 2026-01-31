@@ -171,8 +171,9 @@
 
 
 .spinner {
-  border: 3px solid rgba(255, 255, 255, 0.3);
+  border: 3px solid #1D3D1E;
   border-top: 3px solid white;
+  border-bottom: 3px solid white;
   border-radius: 50%;
   width: 35px;
   height: 35px;

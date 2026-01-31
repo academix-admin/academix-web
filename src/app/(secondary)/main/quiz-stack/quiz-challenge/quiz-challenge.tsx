@@ -80,13 +80,10 @@ export default function QuizChallenge(props: QuizChallengeProps) {
   const [activeQuiz, , setActiveQuizTopicModel] = useActiveQuiz(lang);
 
   useProvideObject<PinData>('pin_controller', () => {
-    console.log('selectedRule', selectedRule);
-    console.log('selectedPayout', selectedRule);
     return { 
       inUse: selectedPayout && selectedRule, 
       action: async (pin: string) => {
-        console.log('PIN entered for quiz engagement:', pin);
-        // handleEngage
+        await handleEngage(pin);
       }
     };
   }, {scope: 'pin_scope', dependencies: [selectedRule, selectedPayout]});
@@ -139,7 +136,7 @@ export default function QuizChallenge(props: QuizChallengeProps) {
       return await response.json();
     } catch (error) {
       console.error("Engage Quiz API error:", error);
-      throw error;
+      throw error
     }
   };
 
@@ -148,7 +145,7 @@ export default function QuizChallenge(props: QuizChallengeProps) {
      nav.pushWith('pin', { requireObjects: ['pin_controller']});
   }
 
-  const handleEngage = async () => {
+  const handleEngage = async (userPin: string) => {
     if (!userData || !selectedGameModeModel || !selectedChallengeModel || !selectedRule || !selectedPayout) return;
 
     try {
@@ -203,13 +200,14 @@ export default function QuizChallenge(props: QuizChallengeProps) {
         country: paramatical.country,
         gender: paramatical.gender,
         age: paramatical.age,
-        userPin: '111111'
+        userPin: userPin
       };
 
       const engagement = await engageQuiz(jwt, requestData);
       const status = engagement.status;
 
       console.log(engagement);
+      console.log(status);
 
       if (status === 'PoolStatus.engaged' || status === 'PoolStatus.this_active') {
         const quizModel = new UserDisplayQuizTopicModel(engagement.quiz_pool);
@@ -310,8 +308,9 @@ export default function QuizChallenge(props: QuizChallengeProps) {
             onClick={() => withdrawBottomController.open()}
             type="button"
             className={styles.continueButton}
+            aria-disabled={quizLoading}
           >
-            {t('engage_text')}
+            {quizLoading ? <span className={styles.spinner}></span> : t('engage_text')}
           </button>
         )}
       </div>
@@ -438,10 +437,9 @@ export default function QuizChallenge(props: QuizChallengeProps) {
               onClick={getUserPin}
               type="button"
               className={styles.continueButton}
-              disabled={quizLoading || !bothCheck}
-              aria-disabled={quizLoading}
+              disabled={!bothCheck}
             >
-              {quizLoading ? <span className={styles.spinner}></span> : t('pay_text')}
+              {t('pay_text')}
             </button>
           </div>
         </div>

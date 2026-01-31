@@ -97,6 +97,10 @@
   transition: all 0.3s ease;
 }
 
+.innerBody_quiz{
+  width: 100%;
+}
+
 .innerBody_light {
   border: 1px solid #e0e0e0;
   background-color: #ffffff;
@@ -398,11 +402,19 @@
   padding: 0 3rem;
 }
 
+.carouselContainer_quiz {
+  padding: 0rem 0;
+}
+
 .swiper {
   padding: 2rem 1.5rem;
   box-sizing: border-box;
   height: auto;
   width: 100%;
+}
+
+.swiper_quiz {
+  padding: 0rem 1.5rem;
 }
 
 .swiper-slide {
@@ -969,11 +981,15 @@
 /* Responsive Adjustments */
 @media (max-width: 1024px) {
   .innerBody {
-    width: 80%;
+    width: 100%;
   }
 
   .carouselContainer {
     padding: 2rem 0;
+  }
+
+  .carouselContainer_quiz{
+    padding: 0rem 0;
   }
 }
 
@@ -1029,6 +1045,10 @@
 
   .swiper {
     padding: 0rem 2.5rem;
+  }
+
+  .swiper_quiz {
+    padding: 0rem 1.5rem;
   }
 }
 
@@ -1109,6 +1129,10 @@
 
   .swiper {
     padding: 0 2rem;
+  }
+
+  .swiper_quiz {
+    padding: 0rem 0.5rem;
   }
 
   .payout_breakdown, .creator_info {
