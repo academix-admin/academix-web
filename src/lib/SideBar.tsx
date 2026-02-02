@@ -235,15 +235,17 @@ export default function Sidebar({
   useInjectSidebarStyles();
 
   const [mounted, setMounted] = useState(false);
-  useEffect(() => {
+  useEffect(() =>  {
     setMounted(true);
   }, []);
 
   const [customWidth, setCustomWidth] = useState<number | null>(null);
   const [isResizing, setIsResizing] = useState(false);
-  const [forceCollapsedLayout, setForceCollapsedLayout] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
   const navRef = useRef<HTMLElement>(null);
   const itemsRef = useRef<Map<string, HTMLElement>>(new Map());
+  const shouldCollapseRef = useRef<boolean>(false);
+  const maxItemWidthRef = useRef<number>(0);
   const controlled = activeId !== undefined;
   const [internalActive, setInternalActive] = useState(navKeys[0]?.id);
   const active = controlled ? activeId : internalActive;
@@ -253,55 +255,121 @@ export default function Sidebar({
   const expandedPx = parseFloat(widthExpanded);
   const collapsedPx = parseFloat(widthCollapsed);
   const currentWidth = customWidth || expandedPx;
-  const useCollapsedLayout = forceCollapsedLayout;
+
+  // Log collapsed state changes
+  useEffect(() => {
+    // State change tracking removed
+  }, [collapsed, currentWidth, expandedPx, collapsedPx]);
 
   // Handle resize
   useEffect(() => {
     if (!isResizing) return;
 
+    const checkOverflow = (width: number) => {
+      // Always measure as if expanded (with text visible)
+      if (navRef.current && itemsRef.current.size > 0) {
+        const navElement = navRef.current;
+        const navPaddingLeft = parseFloat(getComputedStyle(navElement).paddingLeft) || 0;
+        const navPaddingRight = parseFloat(getComputedStyle(navElement).paddingRight) || 0;
+        const availableWidth = width - navPaddingLeft - navPaddingRight;
+
+        let wouldOverflow = false;
+        let highestItemWidth = 0;
+        let debugInfo: any = {
+          width,
+          availableWidth,
+          navPaddingLeft,
+          navPaddingRight,
+          items: [] as any[]
+        };
+
+        itemsRef.current.forEach((itemElement) => {
+          // Get actual computed styles from the item container
+          const itemStyle = getComputedStyle(itemElement);
+          const marginLeft = parseFloat(itemStyle.marginLeft) || 0;
+          const marginRight = parseFloat(itemStyle.marginRight) || 0;
+          const paddingLeft = parseFloat(itemStyle.paddingLeft) || 0;
+          const paddingRight = parseFloat(itemStyle.paddingRight) || 0;
+          const gap = parseFloat(itemStyle.gap) || 0;
+          
+          // Measure icon directly
+          const iconElement = itemElement.querySelector('.sidebar-item-icon') as HTMLElement;
+          const iconWidth = iconElement ? iconElement.scrollWidth : 0;
+          
+          // Measure text directly
+          const textElement = itemElement.querySelector('.sidebar-item-text') as HTMLElement;
+          const textWidth = textElement ? textElement.scrollWidth : 0;
+          
+          // Only check if there's text (expanded state)
+          if (textWidth > 0) {
+            // Calculate the exact needed width: margins + padding + icon + gap + text
+            const expandedItemWidth = marginLeft + marginRight + paddingLeft + paddingRight + iconWidth + gap + textWidth;
+            highestItemWidth = Math.max(highestItemWidth, expandedItemWidth);
+            
+            const itemOverflows = expandedItemWidth > availableWidth;
+            
+            if (itemOverflows) {
+              wouldOverflow = true;
+            }
+
+            debugInfo.items.push({
+              text: textElement.textContent,
+              iconWidth: Math.round(iconWidth * 100) / 100,
+              textWidth: Math.round(textWidth * 100) / 100,
+              marginLeft: Math.round(marginLeft * 100) / 100,
+              marginRight: Math.round(marginRight * 100) / 100,
+              paddingLeft: Math.round(paddingLeft * 100) / 100,
+              paddingRight: Math.round(paddingRight * 100) / 100,
+              gap: Math.round(gap * 100) / 100,
+              expandedItemWidth: Math.round(expandedItemWidth * 100) / 100,
+              overflows: itemOverflows
+            });
+          }
+        });
+
+        // Capture max width when we detect overflow while below expandedPx
+        // Always capture (not just first time) to maintain threshold across expand/collapse cycles
+        if (width < expandedPx && wouldOverflow && highestItemWidth > 0) {
+          if (maxItemWidthRef.current === 0 || maxItemWidthRef.current !== highestItemWidth) {
+            maxItemWidthRef.current = highestItemWidth;
+          }
+        }
+
+        // If we have a captured threshold, use it directly without remeasuring collapsed items
+        if (width < expandedPx && maxItemWidthRef.current > 0) {
+          return maxItemWidthRef.current > availableWidth;
+        }
+
+        // If we measured 0px for all items, they're not visible (sidebar is collapsed)
+        if (highestItemWidth === 0) {
+          // If we have a stored threshold from previous measurement, use it to decide
+          if (maxItemWidthRef.current > 0) {
+            const wouldOverflowNow = maxItemWidthRef.current > availableWidth;
+            return wouldOverflowNow;
+          }
+          // If no stored threshold yet, allow expansion to measure items properly
+          return false;
+        }
+
+        return wouldOverflow;
+      }
+      return false;
+    };
+
     const handleMouseMove = (e: MouseEvent) => {
       const newWidth = Math.max(collapsedPx, Math.min(e.clientX, maxWidth));
       setCustomWidth(newWidth);
+      
+      // Calculate decision but don't apply it yet
+      const shouldCollapse = checkOverflow(newWidth);
+      shouldCollapseRef.current = shouldCollapse;
     };
 
     const handleMouseUp = () => {
       setIsResizing(false);
-
-      // Check if content overflows at current width
-      if (navRef.current) {
-        const navElement = navRef.current;
-        const navPaddingLeft = parseFloat(getComputedStyle(navElement).paddingLeft) || 0;
-        const navPaddingRight = parseFloat(getComputedStyle(navElement).paddingRight) || 0;
-        const availableWidth = navElement.clientWidth - navPaddingLeft - navPaddingRight;
-
-        let hasOverflow = false;
-
-        if (itemsRef.current.size > 0) {
-          itemsRef.current.forEach((itemElement) => {
-            const itemStyle = getComputedStyle(itemElement);
-            const marginLeft = parseFloat(itemStyle.marginLeft) || 0;
-            const marginRight = parseFloat(itemStyle.marginRight) || 0;
-            const paddingLeft = parseFloat(itemStyle.paddingLeft) || 0;
-            const paddingRight = parseFloat(itemStyle.paddingRight) || 0;
-            const gap = parseFloat(itemStyle.gap) || 12;
-            
-            const iconElement = itemElement.querySelector('.sidebar-item-icon') as HTMLElement;
-            const iconWidth = iconElement ? iconElement.scrollWidth : 20;
-            
-            const textElement = itemElement.querySelector('.sidebar-item-text') as HTMLElement;
-            const textWidth = textElement ? textElement.scrollWidth : 0;
-            
-            const contentWidth = textWidth > 0 ? iconWidth + gap + textWidth : iconWidth;
-            const totalItemWidth = marginLeft + marginRight + paddingLeft + paddingRight + contentWidth;
-            
-            if (totalItemWidth > availableWidth) {
-              hasOverflow = true;
-            }
-          });
-        }
-        
-        setForceCollapsedLayout(hasOverflow);
-      }
+      
+      // Apply the decision made during move
+      setCollapsed(shouldCollapseRef.current);
     };
 
     document.addEventListener('mousemove', handleMouseMove);
@@ -311,10 +379,15 @@ export default function Sidebar({
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [isResizing, collapsedPx, maxWidth]);
+  }, [isResizing, collapsedPx, maxWidth, currentWidth]);
 
   const handleResizeStart = (e: React.MouseEvent) => {
     e.preventDefault();
+    // Only reset threshold if we're starting from expanded state at or above expandedPx
+    // If already collapsed, keep the threshold for this resize session
+    if (!collapsed || currentWidth >= expandedPx) {
+      maxItemWidthRef.current = 0;
+    }
     setIsResizing(true);
   };
 
@@ -322,7 +395,8 @@ export default function Sidebar({
     if (!controlled) setInternalActive(item.id);
     onChange?.(item.id, item);
   };
-    if (!mounted) return null;
+
+  if (!mounted) return null;
 
   return (
     <aside
@@ -337,16 +411,21 @@ export default function Sidebar({
     >
       {/* Header */}
       <div className="sidebar-header">
-        {!useCollapsedLayout && logo && <div className="sidebar-logo">{logo}</div>}
+        {!collapsed && logo && <div className="sidebar-logo">{logo}</div>}
 
         <div
           className="sidebar-toggle"
           onClick={() => {
-            setForceCollapsedLayout(!forceCollapsedLayout);
+            if(collapsed){
+              setCustomWidth(parseFloat(widthExpanded));
+            }else{
+              setCustomWidth(parseFloat(widthCollapsed));
+            }
+            setCollapsed(!collapsed);
           }}
-          title={useCollapsedLayout ? "Expand sidebar" : "Collapse sidebar"}
+          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
-          {useCollapsedLayout ? expandIcon : collapseIcon}
+          {collapsed ? expandIcon : collapseIcon}
         </div>
       </div>
 
@@ -369,14 +448,14 @@ export default function Sidebar({
                 color: isActive ? activeColor : inactiveColor,
                 fontSize: textSize,
                 fontWeight,
-                margin: useCollapsedLayout ? '4px 12px' : '4px 8px',
-                justifyContent: useCollapsedLayout ? 'center' : 'flex-start'
+                margin: collapsed ? '4px 12px' : '4px 8px',
+                justifyContent: collapsed ? 'center' : 'flex-start'
               }}
               role="button"
               tabIndex={0}
               onClick={() => handleClick(item)}
               onKeyDown={(e) => e.key === 'Enter' && handleClick(item)}
-              title={useCollapsedLayout ? item.text : undefined}
+              title={collapsed ? item.text : undefined}
             >
               <div className="sidebar-item-icon" style={{
                 fontSize: iconSize,
@@ -385,7 +464,7 @@ export default function Sidebar({
               }}>
                 {item.svg}
               </div>
-              {!useCollapsedLayout && (
+              {!collapsed && (
                 <span className="sidebar-item-text">{item.text}</span>
               )}
             </div>
@@ -396,9 +475,9 @@ export default function Sidebar({
       {/* Footer */}
       {footer && (
         <div className="sidebar-footer" style={{
-          padding: useCollapsedLayout ? '16px 12px' : '16px',
+          padding: collapsed ? '16px 12px' : '16px',
           display: 'flex',
-          justifyContent: useCollapsedLayout ? 'center' : 'flex-start'
+          justifyContent: collapsed ? 'center' : 'flex-start'
         }}>
           {footer}
         </div>
