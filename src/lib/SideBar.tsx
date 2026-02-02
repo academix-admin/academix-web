@@ -234,89 +234,73 @@ export default function Sidebar({
 }: SidebarProps) {
   useInjectSidebarStyles();
 
-  const [mounted, setMounted] = useState(false); // ✅ NEW
-      useEffect(() => {
-        setMounted(true);
-      }, []);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
-  const [collapsed, setCollapsed] = useState(false);
   const [customWidth, setCustomWidth] = useState<number | null>(null);
   const [isResizing, setIsResizing] = useState(false);
+  const [forceCollapsedLayout, setForceCollapsedLayout] = useState(false);
   const navRef = useRef<HTMLElement>(null);
   const itemsRef = useRef<Map<string, HTMLElement>>(new Map());
-  const forceCollapsedLayoutRef = useRef<boolean>(false);
-  const resizeStartStateRef = useRef<'collapsed' | 'expanded' | null>(null);
   const controlled = activeId !== undefined;
   const [internalActive, setInternalActive] = useState(navKeys[0]?.id);
   const active = controlled ? activeId : internalActive;
 
-  // Calculate max width: 400px, min is widthCollapsed
+  // Calculate dimensions
   const maxWidth = 400;
   const expandedPx = parseFloat(widthExpanded);
   const collapsedPx = parseFloat(widthCollapsed);
-  const currentExpandedWidth = Math.min(customWidth || expandedPx, maxWidth);
-
-  // Determine if we should use collapsed layout based on zones and overflow
-  const shouldUseCollapsedLayout = currentExpandedWidth <= collapsedPx || forceCollapsedLayoutRef.current;
+  const currentWidth = customWidth || expandedPx;
+  const useCollapsedLayout = forceCollapsedLayout;
 
   // Handle resize
   useEffect(() => {
     if (!isResizing) return;
 
     const handleMouseMove = (e: MouseEvent) => {
-      // Allow resizing from collapsed width upward
       const newWidth = Math.max(collapsedPx, Math.min(e.clientX, maxWidth));
       setCustomWidth(newWidth);
     };
 
     const handleMouseUp = () => {
       setIsResizing(false);
-      resizeStartStateRef.current = null;
 
       // Check if content overflows at current width
       if (navRef.current) {
         const navElement = navRef.current;
-        const navRect = navElement.getBoundingClientRect();
         const navPaddingLeft = parseFloat(getComputedStyle(navElement).paddingLeft) || 0;
         const navPaddingRight = parseFloat(getComputedStyle(navElement).paddingRight) || 0;
         const availableWidth = navElement.clientWidth - navPaddingLeft - navPaddingRight;
 
-        // Calculate required width for items with content
-        let maxRequiredWidth = 0;
         let hasOverflow = false;
 
         if (itemsRef.current.size > 0) {
-          itemsRef.current.forEach((itemElement, id) => {
+          itemsRef.current.forEach((itemElement) => {
             const itemStyle = getComputedStyle(itemElement);
             const marginLeft = parseFloat(itemStyle.marginLeft) || 0;
             const marginRight = parseFloat(itemStyle.marginRight) || 0;
             const paddingLeft = parseFloat(itemStyle.paddingLeft) || 0;
             const paddingRight = parseFloat(itemStyle.paddingRight) || 0;
-            const gap = parseFloat(itemStyle.gap) || 12; // Default gap from CSS
+            const gap = parseFloat(itemStyle.gap) || 12;
             
-            // Measure icon width
             const iconElement = itemElement.querySelector('.sidebar-item-icon') as HTMLElement;
-            const iconWidth = iconElement ? iconElement.scrollWidth : 20; // Default icon size
+            const iconWidth = iconElement ? iconElement.scrollWidth : 20;
             
-            // Measure text width (even if hidden/overflowing)
             const textElement = itemElement.querySelector('.sidebar-item-text') as HTMLElement;
             const textWidth = textElement ? textElement.scrollWidth : 0;
             
-            // Calculate total content width: icon + gap + text
             const contentWidth = textWidth > 0 ? iconWidth + gap + textWidth : iconWidth;
-            
-            // Add padding and margins
             const totalItemWidth = marginLeft + marginRight + paddingLeft + paddingRight + contentWidth;
             
             if (totalItemWidth > availableWidth) {
               hasOverflow = true;
             }
-            
-            maxRequiredWidth = Math.max(maxRequiredWidth, totalItemWidth);
           });
         }
         
-        forceCollapsedLayoutRef.current = hasOverflow;
+        setForceCollapsedLayout(hasOverflow);
       }
     };
 
@@ -327,35 +311,12 @@ export default function Sidebar({
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [isResizing, maxWidth, collapsedPx, currentExpandedWidth, expandedPx]);
-
-  // Update CSS variable when width changes
-  useEffect(() => {
-    if (typeof document === 'undefined') return;
-    document.documentElement.style.setProperty('--sidebar-width', `${currentExpandedWidth}px`);
-  }, [currentExpandedWidth]);
+  }, [isResizing, collapsedPx, maxWidth]);
 
   const handleResizeStart = (e: React.MouseEvent) => {
     e.preventDefault();
-    // Track if we're starting from collapsed or expanded state
-    resizeStartStateRef.current = shouldUseCollapsedLayout ? 'collapsed' : 'expanded';
     setIsResizing(true);
   };
-
-
-  useLayoutEffect(() => {
-    const expandedPx = parseFloat(widthExpanded);
-    const collapsedPx = parseFloat(widthCollapsed);
-    const borderPx = getBorderWidth(borderRight);
-    const finalWidth = (collapsed ? collapsedPx : expandedPx) + borderPx;
-
-    document.documentElement.style.setProperty(
-      "--sidebar-width",
-      `${finalWidth}px`
-    );
-  }, [collapsed, widthExpanded, widthCollapsed, borderRight]);
-
-
 
   const handleClick = (item: NavItem) => {
     if (!controlled) setInternalActive(item.id);
@@ -367,7 +328,7 @@ export default function Sidebar({
     <aside
       className={`sidebar ${className}`}
       style={{
-        width: collapsed ? widthCollapsed : `${currentExpandedWidth}px`,
+        width: `${currentWidth}px`,
         background: backgroundColor,
         borderRight,
         boxShadow: shadow,
@@ -376,23 +337,16 @@ export default function Sidebar({
     >
       {/* Header */}
       <div className="sidebar-header">
-        {!(collapsed || shouldUseCollapsedLayout) && logo && <div className="sidebar-logo">{logo}</div>}
+        {!useCollapsedLayout && logo && <div className="sidebar-logo">{logo}</div>}
 
         <div
           className="sidebar-toggle"
           onClick={() => {
-            // Expand when below widthExpanded, collapse when at or above
-            if (currentExpandedWidth < expandedPx) {
-              setCustomWidth(expandedPx);
-              forceCollapsedLayoutRef.current = false;
-              setCollapsed(false);
-            } else {
-              setCollapsed(!collapsed);
-            }
+            setForceCollapsedLayout(!forceCollapsedLayout);
           }}
-          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          title={useCollapsedLayout ? "Expand sidebar" : "Collapse sidebar"}
         >
-          {collapsed || shouldUseCollapsedLayout ? expandIcon : collapseIcon}
+          {useCollapsedLayout ? expandIcon : collapseIcon}
         </div>
       </div>
 
@@ -400,7 +354,6 @@ export default function Sidebar({
       <nav className="sidebar-nav" ref={navRef}>
         {navKeys.map((item) => {
           const isActive = active === item.id;
-          const useCollapsed = collapsed || shouldUseCollapsedLayout;
           return (
             <div
               key={item.id}
@@ -416,14 +369,14 @@ export default function Sidebar({
                 color: isActive ? activeColor : inactiveColor,
                 fontSize: textSize,
                 fontWeight,
-                margin: useCollapsed ? '4px 12px' : '4px 8px',
-                justifyContent: useCollapsed ? 'center' : 'flex-start'
+                margin: useCollapsedLayout ? '4px 12px' : '4px 8px',
+                justifyContent: useCollapsedLayout ? 'center' : 'flex-start'
               }}
               role="button"
               tabIndex={0}
               onClick={() => handleClick(item)}
               onKeyDown={(e) => e.key === 'Enter' && handleClick(item)}
-              title={useCollapsed ? item.text : undefined}
+              title={useCollapsedLayout ? item.text : undefined}
             >
               <div className="sidebar-item-icon" style={{
                 fontSize: iconSize,
@@ -432,7 +385,7 @@ export default function Sidebar({
               }}>
                 {item.svg}
               </div>
-              {!useCollapsed && (
+              {!useCollapsedLayout && (
                 <span className="sidebar-item-text">{item.text}</span>
               )}
             </div>
@@ -443,9 +396,9 @@ export default function Sidebar({
       {/* Footer */}
       {footer && (
         <div className="sidebar-footer" style={{
-          padding: (collapsed || shouldUseCollapsedLayout) ? '16px 12px' : '16px',
+          padding: useCollapsedLayout ? '16px 12px' : '16px',
           display: 'flex',
-          justifyContent: (collapsed || shouldUseCollapsedLayout) ? 'center' : 'flex-start'
+          justifyContent: useCollapsedLayout ? 'center' : 'flex-start'
         }}>
           {footer}
         </div>
