@@ -100,7 +100,7 @@ export default function QuizPayoutAcceptance({ onAcceptanceChange, initialValue 
           handleColor: "#888",
           handleWidth: "48px",
           maxWidth: '800px',
-          maxHeight: '92dvh'
+          maxHeight: '88dvh'
         }}
         closeThreshold={0.2}
         zIndex={1000}

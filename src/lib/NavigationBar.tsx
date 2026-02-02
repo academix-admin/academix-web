@@ -60,11 +60,14 @@ export interface NavigationBarProps {
 const useInjectStyles = () => {
   useEffect(() => {
     if (typeof document === 'undefined') return;
-    if (document.getElementById('navigation-bar-styles')) return;
+    
+    const styleId = 'navigation-bar-styles';
+    let styleTag = document.getElementById(styleId) as HTMLStyleElement | null;
 
-    const styleTag = document.createElement('style');
-    styleTag.id = 'navigation-bar-styles';
-    styleTag.innerHTML = `
+    if (!styleTag) {
+      styleTag = document.createElement('style');
+      styleTag.id = styleId;
+      styleTag.innerHTML = `
       .navigation-bar {
         position: fixed;
         bottom: 0;
@@ -114,7 +117,15 @@ const useInjectStyles = () => {
       .fab.right { right: 16px; }
       .fab.hidden { opacity: 0; transform: scale(0.9); pointer-events: none; }
     `;
-    document.head.appendChild(styleTag);
+      document.head.appendChild(styleTag);
+    }
+
+    // Cleanup on unmount
+    return () => {
+      if (styleTag && document.head.contains(styleTag)) {
+        document.head.removeChild(styleTag);
+      }
+    };
   }, []);
 };
 

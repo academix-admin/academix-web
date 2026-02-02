@@ -6,7 +6,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import Image from 'next/image';
 import styles from './quiz-commitment.module.css';
 import { supabaseBrowser } from '@/lib/supabase/client';
-import { useNav, usePageLifecycle } from "@/lib/NavigationStack";
+import { useNav, usePageLifecycle, useProvideObject } from "@/lib/NavigationStack";
 import { capitalizeWords } from '@/utils/textUtils';
 import { getParamatical } from '@/utils/checkers';
 import { useUserData } from '@/lib/stacks/user-stack';
@@ -42,6 +42,7 @@ import { poolsSubscriptionManager } from '@/lib/managers/PoolsQuizTopicSubscript
 import { PoolChangeEvent } from '@/lib/managers/PoolsQuizTopicSubscriptionManager';
 import { useAwaitableRouter } from "@/hooks/useAwaitableRouter";
 import { useQuizDisplay } from "@/lib/stacks/quiz-display-stack";
+import { PinData } from '@/models/pin-data';
 
 interface LeaveQuizResponse {
   status: string;
@@ -75,7 +76,7 @@ export default function QuizCommitment(props: QuizChallengeProps) {
   const [transactionModels, demandTransactionModels, setTransactionModels] = useTransactionModel(lang);
 
   const [currentQuiz, setCurrentQuiz] = useState<UserDisplayQuizTopicModel | null>(null);
-  const [quizModels,,, { isHydrated: availableHydrated }] = usePublicQuiz(lang, action === 'active' ? 'public' : action);
+  const [quizModels, , , { isHydrated: availableHydrated }] = usePublicQuiz(lang, action === 'active' ? 'public' : action);
   const [selectedRule, setSelectedRule] = useState(false);
   const [selectedPayout, setSelectedPayout] = useState(false);
   const [selectedRedeemCodeModel, setSelectedRedeemCodeModel] = useState<RedeemCodeModel | null>(null);
@@ -86,14 +87,24 @@ export default function QuizCommitment(props: QuizChallengeProps) {
 
   const [withdrawBottomViewerId, withdrawBottomController, withdrawBottomIsOpen] = useBottomController();
 
-  const [activeQuiz, , setActiveQuizTopicModel,  { isHydrated: activeHydrated }] = useActiveQuiz(lang);
+  const [activeQuiz, , setActiveQuizTopicModel, { isHydrated: activeHydrated }] = useActiveQuiz(lang);
   const [membersCount, setMembersCount] = useState<number | null>(null);
 
-  const [quizInfoBottomViewerId, quizInfoBottomController, quizInfoBottomIsOpen,,quizInfoBottomRef] = useBottomController();
+  const [quizInfoBottomViewerId, quizInfoBottomController, quizInfoBottomIsOpen, , quizInfoBottomRef] = useBottomController();
 
   const { controlDisplayMessage, closeDisplay } = useQuizDisplay();
 
   const [toQuizLoading, setToQuizLoading] = useState(false);
+
+  useProvideObject<PinData>('pin_controller', () => {
+    return {
+      inUse: selectedPayout && selectedRule,
+      action: async (pin: string) => {
+        withdrawBottomController.open();
+        await handleEngage(pin);
+      }
+    };
+  }, { scope: 'pin_scope', dependencies: [selectedRule, selectedPayout] });
 
   // Subscribe to changes
   const handlePoolChange = (event: PoolChangeEvent) => {
@@ -106,9 +117,11 @@ export default function QuizCommitment(props: QuizChallengeProps) {
     }
 
     if (eventType === 'DELETE' && eventPoolsId === currentQuiz.quizPool?.poolsId) {
-           if(isTop){setInfoState('deleted');
-           closeDisplay();
-           quizInfoBottomController.open();}
+      if (isTop) {
+        setInfoState('deleted');
+        closeDisplay();
+        quizInfoBottomController.open();
+      }
     } else if (quizPool && quizPool.poolsId === currentQuiz.quizPool?.poolsId) {
 
       // Update the pool
@@ -116,18 +129,20 @@ export default function QuizCommitment(props: QuizChallengeProps) {
       const renewedPool = topicModel?.quizPool?.getStreamedUpdate(quizPool);
       setCurrentQuiz(topicModel.copyWith({ quizPool: renewedPool }));
       //         something else
-            // old status was active, ended
-      if(quizPool.poolsJob === 'PoolJob.pool_ended'){
-            if(isTop){setInfoState('closed');
-            closeDisplay();
-            quizInfoBottomController.open();}
+      // old status was active, ended
+      if (quizPool.poolsJob === 'PoolJob.pool_ended') {
+        if (isTop) {
+          setInfoState('closed');
+          closeDisplay();
+          quizInfoBottomController.open();
+        }
       }
 
     }
   };
 
   useEffect(() => {
-    if(!availableHydrated || !activeHydrated) return;
+    if (!availableHydrated || !activeHydrated) return;
     const getQuiz = action === 'active' ? activeQuiz : quizModels.find((e) => e.quizPool?.poolsId === poolsId);
 
     if (getQuiz && !currentQuiz) {
@@ -136,31 +151,31 @@ export default function QuizCommitment(props: QuizChallengeProps) {
       if (getQuiz.quizPool?.poolsJob && getQuiz.quizPool?.poolsJobEndAt) {
         controlDisplayMessage(getQuiz.quizPool.poolsJob, getQuiz.quizPool.poolsJobEndAt);
       }
-    } else if(isTop) {
-      if(!currentQuiz){
-       nav.popToRoot();
+    } else if (isTop) {
+      if (!currentQuiz) {
+        nav.popToRoot();
       }
     }
   }, [poolsId, availableHydrated, activeHydrated, isTop, action, controlDisplayMessage
-      ]);
+  ]);
 
   useEffect(() => {
-      poolsSubscriptionManager.attachListener(handlePoolChange, !currentQuiz);
+    poolsSubscriptionManager.attachListener(handlePoolChange, !currentQuiz);
 
     return () => {
       poolsSubscriptionManager.removeListener(handlePoolChange);
     };
 
-  }, [handlePoolChange ]);
+  }, [handlePoolChange]);
 
-    // ✅ Clean lifecycle management with embedded hook
-    usePageLifecycle(nav, {
-      onResume: ({ stack, current }) => {
-         if (currentQuiz?.quizPool?.poolsJob && currentQuiz?.quizPool?.poolsJobEndAt) {
-                 controlDisplayMessage(currentQuiz.quizPool.poolsJob, currentQuiz.quizPool.poolsJobEndAt);
-               }
+  // ✅ Clean lifecycle management with embedded hook
+  usePageLifecycle(nav, {
+    onResume: ({ stack, current }) => {
+      if (currentQuiz?.quizPool?.poolsJob && currentQuiz?.quizPool?.poolsJobEndAt) {
+        controlDisplayMessage(currentQuiz.quizPool.poolsJob, currentQuiz.quizPool.poolsJobEndAt);
       }
-    }, [currentQuiz]);
+    }
+  }, [currentQuiz]);
 
   // Function to engage quiz API call
   const engageQuiz = async (jwt: string, data: any): Promise<EngageQuizResponse> => {
@@ -217,8 +232,8 @@ export default function QuizCommitment(props: QuizChallengeProps) {
       );
 
       if (!paramatical) {
-           setQuizLoading(false);
-                  setError(t('error_occurred'));
+        setQuizLoading(false);
+        setError(t('error_occurred'));
         return;
       }
 
@@ -226,9 +241,9 @@ export default function QuizCommitment(props: QuizChallengeProps) {
       const jwt = session.data.session?.access_token;
 
       if (!jwt) {
-               console.log('no JWT token');
-               setQuizLoading(false);
-               setError(t('error_occurred'));
+        console.log('no JWT token');
+        setQuizLoading(false);
+        setError(t('error_occurred'));
         return;
       }
 
@@ -244,36 +259,45 @@ export default function QuizCommitment(props: QuizChallengeProps) {
       const status = leave.status;
 
       if (status === 'PoolActive.success') {
-         if(activeQuiz?.quizPool?.poolsId)poolsSubscriptionManager.removeQuizTopicPool(activeQuiz.quizPool.poolsId);
-         setActiveQuizTopicModel(null);
-         const updatedModels = transactionModels.filter(
-             (m) => m.poolsId !== leave.pools_id
-         );
-         setTransactionModels(updatedModels);
-         if(isTop){setInfoState('left');
-         closeDisplay();
-         quizInfoBottomController.open();}
-      }else if(status === 'PoolActive.no_active' && activeQuiz){
-          if(activeQuiz?.quizPool?.poolsId)poolsSubscriptionManager.removeQuizTopicPool(activeQuiz.quizPool.poolsId);
-         setActiveQuizTopicModel(null);
-         const updatedModels = transactionModels.filter(
-             (m) => m.poolsId !== leave.pools_id
-         );
-         setTransactionModels(updatedModels);
-         if(isTop){setInfoState('left');
-         closeDisplay();
-         quizInfoBottomController.open();}
+        if (activeQuiz?.quizPool?.poolsId) poolsSubscriptionManager.removeQuizTopicPool(activeQuiz.quizPool.poolsId);
+        setActiveQuizTopicModel(null);
+        const updatedModels = transactionModels.filter(
+          (m) => m.poolsId !== leave.pools_id
+        );
+        setTransactionModels(updatedModels);
+        if (isTop) {
+          setInfoState('left');
+          closeDisplay();
+          quizInfoBottomController.open();
+        }
+      } else if (status === 'PoolActive.no_active' && activeQuiz) {
+        if (activeQuiz?.quizPool?.poolsId) poolsSubscriptionManager.removeQuizTopicPool(activeQuiz.quizPool.poolsId);
+        setActiveQuizTopicModel(null);
+        const updatedModels = transactionModels.filter(
+          (m) => m.poolsId !== leave.pools_id
+        );
+        setTransactionModels(updatedModels);
+        if (isTop) {
+          setInfoState('left');
+          closeDisplay();
+          quizInfoBottomController.open();
+        }
       }
-            setQuizLoading(false);
+      setQuizLoading(false);
 
     } catch (error: any) {
       console.error("Top up error:", error);
-            setQuizLoading(false);
-            setError(t('error_occurred'));
+      setQuizLoading(false);
+      setError(t('error_occurred'));
     }
   };
 
-  const handleEngage = async () => {
+  const getUserPin = () => {
+    withdrawBottomController.close();
+    nav.pushWith('pin', { requireObjects: ['pin_controller'] });
+  }
+
+  const handleEngage = async (userPin: string) => {
     if (!userData || !currentQuiz || !selectedRule || !selectedPayout) return;
 
     try {
@@ -327,7 +351,8 @@ export default function QuizCommitment(props: QuizChallengeProps) {
         locale: paramatical.locale,
         country: paramatical.country,
         gender: paramatical.gender,
-        age: paramatical.age
+        age: paramatical.age,
+        userPin: userPin
       };
 
       const engagement = await engageQuiz(jwt, requestData);
@@ -337,18 +362,18 @@ export default function QuizCommitment(props: QuizChallengeProps) {
       if (status === 'PoolStatus.engaged' || status === 'PoolStatus.this_active') {
         const quizModel = new UserDisplayQuizTopicModel(engagement.quiz_pool);
         const transaction = new TransactionModel(engagement.transaction_details);
-        if(engagement.transaction_details) setTransactionModels([transaction,...transactionModels]);
+        if (engagement.transaction_details) setTransactionModels([transaction, ...transactionModels]);
         setActiveQuizTopicModel(quizModel);
-        if(quizModel?.quizPool?.poolsId)poolsSubscriptionManager.addQuizTopicPool(
-                                          {
-                                            poolsId: quizModel.quizPool.poolsId,
-                                            poolsSubscriptionType: 'active'
-                                          },
-                                          {
-                                            override: true,
-                                            update: true
-                                          }
-                                        );
+        if (quizModel?.quizPool?.poolsId) poolsSubscriptionManager.addQuizTopicPool(
+          {
+            poolsId: quizModel.quizPool.poolsId,
+            poolsSubscriptionType: 'active'
+          },
+          {
+            override: true,
+            update: true
+          }
+        );
         await fetchPoolMembers(quizModel);
         withdrawBottomController.close();
         await nav.replaceParam({
@@ -372,7 +397,7 @@ export default function QuizCommitment(props: QuizChallengeProps) {
   };
 
   const fetchPoolMembers = useCallback(async (currentQuiz: UserDisplayQuizTopicModel) => {
-    if(!userData || !currentQuiz)return;
+    if (!userData || !currentQuiz) return;
     try {
 
       const { data, error } = await supabaseBrowser.rpc("get_pools_members_count", {
@@ -392,13 +417,13 @@ export default function QuizCommitment(props: QuizChallengeProps) {
       console.error("[Members] error:", err);
       return;
     } finally {
-           // Schedule next call only if component is still mounted
-           if (isMountedRef.current) {
-             timeoutRef.current = setTimeout(() => {
-               fetchPoolMembers(currentQuiz);
-             }, 10000);
-           }
-         }
+      // Schedule next call only if component is still mounted
+      if (isMountedRef.current) {
+        timeoutRef.current = setTimeout(() => {
+          fetchPoolMembers(currentQuiz);
+        }, 10000);
+      }
+    }
   }, []);
 
   useEffect(() => {
@@ -414,12 +439,12 @@ export default function QuizCommitment(props: QuizChallengeProps) {
 
   const onContinueClick = async () => {
     setToQuizLoading(true);
-    if(!userData || !currentQuiz?.quizPool?.poolsId)return;
+    if (!userData || !currentQuiz?.quizPool?.poolsId) return;
     await replaceAndWait(`/quiz/${currentQuiz.quizPool?.poolsId}`);
     setToQuizLoading(false);
   };
 
-  const onExit =  () => {
+  const onExit = () => {
     quizInfoBottomController.close();
     nav.popToRoot();
   };
@@ -429,21 +454,21 @@ export default function QuizCommitment(props: QuizChallengeProps) {
     return Number(num).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",").replace('.00', '');
   }, []);
 
-  const formatStatus= useCallback((status: string) => {
-        switch (status) {
-          case 'PoolJob.waiting':
-            return t('waiting_time');
-          case 'PoolJob.extended_waiting':
-            return t('extended_time');
-          case 'PoolJob.pool_period':
-            return t('pool_time');
-          case 'PoolJob.start_pool':
-            return t('starting_time');
-          case 'PoolJob.pool_ended':
-            return t('quiz_closed');
-          default:
-            return t('open_quiz');
-        }
+  const formatStatus = useCallback((status: string) => {
+    switch (status) {
+      case 'PoolJob.waiting':
+        return t('waiting_time');
+      case 'PoolJob.extended_waiting':
+        return t('extended_time');
+      case 'PoolJob.pool_period':
+        return t('pool_time');
+      case 'PoolJob.start_pool':
+        return t('starting_time');
+      case 'PoolJob.pool_ended':
+        return t('quiz_closed');
+      default:
+        return t('open_quiz');
+    }
   }, []);
 
   const selectedChallengeModel = currentQuiz?.quizPool?.challengeModel;
@@ -452,8 +477,8 @@ export default function QuizCommitment(props: QuizChallengeProps) {
   const balanceSufficient = balance >= (selectedChallengeModel?.challengePrice || 0);
   const codeSufficient = codeBalance >= (selectedChallengeModel?.challengePrice || 0);
   const bothSufficient = (balance < (selectedChallengeModel?.challengePrice || 0)) &&
-                        (codeBalance < (selectedChallengeModel?.challengePrice || 0)) &&
-                        (balance + codeBalance) >= (selectedChallengeModel?.challengePrice || 0);
+    (codeBalance < (selectedChallengeModel?.challengePrice || 0)) &&
+    (balance + codeBalance) >= (selectedChallengeModel?.challengePrice || 0);
   const codeCheck = codeSufficient || bothSufficient;
   const balanceCheck = codeSufficient ? false : (balanceSufficient || bothSufficient);
   const bothCheck = codeCheck || balanceCheck;
@@ -497,12 +522,12 @@ export default function QuizCommitment(props: QuizChallengeProps) {
       </header>
 
       <div className={styles.innerBody}>
-        {currentQuiz  && <QuizImageViewer imageUrl={currentQuiz.topicsImageUrl} identity={currentQuiz.topicsIdentity} />}
-        {currentQuiz  && <QuizDetailsViewer topicsModel={currentQuiz} />}
-        {currentQuiz  && <QuizChallengeDetails poolsId={currentQuiz?.quizPool?.poolsId || ''} membersCount={membersCount || currentQuiz?.quizPool?.poolsMembersCount || 0} minimumMembers={ currentQuiz?.quizPool?.challengeModel?.challengeMinParticipant || 0} maximumMembers={currentQuiz?.quizPool?.challengeModel?.challengeMaxParticipant || 0} fee={currentQuiz?.quizPool?.challengeModel?.challengePrice || 0} status={currentQuiz?.quizPool?.poolsJob || ''} jobEndAt={currentQuiz?.quizPool?.poolsJobEndAt || ''} />}
-        {currentQuiz  && <QuizStatusInfo status={formatStatus(currentQuiz?.quizPool?.poolsJob || '')} />}
-        {currentQuiz  && <QuizRuleAcceptance onAcceptanceChange={setSelectedRule} canChange={action != 'active'} initialValue={action === 'active'}  />}
-        {currentQuiz  && <QuizPayoutAcceptance onAcceptanceChange={setSelectedPayout} canChange={action != 'active'} initialValue={action === 'active'} challengeId={currentQuiz?.quizPool?.challengeModel?.challengeId || ''} />}
+        {currentQuiz && <QuizImageViewer imageUrl={currentQuiz.topicsImageUrl} identity={currentQuiz.topicsIdentity} />}
+        {currentQuiz && <QuizDetailsViewer topicsModel={currentQuiz} />}
+        {currentQuiz && <QuizChallengeDetails poolsId={currentQuiz?.quizPool?.poolsId || ''} membersCount={membersCount || currentQuiz?.quizPool?.poolsMembersCount || 0} minimumMembers={currentQuiz?.quizPool?.challengeModel?.challengeMinParticipant || 0} maximumMembers={currentQuiz?.quizPool?.challengeModel?.challengeMaxParticipant || 0} fee={currentQuiz?.quizPool?.challengeModel?.challengePrice || 0} status={currentQuiz?.quizPool?.poolsJob || ''} jobEndAt={currentQuiz?.quizPool?.poolsJobEndAt || ''} />}
+        {currentQuiz && <QuizStatusInfo status={formatStatus(currentQuiz?.quizPool?.poolsJob || '')} />}
+        {currentQuiz && <QuizRuleAcceptance onAcceptanceChange={setSelectedRule} canChange={action != 'active'} initialValue={action === 'active'} />}
+        {currentQuiz && <QuizPayoutAcceptance onAcceptanceChange={setSelectedPayout} canChange={action != 'active'} initialValue={action === 'active'} challengeId={currentQuiz?.quizPool?.challengeModel?.challengeId || ''} />}
         {currentQuiz && action != 'active' && selectedRule && selectedPayout && (
           <QuizRedeemCode
             onRedeemCodeSelect={setSelectedRedeemCodeModel}
@@ -520,26 +545,26 @@ export default function QuizCommitment(props: QuizChallengeProps) {
         )}
         {action === 'active' && currentQuiz && (
           <div className={styles.actionsRow}>
-              <button
-                            type="button"
-                            className={styles.removeButton}
-                            disabled={!activeQuiz || activeQuiz.quizPool?.poolsStatus != 'Pools.open'}
-                            onClick={handleLeave}
-                          >
-                                          {quizLoading ? <span className={styles.spinner}></span> : t('leave_text')}
-                          </button>
-              <button
-                          className={styles.continueButton}
-                          onClick={onContinueClick}
-                          disabled={!activeQuiz || !getIsContinueEnabled(activeQuiz)}
-              >
-                              {toQuizLoading ? <span className={styles.spinner}></span> : t('continue')}
-              </button>
-        </div>
+            <button
+              type="button"
+              className={styles.removeButton}
+              disabled={!activeQuiz || activeQuiz.quizPool?.poolsStatus != 'Pools.open'}
+              onClick={handleLeave}
+            >
+              {quizLoading ? <span className={styles.spinner}></span> : t('leave_text')}
+            </button>
+            <button
+              className={styles.continueButton}
+              onClick={onContinueClick}
+              disabled={!activeQuiz || !getIsContinueEnabled(activeQuiz)}
+            >
+              {toQuizLoading ? <span className={styles.spinner}></span> : t('continue')}
+            </button>
+          </div>
         )}
       </div>
 
-      { showBottom && action != 'active' && <BottomViewer
+      {showBottom && action != 'active' && <BottomViewer
         id={withdrawBottomViewerId}
         isOpen={withdrawBottomIsOpen}
         onClose={withdrawBottomController.close}
@@ -657,7 +682,7 @@ export default function QuizCommitment(props: QuizChallengeProps) {
 
             {/* Pay Button */}
             <button
-              onClick={handleEngage}
+              onClick={getUserPin}
               type="button"
               className={styles.continueButton}
               disabled={quizLoading || !bothCheck}
@@ -669,7 +694,7 @@ export default function QuizCommitment(props: QuizChallengeProps) {
         </div>
       </BottomViewer>}
 
-      { currentQuiz && action === 'active' && <BottomViewer
+      {currentQuiz && action === 'active' && <BottomViewer
         ref={quizInfoBottomRef}
         id={quizInfoBottomViewerId}
         isOpen={quizInfoBottomIsOpen}
@@ -689,23 +714,23 @@ export default function QuizCommitment(props: QuizChallengeProps) {
         zIndex={1000}
       >
         <div className={`${styles.dialogContainer} ${styles[`dialogContainer_${theme}`]}`}>
-        <div className={styles.poolInfoContainer}>
-          <h3 className={`${styles.dialogTitle} ${styles[`dialogTitle_${theme}`]}`}>
-            {t('pool_closed')}
-          </h3>
-          <h3 className={`${styles.dialogBody} ${styles[`dialogBody_${theme}`]}`}>
-            {infoState === 'deleted' && tNode('pool_info_reason', {topic: <strong>{currentQuiz?.topicsIdentity || ''}</strong>})}
-            {infoState === 'left' && t('user_left_pool')}
-            {infoState === 'closed' && tNode('pool_already_ended', {topic: <strong>{currentQuiz?.topicsIdentity || ''}</strong>})}
-          </h3>
-          <button
-                        onClick={onExit}
-                        type="button"
-                        className={styles.continueButton}
-                      >
-                        {t('exit_text')}
-          </button>
-        </div>
+          <div className={styles.poolInfoContainer}>
+            <h3 className={`${styles.dialogTitle} ${styles[`dialogTitle_${theme}`]}`}>
+              {t('pool_closed')}
+            </h3>
+            <h3 className={`${styles.dialogBody} ${styles[`dialogBody_${theme}`]}`}>
+              {infoState === 'deleted' && tNode('pool_info_reason', { topic: <strong>{currentQuiz?.topicsIdentity || ''}</strong> })}
+              {infoState === 'left' && t('user_left_pool')}
+              {infoState === 'closed' && tNode('pool_already_ended', { topic: <strong>{currentQuiz?.topicsIdentity || ''}</strong> })}
+            </h3>
+            <button
+              onClick={onExit}
+              type="button"
+              className={styles.continueButton}
+            >
+              {t('exit_text')}
+            </button>
+          </div>
         </div>
       </BottomViewer>}
     </main>

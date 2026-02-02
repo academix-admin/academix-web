@@ -28,13 +28,14 @@ interface BottomViewerProps {
   children?: React.ReactNode;
   unmountOnClose?: boolean;
   zIndex?: number;
+  detent?: "content" | "full";
   disableDrag?: boolean;
   avoidKeyboard?: boolean;
   closeThreshold?: number;
 }
 
 // ==================== Styles ====================
-const styles = `
+const createStyles = (maxHeight?: string) => `
 .bottom-viewer-drag-handle {
   height: 5px;
   border-radius: 3px;
@@ -80,12 +81,17 @@ const styles = `
 .bottom-viewer-cancel-btn.left { left: 0px; }
 .bottom-viewer-cancel-btn.right { right: 0px; }
 .react-modal-sheet-container {
-  max-height: calc(var(--vh, 1vh) * 100);
+  max-height: ${maxHeight ? `calc(${maxHeight} - env(safe-area-inset-top) - 34px)` : 'calc(100% - env(safe-area-inset-top) - 34px)'} !important;
   max-width: 500px; /* Default max-width */
   margin: 0 auto;
   border-top-left-radius: 16px;
   border-top-right-radius: 16px;
   box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  left: 0;
+  right: 0;
 }
 .react-modal-sheet-backdrop {
   background-color: rgba(0, 0, 0, 0.5) !important;
@@ -137,15 +143,27 @@ const styles = `
 `;
 
 // ==================== Hook to inject CSS once ====================
-const useInjectStyles = () => {
+const useInjectStyles = (maxHeight?: string, isOpen?: boolean) => {
   useEffect(() => {
-    if (!document.getElementById("bottom-viewer-styles")) {
-      const styleTag = document.createElement("style");
-      styleTag.id = "bottom-viewer-styles";
-      styleTag.innerHTML = styles;
+    if (!isOpen) return; // Only inject when open
+
+    const styleId = maxHeight ? `bottom-viewer-styles-${maxHeight}` : "bottom-viewer-styles";
+    let styleTag = document.getElementById(styleId) as HTMLStyleElement | null;
+    
+    if (!styleTag) {
+      styleTag = document.createElement("style");
+      styleTag.id = styleId;
+      styleTag.innerHTML = createStyles(maxHeight);
       document.head.appendChild(styleTag);
     }
-  }, []);
+
+    // Cleanup: Remove style tag when component unmounts or closes
+    return () => {
+      if (styleTag && document.head.contains(styleTag)) {
+        document.head.removeChild(styleTag);
+      }
+    };
+  }, [maxHeight, isOpen]);
 };
 
 // ==================== BottomViewer Component ====================
@@ -159,11 +177,13 @@ const BottomViewer = React.forwardRef<any, BottomViewerProps>(({
   children,
   unmountOnClose = true,
   zIndex = 1000,
+  detent = "content",
   disableDrag = false,
   avoidKeyboard = true,
   closeThreshold = 0.2,
 }, ref) => {
   const sheetRef = useRef<any>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
     const contentRef = useRef<HTMLDivElement>(null);
     const previousActiveElement = useRef<Element | null>(null);
 
@@ -171,7 +191,7 @@ const BottomViewer = React.forwardRef<any, BottomViewerProps>(({
     const initialChildrenRef = useRef<React.ReactNode>(children);
     const [currentContent, setCurrentContent] = useState<React.ReactNode>(children);
 
-    useInjectStyles();
+    useInjectStyles(layoutProp?.maxHeight, isOpen);
 
     // FIX: Only update currentContent when children prop changes AND we're not controlling content internally
     const isControlledInternally = useRef(false);
@@ -214,12 +234,6 @@ const BottomViewer = React.forwardRef<any, BottomViewerProps>(({
         previousActiveElement.current = document.activeElement;
         document.body.classList.add('body-bottom-sheet-open');
 
-        // Set CSS variable for dynamic media query
-        const maxWidth = getMaxWidth();
-        if (maxWidth !== '500px') {
-          document.documentElement.style.setProperty('--bottom-viewer-max-width', maxWidth);
-        }
-
         setTimeout(() => contentRef.current?.focus(), 100);
       } else {
         document.body.classList.remove('body-bottom-sheet-open');
@@ -228,15 +242,11 @@ const BottomViewer = React.forwardRef<any, BottomViewerProps>(({
         }
         // FIX: Reset control state when closed
         isControlledInternally.current = false;
-
-        // Reset CSS variable when closed
-        document.documentElement.style.removeProperty('--bottom-viewer-max-width');
       }
       return () => {
         document.body.classList.remove('body-bottom-sheet-open');
-        document.documentElement.style.removeProperty('--bottom-viewer-max-width');
       };
-    }, [isOpen, getMaxWidth]);
+    }, [isOpen]);
 
 
     const handleBackdropTap = useCallback((event: MouseEvent | PointerEvent | TouchEvent | any) => {
@@ -302,12 +312,13 @@ const BottomViewer = React.forwardRef<any, BottomViewerProps>(({
       onClose={onClose}
       snapPoints={[0, 0.5, 1]}
       initialSnap={2}
-      detent="content"
+      detent={detent}
       style={{ zIndex }}
       disableDrag={disableDrag}
       avoidKeyboard={avoidKeyboard}
     >
       <Sheet.Container
+        ref={containerRef}
         style={{
           maxWidth: getMaxWidth(),
           margin: "0 auto",

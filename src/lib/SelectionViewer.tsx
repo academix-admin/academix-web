@@ -265,12 +265,22 @@ const styles = `
 // ==================== Hook to inject CSS once ====================
 const useInjectStyles = () => {
   useEffect(() => {
-    if (!document.getElementById("selection-viewer-styles")) {
-      const styleTag = document.createElement("style");
-      styleTag.id = "selection-viewer-styles";
+    const styleId = "selection-viewer-styles";
+    let styleTag = document.getElementById(styleId) as HTMLStyleElement | null;
+    
+    if (!styleTag) {
+      styleTag = document.createElement("style");
+      styleTag.id = styleId;
       styleTag.innerHTML = styles;
       document.head.appendChild(styleTag);
     }
+
+    // Cleanup on unmount
+    return () => {
+      if (styleTag && document.head.contains(styleTag)) {
+        document.head.removeChild(styleTag);
+      }
+    };
   }, []);
 };
 

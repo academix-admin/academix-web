@@ -41,410 +41,410 @@ import { useActiveQuiz } from "@/lib/stacks/active-quiz-stack";
 import { PinData } from '@/models/pin-data';
 
 interface QuizChallengeProps {
-  topicsId: string;
-  pType: string;
+    topicsId: string;
+    pType: string;
 }
 
 interface EngageQuizResponse {
-  status: string;
-  quiz_pool: any;
-  transaction_details?: BackendTransactionModel;
+    status: string;
+    quiz_pool: any;
+    transaction_details?: BackendTransactionModel;
 }
 
 
 export default function QuizChallenge(props: QuizChallengeProps) {
-  const { theme } = useTheme();
-  const { t, lang } = useLanguage();
-  const nav = useNav();
-  const { topicsId, pType } = props;
-  const isTop = nav.isTop();
+    const { theme } = useTheme();
+    const { t, lang } = useLanguage();
+    const nav = useNav();
+    const { topicsId, pType } = props;
+    const isTop = nav.isTop();
 
-  const { userData, userData$ } = useUserData();
-  const [userBalance] = useUserBalance(lang);
-  const [transactionModels, demandTransactionModels, setTransactionModels] = useTransactionModel(lang);
+    const { userData, userData$ } = useUserData();
+    const [userBalance] = useUserBalance(lang);
+    const [transactionModels, demandTransactionModels, setTransactionModels] = useTransactionModel(lang);
 
-  const [currentQuiz, setCurrentQuiz] = useState<UserDisplayQuizTopicModel | null>(null);
-  const [quizModels, , , { isHydrated }] = useAvailableQuiz(lang, pType);
-  const [selectedGameModeModel, setSelectedGameModeModel] = useState<GameModeModel | null>(null);
-  const [selectedChallengeModel, setSelectedChallengeModel] = useState<ChallengeModel | null>(null);
-  const [selectedRule, setSelectedRule] = useState(false);
-  const [selectedPayout, setSelectedPayout] = useState(false);
-  const [selectedRedeemCodeModel, setSelectedRedeemCodeModel] = useState<RedeemCodeModel | null>(null);
-  const [selectedSkip, setSelectedSkip] = useState(false);
-  const [quizLoading, setQuizLoading] = useState(false);
-  const [error, setError] = useState('');
+    const [currentQuiz, setCurrentQuiz] = useState<UserDisplayQuizTopicModel | null>(null);
+    const [quizModels, , , { isHydrated }] = useAvailableQuiz(lang, pType);
+    const [selectedGameModeModel, setSelectedGameModeModel] = useState<GameModeModel | null>(null);
+    const [selectedChallengeModel, setSelectedChallengeModel] = useState<ChallengeModel | null>(null);
+    const [selectedRule, setSelectedRule] = useState(false);
+    const [selectedPayout, setSelectedPayout] = useState(false);
+    const [selectedRedeemCodeModel, setSelectedRedeemCodeModel] = useState<RedeemCodeModel | null>(null);
+    const [selectedSkip, setSelectedSkip] = useState(false);
+    const [quizLoading, setQuizLoading] = useState(false);
+    const [error, setError] = useState('');
 
 
-  const [withdrawBottomViewerId, withdrawBottomController, withdrawBottomIsOpen, , withdrawBottomRef] = useBottomController();
+    const [withdrawBottomViewerId, withdrawBottomController, withdrawBottomIsOpen, , withdrawBottomRef] = useBottomController();
 
-  const [activeQuiz, , setActiveQuizTopicModel] = useActiveQuiz(lang);
+    const [activeQuiz, , setActiveQuizTopicModel] = useActiveQuiz(lang);
 
-  useProvideObject<PinData>('pin_controller', () => {
-    return {
-      inUse: selectedPayout && selectedRule,
-      action: async (pin: string) => {
-        withdrawBottomController.open();
-        await handleEngage(pin);
-      }
+    useProvideObject<PinData>('pin_controller', () => {
+        return {
+            inUse: selectedPayout && selectedRule,
+            action: async (pin: string) => {
+                withdrawBottomController.open();
+                await handleEngage(pin);
+            }
+        };
+    }, { scope: 'pin_scope', dependencies: [selectedRule, selectedPayout] });
+
+    useEffect(() => {
+        if (!isHydrated) return;
+        const getQuiz = quizModels.find((e: UserDisplayQuizTopicModel) => e.topicsId === topicsId);
+
+        if (getQuiz) {
+            setCurrentQuiz(getQuiz);
+        } else if (isTop) {
+            nav.popToRoot();
+        }
+    }, [quizModels, topicsId, isHydrated, isTop]);
+
+
+    useEffect(() => {
+        setSelectedChallengeModel(null);
+        setSelectedRule(false);
+        setSelectedPayout(false);
+        setSelectedRedeemCodeModel(null);
+        setSelectedSkip(false);
+    }, [selectedGameModeModel]);
+
+    useEffect(() => {
+        if (selectedRule) return;
+        setSelectedRedeemCodeModel(null);
+        setSelectedSkip(false);
+    }, [selectedRule]);
+
+    useEffect(() => {
+        if (selectedPayout) return;
+        setSelectedRedeemCodeModel(null);
+        setSelectedSkip(false);
+    }, [selectedPayout]);
+
+    // Function to engage quiz API call
+    const engageQuiz = async (jwt: string, data: any): Promise<EngageQuizResponse> => {
+        const proxyUrl = '/api/engage';
+
+        try {
+            const response = await fetch(proxyUrl, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${jwt}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+            });
+            return await response.json();
+        } catch (error) {
+            console.error("Engage Quiz API error:", error);
+            throw error
+        }
     };
-  }, { scope: 'pin_scope', dependencies: [selectedRule, selectedPayout] });
 
-  useEffect(() => {
-    if (!isHydrated) return;
-    const getQuiz = quizModels.find((e: UserDisplayQuizTopicModel) => e.topicsId === topicsId);
-
-    if (getQuiz) {
-      setCurrentQuiz(getQuiz);
-    } else if (isTop) {
-      nav.popToRoot();
+    const getUserPin = () => {
+        withdrawBottomController.close();
+        nav.pushWith('pin', { requireObjects: ['pin_controller'] });
     }
-  }, [quizModels, topicsId, isHydrated, isTop]);
 
+    const handleEngage = async (userPin: string) => {
+        if (!userData || !selectedGameModeModel || !selectedChallengeModel || !selectedRule || !selectedPayout) return;
 
-  useEffect(() => {
-    setSelectedChallengeModel(null);
-    setSelectedRule(false);
-    setSelectedPayout(false);
-    setSelectedRedeemCodeModel(null);
-    setSelectedSkip(false);
-  }, [selectedGameModeModel]);
+        try {
+            setQuizLoading(true);
+            setError('');
+            const location = await checkLocation();
+            const paramatical = await getParamatical(
+                userData.usersId,
+                lang,
+                userData.usersSex,
+                userData.usersDob
+            );
 
-  useEffect(() => {
-    if (selectedRule) return;
-    setSelectedRedeemCodeModel(null);
-    setSelectedSkip(false);
-  }, [selectedRule]);
+            if (!paramatical) {
+                setQuizLoading(false);
+                setError(t('error_occurred'));
+                return;
+            }
 
-  useEffect(() => {
-    if (selectedPayout) return;
-    setSelectedRedeemCodeModel(null);
-    setSelectedSkip(false);
-  }, [selectedPayout]);
+            const feature = await checkFeatures(
+                'Features.quiz_taking',
+                lang,
+                paramatical.country,
+                userData.usersSex,
+                userData.usersDob
+            );
 
-  // Function to engage quiz API call
-  const engageQuiz = async (jwt: string, data: any): Promise<EngageQuizResponse> => {
-    const proxyUrl = '/api/engage';
+            if (!feature) {
+                setQuizLoading(false);
+                console.log('feature not available');
+                setError(t('feature_unavailable'));
+                return;
+            }
 
-    try {
-      const response = await fetch(proxyUrl, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${jwt}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
-      return await response.json();
-    } catch (error) {
-      console.error("Engage Quiz API error:", error);
-      throw error
-    }
-  };
+            const session = await supabaseBrowser.auth.getSession();
+            const jwt = session.data.session?.access_token;
 
-  const getUserPin = () => {
-    withdrawBottomController.close();
-    nav.pushWith('pin', { requireObjects: ['pin_controller'] });
-  }
+            if (!jwt) {
+                console.log('no JWT token');
+                setQuizLoading(false);
+                setError(t('error_occurred'));
+                return;
+            }
 
-  const handleEngage = async (userPin: string) => {
-    if (!userData || !selectedGameModeModel || !selectedChallengeModel || !selectedRule || !selectedPayout) return;
+            const requestData = {
+                userId: userData.usersId,
+                topicsId: topicsId,
+                challengeId: selectedChallengeModel.challengeId,
+                poolsId: null,
+                redeemCode: selectedRedeemCodeModel?.redeemCodeValue,
+                locale: paramatical.locale,
+                country: paramatical.country,
+                gender: paramatical.gender,
+                age: paramatical.age,
+                userPin: userPin
+            };
 
-    try {
-      setQuizLoading(true);
-      setError('');
-      const location = await checkLocation();
-      const paramatical = await getParamatical(
-        userData.usersId,
-        lang,
-        userData.usersSex,
-        userData.usersDob
-      );
+            const engagement = await engageQuiz(jwt, requestData);
+            const status = engagement.status;
 
-      if (!paramatical) {
-        setQuizLoading(false);
-        setError(t('error_occurred'));
-        return;
-      }
+            console.log(engagement);
+            console.log(status);
 
-      const feature = await checkFeatures(
-        'Features.quiz_taking',
-        lang,
-        paramatical.country,
-        userData.usersSex,
-        userData.usersDob
-      );
+            if (status === 'PoolStatus.engaged' || status === 'PoolStatus.this_active') {
+                const quizModel = new UserDisplayQuizTopicModel(engagement.quiz_pool);
+                const transaction = new TransactionModel(engagement.transaction_details);
 
-      if (!feature) {
-        setQuizLoading(false);
-        console.log('feature not available');
-        setError(t('feature_unavailable'));
-        return;
-      }
+                if (engagement.transaction_details) setTransactionModels([transaction, ...transactionModels]);
+                const poolsId = quizModel?.quizPool?.poolsId;
+                // Add specific pools to monitor
+                if (poolsId) poolsSubscriptionManager.addQuizTopicPool({
+                    poolsId: poolsId,
+                    poolsSubscriptionType: 'active'
+                });
 
-      const session = await supabaseBrowser.auth.getSession();
-      const jwt = session.data.session?.access_token;
+                setActiveQuizTopicModel(quizModel);
+                // withdrawBottomController.close();
+                await nav.pushAndPopUntil('quiz_commitment', (entry: any) => entry.key === 'quiz_page', {
+                    poolsId: poolsId,
+                    action: 'active'
+                });
+            } else {
+                //
+            }
 
-      if (!jwt) {
-        console.log('no JWT token');
-        setQuizLoading(false);
-        setError(t('error_occurred'));
-        return;
-      }
+            setQuizLoading(false);
 
-      const requestData = {
-        userId: userData.usersId,
-        topicsId: topicsId,
-        challengeId: selectedChallengeModel.challengeId,
-        poolsId: null,
-        redeemCode: selectedRedeemCodeModel?.redeemCodeValue,
-        locale: paramatical.locale,
-        country: paramatical.country,
-        gender: paramatical.gender,
-        age: paramatical.age,
-        userPin: userPin
-      };
+        } catch (error: any) {
+            console.error("Top up error:", error);
+            setQuizLoading(false);
+            setError(t('error_occurred'));
+        }
+    };
 
-      const engagement = await engageQuiz(jwt, requestData);
-      const status = engagement.status;
+    const goBack = async () => {
+        await nav.pop();
+        StateStack.core.clearScope('redeem_code_flow');
+    };
 
-      console.log(engagement);
-      console.log(status);
+    // Format number with commas
+    const formatNumber = useCallback((num: number) => {
+        return Number(num).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",").replace('.00', '');
+    }, []);
 
-      if (status === 'PoolStatus.engaged' || status === 'PoolStatus.this_active') {
-        const quizModel = new UserDisplayQuizTopicModel(engagement.quiz_pool);
-        const transaction = new TransactionModel(engagement.transaction_details);
+    const balance = userBalance?.usersBalanceAmount ?? 0;
+    const codeBalance = selectedRedeemCodeModel?.redeemCodeAmount || 0;
+    const balanceSufficient = balance >= (selectedChallengeModel?.challengePrice || 0);
+    const codeSufficient = codeBalance >= (selectedChallengeModel?.challengePrice || 0);
+    const bothSufficient = (balance < (selectedChallengeModel?.challengePrice || 0)) &&
+        (codeBalance < (selectedChallengeModel?.challengePrice || 0)) &&
+        (balance + codeBalance) >= (selectedChallengeModel?.challengePrice || 0);
+    const codeCheck = codeSufficient || bothSufficient;
+    const balanceCheck = codeSufficient ? false : (balanceSufficient || bothSufficient);
+    const bothCheck = codeCheck || balanceCheck;
 
-        if (engagement.transaction_details) setTransactionModels([transaction, ...transactionModels]);
-        const poolsId = quizModel?.quizPool?.poolsId;
-        // Add specific pools to monitor
-        if (poolsId) poolsSubscriptionManager.addQuizTopicPool({
-          poolsId: poolsId,
-          poolsSubscriptionType: 'active'
-        });
+    const showBottom = currentQuiz && selectedChallengeModel && (selectedSkip || selectedRedeemCodeModel) && selectedRule && selectedPayout;
 
-        setActiveQuizTopicModel(quizModel);
-        // withdrawBottomController.close();
-        await nav.pushAndPopUntil('quiz_commitment', (entry: any) => entry.key === 'quiz_page', {
-          poolsId: poolsId,
-          action: 'active'
-        });
-      } else {
-        //
-      }
-
-      setQuizLoading(false);
-
-    } catch (error: any) {
-      console.error("Top up error:", error);
-      setQuizLoading(false);
-      setError(t('error_occurred'));
-    }
-  };
-
-  const goBack = async () => {
-    await nav.pop();
-    StateStack.core.clearScope('redeem_code_flow');
-  };
-
-  // Format number with commas
-  const formatNumber = useCallback((num: number) => {
-    return Number(num).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",").replace('.00', '');
-  }, []);
-
-  const balance = userBalance?.usersBalanceAmount ?? 0;
-  const codeBalance = selectedRedeemCodeModel?.redeemCodeAmount || 0;
-  const balanceSufficient = balance >= (selectedChallengeModel?.challengePrice || 0);
-  const codeSufficient = codeBalance >= (selectedChallengeModel?.challengePrice || 0);
-  const bothSufficient = (balance < (selectedChallengeModel?.challengePrice || 0)) &&
-    (codeBalance < (selectedChallengeModel?.challengePrice || 0)) &&
-    (balance + codeBalance) >= (selectedChallengeModel?.challengePrice || 0);
-  const codeCheck = codeSufficient || bothSufficient;
-  const balanceCheck = codeSufficient ? false : (balanceSufficient || bothSufficient);
-  const bothCheck = codeCheck || balanceCheck;
-
-  const showBottom = currentQuiz && selectedChallengeModel && (selectedSkip || selectedRedeemCodeModel) && selectedRule && selectedPayout;
-
-  return (
-    <main className={`${styles.container} ${styles[`container_${theme}`]}`}>
-      <header className={`${styles.header} ${styles[`header_${theme}`]}`}>
-        <div className={styles.headerContent}>
-          <button
-            className={styles.backButton}
-            onClick={goBack}
-            aria-label="Go back"
-          >
-            <svg className={styles.backIcon} viewBox="0 0 16 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path
-                d="M10.0424 0.908364L1.01887 8.84376C0.695893 9.12721 0.439655 9.46389 0.264823 9.83454C0.089992 10.2052 0 10.6025 0 11.0038C0 11.405 0.089992 11.8024 0.264823 12.173C0.439655 12.5437 0.695893 12.8803 1.01887 13.1638L10.0424 21.0992C12.2373 23.0294 16 21.6507 16 18.9239V3.05306C16 0.326231 12.2373 -1.02187 10.0424 0.908364Z"
-                fill="currentColor"
-              />
-            </svg>
-          </button>
-          <h1 className={styles.title}>{t('quiz_challenges')}</h1>
-          <div className={styles.headerSpacer} />
-        </div>
-      </header>
-
-      <div className={styles.innerBody}>
-        <QuizAllocation />
-        {currentQuiz && <GameMode onModeSelect={setSelectedGameModeModel} topicsId={currentQuiz.topicsId} />}
-        {currentQuiz && selectedGameModeModel && (
-          <GameChallenge
-            key={selectedGameModeModel.gameModeId}
-            onChallengeSelect={setSelectedChallengeModel}
-            topicsId={currentQuiz.topicsId}
-            gameModeId={selectedGameModeModel.gameModeId}
-          />
-        )}
-        {currentQuiz && selectedChallengeModel && <QuizRuleAcceptance onAcceptanceChange={setSelectedRule} />}
-        {currentQuiz && selectedChallengeModel && <QuizPayoutAcceptance onAcceptanceChange={setSelectedPayout} challengeId={selectedChallengeModel.challengeId} />}
-        {currentQuiz && selectedChallengeModel && selectedRule && selectedPayout && (
-          <QuizRedeemCode
-            onRedeemCodeSelect={setSelectedRedeemCodeModel}
-            onSkip={setSelectedSkip}
-          />
-        )}
-        {showBottom && (
-          <button
-            onClick={() => withdrawBottomController.open()}
-            type="button"
-            className={styles.continueButton}
-          >
-            {t('engage_text')}
-          </button>
-        )}
-      </div>
-
-      {showBottom && <BottomViewer
-        ref={withdrawBottomRef}
-        id={withdrawBottomViewerId}
-        isOpen={withdrawBottomIsOpen}
-        onClose={withdrawBottomController.close}
-        backDrop={false}
-        cancelButton={{
-          position: "right",
-          onClick: withdrawBottomController.close,
-          view: <DialogCancel />
-        }}
-        layoutProp={{
-          backgroundColor: theme === 'light' ? "#fff" : "#121212",
-          handleColor: "#888",
-          handleWidth: "48px"
-        }}
-        closeThreshold={0.2}
-        zIndex={1000}
-      >
-        <div className={`${styles.dialogContainer} ${styles[`dialogContainer_${theme}`]}`}>
-          <div className={styles.paymentConfirmation}>
-            {/* Amount */}
-            <div className={styles.amountSection}>
-              <div className={styles.currencyAmount}>
-                A {formatNumber(selectedChallengeModel?.challengePrice || 0)}
-              </div>
-            </div>
-
-            {/* Challenge */}
-            <div className={styles.infoRow}>
-              <span className={styles.infoLabel}>{t('challenge_text')}:</span>
-              <span className={styles.infoValue}>
-                {selectedChallengeModel?.challengeIdentity}
-              </span>
-            </div>
-
-            {/* Topic */}
-            <div className={styles.infoRow}>
-              <span className={styles.infoLabel}>{t('topic_text')}:</span>
-              <span className={styles.infoValue}>{currentQuiz.topicsIdentity}</span>
-            </div>
-
-            {/* Amount */}
-            <div className={styles.infoRow}>
-              <span className={styles.infoLabel}>{t('amount_text')}:</span>
-              <span className={styles.infoValue}>
-                A {selectedChallengeModel?.challengePrice}
-              </span>
-            </div>
-
-            {/* Fees */}
-            <div className={styles.infoRow}>
-              <span className={styles.infoLabel}>{t('fee_text')}:</span>
-              <span className={styles.infoValue}>0.00</span>
-            </div>
-
-            <div className={styles.divider} />
-
-            {/* Payment Method */}
-            <div className={styles.paymentMethodSection}>
-              <h3 className={styles.paymentMethodTitle}>{t('payment_method')}</h3>
-
-              <div className={styles.walletCard}>
-                <div className={styles.walletIcon}>
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                    <path
-                      d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    />
-                    <path
-                      d="M16 14a2 2 0 11-4 0 2 2 0 014 0z"
-                      fill="currentColor"
-                    />
-                  </svg>
+    return (
+        <main className={`${styles.container} ${styles[`container_${theme}`]}`}>
+            <header className={`${styles.header} ${styles[`header_${theme}`]}`}>
+                <div className={styles.headerContent}>
+                    <button
+                        className={styles.backButton}
+                        onClick={goBack}
+                        aria-label="Go back"
+                    >
+                        <svg className={styles.backIcon} viewBox="0 0 16 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path
+                                d="M10.0424 0.908364L1.01887 8.84376C0.695893 9.12721 0.439655 9.46389 0.264823 9.83454C0.089992 10.2052 0 10.6025 0 11.0038C0 11.405 0.089992 11.8024 0.264823 12.173C0.439655 12.5437 0.695893 12.8803 1.01887 13.1638L10.0424 21.0992C12.2373 23.0294 16 21.6507 16 18.9239V3.05306C16 0.326231 12.2373 -1.02187 10.0424 0.908364Z"
+                                fill="currentColor"
+                            />
+                        </svg>
+                    </button>
+                    <h1 className={styles.title}>{t('quiz_challenges')}</h1>
+                    <div className={styles.headerSpacer} />
                 </div>
+            </header>
 
-                <div className={styles.walletInfo}>
-                  <div className={styles.walletName}>
-                    {t('redeem_code_text')} (
-                    <span className={styles.academixBalance}>
-                      A {formatNumber(codeBalance)}
-                    </span>
-                    )
-                  </div>
-                  {!codeCheck && <span> {t('insufficient_balance')} </span>}
-                </div>
-              </div>
-
-              <div className={styles.walletCard}>
-                <div className={styles.walletIcon}>
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                    <path
-                      d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"
-                      stroke="currentColor"
-                      strokeWidth="2"
+            <div className={styles.innerBody}>
+                <QuizAllocation />
+                {currentQuiz && <GameMode onModeSelect={setSelectedGameModeModel} topicsId={currentQuiz.topicsId} />}
+                {currentQuiz && selectedGameModeModel && (
+                    <GameChallenge
+                        key={selectedGameModeModel.gameModeId}
+                        onChallengeSelect={setSelectedChallengeModel}
+                        topicsId={currentQuiz.topicsId}
+                        gameModeId={selectedGameModeModel.gameModeId}
                     />
-                    <path
-                      d="M16 14a2 2 0 11-4 0 2 2 0 014 0z"
-                      fill="currentColor"
+                )}
+                {currentQuiz && selectedChallengeModel && <QuizRuleAcceptance onAcceptanceChange={setSelectedRule} />}
+                {currentQuiz && selectedChallengeModel && <QuizPayoutAcceptance onAcceptanceChange={setSelectedPayout} challengeId={selectedChallengeModel.challengeId} />}
+                {currentQuiz && selectedChallengeModel && selectedRule && selectedPayout && (
+                    <QuizRedeemCode
+                        onRedeemCodeSelect={setSelectedRedeemCodeModel}
+                        onSkip={setSelectedSkip}
                     />
-                  </svg>
-                </div>
-
-                <div className={styles.walletInfo}>
-                  <div className={styles.walletName}>
-                    {t('wallet_text')} (
-                    <span className={styles.academixBalance}>
-                      A {formatNumber(balance)}
-                    </span>
-                    )
-                  </div>
-                  {!balanceCheck && !balanceSufficient && <span> {t('insufficient_balance')} </span>}
-                </div>
-              </div>
+                )}
+                {showBottom && (
+                    <button
+                        onClick={() => withdrawBottomController.open()}
+                        type="button"
+                        className={styles.continueButton}
+                    >
+                        {t('engage_text')}
+                    </button>
+                )}
             </div>
 
-            {/* Pay Button */}
-            <button
-              onClick={getUserPin}
-              type="button"
-              className={styles.continueButton}
-              disabled={!bothCheck || quizLoading}
-              aria-disabled={!quizLoading}
+            {showBottom && <BottomViewer
+                ref={withdrawBottomRef}
+                id={withdrawBottomViewerId}
+                isOpen={withdrawBottomIsOpen}
+                onClose={withdrawBottomController.close}
+                backDrop={false}
+                cancelButton={{
+                    position: "right",
+                    onClick: withdrawBottomController.close,
+                    view: <DialogCancel />
+                }}
+                layoutProp={{
+                    backgroundColor: theme === 'light' ? "#fff" : "#121212",
+                    handleColor: "#888",
+                    handleWidth: "48px"
+                }}
+                closeThreshold={0.2}
+                zIndex={1000}
             >
-              {quizLoading ? <span className={styles.spinner}></span> : t('pay_text')}
-            </button>
-          </div>
-        </div>
-      </BottomViewer>}
-    </main>
-  );
+                <div className={`${styles.dialogContainer} ${styles[`dialogContainer_${theme}`]}`}>
+                    <div className={styles.paymentConfirmation}>
+                        {/* Amount */}
+                        <div className={styles.amountSection}>
+                            <div className={styles.currencyAmount}>
+                                A {formatNumber(selectedChallengeModel?.challengePrice || 0)}
+                            </div>
+                        </div>
+
+                        {/* Challenge */}
+                        <div className={styles.infoRow}>
+                            <span className={styles.infoLabel}>{t('challenge_text')}:</span>
+                            <span className={styles.infoValue}>
+                                {selectedChallengeModel?.challengeIdentity}
+                            </span>
+                        </div>
+
+                        {/* Topic */}
+                        <div className={styles.infoRow}>
+                            <span className={styles.infoLabel}>{t('topic_text')}:</span>
+                            <span className={styles.infoValue}>{currentQuiz.topicsIdentity}</span>
+                        </div>
+
+                        {/* Amount */}
+                        <div className={styles.infoRow}>
+                            <span className={styles.infoLabel}>{t('amount_text')}:</span>
+                            <span className={styles.infoValue}>
+                                A {selectedChallengeModel?.challengePrice}
+                            </span>
+                        </div>
+
+                        {/* Fees */}
+                        <div className={styles.infoRow}>
+                            <span className={styles.infoLabel}>{t('fee_text')}:</span>
+                            <span className={styles.infoValue}>0.00</span>
+                        </div>
+
+                        <div className={styles.divider} />
+
+                        {/* Payment Method */}
+                        <div className={styles.paymentMethodSection}>
+                            <h3 className={styles.paymentMethodTitle}>{t('payment_method')}</h3>
+
+                            <div className={styles.walletCard}>
+                                <div className={styles.walletIcon}>
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                        <path
+                                            d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"
+                                            stroke="currentColor"
+                                            strokeWidth="2"
+                                        />
+                                        <path
+                                            d="M16 14a2 2 0 11-4 0 2 2 0 014 0z"
+                                            fill="currentColor"
+                                        />
+                                    </svg>
+                                </div>
+
+                                <div className={styles.walletInfo}>
+                                    <div className={styles.walletName}>
+                                        {t('redeem_code_text')} (
+                                        <span className={styles.academixBalance}>
+                                            A {formatNumber(codeBalance)}
+                                        </span>
+                                        )
+                                    </div>
+                                    {!codeCheck && <span> {t('insufficient_balance')} </span>}
+                                </div>
+                            </div>
+
+                            <div className={styles.walletCard}>
+                                <div className={styles.walletIcon}>
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                        <path
+                                            d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"
+                                            stroke="currentColor"
+                                            strokeWidth="2"
+                                        />
+                                        <path
+                                            d="M16 14a2 2 0 11-4 0 2 2 0 014 0z"
+                                            fill="currentColor"
+                                        />
+                                    </svg>
+                                </div>
+
+                                <div className={styles.walletInfo}>
+                                    <div className={styles.walletName}>
+                                        {t('wallet_text')} (
+                                        <span className={styles.academixBalance}>
+                                            A {formatNumber(balance)}
+                                        </span>
+                                        )
+                                    </div>
+                                    {!balanceCheck && !balanceSufficient && <span> {t('insufficient_balance')} </span>}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Pay Button */}
+                        <button
+                            onClick={getUserPin}
+                            type="button"
+                            className={styles.continueButton}
+                            disabled={!bothCheck || quizLoading}
+                            aria-disabled={!quizLoading}
+                        >
+                            {quizLoading ? <span className={styles.spinner}></span> : t('pay_text')}
+                        </button>
+                    </div>
+                </div>
+            </BottomViewer>}
+        </main>
+    );
 }

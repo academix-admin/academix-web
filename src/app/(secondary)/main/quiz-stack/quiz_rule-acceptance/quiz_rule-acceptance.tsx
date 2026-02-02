@@ -93,6 +93,7 @@ export default function QuizRuleAcceptance({ onAcceptanceChange, initialValue = 
         id={bottomViewerId}
         isOpen={bottomIsOpen}
         onClose={handleClose}
+        // detent='full'
         cancelButton={{
           position: "right",
           onClick: handleClose,
@@ -103,7 +104,7 @@ export default function QuizRuleAcceptance({ onAcceptanceChange, initialValue = 
           handleColor: "#888",
           handleWidth: "48px",
           maxWidth: '800px',
-          maxHeight: '92dvh'
+          maxHeight: '88dvh'
         }}
         closeThreshold={0.2}
         zIndex={1000}

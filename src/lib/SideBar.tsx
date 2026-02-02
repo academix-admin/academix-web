@@ -150,6 +150,13 @@ const useInjectSidebarStyles = () => {
       }
     `;
     document.head.appendChild(styleTag);
+
+    // Cleanup on unmount
+    return () => {
+      if (styleTag && document.head.contains(styleTag)) {
+        document.head.removeChild(styleTag);
+      }
+    };
   }, []);
 };
 
