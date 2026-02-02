@@ -5,6 +5,7 @@ import {useNav } from "@/lib/NavigationStack";
 import NavigationStack from "@/lib/NavigationStack";
 import ProfilePage from "./profile-page/profile-page";
 import EditProfile from "./edit-profile/edit-profile";
+import SecurityPage from "./security-page/security-page";
 import RedeemCodes from "./redeem-codes/redeem-codes";
 import AboutPage from "../shared/about-page/about-page";
 import HelpPage from "../shared/help-page/help-page";
@@ -25,7 +26,8 @@ const profileStackNavLink = {
   rules_page: RulesPage,
   payout_page: PayoutPage,
   help_page: HelpPage,
-  instructions_page: InstructionsPage
+  instructions_page: InstructionsPage,
+  security: SecurityPage
 };
 
 export const ProfileStack = () => (
