@@ -256,10 +256,16 @@ export default function Sidebar({
   const collapsedPx = parseFloat(widthCollapsed);
   const currentWidth = customWidth || expandedPx;
 
-  // Log collapsed state changes
-  useEffect(() => {
-    // State change tracking removed
-  }, [collapsed, currentWidth, expandedPx, collapsedPx]);
+  // Set CSS custom property for sidebar width
+  useLayoutEffect(() => {
+    const borderPx = getBorderWidth(borderRight);
+    const finalWidth = currentWidth + borderPx;
+
+    document.documentElement.style.setProperty(
+      "--sidebar-width",
+      `${finalWidth}px`
+    );
+  }, [currentWidth, borderRight]);
 
   // Handle resize
   useEffect(() => {
