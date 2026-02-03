@@ -8,6 +8,8 @@ import EditProfile from "./edit-profile/edit-profile";
 import SecurityPage from "./security-page/security-page";
 import SecurityVerification from "./security-verification/security-verification";
 import SecurityOtp from "./security-otp/security-otp";
+import PinManagement from "./pin-management/pin-management";
+import PasswordManagement from "./password-management/password-management";
 import RedeemCodes from "./redeem-codes/redeem-codes";
 import AboutPage from "../shared/about-page/about-page";
 import HelpPage from "../shared/help-page/help-page";
@@ -31,7 +33,9 @@ const profileStackNavLink = {
   instructions_page: InstructionsPage,
   security: SecurityPage,
   security_verification: SecurityVerification,
-  security_otp: SecurityOtp
+  security_otp: SecurityOtp,
+  pin_mangement: PinManagement,
+  password_management: PasswordManagement
 };
 
 export const ProfileStack = () => (

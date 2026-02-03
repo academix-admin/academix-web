@@ -1,0 +1,69 @@
+'use client';
+
+import { useEffect, useState, useCallback, useRef } from 'react';
+import { useTheme } from '@/context/ThemeContext';
+import { useLanguage } from '@/context/LanguageContext';
+import Image from 'next/image';
+import styles from './pin-management.module.css';
+import Link from 'next/link';
+import { supabaseBrowser } from '@/lib/supabase/client';
+import { useNav } from "@/lib/NavigationStack";
+import { useOtp } from '@/lib/stacks/otp-stack';
+import { createStateStack, useDemandState, StateStack } from '@/lib/state-stack';
+import { useAwaitableRouter } from "@/hooks/useAwaitableRouter";
+import { UserData } from '@/models/user-data';
+import { useUserData } from '@/lib/stacks/user-stack';
+import {  fetchUserData } from '@/utils/checkers';
+import { useRouter } from "next/navigation";
+
+
+// Define props interface for the Otp component
+interface PinManagementProps {
+  isNew: boolean;
+}
+
+export default function PinManagement(props: PinManagementProps) {
+  const { theme } = useTheme();
+  const { t, tNode, lang } = useLanguage();
+  const { otpTimer, otpTimer$, __meta } = useOtp();
+  const { userData, userData$ } = useUserData();
+  const nav = useNav();
+  const isTop = nav.isTop();
+
+  const [otpValue, setOtpValue] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const {  isNew } = props;
+
+  
+  return (
+    <main className={`${styles.container} ${styles[`container_${theme}`]}`}>
+      {(isLoading) && <div className={styles.loadingOverlay} aria-hidden="true" />}
+
+      <header className={`${styles.header} ${styles[`header_${theme}`]}`}>
+        <div className={styles.headerContent}>
+            <button
+              className={styles.backButton}
+              onClick={() => nav.pop()}
+              aria-label="Go back"
+            >
+              <svg className={styles.backIcon} viewBox="0 0 16 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path
+                  d="M10.0424 0.908364L1.01887 8.84376C0.695893 9.12721 0.439655 9.46389 0.264823 9.83454C0.089992 10.2052 0 10.6025 0 11.0038C0 11.405 0.089992 11.8024 0.264823 12.173C0.439655 12.5437 0.695893 12.8803 1.01887 13.1638L10.0424 21.0992C12.2373 23.0294 16 21.6507 16 18.9239V3.05306C16 0.326231 12.2373 -1.02187 10.0424 0.908364Z"
+                  fill="currentColor"
+                />
+              </svg>
+            </button>
+          
+          <h1 className={styles.title}>{t('pin_management')}</h1>
+        </div>
+      </header>
+
+      <div className={styles.innerBody}>
+        
+        
+      </div>
+    </main>
+  );
+}

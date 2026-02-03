@@ -311,9 +311,9 @@ export default function SecurityOtp(props: OtpProps) {
       } else {
         // OTP verified successfully
       if(request === 'Pin') {
-        nav.pushAndPopUntil('pin_mangement', (entry)=> entry.key === 'security',{ isNew: isNew ?? false });
+        nav.pushAndPopUntil('pin_mangement', (entry)=> entry.key === 'profile_page',{ isNew: isNew ?? false });
       } else {
-        nav.pushAndPopUntil('password_management', (entry)=> entry.key === 'security');
+        nav.pushAndPopUntil('password_management', (entry)=> entry.key === 'profile_page');
       }
           __meta.clear();
           setIsLoading(false);
@@ -385,7 +385,6 @@ export default function SecurityOtp(props: OtpProps) {
 
       <header className={`${styles.header} ${styles[`header_${theme}`]}`}>
         <div className={styles.headerContent}>
-          {canGoBack && (
             <button
               className={styles.backButton}
               onClick={() => nav.pop()}
@@ -398,7 +397,7 @@ export default function SecurityOtp(props: OtpProps) {
                 />
               </svg>
             </button>
-          )}
+          
           <h1 className={styles.title}>{t('otp_text')}</h1>
         </div>
       </header>
