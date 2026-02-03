@@ -6,6 +6,7 @@ import NavigationStack from "@/lib/NavigationStack";
 import ProfilePage from "./profile-page/profile-page";
 import EditProfile from "./edit-profile/edit-profile";
 import SecurityPage from "./security-page/security-page";
+import SecurityVerification from "./security-verification/security-verification";
 import RedeemCodes from "./redeem-codes/redeem-codes";
 import AboutPage from "../shared/about-page/about-page";
 import HelpPage from "../shared/help-page/help-page";
@@ -27,7 +28,8 @@ const profileStackNavLink = {
   payout_page: PayoutPage,
   help_page: HelpPage,
   instructions_page: InstructionsPage,
-  security: SecurityPage
+  security: SecurityPage,
+  security_verification: SecurityVerification
 };
 
 export const ProfileStack = () => (
