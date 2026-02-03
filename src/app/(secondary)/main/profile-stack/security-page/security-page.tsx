@@ -70,7 +70,7 @@ export default function SecurityPage() {
 
   const handleChangePin = () => { 
     // Logic to change PIN
-    nav.push('security_verification', {request: 'Pin'});
+    nav.push('security_verification', {request: 'Pin', isNew: true});
   }
 
   const handleChangePassword = () => { 

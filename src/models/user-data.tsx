@@ -32,7 +32,7 @@ export class UserData {
   usersUsername: string;
   usersNames: string;
   usersEmail: string;
-  usersPhone: string | null;
+  usersPhone: string ;
   usersDob: string;
   usersSex: string;
   usersImage: string | null;
@@ -48,7 +48,7 @@ export class UserData {
     this.usersUsername = data?.users_username ?? "";
     this.usersNames = data?.users_names ?? "";
     this.usersEmail = data?.users_email ?? "";
-    this.usersPhone = data?.users_phone ?? null;
+    this.usersPhone = data?.users_phone ?? "";
     this.usersDob = data?.users_dob ?? "";
     this.usersSex = data?.users_sex ?? "";
     this.usersImage = data?.users_image ?? null;
