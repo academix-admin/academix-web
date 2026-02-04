@@ -1522,9 +1522,13 @@ export function useGroupScopedScrollRestoration(
       const scrollKey = makeScrollKey(uid);
       const savedPosition = scrollData.scrollPositions.get(scrollKey);
       const container = getScrollableContainer(uid);
+      
+      // Explicitly determine if this is a new/fresh page
+      const isNewPage = savedPosition === undefined;
 
       const restoreScroll = () => {
-        const position = savedPosition ?? 0;
+        // Force reset to 0 for new pages, restore for existing ones
+        const position = isNewPage ? 0 : (savedPosition ?? 0);
         setScrollPosition(position, container);
       };
 
