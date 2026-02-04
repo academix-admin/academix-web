@@ -1295,21 +1295,24 @@ export function useGroupScopedScrollRestoration(
   groupContext: GroupNavigationContextType | null,
   groupStackId: string | null
 ) {
-  const groupKey = groupContext ? `${groupContext.getGroupId()}:${groupStackId}` : 'root';
+  // Composite key: groupId:stackId
+  const groupStackKey = groupContext 
+    ? `${groupContext.getGroupId()}:${groupStackId}`
+    : 'root:root';
 
   const scrollData = useRef<{
-    groupScrollPositions: Map<string, Map<string, number>>;
+    // Map: "groupId:stackId:pageUid" -> scroll position
+    scrollPositions: Map<string, number>;
     lastUid: string | null;
-    lastGroupKey: string | null;
+    lastGroupStackKey: string | null;
     lastActive: boolean;
     scrollContainers: Map<string, ContainerData | 'window'>;
     currentScrollY: number;
-    // Track window dimensions for cache invalidation
     lastWindowWidth: number;
   }>({
-    groupScrollPositions: new Map(),
+    scrollPositions: new Map(),
     lastUid: null,
-    lastGroupKey: null,
+    lastGroupStackKey: null,
     lastActive: true,
     scrollContainers: new Map(),
     currentScrollY: 0,
@@ -1319,19 +1322,14 @@ export function useGroupScopedScrollRestoration(
   const isActiveGroup = groupContext ? groupContext.isActiveStack(groupStackId || '') : true;
   const [cacheVersion, setCacheVersion] = useState(0);
 
+  // Helper to create composite scroll key
+  const makeScrollKey = (uid: string): string => `${groupStackKey}:${uid}`;
+
   useEffect(() => {
     if (typeof window !== "undefined" && "scrollRestoration" in window.history) {
       window.history.scrollRestoration = "manual";
     }
   }, []);
-
-  // Get or create position map for current group
-  const getGroupScrollPositions = () => {
-    if (!scrollData.groupScrollPositions.has(groupKey)) {
-      scrollData.groupScrollPositions.set(groupKey, new Map());
-    }
-    return scrollData.groupScrollPositions.get(groupKey)!;
-  };
 
   // Scrollable detection
   const analyzeContainer = (element: HTMLElement, level: number): ContainerData => {
@@ -1478,19 +1476,19 @@ export function useGroupScopedScrollRestoration(
     }
   }, []);
 
-  // Track scroll position ONLY for active group
+  // Track scroll position for active page
   useEffect(() => {
     if (!isActiveGroup) return;
 
-    const groupPositions = getGroupScrollPositions();
     const top = stackSnapshot.at(-1);
     if (!top) return;
 
     const container = getScrollableContainer(top.uid);
+    const scrollKey = makeScrollKey(top.uid);
 
     const handleScroll = () => {
       const scrollPosition = getCurrentScrollPosition(container);
-      groupPositions.set(top.uid, scrollPosition);
+      scrollData.scrollPositions.set(scrollKey, scrollPosition);
       scrollData.currentScrollY = scrollPosition;
     };
 
@@ -1499,53 +1497,74 @@ export function useGroupScopedScrollRestoration(
     return () => {
       removeListener();
     };
-  }, [stackSnapshot, isActiveGroup, groupKey, cacheVersion]);
+  }, [stackSnapshot, isActiveGroup, groupStackKey, cacheVersion]);
 
-  // Smart scroll restoration
+  // Restore scroll position when page changes
   useEffect(() => {
     const topEntry = stackSnapshot.at(-1);
     if (!topEntry) return;
 
     const { uid } = topEntry;
-    const { lastUid, lastGroupKey, lastActive, groupScrollPositions, currentScrollY } = scrollData;
-    const currentGroupPositions = getGroupScrollPositions();
+    const { lastUid, lastGroupStackKey, lastActive, currentScrollY } = scrollData;
 
-    const groupChanged = lastGroupKey !== groupKey;
+    const groupStackKeyChanged = lastGroupStackKey !== groupStackKey;
     const uidChanged = uid !== lastUid;
     const activeChanged = lastActive !== isActiveGroup;
 
-    // Save current position before switching away
-    if (lastUid && lastActive && lastGroupKey && (groupChanged || uidChanged)) {
-      const lastGroupPositions = groupScrollPositions.get(lastGroupKey);
-      if (lastGroupPositions) {
-        // Use the tracked scroll position, NOT querying the DOM
-        lastGroupPositions.set(lastUid, currentScrollY);
-      }
+    // Save current position before switching
+    if (lastUid && lastActive && lastGroupStackKey && (groupStackKeyChanged || uidChanged)) {
+      const lastScrollKey = `${lastGroupStackKey}:${lastUid}`;
+      scrollData.scrollPositions.set(lastScrollKey, currentScrollY);
     }
 
     // Restore position when becoming active
-    if (isActiveGroup && (groupChanged || uidChanged || activeChanged)) {
-      const savedPosition = currentGroupPositions.get(uid);
+    if (isActiveGroup && (groupStackKeyChanged || uidChanged || activeChanged)) {
+      const scrollKey = makeScrollKey(uid);
+      const savedPosition = scrollData.scrollPositions.get(scrollKey);
       const container = getScrollableContainer(uid);
+      
+      // Explicitly determine if this is a new/fresh page
+      const isNewPage = savedPosition === undefined;
 
       const restoreScroll = () => {
-        const position = savedPosition ?? 0;
+        // Force reset to 0 for new pages, restore for existing ones
+        const position = isNewPage ? 0 : (savedPosition ?? 0);
         setScrollPosition(position, container);
       };
 
       // --- IMMEDIATE RESTORE ---
-      restoreScroll(); // run synchronously BEFORE paint
+      restoreScroll();
 
       // --- DOM-settled fallback ---
       requestAnimationFrame(() => restoreScroll());
-      setTimeout(() => restoreScroll(), 20); // micro fallback
+      setTimeout(() => restoreScroll(), 20);
     }
 
     // Update state
     scrollData.lastUid = uid;
-    scrollData.lastGroupKey = groupKey;
+    scrollData.lastGroupStackKey = groupStackKey;
     scrollData.lastActive = isActiveGroup;
-  }, [stackSnapshot, isActiveGroup, groupKey, cacheVersion]);
+  }, [stackSnapshot, isActiveGroup, groupStackKey, cacheVersion]);
+
+  // Clean up scroll for pages no longer in stack
+  useEffect(() => {
+    const currentUids = new Set(stackSnapshot.map(entry => entry.uid));
+    const scrollKey = `${groupStackKey}:`;
+
+    // Find and remove scroll entries for pages not in current stack
+    const keysToDelete: string[] = [];
+    scrollData.scrollPositions.forEach((_, key) => {
+      // Only clean up entries for THIS groupStackKey
+      if (key.startsWith(scrollKey)) {
+        const uid = key.slice(scrollKey.length);
+        if (!currentUids.has(uid)) {
+          keysToDelete.push(key);
+        }
+      }
+    });
+
+    keysToDelete.forEach(key => scrollData.scrollPositions.delete(key));
+  }, [stackSnapshot, groupStackKey]);
 
   // Clean up container cache when UIDs are removed
   useEffect(() => {
