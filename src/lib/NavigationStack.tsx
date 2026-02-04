@@ -1515,8 +1515,51 @@ export function useGroupScopedScrollRestoration(
     if (savedPosition === undefined) {
       const container = getScrollableContainer(uid);
       setScrollPosition(0, container);
+      
+      // Force scroll reset multiple times at different timing points
+      // This ensures it happens before the user can see the inherited scroll
+      queueMicrotask(() => setScrollPosition(0, container));
+      requestAnimationFrame(() => setScrollPosition(0, container));
+      setTimeout(() => setScrollPosition(0, container), 0);
+      setTimeout(() => setScrollPosition(0, container), 1);
+      setTimeout(() => setScrollPosition(0, container), 5);
     }
   }, [stackSnapshot, isActiveGroup]); // Minimal deps - just the stack
+
+  // Additional: Watch for DOM mutations and force scroll on new page mount
+  useEffect(() => {
+    if (!isActiveGroup) return;
+    
+    const topEntry = stackSnapshot.at(-1);
+    if (!topEntry) return;
+
+    const { uid } = topEntry;
+    const savedPosition = globalScrollData.scrollPositions.get(uid);
+    
+    // Only for new pages
+    if (savedPosition !== undefined) return;
+
+    const container = getScrollableContainer(uid);
+    if (container === 'window') return;
+
+    // Use MutationObserver to detect when page content is added to DOM
+    const observer = new MutationObserver(() => {
+      // Page content detected, immediately reset scroll
+      setScrollPosition(0, container);
+      
+      // Force reset a few more times as content renders
+      queueMicrotask(() => setScrollPosition(0, container));
+      setTimeout(() => setScrollPosition(0, container), 0);
+    });
+
+    observer.observe(container, {
+      childList: true,
+      subtree: true,
+      characterData: false,
+    });
+
+    return () => observer.disconnect();
+  }, [stackSnapshot, isActiveGroup]);
 
   // Restore scroll position when page changes
   useEffect(() => {
