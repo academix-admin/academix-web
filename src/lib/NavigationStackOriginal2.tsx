@@ -13,7 +13,6 @@ import React, {
   lazy,
   Suspense,
   ComponentType,
-  useLayoutEffect
 } from "react";
 
 const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useEffect : () => {};
@@ -1500,24 +1499,6 @@ export function useGroupScopedScrollRestoration(
     };
   }, [stackSnapshot, isActiveGroup, groupStackKey, cacheVersion]);
 
-  // Reset scroll for NEW pages SYNCHRONOUSLY before React renders
-  // This uses useLayoutEffect to run BEFORE paint, preventing inherited scroll
-  useLayoutEffect(() => {
-    if (!isActiveGroup) return;
-    
-    const topEntry = stackSnapshot.at(-1);
-    if (!topEntry) return;
-
-    const { uid } = topEntry;
-    const savedPosition = globalScrollData.scrollPositions.get(uid);
-    
-    // If this is a brand new page (no saved position), reset scroll immediately
-    if (savedPosition === undefined) {
-      const container = getScrollableContainer(uid);
-      setScrollPosition(0, container);
-    }
-  }, [stackSnapshot, isActiveGroup]); // Minimal deps - just the stack
-
   // Restore scroll position when page changes
   useEffect(() => {
     const topEntry = stackSnapshot.at(-1);
@@ -1548,22 +1529,18 @@ export function useGroupScopedScrollRestoration(
       // Explicitly determine if this is a new/fresh page
       const isNewPage = savedPosition === undefined;
 
-      if (isNewPage) {
-        // For brand new pages, SYNCHRONOUSLY reset to 0 immediately
-        setScrollPosition(0, container);
-      } else if (savedPosition !== undefined) {
-        // For existing pages, restore from saved position with fallbacks
-        const restoreScroll = () => {
-          setScrollPosition(savedPosition, container);
-        };
+      const restoreScroll = () => {
+        // Force reset to 0 for new pages, restore for existing ones
+        const position = isNewPage ? 0 : (savedPosition ?? 0);
+        setScrollPosition(position, container);
+      };
 
-        // --- IMMEDIATE RESTORE ---
-        restoreScroll();
+      // --- IMMEDIATE RESTORE ---
+      restoreScroll();
 
-        // --- DOM-settled fallback ---
-        requestAnimationFrame(() => restoreScroll());
-        setTimeout(() => restoreScroll(), 20);
-      }
+      // --- DOM-settled fallback ---
+      requestAnimationFrame(() => restoreScroll());
+      setTimeout(() => restoreScroll(), 20);
     }
 
     // Update global state
