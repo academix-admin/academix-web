@@ -1,22 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 // Define the expected request body structure
-interface EngageQuizRequest {
+interface PinChangeRequest {
   userId: string;
-  topicsId: string;
-  challengeId: string;
-  poolsId: number;
-  redeemCode: string;
-  locale: string;
-  country: string;
-  gender: string;
-  age: number;
+  oldPin: string;
+  newPin: string;
 }
 
 export async function POST(request: NextRequest) {
   try {
     // Parse the request body
-    const body: EngageQuizRequest = await request.json();
+    const body: PinChangeRequest = await request.json();
 
     // Get the authorization header from the request
     const authHeader = request.headers.get('authorization');
@@ -28,24 +22,33 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Make the request to the external payment API
-    const response = await fetch(
-      'https://elfoxu5sxf.execute-api.eu-north-1.amazonaws.com/prod/join',
-      {
-        method: 'POST',
-        headers: {
-          'Authorization': authHeader,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(body),
-      }
-    );
+    const { userId, oldPin, newPin } = body;
 
+    if (!userId || !oldPin || !newPin) {
+      return NextResponse.json(
+        { error: 'Missing required fields: userId, oldPin, newPin' },
+        { status: 400 }
+      );
+    }
 
-    // Parse the response
+    // Call AWS API endpoint
+    const awsApiUrl = 'https://fz0b8vmhba.execute-api.eu-north-1.amazonaws.com/prod/pin/change';
+    
+    const response = await fetch(awsApiUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': authHeader,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        userId,
+        oldPin,
+        newPin,
+      }),
+    });
+
     const data = await response.json();
 
-    // Return the response with CORS headers
     return NextResponse.json(data, {
       status: response.status,
       headers: {
@@ -55,8 +58,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Payment API error:', error);
-
+    console.error('[PIN Change] Error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

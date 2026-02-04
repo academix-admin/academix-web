@@ -42,23 +42,12 @@ export async function POST(request: NextRequest) {
       }
     );
 
-    // Check if the response is OK
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('External API error:', response.status, errorText);
-
-      return NextResponse.json(
-        { error: `External API error: ${response.status} ${errorText}` },
-        { status: response.status }
-      );
-    }
-
     // Parse the response
     const data = await response.json();
 
     // Return the response with CORS headers
     return NextResponse.json(data, {
-      status: 200,
+      status: response.status,
       headers: {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'POST, OPTIONS',

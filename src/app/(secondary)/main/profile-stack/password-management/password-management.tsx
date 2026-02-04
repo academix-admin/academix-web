@@ -3,18 +3,11 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
-import Image from 'next/image';
 import styles from './password-management.module.css';
-import Link from 'next/link';
 import CachedLottie from '@/components/CachedLottie';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useNav } from "@/lib/NavigationStack";
-import { useOtp } from '@/lib/stacks/otp-stack';
-import { createStateStack, useDemandState, StateStack } from '@/lib/state-stack';
-import { useAwaitableRouter } from "@/hooks/useAwaitableRouter";
-import { UserData } from '@/models/user-data';
 import { useUserData } from '@/lib/stacks/user-stack';
-import {  fetchUserData } from '@/utils/checkers';
 
 const validatePassword = (value: string) => {
   const hasUppercase = /[A-Z]/.test(value);

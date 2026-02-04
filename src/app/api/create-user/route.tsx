@@ -35,23 +35,13 @@ export async function POST(request: NextRequest) {
       }
     );
 
-    // Handle non-200 responses
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Backend API error:', response.status, errorText);
-
-      return NextResponse.json(
-        { error: `Backend API error: ${response.status} ${errorText}` },
-        { status: response.status }
-      );
-    }
 
     // Parse response JSON
     const data = await response.json();
 
     // Return success with CORS headers
     return NextResponse.json(data, {
-      status: 200,
+      status: response.status,
       headers: {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'POST, OPTIONS',
