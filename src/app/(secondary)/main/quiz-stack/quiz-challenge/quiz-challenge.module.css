@@ -147,7 +147,6 @@
   justify-content: center;
   width: 100%;
   margin-top: 0.25rem;
-  margin-bottom: 0.25rem;
 }
 
 
@@ -176,7 +175,6 @@
   border: none;
   cursor: pointer;
   transition: background-color 0.2s;
-  margin-top: 3rem;
 }
 
 .continueButton:hover {
@@ -292,6 +290,7 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+  margin-bottom: 2rem;
 }
 
 .paymentMethodTitle {
@@ -338,6 +337,34 @@
 
 .academixBalance {
   color: #1C6B1E;
+}
+
+.errorText {
+  font-size: 0.75rem;
+  margin: 0px;
+  margin-top: 0.25rem;
+  margin-bottom: 0.75rem;
+  text-align: left;
+  font-weight: 500;
+  line-height: 1.25;
+  word-break: break-word;
+  white-space: normal;
+  color: #DC2626;
+  display: block;
+  padding: 0.5rem;
+  border-radius: 4px;
+}
+
+.container_light .errorText {
+  background-color: #FEE2E2;
+  border: 1px solid #FECACA;
+  color: #991B1B;
+}
+
+.container_dark .errorText {
+  background-color: #7F1D1D;
+  border: 1px solid #DC2626;
+  color: #FEE2E2;
 }
 
 .payButton {

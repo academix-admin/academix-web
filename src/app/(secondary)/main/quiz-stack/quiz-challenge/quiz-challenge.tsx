@@ -207,8 +207,7 @@ export default function QuizChallenge(props: QuizChallengeProps) {
             const engagement = await engageQuiz(jwt, requestData);
             const status = engagement.status;
 
-            console.log(engagement);
-            console.log(status);
+            console.log("Engage Quiz Response:", engagement);
 
             if (status === 'PoolStatus.engaged' || status === 'PoolStatus.this_active') {
                 const quizModel = new UserDisplayQuizTopicModel(engagement.quiz_pool);
@@ -223,13 +222,14 @@ export default function QuizChallenge(props: QuizChallengeProps) {
                 });
 
                 setActiveQuizTopicModel(quizModel);
-                // withdrawBottomController.close();
+                withdrawBottomController.close();
                 await nav.pushAndPopUntil('quiz_commitment', (entry: any) => entry.key === 'quiz_page', {
                     poolsId: poolsId,
                     action: 'active'
                 });
             } else {
                 //
+                setError(status);
             }
 
             setQuizLoading(false);
@@ -433,6 +433,7 @@ export default function QuizChallenge(props: QuizChallengeProps) {
                         </div>
 
                         {/* Pay Button */}
+                        {error && <p className={`${styles.errorText} ${styles[`errorText_${theme}`]}`}>{error}</p>}
                         <button
                             onClick={getUserPin}
                             type="button"

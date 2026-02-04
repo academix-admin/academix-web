@@ -1506,19 +1506,13 @@ export function useGroupScopedScrollRestoration(
     const topEntry = stackSnapshot.at(-1);
     if (!topEntry) return;
 
-    const { uid, key } = topEntry;
+    const { uid } = topEntry;
     const { lastUid, lastGroupKey, lastActive, groupScrollPositions, currentScrollY } = scrollData;
     const currentGroupPositions = getGroupScrollPositions();
 
     const groupChanged = lastGroupKey !== groupKey;
     const uidChanged = uid !== lastUid;
     const activeChanged = lastActive !== isActiveGroup;
-
-    // Check if the same page key is being re-pushed (detect stale scroll state)
-    // This handles the case where we pop and then push the same page back
-    const isRepushOfSamePage = lastUid && stackSnapshot.length >= 2
-      ? stackSnapshot[stackSnapshot.length - 2]?.key === topEntry.key && uidChanged
-      : false;
 
     // Save current position before switching away
     if (lastUid && lastActive && lastGroupKey && (groupChanged || uidChanged)) {
@@ -1531,8 +1525,10 @@ export function useGroupScopedScrollRestoration(
 
     // Restore position when becoming active
     if (isActiveGroup && (groupChanged || uidChanged || activeChanged)) {
-      // If this is a re-pushed page, don't restore stale scroll, start fresh at 0
-      const savedPosition = isRepushOfSamePage ? undefined : currentGroupPositions.get(uid);
+      // Each UID has its own scroll position. If UID doesn't exist in map, it defaults to 0
+      // This naturally handles the case where a page is popped (its UID is removed from stack)
+      // and then pushed again (new UID created with no saved position)
+      const savedPosition = currentGroupPositions.get(uid);
       const container = getScrollableContainer(uid);
 
       const restoreScroll = () => {
