@@ -1501,24 +1501,18 @@ export function useGroupScopedScrollRestoration(
     };
   }, [stackSnapshot, isActiveGroup, groupKey, cacheVersion]);
 
-  // Smart scroll restoration with detection for re-pushed pages
+  // Smart scroll restoration
   useEffect(() => {
     const topEntry = stackSnapshot.at(-1);
     if (!topEntry) return;
 
-    const { uid, key } = topEntry;
+    const { uid } = topEntry;
     const { lastUid, lastGroupKey, lastActive, groupScrollPositions, currentScrollY } = scrollData;
     const currentGroupPositions = getGroupScrollPositions();
 
     const groupChanged = lastGroupKey !== groupKey;
     const uidChanged = uid !== lastUid;
     const activeChanged = lastActive !== isActiveGroup;
-
-    // Check if the same page key is being re-pushed (detect stale scroll state)
-    // This handles the case where we pop and then push the same page back
-    const isRepushOfSamePage = lastUid && stackSnapshot.length >= 2
-      ? stackSnapshot[stackSnapshot.length - 2]?.key === topEntry.key && uidChanged
-      : false;
 
     // Save current position before switching away
     if (lastUid && lastActive && lastGroupKey && (groupChanged || uidChanged)) {
@@ -1531,8 +1525,7 @@ export function useGroupScopedScrollRestoration(
 
     // Restore position when becoming active
     if (isActiveGroup && (groupChanged || uidChanged || activeChanged)) {
-      // If this is a re-pushed page, don't restore stale scroll, start fresh at 0
-      const savedPosition = isRepushOfSamePage ? undefined : currentGroupPositions.get(uid);
+      const savedPosition = currentGroupPositions.get(uid);
       const container = getScrollableContainer(uid);
 
       const restoreScroll = () => {
@@ -1554,17 +1547,9 @@ export function useGroupScopedScrollRestoration(
     scrollData.lastActive = isActiveGroup;
   }, [stackSnapshot, isActiveGroup, groupKey, cacheVersion]);
 
-  // Clean up scroll and container cache when UIDs are removed
+  // Clean up container cache when UIDs are removed
   useEffect(() => {
     const currentUids = new Set(stackSnapshot.map(entry => entry.uid));
-
-    // Clean up scroll positions for removed UIDs
-    const groupPositions = getGroupScrollPositions();
-    groupPositions.forEach((_, uid) => {
-      if (!currentUids.has(uid)) {
-        groupPositions.delete(uid);
-      }
-    });
 
     // Remove cached containers for UIDs that no longer exist
     scrollData.scrollContainers.forEach((_, uid) => {
@@ -1627,16 +1612,14 @@ function isEqual(a: StackEntry[], b: StackEntry[]): boolean {
 }
 
 function generateStableUid(key: string, params?: NavParams): string {
-  // Include timestamp to ensure unique UIDs for each push, even with same key+params
-  // This prevents scroll position collision when same page is popped and re-pushed
-  const str = key + (params ? JSON.stringify(params) : '') + Date.now() + Math.random();
+  const str = key + (params ? JSON.stringify(params) : '');
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
     const char = str.charCodeAt(i);
     hash = ((hash << 5) - hash) + char;
     hash = hash & hash;
   }
-  return `uid_${Math.abs(hash)}_${Date.now()}`;
+  return `uid_${Math.abs(hash)}`;
 }
 
 function parseRawKey(raw: string, params?: NavParams) {
