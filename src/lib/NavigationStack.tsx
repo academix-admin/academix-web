@@ -2370,6 +2370,14 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
           });
         }
 
+        // Emit final stack state after all pop operations are complete
+        // This ensures subscribers and persistence layer get the correct final state.
+        // We pass the current final stack as "previousStack" so emit detects no page change
+        // at the top (since top entry is still newEntry) and only notifies subscribers/persists.
+        if (poppedEntries.length > 0) {
+          emit(regEntry.stack.slice(), { type: 'popUntil', target: undefined });
+        }
+
         return true;
       });
     },
