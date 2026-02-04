@@ -1490,7 +1490,6 @@ export function useGroupScopedScrollRestoration(
       const scrollPosition = getCurrentScrollPosition(container);
       globalScrollData.scrollPositions.set(scrollKey, scrollPosition);
       globalScrollData.currentScrollY = scrollPosition;
-      console.log(`[SCROLL-SAVE] Saved scroll for UID: ${scrollKey} -> ${scrollPosition}px`);
     };
 
     const removeListener = addScrollListener(container, handleScroll);
@@ -1518,7 +1517,6 @@ export function useGroupScopedScrollRestoration(
       // Get the ACTUAL scroll position from the container at switch time
       const lastContainer = getScrollableContainer(lastUid);
       const actualScrollPosition = getCurrentScrollPosition(lastContainer);
-      console.log(`[SCROLL-SAVE-BEFORE-SWITCH] Saving UID: ${lastScrollKey}, Actual value from container: ${actualScrollPosition}px`);
       globalScrollData.scrollPositions.set(lastScrollKey, actualScrollPosition);
     }
 
@@ -1530,13 +1528,11 @@ export function useGroupScopedScrollRestoration(
       
       // Explicitly determine if this is a new/fresh page
       const isNewPage = savedPosition === undefined;
-      console.log(`[SCROLL-RESTORE] UID: ${scrollKey}, SavedPos: ${savedPosition}, IsNewPage: ${isNewPage}, GroupChanged: ${groupStackKeyChanged}, UIDChanged: ${uidChanged}`);
 
       const restoreScroll = () => {
         // Force reset to 0 for new pages, restore for existing ones
         const position = isNewPage ? 0 : (savedPosition ?? 0);
         setScrollPosition(position, container);
-        console.log(`[SCROLL-RESTORE-APPLIED] UID: ${scrollKey} -> ${position}px (isNewPage: ${isNewPage})`);
       };
 
       // --- IMMEDIATE RESTORE ---
@@ -1551,7 +1547,6 @@ export function useGroupScopedScrollRestoration(
     globalScrollData.lastUid = uid;
     globalScrollData.lastGroupStackKey = groupStackKey;
     globalScrollData.lastActive = isActiveGroup;
-    console.log(`[SCROLL-STATE-UPDATE] lastUid: ${uid}, lastGroupStackKey: ${groupStackKey}, lastActive: ${isActiveGroup}`);
   }, [stackSnapshot, isActiveGroup, groupStackKey, cacheVersion]);
 
   // Clean up scroll for pages no longer in entire navigation system
@@ -1593,9 +1588,6 @@ export function useGroupScopedScrollRestoration(
       });
     }
 
-    console.log(`[SCROLL-CLEANUP] All valid UIDs in entire navigation tree: ${Array.from(validUids).join(', ')}`);
-    console.log(`[SCROLL-CLEANUP] All stored scroll keys: ${Array.from(globalScrollData.scrollPositions.keys()).join(', ')}`);
-
     // Delete scroll entries that don't exist in ANY stack in the entire navigation
     const keysToDelete: string[] = [];
     globalScrollData.scrollPositions.forEach((_, key) => {
@@ -1604,12 +1596,7 @@ export function useGroupScopedScrollRestoration(
       }
     });
 
-    if (keysToDelete.length > 0) {
-      console.log(`[SCROLL-CLEANUP] Deleting UIDs not in any stack: ${keysToDelete.join(', ')}`);
-      keysToDelete.forEach(key => globalScrollData.scrollPositions.delete(key));
-    } else {
-      console.log(`[SCROLL-CLEANUP] No cleanup needed - all scroll entries are valid`);
-    }
+    keysToDelete.forEach(key => globalScrollData.scrollPositions.delete(key));
   }, [stackSnapshot, api]);
 
   // Clean up container cache when UIDs are removed
