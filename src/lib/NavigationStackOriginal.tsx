@@ -13,7 +13,6 @@ import React, {
   lazy,
   Suspense,
   ComponentType,
-  useLayoutEffect
 } from "react";
 
 const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useEffect : () => {};
@@ -25,7 +24,6 @@ type TransitionState = "enter" | "idle" | "exit" | "done";
 type ParsedStack = { code: string; params?: NavParams }[];
 
 export type StackEntry = {
-  // uid format: "groupId:stackId:pageUid" (composite key for scroll restoration)
   uid: string;
   key: string;
   params?: NavParams;
@@ -1277,16 +1275,6 @@ class EnhancedLifecycleManager {
 }
 
 // ==================== Group-Scoped Scroll Restoration ====================
-
-// Global scroll storage shared across all stack hooks
-const globalScrollData = {
-  scrollPositions: new Map<string, number>(),
-  lastUid: null as string | null,
-  lastGroupStackKey: null as string | null,
-  lastActive: true,
-  currentScrollY: 0,
-};
-
 interface ContainerData {
   element: HTMLElement;
   level: number;
@@ -1307,30 +1295,43 @@ export function useGroupScopedScrollRestoration(
   groupContext: GroupNavigationContextType | null,
   groupStackId: string | null
 ) {
-  // Composite key: groupId:stackId
-  const groupStackKey = groupContext 
-    ? `${groupContext.getGroupId()}:${groupStackId}`
-    : 'root:root';
+  const groupKey = groupContext ? `${groupContext.getGroupId()}:${groupStackId}` : 'root';
 
   const scrollData = useRef<{
+    groupScrollPositions: Map<string, Map<string, number>>;
+    lastUid: string | null;
+    lastGroupKey: string | null;
+    lastActive: boolean;
     scrollContainers: Map<string, ContainerData | 'window'>;
+    currentScrollY: number;
+    // Track window dimensions for cache invalidation
     lastWindowWidth: number;
   }>({
+    groupScrollPositions: new Map(),
+    lastUid: null,
+    lastGroupKey: null,
+    lastActive: true,
     scrollContainers: new Map(),
+    currentScrollY: 0,
     lastWindowWidth: typeof window !== 'undefined' ? window.innerWidth : 0,
   }).current;
 
   const isActiveGroup = groupContext ? groupContext.isActiveStack(groupStackId || '') : true;
   const [cacheVersion, setCacheVersion] = useState(0);
 
-  // UID is already composite (groupId:stackId:pageUid), just return it
-  const makeScrollKey = (uid: string): string => uid;
-
   useEffect(() => {
     if (typeof window !== "undefined" && "scrollRestoration" in window.history) {
       window.history.scrollRestoration = "manual";
     }
   }, []);
+
+  // Get or create position map for current group
+  const getGroupScrollPositions = () => {
+    if (!scrollData.groupScrollPositions.has(groupKey)) {
+      scrollData.groupScrollPositions.set(groupKey, new Map());
+    }
+    return scrollData.groupScrollPositions.get(groupKey)!;
+  };
 
   // Scrollable detection
   const analyzeContainer = (element: HTMLElement, level: number): ContainerData => {
@@ -1477,20 +1478,20 @@ export function useGroupScopedScrollRestoration(
     }
   }, []);
 
-  // Track scroll position for active page
+  // Track scroll position ONLY for active group
   useEffect(() => {
     if (!isActiveGroup) return;
 
+    const groupPositions = getGroupScrollPositions();
     const top = stackSnapshot.at(-1);
     if (!top) return;
 
     const container = getScrollableContainer(top.uid);
-    const scrollKey = makeScrollKey(top.uid);
 
     const handleScroll = () => {
       const scrollPosition = getCurrentScrollPosition(container);
-      globalScrollData.scrollPositions.set(scrollKey, scrollPosition);
-      globalScrollData.currentScrollY = scrollPosition;
+      groupPositions.set(top.uid, scrollPosition);
+      scrollData.currentScrollY = scrollPosition;
     };
 
     const removeListener = addScrollListener(container, handleScroll);
@@ -1498,129 +1499,53 @@ export function useGroupScopedScrollRestoration(
     return () => {
       removeListener();
     };
-  }, [stackSnapshot, isActiveGroup, groupStackKey, cacheVersion]);
+  }, [stackSnapshot, isActiveGroup, groupKey, cacheVersion]);
 
-  // Reset scroll for NEW pages SYNCHRONOUSLY before React renders
-  // This uses useLayoutEffect to run BEFORE paint, preventing inherited scroll
-  useLayoutEffect(() => {
-    if (!isActiveGroup) return;
-    
-    const topEntry = stackSnapshot.at(-1);
-    if (!topEntry) return;
-
-    const { uid } = topEntry;
-    const savedPosition = globalScrollData.scrollPositions.get(uid);
-    
-    // If this is a brand new page (no saved position), reset scroll immediately
-    if (savedPosition === undefined) {
-      const container = getScrollableContainer(uid);
-      setScrollPosition(0, container);
-    }
-  }, [stackSnapshot, isActiveGroup]); // Minimal deps - just the stack
-
-  // Restore scroll position when page changes
+  // Smart scroll restoration
   useEffect(() => {
     const topEntry = stackSnapshot.at(-1);
     if (!topEntry) return;
 
     const { uid } = topEntry;
-    const { lastUid, lastGroupStackKey, lastActive, currentScrollY } = globalScrollData;
+    const { lastUid, lastGroupKey, lastActive, groupScrollPositions, currentScrollY } = scrollData;
+    const currentGroupPositions = getGroupScrollPositions();
 
-    const groupStackKeyChanged = lastGroupStackKey !== groupStackKey;
+    const groupChanged = lastGroupKey !== groupKey;
     const uidChanged = uid !== lastUid;
     const activeChanged = lastActive !== isActiveGroup;
 
-    // Save current position before switching - get ACTUAL position from container, not cached value
-    if (lastUid && lastActive && lastGroupStackKey && (groupStackKeyChanged || uidChanged)) {
-      const lastScrollKey = lastUid;
-      // Get the ACTUAL scroll position from the container at switch time
-      const lastContainer = getScrollableContainer(lastUid);
-      const actualScrollPosition = getCurrentScrollPosition(lastContainer);
-      globalScrollData.scrollPositions.set(lastScrollKey, actualScrollPosition);
+    // Save current position before switching away
+    if (lastUid && lastActive && lastGroupKey && (groupChanged || uidChanged)) {
+      const lastGroupPositions = groupScrollPositions.get(lastGroupKey);
+      if (lastGroupPositions) {
+        // Use the tracked scroll position, NOT querying the DOM
+        lastGroupPositions.set(lastUid, currentScrollY);
+      }
     }
 
     // Restore position when becoming active
-    if (isActiveGroup && (groupStackKeyChanged || uidChanged || activeChanged)) {
-      const scrollKey = makeScrollKey(uid);
-      const savedPosition = globalScrollData.scrollPositions.get(scrollKey);
+    if (isActiveGroup && (groupChanged || uidChanged || activeChanged)) {
+      const savedPosition = currentGroupPositions.get(uid);
       const container = getScrollableContainer(uid);
-      
-      // Explicitly determine if this is a new/fresh page
-      const isNewPage = savedPosition === undefined;
 
-      if (isNewPage) {
-        // For brand new pages, SYNCHRONOUSLY reset to 0 immediately
-        setScrollPosition(0, container);
-      } else if (savedPosition !== undefined) {
-        // For existing pages, restore from saved position with fallbacks
-        const restoreScroll = () => {
-          setScrollPosition(savedPosition, container);
-        };
+      const restoreScroll = () => {
+        const position = savedPosition ?? 0;
+        setScrollPosition(position, container);
+      };
 
-        // --- IMMEDIATE RESTORE ---
-        restoreScroll();
+      // --- IMMEDIATE RESTORE ---
+      restoreScroll(); // run synchronously BEFORE paint
 
-        // --- DOM-settled fallback ---
-        requestAnimationFrame(() => restoreScroll());
-        setTimeout(() => restoreScroll(), 20);
-      }
+      // --- DOM-settled fallback ---
+      requestAnimationFrame(() => restoreScroll());
+      setTimeout(() => restoreScroll(), 20); // micro fallback
     }
 
-    // Update global state
-    globalScrollData.lastUid = uid;
-    globalScrollData.lastGroupStackKey = groupStackKey;
-    globalScrollData.lastActive = isActiveGroup;
-  }, [stackSnapshot, isActiveGroup, groupStackKey, cacheVersion]);
-
-  // Clean up scroll for pages no longer in entire navigation system
-  useEffect(() => {
-    // Build set of ALL valid UIDs across entire navigation tree (including nested/parent stacks)
-    const validUids = new Set<string>();
-    const visited = new Set<string>();
-    
-    // Recursively collect UIDs from a stack and its children
-    const collectUidsRecursive = (stackId: string) => {
-      if (visited.has(stackId)) return;
-      visited.add(stackId);
-      
-      const regEntry = globalRegistry.get(stackId);
-      if (!regEntry) return;
-      
-      // Add UIDs from this stack
-      if (regEntry.stack && Array.isArray(regEntry.stack)) {
-        regEntry.stack.forEach((entry: StackEntry) => {
-          validUids.add(entry.uid);
-        });
-      }
-      
-      // Recursively add UIDs from child stacks
-      if (regEntry.childIds && regEntry.childIds.size > 0) {
-        regEntry.childIds.forEach((childId: string) => {
-          collectUidsRecursive(childId);
-        });
-      }
-    };
-    
-    // Traverse entire registry to collect all UIDs from all stacks (including nested)
-    if (typeof window !== 'undefined' && globalRegistry) {
-      globalRegistry.forEach((regEntry, stackId) => {
-        // Only start from root stacks (no parent)
-        if (!regEntry.parentId) {
-          collectUidsRecursive(stackId);
-        }
-      });
-    }
-
-    // Delete scroll entries that don't exist in ANY stack in the entire navigation
-    const keysToDelete: string[] = [];
-    globalScrollData.scrollPositions.forEach((_, key) => {
-      if (!validUids.has(key)) {
-        keysToDelete.push(key);
-      }
-    });
-
-    keysToDelete.forEach(key => globalScrollData.scrollPositions.delete(key));
-  }, [stackSnapshot, api]);
+    // Update state
+    scrollData.lastUid = uid;
+    scrollData.lastGroupKey = groupKey;
+    scrollData.lastActive = isActiveGroup;
+  }, [stackSnapshot, isActiveGroup, groupKey, cacheVersion]);
 
   // Clean up container cache when UIDs are removed
   useEffect(() => {
@@ -1697,38 +1622,6 @@ function generateStableUid(key: string, params?: NavParams): string {
   return `uid_${Math.abs(hash)}`;
 }
 
-// Generate composite UID: "groupId:stackId:pageUid"
-function generateCompositeUid(
-  stackId: string,
-  groupContext: GroupNavigationContextType | null,
-  groupStackId: string | null,
-  key: string,
-  params?: NavParams
-): string {
-  const groupStackKey = groupContext
-    ? `${groupContext.getGroupId()}:${groupStackId}`
-    : 'root:root';
-  const pageUid = generateStableUid(key, params);
-  return `${groupStackKey}:${pageUid}`;
-}
-
-// Ensure UID is composite format - upgrade old non-composite UIDs if needed
-function ensureCompositeUid(
-  uid: string | undefined,
-  stackId: string,
-  groupContext: GroupNavigationContextType | null,
-  groupStackId: string | null,
-  key: string,
-  params?: NavParams
-): string {
-  // If already composite (contains ':'), return as-is
-  if (uid && uid.includes(':')) {
-    return uid;
-  }
-  // Otherwise regenerate as composite
-  return generateCompositeUid(stackId, groupContext, groupStackId, key, params);
-}
-
 function parseRawKey(raw: string, params?: NavParams) {
   if (!raw) return { key: '', params };
 
@@ -1748,22 +1641,19 @@ function storageKeyFor(id: string) {
   return `navstack:${id}`;
 }
 
-function readPersistedStack(id: string, groupContext: GroupNavigationContextType | null, groupStackId: string | null): StackEntry[] | null {
+function readPersistedStack(id: string): StackEntry[] | null {
   try {
     if (typeof window === "undefined") return null;
     const raw = sessionStorage.getItem(storageKeyFor(id));
     if (!raw) return null;
-    const parsed = JSON.parse(raw) as { timestamp: number; entries: any[] };
+    const parsed = JSON.parse(raw) as { timestamp: number; entries: StackEntry[] };
     if (!parsed.timestamp || !parsed.entries || !Array.isArray(parsed.entries)) return null;
     const expired = Date.now() - parsed.timestamp > STORAGE_TTL_MS;
     if (expired) {
       sessionStorage.removeItem(storageKeyFor(id));
       return null;
     }
-    return parsed.entries.map((p) => {
-      const compositeUid = ensureCompositeUid(p.uid, id, groupContext, groupStackId, p.key, p.params);
-      return { uid: compositeUid, key: p.key, params: p.params, metadata: p.metadata };
-    });
+    return parsed.entries.map((p) => ({ uid: generateStableUid(p.key, p.params), key: p.key, params: p.params, metadata: p.metadata }));
   } catch (e) {
     return null;
   }
@@ -2174,7 +2064,7 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
         const { key, params: p } = parseRawKey(rawKey, params);
 
         const newEntry: StackEntry = {
-          uid: generateCompositeUid(id, groupContext, groupStackId, key, p),
+          uid: generateStableUid(key, p),
           key,
           params: p,
           metadata
@@ -2220,7 +2110,7 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
    async replace(rawKey, params, metadata) {
      return withLock<boolean>(async () => {
        const { key, params: p } = parseRawKey(rawKey, params);
-       const newEntry: StackEntry = { uid: generateCompositeUid(id, groupContext, groupStackId, key, p), key, params: p, metadata };
+       const newEntry: StackEntry = { uid: generateStableUid(key, p), key, params: p, metadata };
        const previousEntry = regEntry.stack[regEntry.stack.length - 1];
 
        // Before replace lifecycle
@@ -2423,7 +2313,7 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
     async pushAndPopUntil(rawKey, predicate, params, metadata) {
       return withLock<boolean>(async () => {
         const { key, params: p } = parseRawKey(rawKey, params);
-        const newEntry: StackEntry = { uid: generateCompositeUid(id, groupContext, groupStackId, key, p), key, params: p, metadata };
+        const newEntry: StackEntry = { uid: generateStableUid(key, p), key, params: p, metadata };
 
         const previousStack = regEntry.stack.slice();
         const lastTop = regEntry.stack[regEntry.stack.length - 1];
@@ -2480,14 +2370,6 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
           });
         }
 
-        // Emit final stack state after all pop operations are complete
-        // This ensures subscribers and persistence layer get the correct final state.
-        // We pass the current final stack as "previousStack" so emit detects no page change
-        // at the top (since top entry is still newEntry) and only notifies subscribers/persists.
-        if (poppedEntries.length > 0) {
-          emit(regEntry.stack.slice(), { type: 'popUntil', target: undefined });
-        }
-
         return true;
       });
     },
@@ -2495,7 +2377,7 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
     async pushAndReplace(rawKey, params, metadata) {
       return withLock<boolean>(async () => {
         const { key, params: p } = parseRawKey(rawKey, params);
-        const newEntry: StackEntry = { uid: generateCompositeUid(id, groupContext, groupStackId, key, p), key, params: p, metadata };
+        const newEntry: StackEntry = { uid: generateStableUid(key, p), key, params: p, metadata };
         const previousEntry = regEntry.stack[regEntry.stack.length - 1];
 
         // Before replace lifecycle
@@ -2538,7 +2420,7 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
     async go(rawKey, params, metadata) {
       return withLock<boolean>(async () => {
         const { key, params: p } = parseRawKey(rawKey, params);
-        const newEntry: StackEntry = { uid: generateCompositeUid(id, groupContext, groupStackId, key, p), key, params: p, metadata };
+        const newEntry: StackEntry = { uid: generateStableUid(key, p), key, params: p, metadata };
         const previousEntry = regEntry.stack[regEntry.stack.length - 1];
 
         // Before replace lifecycle (go is essentially a replace)
@@ -4682,7 +4564,7 @@ export default function NavigationStack(props: {
                 try { return decodeURIComponent(t.code.slice(2)); } catch { return t.code.slice(2); }
               })() : t.code);
               return {
-                uid: generateCompositeUid(id, groupContext, groupStackId, resolvedKey, t.params),
+                uid: generateStableUid(resolvedKey, t.params),
                 key: resolvedKey,
                 params: t.params
               } as StackEntry;
@@ -4697,7 +4579,7 @@ export default function NavigationStack(props: {
 
     // Second priority: Fall back to persisted storage
     if (persist ) {
-      const persisted = readPersistedStack(id, groupContext, groupStackId);
+      const persisted = readPersistedStack(id);
       if (persisted && persisted.length > 0) {
         regEntry.stack = persisted;
         setStackSnapshot([...persisted]);
@@ -4713,14 +4595,14 @@ export default function NavigationStack(props: {
       return;
     }
     regEntry.stack = [{
-      uid: generateCompositeUid(id, groupContext, groupStackId, key, params),
+      uid: generateStableUid(key, params),
       key,
       params
     }];
     setStackSnapshot([...regEntry.stack]);
     if (persist ) writePersistedStack(id, regEntry.stack);
     setInitialized(true);
-  }, [id, entry, navLink, groupContext, groupStackId]);
+  }, [id, entry, navLink, groupContext]);
 
 
   useEffect(() => {
@@ -4768,7 +4650,7 @@ export default function NavigationStack(props: {
           try { return decodeURIComponent(t.code.slice(2)); } catch { return t.code.slice(2); }
         })() : t.code);
         return {
-          uid: generateCompositeUid(id, groupContext, groupStackId, resolvedKey, t.params),
+          uid: generateStableUid(resolvedKey, t.params),
           key: resolvedKey,
           params: t.params,
         };
