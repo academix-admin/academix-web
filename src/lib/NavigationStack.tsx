@@ -167,19 +167,7 @@ export type NavStackAPI = {
   isActiveStack: () => boolean;
   isInGroup: () => boolean;
   getGroupId: () => string | null;
-  /**
-   * Switch to a group and optionally execute operations on its stack
-   * @param groupId - The group to switch to
-   * @param callback - Optional callback that receives the new group's API
-   * 
-   * Examples:
-   *   // Without callback - returns promise of NavStackAPI
-   *   const api = await nav.goToGroupId('profile-stack');
-   *   
-   *   // With callback - executes on new group's stack
-   *   await nav.goToGroupId('profile-stack', (api) => api.push('security_page', {isNew: true}));
-   */
-  goToGroupId(groupId: string, callback?: (api: NavStackAPI) => Promise<void> | void): Promise<NavStackAPI>;
+  goToGroupId(groupId: string): Promise<NavStackAPI>;
   addOnCreate: (handler: LifecycleHandler) => () => void;
   addOnDispose: (handler: LifecycleHandler) => () => void;
   addOnPause: (handler: LifecycleHandler) => () => void;
@@ -3052,7 +3040,7 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
       return groupContext ? groupContext.getGroupId() : null;
     },
 
-    goToGroupId(groupId: string, callback?: (api: NavStackAPI) => Promise<void> | void): Promise<NavStackAPI > {
+    goToGroupId(groupId: string): Promise<NavStackAPI > {
       if (!groupContext) {
         return Promise.reject(new Error(`Stack ${id} is not in a group`));
       }
@@ -3069,12 +3057,6 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
       return groupContext.goToGroupId(groupId).then(async (success) => {
         if (!success) {
           throw new Error(`Failed to switch to group ${groupId}`);
-        }
-
-        // Execute callback if provided
-        if (callback) {
-          await callback(targetApi);
-          return;
         }
 
         return targetApi;

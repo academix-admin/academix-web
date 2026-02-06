@@ -163,6 +163,7 @@ export default function PasswordManagement() {
             </svg>
           </button>
 
+
           <h1 className={styles.title}>{t('change_password')}</h1>
         </div>
       </header>

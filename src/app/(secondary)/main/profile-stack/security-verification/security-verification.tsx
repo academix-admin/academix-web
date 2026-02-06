@@ -72,6 +72,9 @@ export default function SecurityVerification(props: SecurityVerificationProps) {
 
   const getVerificationLabel = () => {
     if (request === 'Pin') {
+      if(isNew){
+        return t('create_new_pin');
+      }
       return t('change_pin');
     }
     return t('change_password');
