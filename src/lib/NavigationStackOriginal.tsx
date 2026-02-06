@@ -1572,7 +1572,6 @@ export function useGroupScopedScrollRestoration(
     globalScrollData.lastActive = isActiveGroup;
   }, [stackSnapshot, isActiveGroup, groupStackKey, cacheVersion]);
 
-
   // Clean up scroll for pages no longer in entire navigation system
   useEffect(() => {
     // Build set of ALL valid UIDs across entire navigation tree (including nested/parent stacks)
