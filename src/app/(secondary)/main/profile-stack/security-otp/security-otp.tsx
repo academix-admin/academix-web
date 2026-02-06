@@ -312,9 +312,9 @@ export default function SecurityOtp(props: SecurityOtpProps) {
       } else {
         // OTP verified successfully
       if(request === 'Pin') {
-        nav.pushAndPopUntil('pin_mangement', (entry)=> entry.key === 'security',{ isNew: isNew ?? false });
+        nav.pushAndPopUntil('pin_mangement', (entry)=> entry.key === 'security_page',{ isNew: isNew ?? false });
       } else {
-        nav.pushAndPopUntil('password_management', (entry)=> entry.key === 'security');
+        nav.pushAndPopUntil('password_management', (entry)=> entry.key === 'security_page');
       }
           __meta.clear();
           setIsLoading(false);

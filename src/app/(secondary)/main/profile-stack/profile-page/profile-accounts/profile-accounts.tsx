@@ -35,7 +35,7 @@ export default function ProfileAccounts({ onStateChange }: ComponentStateProps) 
             case 2:
               break;
             case 3:
-              nav.push('security');
+              nav.push('security_page');
               break;
             case 4:
               nav.push('redeem_codes');

@@ -61,7 +61,7 @@ export default function SecurityVerification(props: SecurityVerificationProps) {
         await resetPasswordForPhone(verificationSelected.value);
       }
       otpTimer$.start(300);
-      nav.pushAndPopUntil('security_otp', (entry)=> entry.key === 'security', {request: request, verification: verificationSelected?.type, isNew: isNew ?? false, value: verificationSelected?.value });
+      nav.pushAndPopUntil('security_otp', (entry)=> entry.key === 'security_page', {request: request, verification: verificationSelected?.type, isNew: isNew ?? false, value: verificationSelected?.value });
       setLoading(false);
     } catch (err) {
       setLoading(false);

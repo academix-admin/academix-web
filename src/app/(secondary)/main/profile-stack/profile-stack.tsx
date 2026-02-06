@@ -31,7 +31,7 @@ const profileStackNavLink = {
   payout_page: PayoutPage,
   help_page: HelpPage,
   instructions_page: InstructionsPage,
-  security: SecurityPage,
+  security_page: SecurityPage,
   security_verification: SecurityVerification,
   security_otp: SecurityOtp,
   pin_mangement: PinManagement,
