@@ -168,10 +168,18 @@ export type NavStackAPI = {
   isInGroup: () => boolean;
   getGroupId: () => string | null;
   /**
-   * Chainable group navigation - returns Promise<NavStackAPI>
-   * Example: await nav.goToGroupId('group2').push('page2')
+   * Switch to a group and optionally execute operations on its stack
+   * @param groupId - The group to switch to
+   * @param callback - Optional callback that receives the new group's API
+   * 
+   * Examples:
+   *   // Without callback - returns promise of NavStackAPI
+   *   const api = await nav.goToGroupId('profile-stack');
+   *   
+   *   // With callback - executes on new group's stack
+   *   await nav.goToGroupId('profile-stack', (api) => api.push('security_page', {isNew: true}));
    */
-  goToGroupId: (groupId: string) => Promise<NavStackAPI>;
+  goToGroupId(groupId: string, callback?: (api: NavStackAPI) => Promise<void> | void): Promise<NavStackAPI>;
   addOnCreate: (handler: LifecycleHandler) => () => void;
   addOnDispose: (handler: LifecycleHandler) => () => void;
   addOnPause: (handler: LifecycleHandler) => () => void;
@@ -3044,14 +3052,33 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
       return groupContext ? groupContext.getGroupId() : null;
     },
 
-    goToGroupId(groupId: string): Promise<NavStackAPI> {
+    goToGroupId(groupId: string, callback?: (api: NavStackAPI) => Promise<void> | void): Promise<NavStackAPI > {
       if (!groupContext) {
-        console.warn(`goToGroupId called on non-group stack ${id}`);
         return Promise.reject(new Error(`Stack ${id} is not in a group`));
       }
 
-      // Switch to the new group and return the promise that resolves to the new API
-      return groupContext.goToGroupId(groupId).then(() => api);
+      // The groupId IS the stackId - each NavigationStack in the group has a unique id
+      const targetStack = globalRegistry.get(groupId);
+      const targetApi = targetStack?.api;
+      
+      if (!targetApi) {
+        return Promise.reject(new Error(`Stack ${groupId} not found in group`));
+      }
+
+      // Switch to the group
+      return groupContext.goToGroupId(groupId).then(async (success) => {
+        if (!success) {
+          throw new Error(`Failed to switch to group ${groupId}`);
+        }
+
+        // Execute callback if provided
+        if (callback) {
+          await callback(targetApi);
+          return;
+        }
+
+        return targetApi;
+      });
     },
 
     addOnCreate: (handler) => lifecycleManager.addHandler('onCreate', handler),
