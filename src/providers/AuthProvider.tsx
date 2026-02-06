@@ -57,11 +57,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const { userData, __meta } = useUserData();
-  const { replaceAndWait } = useAwaitableRouter();
+  const { replaceAndWait } = useAwaitableRouter({ timeout: 8000, enableLogging: true });
 
   const publicRoutes = ['/rules', '/payout', '/redirect', /^\/redirect\/[a-f0-9-]+$/, '/rewards', '/rates', '/about', '/help', '/instructions'];
   const internalRoutes = ['/', '/login', '/signup', '/welcome'];
   const protectedRoutes = ['/main', '/quiz', /^\/quiz\/[a-f0-9-]+$/];
+
+  // Check if session is expired
+  const isSessionExpired = (sess: Session | null): boolean => {
+    if (!sess) return true;
+    const expiresAt = sess.expires_at;
+    if (!expiresAt) return false;
+    const now = Math.floor(Date.now() / 1000);
+    const isExpired = now > expiresAt;
+    if (isExpired) {
+      console.log('[AUTH] Session expired', { expiresAt, now, diff: now - expiresAt });
+    }
+    return isExpired;
+  };
 
   useEffect(() => {
     // Immediate initialization for public routes
@@ -83,19 +96,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         const initialUser = userResult.data.user;
         const initialSession = sessionResult.data.session;
-        setUser(initialUser);
-        setSession(initialSession);
 
-        if (initialUser && userData && matchesRoutePattern(pathname, internalRoutes) ) {
-          await replaceAndWait("/main");
+        // Check if session is expired
+        if (isSessionExpired(initialSession)) {
+          setUser(null);
+          setSession(null);
+        } else {
+          setUser(initialUser);
+          setSession(initialSession);
         }
+
+        // Navigate authenticated users away from internal routes
+        if (initialUser && userData && matchesRoutePattern(pathname, internalRoutes)) {
+          await Promise.race([
+            replaceAndWait("/main"),
+            new Promise(resolve => setTimeout(resolve, 4000))
+          ]);
+        } 
 
         const { data: { subscription } } = supabaseBrowser.auth.onAuthStateChange(
           async (event, newSession) => {
-            setSession(newSession);
-            setUser(newSession?.user ?? null);
 
-            if (!newSession) {
+            // Check if incoming session is expired
+            if (isSessionExpired(newSession)) {
+              console.log('[AUTH] Received expired session, treating as logout');
+              setSession(null);
+              setUser(null);
+              
               await Promise.all([
                 StateStack.core.clearScope('mission_flow'),
                 StateStack.core.clearScope('achievements_flow'),
@@ -106,6 +133,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               if (matchesRoutePattern(pathname, protectedRoutes)) {
                 await replaceAndWait("/");
               }
+            } else {
+              setSession(newSession);
+              setUser(newSession?.user ?? null);
+
+              if (!newSession) {
+                await Promise.all([
+                  StateStack.core.clearScope('mission_flow'),
+                  StateStack.core.clearScope('achievements_flow'),
+                  StateStack.core.clearScope('payment_flow'),
+                  StateStack.core.clearScope('secondary_flow'),
+                ]);
+                sessionStorage.clear();
+                if (matchesRoutePattern(pathname, protectedRoutes)) {
+                  await replaceAndWait("/");
+                }
+              }
             }
 
             setInitialized(true);
@@ -113,8 +156,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         );
 
         unsubscribe = () => subscription.unsubscribe();
+
         setInitialized(true);
       } catch (error) {
+        console.error('[AUTH] Initialization error:', error);
         setInitialized(true);
       }
     };
@@ -133,3 +178,4 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     </AuthContext.Provider>
   );
 }
+ 

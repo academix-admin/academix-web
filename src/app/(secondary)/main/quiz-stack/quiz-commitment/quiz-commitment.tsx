@@ -380,6 +380,11 @@ export default function QuizCommitment(props: QuizChallengeProps) {
           poolsId: quizModel?.quizPool?.poolsId,
           action: 'active'
         });
+      }else if(status === 'PoolStatus.pinError'){
+        withdrawBottomController.close();
+        await (await nav.goToGroupId('profile_stack')).push('security_page', {isNew: true});
+      }else if(status === 'PoolStatus.pinError'){
+        setError(status);
       }
 
       setQuizLoading(false);
@@ -679,6 +684,8 @@ export default function QuizCommitment(props: QuizChallengeProps) {
                 </div>
               </div>
             </div>
+            
+            {error && <p className={`${styles.errorText} ${styles[`errorText_${theme}`]}`}>{error}</p>}
 
             {/* Pay Button */}
             <button

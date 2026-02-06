@@ -167,7 +167,11 @@ export type NavStackAPI = {
   isActiveStack: () => boolean;
   isInGroup: () => boolean;
   getGroupId: () => string | null;
-  goToGroupId: (groupId: string) => Promise<boolean>;
+  /**
+   * Chainable group navigation - returns Promise<NavStackAPI>
+   * Example: await nav.goToGroupId('group2').push('page2')
+   */
+  goToGroupId: (groupId: string) => Promise<NavStackAPI>;
   addOnCreate: (handler: LifecycleHandler) => () => void;
   addOnDispose: (handler: LifecycleHandler) => () => void;
   addOnPause: (handler: LifecycleHandler) => () => void;
@@ -3040,13 +3044,14 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
       return groupContext ? groupContext.getGroupId() : null;
     },
 
-    async goToGroupId(groupId: string) {
+    goToGroupId(groupId: string): Promise<NavStackAPI> {
       if (!groupContext) {
         console.warn(`goToGroupId called on non-group stack ${id}`);
-        return false;
+        return Promise.reject(new Error(`Stack ${id} is not in a group`));
       }
 
-      return groupContext.goToGroupId(groupId);
+      // Switch to the new group and return the promise that resolves to the new API
+      return groupContext.goToGroupId(groupId).then(() => api);
     },
 
     addOnCreate: (handler) => lifecycleManager.addHandler('onCreate', handler),
