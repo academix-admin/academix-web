@@ -229,7 +229,7 @@ export default function QuizChallenge(props: QuizChallengeProps) {
                 });
             } else if(status === 'PoolStatus.pinError'){
                 withdrawBottomController.close();
-                await (await nav.goToGroupId('profile_stack')).push('security_page', {isNew: true});
+                await (await nav.goToGroupId('profile-stack')).push('security_page', {isNew: true});
             } else {
                 //
                 setError(status);
