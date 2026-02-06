@@ -200,14 +200,14 @@ const Keypad: React.FC<KeypadProps> = ({ value, onChange, disabled = false, erro
 };
 
 // Define props interface for the Otp component
-interface OtpProps {
+interface SecurityOtpProps {
   request: 'Pin' | 'Password';
   verification: 'Email' | 'Phone';
   value: string;
   isNew: boolean;
 }
 
-export default function SecurityOtp(props: OtpProps) {
+export default function SecurityOtp(props: SecurityOtpProps) {
   const { theme } = useTheme();
   const { t, tNode, lang } = useLanguage();
   const { otpTimer, otpTimer$, __meta } = useOtp();
@@ -229,6 +229,7 @@ export default function SecurityOtp(props: OtpProps) {
 
   const firstInputRef = useRef<HTMLInputElement>(null);
 
+  
     useEffect(() => {
         if (!otpTimer.expiresAt && __meta.isHydrated && isTop) {
           nav.popToRoot();

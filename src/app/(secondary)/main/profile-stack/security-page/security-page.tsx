@@ -60,22 +60,27 @@ function SecurityMenuItem({
   );
 }
 
+interface SecurityProps {
+  isNew?: boolean;
+}
 
-export default function SecurityPage() {
+export default function SecurityPage(props: SecurityProps) {
   const { theme } = useTheme();
   const { t } = useLanguage();
   const nav = useNav();
 
   const goBack = () => nav.pop();
 
-  const handleChangePin = () => { 
+  const { isNew } = props;
+
+  const handleChangePin = () => {
     // Logic to change PIN
-    nav.push('security_verification', {request: 'Pin', isNew: false});
+    nav.push('security_verification', { request: 'Pin', isNew: isNew ?? false });
   }
 
-  const handleChangePassword = () => { 
+  const handleChangePassword = () => {
     // Logic to change Password
-    nav.push('security_verification', {request: 'Password'});
+    nav.push('security_verification', { request: 'Password' });
   }
 
   return (
