@@ -272,7 +272,13 @@ export default function NavigationBar({
         }
 
         if (mode === 'autohide') {
-          setHidden(current > prevScroll.current && current > 50);
+          const shouldHide = current > prevScroll.current && current > 50;
+          const logMsg = `[${new Date().toISOString()}] AutohideLogic - current: ${current}, prev: ${prevScroll.current}, scrollDown: ${current > prevScroll.current}, threshold50: ${current > 50}, shouldHide: ${shouldHide}`;
+          console.log(logMsg);
+          if (typeof window !== 'undefined') {
+            (window as any).__scrollDebugLogs?.push(logMsg);
+          }
+          setHidden(shouldHide);
           prevScroll.current = current;
         }
 
@@ -363,6 +369,15 @@ export default function NavigationBar({
   // Reset fabClicked when nav hides again
   useEffect(() => {
     if (hidden) setFabClicked(false);
+  }, [hidden]);
+
+  // Log hidden state changes for debugging
+  React.useEffect(() => {
+    const logMsg = `[${new Date().toISOString()}] NavigationBar hidden state changed to: ${hidden}`;
+    console.log(logMsg);
+    if (typeof window !== 'undefined') {
+      (window as any).__scrollDebugLogs?.push(logMsg);
+    }
   }, [hidden]);
 
     if (!mounted) return null;
