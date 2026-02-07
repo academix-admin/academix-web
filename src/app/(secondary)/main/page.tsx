@@ -45,19 +45,41 @@ useEffect(() => {
   handleSignOut();
 }, [userData,__meta.isHydrated]);
 
-  /** Subscribe to scroll broadcaster with proper cleanup */
+  /** Subscribe to scroll broadcaster when callback is ready */
   useEffect(() => {
-    const unsubscribe = scrollBroadcaster.subscribe((e) => {
-      navBarScrollRef.current?.({
-        container: e.container,
-        position: e.position ?? e.scrollPosition,
-        clientHeight: e.clientHeight,
-        scrollHeight: e.scrollHeight,
-        scrollPercentage: e.scrollPercentage,
-      });
-    });
+    // Create a subscription manager that subscribes once callback is available
+    let unsubscribe: (() => void) | null = null;
+    let mounted = true;
 
-    return () => unsubscribe?.();
+    const checkAndSubscribe = () => {
+      if (navBarScrollRef.current !== null && !unsubscribe && mounted) {
+        unsubscribe = scrollBroadcaster.subscribe((e) => {
+          navBarScrollRef.current?.({
+            container: e.container,
+            position: e.position ?? e.scrollPosition,
+            clientHeight: e.clientHeight,
+            scrollHeight: e.scrollHeight,
+            scrollPercentage: e.scrollPercentage,
+          });
+        });
+      }
+    };
+
+    // Check immediately
+    checkAndSubscribe();
+
+    // Also check periodically until callback is set (within first 1 second)
+    const timeout = setTimeout(() => {
+      if (!unsubscribe) {
+        checkAndSubscribe();
+      }
+    }, 50);
+
+    return () => {
+      mounted = false;
+      clearTimeout(timeout);
+      unsubscribe?.();
+    };
   }, []);
 
 
