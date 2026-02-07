@@ -23,11 +23,7 @@ const Main = () => {
   const { t } = useLanguage();
   const [active, setActive] = useState('home-stack');
   const { userData, userData$, __meta } = useUserData();
-  
-  // Use proper ref typing for iOS compatibility
-  const navBarScrollRef = useRef<((event: NavigationBarScrollEvent) => void) | null>(null);
-  // Queue scroll events that arrive before callback is ready
-  const scrollQueueRef = useRef<any[]>([]);
+  const navBarScrollRef = useRef<(event: NavigationBarScrollEvent) => void>(null);
 
 useEffect(() => {
 
@@ -49,42 +45,39 @@ useEffect(() => {
   handleSignOut();
 }, [userData,__meta.isHydrated]);
 
-  /** Subscribe to scroll broadcaster with event queueing for iOS */
+  /** Subscribe to scroll broadcaster with proper cleanup */
   useEffect(() => {
-    // Memoized scroll handler that queues events if callback isn't ready
-    const handleScrollBroadcast = (e: any) => {
-      if (!navBarScrollRef.current) {
-        // Queue the event if callback not ready yet
-        scrollQueueRef.current.push(e);
-        return;
+    console.log('[ScrollDebug] Subscription setup started');
+    if (typeof window !== 'undefined') {
+      (window as any).__scrollDebugLogs = (window as any).__scrollDebugLogs || [];
+    }
+    
+    const unsubscribe = scrollBroadcaster.subscribe((e) => {
+      const timestamp = new Date().toISOString();
+      const haCallback = !!navBarScrollRef.current;
+      const logMsg = `[${timestamp}] ScrollBroadcaster event - position: ${e.position ?? e.scrollPosition}, hasCallback: ${haCallback}`;
+      
+      console.log(logMsg);
+      if (typeof window !== 'undefined') {
+        (window as any).__scrollDebugLogs?.push(logMsg);
       }
       
-      // Process any queued events first
-      while (scrollQueueRef.current.length > 0) {
-        const queuedEvent = scrollQueueRef.current.shift();
-        navBarScrollRef.current({
-          container: queuedEvent.container,
-          position: queuedEvent.position ?? queuedEvent.scrollPosition,
-          clientHeight: queuedEvent.clientHeight,
-          scrollHeight: queuedEvent.scrollHeight,
-          scrollPercentage: queuedEvent.scrollPercentage,
-        });
-      }
-      
-      // Then process current event
-      navBarScrollRef.current({
+      navBarScrollRef.current?.({
         container: e.container,
         position: e.position ?? e.scrollPosition,
         clientHeight: e.clientHeight,
         scrollHeight: e.scrollHeight,
         scrollPercentage: e.scrollPercentage,
       });
+    });
+    
+    console.log('[ScrollDebug] Subscription setup complete');
+
+    return () => {
+      console.log('[ScrollDebug] Subscription cleanup');
+      unsubscribe?.();
     };
-
-    const unsubscribe = scrollBroadcaster.subscribe(handleScrollBroadcast);
-
-    return () => unsubscribe?.();
-  }, []); // Empty deps - stable subscription
+  }, []);
 
 
   const navStackMap = new Map([
@@ -214,20 +207,15 @@ useEffect(() => {
           paddingY="0px"
           paddingX="0px"
           
-          /** Inject scroll callback from ref and flush queued events */
+          /** Inject scroll callback from ref */
           onScroll={(callback) => {
-            navBarScrollRef.current = callback;
-            // Flush any queued scroll events now that callback is available
-            while (scrollQueueRef.current.length > 0) {
-              const queuedEvent = scrollQueueRef.current.shift();
-              callback({
-                container: queuedEvent.container,
-                position: queuedEvent.position ?? queuedEvent.scrollPosition,
-                clientHeight: queuedEvent.clientHeight,
-                scrollHeight: queuedEvent.scrollHeight,
-                scrollPercentage: queuedEvent.scrollPercentage,
-              });
+            const timestamp = new Date().toISOString();
+            const logMsg = `[${timestamp}] NavigationBar onScroll callback assigned`;
+            console.log(logMsg);
+            if (typeof window !== 'undefined') {
+              (window as any).__scrollDebugLogs?.push(logMsg);
             }
+            navBarScrollRef.current = callback;
           }}
 
           /* Bar visuals */

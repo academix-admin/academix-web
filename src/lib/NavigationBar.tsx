@@ -90,15 +90,10 @@ const useInjectStyles = () => {
         display: flex;
         justify-content: space-around;
         align-items: center;
-        transition: bottom 0.25s ease, height 0.25s ease, padding 0.25s ease;
+        transition: height 0.25s ease, padding 0.25s ease, transform 0.25s ease;
         z-index: 50;
         overflow: hidden;
-        box-sizing: border-box;
-        /* iOS GPU acceleration */
-        -webkit-transform: translateZ(0);
-        transform: translateZ(0);
-        backface-visibility: hidden;
-        -webkit-backface-visibility: hidden;
+          box-sizing: border-box;
       }
 
       .nav-item {
@@ -109,12 +104,9 @@ const useInjectStyles = () => {
         cursor: pointer;
         transition: color 0.2s ease, transform 0.2s ease;
         user-select: none;
-        -webkit-user-select: none;
-        -webkit-tap-highlight-color: transparent;
         min-width: 44px;
         min-height: 44px;
         outline: none;
-        touch-action: manipulation;
       }
 
       .nav-item:hover {
@@ -124,9 +116,6 @@ const useInjectStyles = () => {
       .nav-item svg {
         margin-bottom: 2px;
         transition: transform 0.2s ease;
-        /* Prevent iOS SVG rendering bugs */
-        -webkit-transform: translateZ(0);
-        transform: translateZ(0);
       }
 
       .fab {
@@ -136,22 +125,11 @@ const useInjectStyles = () => {
         justify-content: center;
         cursor: pointer;
         transition: transform 0.2s ease, opacity 0.2s ease;
-        /* iOS optimizations */
-        -webkit-transform: translateZ(0);
-        transform: translateZ(0);
-        backface-visibility: hidden;
-        -webkit-backface-visibility: hidden;
-        -webkit-tap-highlight-color: transparent;
-        touch-action: manipulation;
       }
 
       .fab.left { left: 16px; }
       .fab.right { right: 16px; }
-      .fab.hidden { 
-        opacity: 0; 
-        transform: scale(0.9) translateZ(0);
-        pointer-events: none; 
-      }
+      .fab.hidden { opacity: 0; transform: scale(0.9); pointer-events: none; }
     `;
       document.head.appendChild(styleTag);
     }
@@ -252,8 +230,15 @@ export default function NavigationBar({
     return () => window.removeEventListener('resize', checkContentHeight);
   }, [mode]);
 
-  /** Scroll handler with iOS-specific fixes */
+  /** Scroll handler - listen to injected scroll events */
   const scrollHandlerCallback = React.useCallback((event: NavigationBarScrollEvent) => {
+    const timestamp = new Date().toISOString();
+    const logMsg = `[${timestamp}] NavigationBar scrollHandler - position: ${event.position}, mode: ${mode}`;
+    console.log(logMsg);
+    if (typeof window !== 'undefined') {
+      (window as any).__scrollDebugLogs?.push(logMsg);
+    }
+
     if (mode === 'normal') return;
 
     if (!tickingRef.current) {
@@ -266,17 +251,11 @@ export default function NavigationBar({
         }
 
         const atTop = current <= 0;
-        // Increase buffer for iOS momentum scrolling
-        const atBottom = clientHeight + current >= scrollHeight - 10;
+        const atBottom = clientHeight + current >= scrollHeight - 2; // small buffer
 
-        // Better iOS overscroll detection
-        const isOverscrolling = current < -5 || (clientHeight + current > scrollHeight + 5);
-        
-        if (atTop || atBottom || isOverscrolling) {
-          // Don't update prevScroll during overscroll
-          if (!isOverscrolling) {
-            prevScroll.current = current;
-          }
+        // 🚫 Ignore overscroll on iOS
+        if (atTop || atBottom) {
+          prevScroll.current = current;
           tickingRef.current = false;
           return;
         }
@@ -293,14 +272,7 @@ export default function NavigationBar({
         }
 
         if (mode === 'autohide') {
-          // Add minimum scroll delta for iOS to prevent jitter
-          const delta = Math.abs(current - prevScroll.current);
-          const isScrollingDown = current > prevScroll.current;
-          
-          // Only update if scrolled more than 5px (helps with iOS momentum)
-          if (delta > 5) {
-            setHidden(isScrollingDown && current > 50);
-          }
+          setHidden(current > prevScroll.current && current > 50);
           prevScroll.current = current;
         }
 
@@ -313,10 +285,19 @@ export default function NavigationBar({
   // Use injected onScroll prop, fallback to window scroll
   useEffect(() => {
     // Only set up scroll handlers AFTER hydration
-    if (!mounted) return;
+    if (!mounted) {
+      console.log('[ScrollDebug] NavigationBar not mounted yet');
+      return;
+    }
 
     if (onScroll) {
       // Custom scroll handler injected from parent (e.g., scrollBroadcaster)
+      const timestamp = new Date().toISOString();
+      const logMsg = `[${timestamp}] NavigationBar: Injecting scroll handler via onScroll prop`;
+      console.log(logMsg);
+      if (typeof window !== 'undefined') {
+        (window as any).__scrollDebugLogs?.push(logMsg);
+      }
       onScroll(scrollHandlerCallback);
       return;
     }
