@@ -47,21 +47,7 @@ useEffect(() => {
 
   /** Subscribe to scroll broadcaster with proper cleanup */
   useEffect(() => {
-    console.log('[ScrollDebug] Subscription setup started');
-    if (typeof window !== 'undefined') {
-      (window as any).__scrollDebugLogs = (window as any).__scrollDebugLogs || [];
-    }
-    
     const unsubscribe = scrollBroadcaster.subscribe((e) => {
-      const timestamp = new Date().toISOString();
-      const haCallback = !!navBarScrollRef.current;
-      const logMsg = `[${timestamp}] ScrollBroadcaster event - position: ${e.position ?? e.scrollPosition}, hasCallback: ${haCallback}`;
-      
-      console.log(logMsg);
-      if (typeof window !== 'undefined') {
-        (window as any).__scrollDebugLogs?.push(logMsg);
-      }
-      
       navBarScrollRef.current?.({
         container: e.container,
         position: e.position ?? e.scrollPosition,
@@ -70,13 +56,8 @@ useEffect(() => {
         scrollPercentage: e.scrollPercentage,
       });
     });
-    
-    console.log('[ScrollDebug] Subscription setup complete');
 
-    return () => {
-      console.log('[ScrollDebug] Subscription cleanup');
-      unsubscribe?.();
-    };
+    return () => unsubscribe?.();
   }, []);
 
 
@@ -209,12 +190,6 @@ useEffect(() => {
           
           /** Inject scroll callback from ref */
           onScroll={(callback) => {
-            const timestamp = new Date().toISOString();
-            const logMsg = `[${timestamp}] NavigationBar onScroll callback assigned`;
-            console.log(logMsg);
-            if (typeof window !== 'undefined') {
-              (window as any).__scrollDebugLogs?.push(logMsg);
-            }
             navBarScrollRef.current = callback;
           }}
 
