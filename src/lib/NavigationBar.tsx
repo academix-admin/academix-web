@@ -90,10 +90,15 @@ const useInjectStyles = () => {
         display: flex;
         justify-content: space-around;
         align-items: center;
-        transition: height 0.25s ease, padding 0.25s ease, transform 0.25s ease;
+        transition: bottom 0.25s ease, height 0.25s ease, padding 0.25s ease;
         z-index: 50;
         overflow: hidden;
-          box-sizing: border-box;
+        box-sizing: border-box;
+        /* iOS GPU acceleration */
+        -webkit-transform: translateZ(0);
+        transform: translateZ(0);
+        backface-visibility: hidden;
+        -webkit-backface-visibility: hidden;
       }
 
       .nav-item {
@@ -104,9 +109,12 @@ const useInjectStyles = () => {
         cursor: pointer;
         transition: color 0.2s ease, transform 0.2s ease;
         user-select: none;
+        -webkit-user-select: none;
+        -webkit-tap-highlight-color: transparent;
         min-width: 44px;
         min-height: 44px;
         outline: none;
+        touch-action: manipulation;
       }
 
       .nav-item:hover {
@@ -116,6 +124,9 @@ const useInjectStyles = () => {
       .nav-item svg {
         margin-bottom: 2px;
         transition: transform 0.2s ease;
+        /* Prevent iOS SVG rendering bugs */
+        -webkit-transform: translateZ(0);
+        transform: translateZ(0);
       }
 
       .fab {
@@ -125,11 +136,22 @@ const useInjectStyles = () => {
         justify-content: center;
         cursor: pointer;
         transition: transform 0.2s ease, opacity 0.2s ease;
+        /* iOS optimizations */
+        -webkit-transform: translateZ(0);
+        transform: translateZ(0);
+        backface-visibility: hidden;
+        -webkit-backface-visibility: hidden;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
       }
 
       .fab.left { left: 16px; }
       .fab.right { right: 16px; }
-      .fab.hidden { opacity: 0; transform: scale(0.9); pointer-events: none; }
+      .fab.hidden { 
+        opacity: 0; 
+        transform: scale(0.9) translateZ(0);
+        pointer-events: none; 
+      }
     `;
       document.head.appendChild(styleTag);
     }
@@ -230,7 +252,7 @@ export default function NavigationBar({
     return () => window.removeEventListener('resize', checkContentHeight);
   }, [mode]);
 
-  /** Scroll handler - listen to injected scroll events */
+  /** Scroll handler with iOS-specific fixes */
   const scrollHandlerCallback = React.useCallback((event: NavigationBarScrollEvent) => {
     if (mode === 'normal') return;
 
@@ -244,11 +266,17 @@ export default function NavigationBar({
         }
 
         const atTop = current <= 0;
-        const atBottom = clientHeight + current >= scrollHeight - 2; // small buffer
+        // Increase buffer for iOS momentum scrolling
+        const atBottom = clientHeight + current >= scrollHeight - 10;
 
-        // 🚫 Ignore overscroll on iOS
-        if (atTop || atBottom) {
-          prevScroll.current = current;
+        // Better iOS overscroll detection
+        const isOverscrolling = current < -5 || (clientHeight + current > scrollHeight + 5);
+        
+        if (atTop || atBottom || isOverscrolling) {
+          // Don't update prevScroll during overscroll
+          if (!isOverscrolling) {
+            prevScroll.current = current;
+          }
           tickingRef.current = false;
           return;
         }
@@ -265,7 +293,14 @@ export default function NavigationBar({
         }
 
         if (mode === 'autohide') {
-          setHidden(current > prevScroll.current && current > 50);
+          // Add minimum scroll delta for iOS to prevent jitter
+          const delta = Math.abs(current - prevScroll.current);
+          const isScrollingDown = current > prevScroll.current;
+          
+          // Only update if scrolled more than 5px (helps with iOS momentum)
+          if (delta > 5) {
+            setHidden(isScrollingDown && current > 50);
+          }
           prevScroll.current = current;
         }
 

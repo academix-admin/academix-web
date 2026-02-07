@@ -23,7 +23,9 @@ const Main = () => {
   const { t } = useLanguage();
   const [active, setActive] = useState('home-stack');
   const { userData, userData$, __meta } = useUserData();
-  const navBarScrollRef = useRef<(event: NavigationBarScrollEvent) => void>(null);
+  
+  // Use proper ref typing for iOS compatibility
+  const navBarScrollRef = useRef<((event: NavigationBarScrollEvent) => void) | null>(null);
 
 useEffect(() => {
 
@@ -45,42 +47,27 @@ useEffect(() => {
   handleSignOut();
 }, [userData,__meta.isHydrated]);
 
-  /** Subscribe to scroll broadcaster when callback is ready */
+  /** Subscribe to scroll broadcaster with stable handler */
   useEffect(() => {
-    // Create a subscription manager that subscribes once callback is available
-    let unsubscribe: (() => void) | null = null;
-    let mounted = true;
-
-    const checkAndSubscribe = () => {
-      if (navBarScrollRef.current !== null && !unsubscribe && mounted) {
-        unsubscribe = scrollBroadcaster.subscribe((e) => {
-          navBarScrollRef.current?.({
-            container: e.container,
-            position: e.position ?? e.scrollPosition,
-            clientHeight: e.clientHeight,
-            scrollHeight: e.scrollHeight,
-            scrollPercentage: e.scrollPercentage,
-          });
-        });
-      }
+    // Memoized scroll handler to prevent unnecessary re-subscriptions
+    const handleScrollBroadcast = (e: any) => {
+      // Guard against missing ref
+      if (!navBarScrollRef.current) return;
+      
+      // Call the NavigationBar's scroll handler
+      navBarScrollRef.current({
+        container: e.container,
+        position: e.position ?? e.scrollPosition,
+        clientHeight: e.clientHeight,
+        scrollHeight: e.scrollHeight,
+        scrollPercentage: e.scrollPercentage,
+      });
     };
 
-    // Check immediately
-    checkAndSubscribe();
+    const unsubscribe = scrollBroadcaster.subscribe(handleScrollBroadcast);
 
-    // Also check periodically until callback is set (within first 1 second)
-    const timeout = setTimeout(() => {
-      if (!unsubscribe) {
-        checkAndSubscribe();
-      }
-    }, 50);
-
-    return () => {
-      mounted = false;
-      clearTimeout(timeout);
-      unsubscribe?.();
-    };
-  }, []);
+    return () => unsubscribe?.();
+  }, []); // Empty deps - stable subscription
 
 
   const navStackMap = new Map([
