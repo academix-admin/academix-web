@@ -227,7 +227,7 @@ export default function QuizChallenge(props: QuizChallengeProps) {
                     poolsId: poolsId,
                     action: 'active'
                 });
-            } else if(status === 'PoolStatus.pinError'){
+            } else if (status === 'PoolStatus.pinError') {
                 withdrawBottomController.close();
                 await (await nav.goToGroupId('profile-stack')).push('security_verification', { request: 'Pin', isNew: true });
             } else {
