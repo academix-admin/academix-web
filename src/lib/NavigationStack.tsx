@@ -18,6 +18,57 @@ import React, {
 
 const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useEffect : () => {};
 
+// ==================== Scroll Broadcast System ====================
+// Global event system for scroll position changes across pages
+// Components can subscribe to get real-time scroll updates
+
+export type ScrollBroadcastEvent = {
+  uid: string;
+  pageKey: string;
+  scrollPosition: number;
+  scrollPercentage: number;
+  container: HTMLElement | 'window';
+  timestamp: number;
+};
+
+type ScrollListener = (event: ScrollBroadcastEvent) => void;
+
+class ScrollBroadcaster {
+  private listeners: Set<ScrollListener> = new Set();
+
+  subscribe(listener: ScrollListener): () => void {
+    this.listeners.add(listener);
+    console.log(`[ScrollBroadcaster] Subscriber added. Total listeners: ${this.listeners.size}`);
+    return () => {
+      this.listeners.delete(listener);
+      console.log(`[ScrollBroadcaster] Subscriber removed. Total listeners: ${this.listeners.size}`);
+    };
+  }
+
+  broadcast(event: ScrollBroadcastEvent): void {
+    console.log(`[ScrollBroadcast] Event: pageKey=${event.pageKey} uid=${event.uid} position=${event.scrollPosition}px container=${event.container === 'window' ? 'WINDOW' : 'ELEMENT'}`);
+    this.listeners.forEach(listener => {
+      try {
+        listener(event);
+      } catch (error) {
+        console.error('[ScrollBroadcaster] Error in listener:', error);
+      }
+    });
+  }
+
+  hasListeners(): boolean {
+    return this.listeners.size > 0;
+  }
+}
+
+const scrollBroadcaster = new ScrollBroadcaster();
+
+export const useScrollBroadcast = (callback: (event: ScrollBroadcastEvent) => void) => {
+  useEffect(() => {
+    return scrollBroadcaster.subscribe(callback);
+  }, [callback]);
+};
+
 // ==================== Types ====================
 type NavParams = Record<string, any> | undefined;
 type LazyComponent = Promise<{ default: ComponentType<any> }>;
@@ -192,6 +243,7 @@ type TransitionRenderer = (props: {
   state: TransitionState;
   index: number;
   isTop: boolean;
+  style?: React.CSSProperties;
 }) => ReactNode;
 
 type GuardFn = (action: {
@@ -1322,13 +1374,41 @@ export function useGroupScopedScrollRestoration(
 
   const isActiveGroup = groupContext ? groupContext.isActiveStack(groupStackId || '') : true;
   const [cacheVersion, setCacheVersion] = useState(0);
+  
+  // Track when a new page is mounted to detect and counter scroll restoration
+  const newPageMountRef = useRef<{ uid: string | null; mountTime: number }>({ 
+    uid: null, 
+    mountTime: 0
+  });
 
   // UID is already composite (groupId:stackId:pageUid), just return it
   const makeScrollKey = (uid: string): string => uid;
 
+  // Debug helper - call this in console: window.__debugScrollState?.()
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      (window as any).__debugScrollState = () => {
+        console.log('%c=== SCROLL STATE DEBUG ===', 'font-weight: bold; font-size: 14px;');
+        console.log('Global Scroll Data:', {
+          lastUid: globalScrollData.lastUid,
+          lastGroupStackKey: globalScrollData.lastGroupStackKey,
+          lastActive: globalScrollData.lastActive,
+          currentScrollY: globalScrollData.currentScrollY,
+          scrollPositions: Object.fromEntries(globalScrollData.scrollPositions),
+        });
+        console.log('Stack Snapshot:', stackSnapshot.map(e => ({ key: e.key, uid: e.uid })));
+        console.log('Is Active Group:', isActiveGroup);
+        console.log('Group Stack Key:', groupStackKey);
+        console.log('Current Top Entry:', stackSnapshot[stackSnapshot.length - 1]);
+        console.log('%c=== END DEBUG ===', 'font-weight: bold; font-size: 14px;');
+      };
+    }
+  }, [stackSnapshot, isActiveGroup]);
+
   useEffect(() => {
     if (typeof window !== "undefined" && "scrollRestoration" in window.history) {
       window.history.scrollRestoration = "manual";
+      console.log(`[ScrollRestoration] Disabled browser scroll restoration - using manual management`);
     }
   }, []);
 
@@ -1387,67 +1467,70 @@ export function useGroupScopedScrollRestoration(
 
   // Scrollable container detection with cache invalidation
   const findScrollableContainer = (uid: string): ContainerData | 'window' | null => {
-    // Find the page element
+    // The navstack-page div is the actual scrollable container
+    // It's set with overflow-y: auto for top pages, overflow-y: hidden for others
+    // It's unique across all groups and pages
     const pageElement = document.querySelector(`[data-nav-uid="${uid}"]`) as HTMLElement;
-    if (!pageElement) return null;
-
-
-    // Collect data for all potential containers
-    const containerData: ContainerData[] = [];
-    let currentElement: HTMLElement | null = pageElement;
-    let level = 0;
-
-    while (currentElement && level < 50) {
-      const data = analyzeContainer(currentElement, level);
-      containerData.push(data);
-      currentElement = currentElement.parentElement;
-      level++;
+    
+    if (!pageElement) {
+      console.log(`[ContainerDetection-Error] No navstack-page found uid=${uid}`);
+      return null;
     }
 
-    if (containerData.length === 0) return 'window';
-
-    // Sort by score (highest first)
-    containerData.sort((a, b) => {
-      return b.score - a.score;
-    });
-
-    const bestContainer = containerData[0];
-
-    if (bestContainer.score > 0) return bestContainer;
-
-    return 'window';
+    const style = getComputedStyle(pageElement);
+    const overflowY = style.overflowY;
+    
+    console.log(`[ContainerDetection] Found navstack-page uid=${uid} overflowY=${overflowY} scrollHeight=${pageElement.scrollHeight} clientHeight=${pageElement.clientHeight}`);
+    
+    return {
+      element: pageElement,
+      level: 0,
+      maxHeight: 'auto',
+      overflowX: style.overflowX,
+      overflowY: overflowY,
+      clientHeight: pageElement.clientHeight,
+      clientWidth: pageElement.clientWidth,
+      scrollHeight: pageElement.scrollHeight,
+      scrollWidth: pageElement.scrollWidth,
+      score: 100 // This is the container
+    };
   };
 
   // Get scrollable container with cache management
   const getScrollableContainer = (uid: string): HTMLElement | 'window' => {
     if (typeof document === 'undefined') return 'window';
 
-
     // Check cache first
     const cached = scrollData.scrollContainers.get(uid);
     if (cached) {
-      if (cached === 'window') return 'window';
+      if (cached === 'window') {
+        return 'window';
+      }
       return cached.element;
     }
 
+    console.log(`[GetScrollContainer] uid=${uid} detecting...`);
     const container = findScrollableContainer(uid);
 
-    if (!container) return 'window';
-
-    if (container === 'window') {
-      scrollData.scrollContainers.set(uid, 'window');
+    if (!container) {
+      console.log(`[GetScrollContainer] uid=${uid} not found, using WINDOW`);
       return 'window';
     }
 
     // Store the container
     scrollData.scrollContainers.set(uid, container);
-    return container.element;
+    if (container !== 'window') {
+      console.log(`[GetScrollContainer] uid=${uid} cached navstack-page scrollHeight=${container.element.scrollHeight}`);
+      return container.element;
+    }
+    return 'window';
   };
 
   // Get current scroll position
   const getCurrentScrollPosition = (container: HTMLElement | 'window'): number => {
     if (container === 'window') {
-      return typeof window !== 'undefined' ? window.scrollY : 0;
+      const pos = typeof window !== 'undefined' ? window.scrollY : 0;
+      return pos;
     }
     return container.scrollTop;
   };
@@ -1455,8 +1538,10 @@ export function useGroupScopedScrollRestoration(
   // Set scroll position
   const setScrollPosition = (position: number, container: HTMLElement | 'window') => {
     if (container === 'window') {
+      console.log(`[SetScrollPosition] WINDOW target=${position}px current=${window.scrollY}px`);
       window.scrollTo(0, position);
     } else {
+      console.log(`[SetScrollPosition] NAVSTACK-PAGE target=${position}px current=${container.scrollTop}px scrollHeight=${container.scrollHeight}`);
       container.scrollTop = position;
     }
   };
@@ -1479,18 +1564,66 @@ export function useGroupScopedScrollRestoration(
 
   // Track scroll position for active page
   useEffect(() => {
-    if (!isActiveGroup) return;
+    if (!isActiveGroup) {
+      console.log(`[ScrollListener-Skip] Group not active. groupStackKey=${groupStackKey} isActiveGroup=${isActiveGroup}`);
+      return;
+    }
 
     const top = stackSnapshot.at(-1);
-    if (!top) return;
+    if (!top) {
+      console.log(`[ScrollListener-Skip] No top entry in stack`);
+      return;
+    }
+
+    console.log(`[ScrollListener-Setup] Attaching scroll listener. Page=${top.key} uid=${top.uid} groupStackKey=${groupStackKey} isActiveGroup=${isActiveGroup}`);
 
     const container = getScrollableContainer(top.uid);
     const scrollKey = makeScrollKey(top.uid);
+    const now = Date.now();
+    const timestamp = new Date(now).toISOString().split('T')[1]; // HH:MM:SS.mmm
 
     const handleScroll = () => {
       const scrollPosition = getCurrentScrollPosition(container);
+      const containerType = container === 'window' ? 'WINDOW' : 'ELEMENT';
+      
+      // Detect if this is a new page that just jumped to old scroll position
+      if (newPageMountRef.current.uid === top.uid && scrollPosition > 0) {
+        const timeSinceMountMs = now - newPageMountRef.current.mountTime;
+        console.log(`[ScrollListener-NewPage] Page=${top.key} uid=${top.uid} position=${scrollPosition}px container=${containerType} msSinceMountMs=${timeSinceMountMs}`);
+        
+        // This is the moment WebKit restored the scroll - reset it once right now
+        console.log(`[ScrollListener-Restore] Detected WebKit scroll restoration, resetting to 0`);
+        setScrollPosition(0, container);
+        
+        // Clear the new page marker so we don't keep resetting
+        newPageMountRef.current = { uid: null, mountTime: 0 };
+        return;
+      }
+      
       globalScrollData.scrollPositions.set(scrollKey, scrollPosition);
       globalScrollData.currentScrollY = scrollPosition;
+      
+      // Calculate scroll percentage
+      const scrollHeight = container === 'window' 
+        ? (typeof window !== 'undefined' ? document.documentElement.scrollHeight : 0)
+        : container.scrollHeight;
+      const clientHeight = container === 'window'
+        ? (typeof window !== 'undefined' ? window.innerHeight : 0)
+        : container.clientHeight;
+      const maxScroll = Math.max(scrollHeight - clientHeight, 0);
+      const scrollPercentage = maxScroll > 0 ? (scrollPosition / maxScroll) * 100 : 0;
+      
+      console.log(`[ScrollListener] Page=${top.key} uid=${top.uid} position=${scrollPosition}px container=${containerType} percentage=${scrollPercentage.toFixed(1)}% scrollHeight=${scrollHeight} clientHeight=${clientHeight}`);
+      
+      // Broadcast scroll event globally
+      scrollBroadcaster.broadcast({
+        uid: top.uid,
+        pageKey: top.key,
+        scrollPosition,
+        scrollPercentage,
+        container,
+        timestamp: Date.now(),
+      });
     };
 
     const removeListener = addScrollListener(container, handleScroll);
@@ -1500,6 +1633,7 @@ export function useGroupScopedScrollRestoration(
     };
   }, [stackSnapshot, isActiveGroup, groupStackKey, cacheVersion]);
 
+
   // Reset scroll for NEW pages SYNCHRONOUSLY before React renders
   // This uses useLayoutEffect to run BEFORE paint, preventing inherited scroll
   useLayoutEffect(() => {
@@ -1508,27 +1642,42 @@ export function useGroupScopedScrollRestoration(
     const topEntry = stackSnapshot.at(-1);
     if (!topEntry) return;
 
-    const { uid } = topEntry;
+    const { uid, key } = topEntry;
     const savedPosition = globalScrollData.scrollPositions.get(uid);
+    const now = Date.now();
+    const timestamp = new Date(now).toISOString().split('T')[1]; // HH:MM:SS.mmm
     
-    // If this is a brand new page (no saved position), reset scroll immediately
+    // If this is a brand new page (no saved position), reset scroll to 0
     if (savedPosition === undefined) {
       const container = getScrollableContainer(uid);
+      console.log(`[ScrollReset] ${timestamp} NEW PAGE - Key: ${key} | Resetting to 0`);
       setScrollPosition(0, container);
+      
+      // Mark this page as newly mounted so scroll listener can detect when WebKit restores scroll
+      newPageMountRef.current = { uid, mountTime: now };
+    } else {
+      console.log(`[ScrollReset-ExistingPage] key=${key} uid=${uid} savedPosition=${savedPosition}px`);
     }
-  }, [stackSnapshot, isActiveGroup]); // Minimal deps - just the stack
 
-  // Restore scroll position when page changes
+    return () => {
+      // Cleanup: if effect unmounts and this was our new page, clear marker
+      if (newPageMountRef.current.uid === uid) {
+        newPageMountRef.current = { uid: null, mountTime: 0 };
+      }
+    };
+  }, [stackSnapshot, isActiveGroup]); // Minimal deps - just the stack
   useEffect(() => {
     const topEntry = stackSnapshot.at(-1);
     if (!topEntry) return;
 
-    const { uid } = topEntry;
+    const { uid, key } = topEntry;
     const { lastUid, lastGroupStackKey, lastActive, currentScrollY } = globalScrollData;
 
     const groupStackKeyChanged = lastGroupStackKey !== groupStackKey;
     const uidChanged = uid !== lastUid;
     const activeChanged = lastActive !== isActiveGroup;
+
+    console.log(`[RestoreEffect] key=${key} uid=${uid} groupStackKeyChanged=${groupStackKeyChanged} uidChanged=${uidChanged} activeChanged=${activeChanged}`);
 
     // Save current position before switching - get ACTUAL position from container, not cached value
     if (lastUid && lastActive && lastGroupStackKey && (groupStackKeyChanged || uidChanged)) {
@@ -1537,6 +1686,7 @@ export function useGroupScopedScrollRestoration(
       const lastContainer = getScrollableContainer(lastUid);
       const actualScrollPosition = getCurrentScrollPosition(lastContainer);
       globalScrollData.scrollPositions.set(lastScrollKey, actualScrollPosition);
+      console.log(`[RestoreEffect-Save] savedUID=${lastUid} position=${actualScrollPosition}px`);
     }
 
     // Restore position when becoming active
@@ -1550,10 +1700,15 @@ export function useGroupScopedScrollRestoration(
 
       if (isNewPage) {
         // For brand new pages, SYNCHRONOUSLY reset to 0 immediately
+        console.log(`[RestoreEffect-NewPage] uid=${uid} key=${key} resetting to 0`);
         setScrollPosition(0, container);
       } else if (savedPosition !== undefined) {
         // For existing pages, restore from saved position with fallbacks
+        console.log(`[RestoreEffect-Restore] uid=${uid} key=${key} target=${savedPosition}px`);
+        
         const restoreScroll = () => {
+          const currentPos = getCurrentScrollPosition(container);
+          console.log(`[RestoreEffect-Restore-Action] uid=${uid} setting=${savedPosition}px current=${currentPos}px`);
           setScrollPosition(savedPosition, container);
         };
 
@@ -1561,8 +1716,14 @@ export function useGroupScopedScrollRestoration(
         restoreScroll();
 
         // --- DOM-settled fallback ---
-        requestAnimationFrame(() => restoreScroll());
-        setTimeout(() => restoreScroll(), 20);
+        requestAnimationFrame(() => {
+          console.log(`[RestoreEffect-Restore-RAF] uid=${uid} RAF fallback`);
+          restoreScroll();
+        });
+        setTimeout(() => {
+          console.log(`[RestoreEffect-Restore-Timer] uid=${uid} timer fallback 20ms`);
+          restoreScroll();
+        }, 20);
       }
     }
 
@@ -1570,6 +1731,7 @@ export function useGroupScopedScrollRestoration(
     globalScrollData.lastUid = uid;
     globalScrollData.lastGroupStackKey = groupStackKey;
     globalScrollData.lastActive = isActiveGroup;
+    console.log(`[RestoreEffect-GlobalState] lastUid=${uid} isActive=${isActiveGroup} groupStackKey=${groupStackKey}`);
   }, [stackSnapshot, isActiveGroup, groupStackKey, cacheVersion]);
 
 
@@ -3248,7 +3410,19 @@ function SlideTransitionRenderer({
       : "";
 
   return (
-    <div key={uid} className={`${baseClass} ${slideCls}`} inert={!isTop} data-nav-uid={uid}>
+    <div 
+      key={uid} 
+      className={`${baseClass} ${slideCls}`} 
+      inert={!isTop} 
+      data-nav-uid={uid}
+      style={{
+        overflowY: isTop ? 'auto' : 'hidden',
+        overflowX: 'hidden',
+        WebkitOverflowScrolling: 'touch',
+        width: '100%',
+        height: '100%',
+      }}
+    >
       {children}
     </div>
   );
@@ -3286,7 +3460,19 @@ function FadeTransitionRenderer({
       : "";
 
   return (
-    <div key={uid} className={`${baseClass} ${fadeCls}`} inert={!isTop} data-nav-uid={uid}>
+    <div 
+      key={uid} 
+      className={`${baseClass} ${fadeCls}`} 
+      inert={!isTop} 
+      data-nav-uid={uid}
+      style={{
+        overflowY: isTop ? 'auto' : 'hidden',
+        overflowX: 'hidden',
+        WebkitOverflowScrolling: 'touch',
+        width: '100%',
+        height: '100%',
+      }}
+    >
       {children}
     </div>
   );
@@ -4975,7 +5161,15 @@ export default function NavigationStack(props: {
       }
     }
 
-    const builtInRenderer: TransitionRenderer = ({ children, state: s, isTop: t, index }) => {
+    const defaultPageStyle: React.CSSProperties = {
+      overflowY: 'auto',
+      overflowX: 'hidden',
+      WebkitOverflowScrolling: 'touch',
+      width: '100%',
+      height: '100%',
+    };
+
+    const builtInRenderer: TransitionRenderer = ({ children, state: s, isTop: t, index, style = {} }) => {
       const baseClass = "navstack-page";
       const uid = currentEntry.uid;
 
@@ -5001,6 +5195,11 @@ export default function NavigationStack(props: {
           className={`${baseClass}`}
           inert={!t}
           data-nav-uid={uid}
+          style={{
+            ...defaultPageStyle,
+            overflowY: t ? 'auto' : 'hidden',
+            ...style,
+          }}
         >
           {children}
         </div>
@@ -5030,7 +5229,7 @@ export default function NavigationStack(props: {
 
   return (
     <NavContext.Provider value={api}>
-      <div className={`navstack-root ${className ?? ""}`} style={{ position: "relative", width: "auto", height: "auto", ...style }}>
+      <div className={`navstack-root ${className ?? ""}`} style={{ position: "relative", width: "100%", height: "100%", overflow: "hidden", ...style }}>
         {renders.map((r, idx) => (
           <React.Fragment key={r.entry.uid}>
             {renderEntry(r, idx)}

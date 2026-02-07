@@ -39,10 +39,6 @@
     flex-direction: row;
   }
 
-  .sidebarContainer {
-
-  }
-
   .contentArea{
      max-height: 100dvh;
   }
@@ -65,7 +61,7 @@
     .contentArea{
        padding-bottom: 100px;
        max-height: none;
-       min-height: 100vh;
+       max-height: 100vh;
     }
 
 }
@@ -79,7 +75,7 @@
   .contentArea{
          padding-bottom: 100px;
          max-height: none;
-         min-height: 100vh;
+         max-height: 100vh;
   }
 }
 

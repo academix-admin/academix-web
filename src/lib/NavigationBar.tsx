@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { useScrollBroadcast } from './NavigationStack';
 
 export type NavigationModeType = 'normal' | 'float' | 'autohide';
 
@@ -214,53 +215,57 @@ export default function NavigationBar({
     return () => window.removeEventListener('resize', checkContentHeight);
   }, [mode]);
 
-  /** Scroll handler */
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
+  // Track scroll state for broadcast listening
+  const scrollHandlerCallback = React.useCallback((event: any) => {
     if (mode === 'normal') return;
 
-    let ticking = false;
-    const handleScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          const current = window.scrollY;
-          const atTop = current <= 0;
-          const atBottom =
-            window.innerHeight + current >=
-            document.documentElement.scrollHeight - 2; // small buffer
+    const { scrollPosition, pageKey, uid } = event;
+    const atTop = scrollPosition <= 0;
+    
+    // Get viewport and content heights from the scrollable container
+    const container = event.container;
+    let contentHeight = 0;
+    if (container === 'window') {
+      contentHeight = document.documentElement.scrollHeight;
+    } else if (container instanceof HTMLElement) {
+      contentHeight = container.scrollHeight;
+      contentHeight += container.offsetTop; // Account for offset
+    }
+    
+    const clientHeight = container === 'window'
+      ? window.innerHeight
+      : container instanceof HTMLElement ? container.clientHeight : 0;
+    
+    const atBottom = clientHeight + scrollPosition >= contentHeight - 2; // small buffer
 
-          // 🚫 Ignore overscroll on iOS
-          if (atTop || atBottom) {
-            prevScroll.current = current;
-            ticking = false;
-            return;
-          }
+    console.log(`[NavigationBar-ScrollEvent] pageKey=${pageKey} uid=${uid} position=${scrollPosition}px mode=${mode} atTop=${atTop} atBottom=${atBottom}`);
 
-          if (mode === 'float') {
-            const rawRatio = Math.min(1, current / floatScrollThreshold);
-            const ratio =
-              rawRatio >= snapPoint
-                ? 1
-                : rawRatio <= snapPoint * 0.7
-                ? 0
-                : rawRatio;
-            setShrinkRatio(ratio);
-          }
+    // 🚫 Ignore overscroll at boundaries
+    if (atTop || atBottom) {
+      prevScroll.current = scrollPosition;
+      return;
+    }
 
-          if (mode === 'autohide') {
-            setHidden(current > prevScroll.current && current > 50);
-            prevScroll.current = current;
-          }
+    if (mode === 'float') {
+      const rawRatio = Math.min(1, scrollPosition / floatScrollThreshold);
+      const ratio =
+        rawRatio >= snapPoint
+          ? 1
+          : rawRatio <= snapPoint * 0.7
+          ? 0
+          : rawRatio;
+      setShrinkRatio(ratio);
+    }
 
-          ticking = false;
-        });
-        ticking = true;
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    if (mode === 'autohide') {
+      setHidden(scrollPosition > prevScroll.current && scrollPosition > 50);
+      prevScroll.current = scrollPosition;
+      console.log(`[NavigationBar-AutoHide] hidden=${scrollPosition > prevScroll.current && scrollPosition > 50}`);
+    }
   }, [mode, floatScrollThreshold, snapPoint]);
+
+  /** Scroll handler - listen to broadcast instead of window */
+  useScrollBroadcast(scrollHandlerCallback);
 
 
   const handleClick = (item: NavItem) => {
