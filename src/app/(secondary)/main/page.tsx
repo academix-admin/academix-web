@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import styles from './page.module.css';
-import { GroupNavigationStack } from "@/lib/NavigationStack";
-import NavigationBar from "@/lib/NavigationBar";
+import { GroupNavigationStack, scrollBroadcaster } from "@/lib/NavigationStack";
+import NavigationBar, { NavigationBarScrollEvent } from "@/lib/NavigationBar";
 import SideBar from "@/lib/SideBar";
 import { HomeStack } from './home-stack/home-stack';
 import { RewardsStack } from './rewards-stack/rewards-stack';
@@ -22,7 +22,8 @@ const Main = () => {
   const { theme } = useTheme();
   const { t } = useLanguage();
   const [active, setActive] = useState('home-stack');
-   const { userData, userData$, __meta } = useUserData();
+  const { userData, userData$, __meta } = useUserData();
+  const navBarScrollRef = useRef<(event: NavigationBarScrollEvent) => void>(null);
 
 useEffect(() => {
 
@@ -43,6 +44,21 @@ useEffect(() => {
 
   handleSignOut();
 }, [userData,__meta.isHydrated]);
+
+  /** Subscribe to scroll broadcaster with proper cleanup */
+  useEffect(() => {
+    const unsubscribe = scrollBroadcaster.subscribe((e) => {
+      navBarScrollRef.current?.({
+        container: e.container,
+        position: e.position ?? e.scrollPosition,
+        clientHeight: e.clientHeight,
+        scrollHeight: e.scrollHeight,
+        scrollPercentage: e.scrollPercentage,
+      });
+    });
+
+    return () => unsubscribe?.();
+  }, []);
 
 
   const navStackMap = new Map([
@@ -171,6 +187,11 @@ useEffect(() => {
           itemSpacing="8px"
           paddingY="0px"
           paddingX="0px"
+          
+          /** Inject scroll callback from ref */
+          onScroll={(callback) => {
+            navBarScrollRef.current = callback;
+          }}
 
           /* Bar visuals */
           barBorderTop={`1px solid ${borderColor}`}

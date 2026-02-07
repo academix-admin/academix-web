@@ -1,7 +1,17 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { useScrollBroadcast } from './NavigationStack';
+
+export type NavigationBarScrollEvent = {
+  container: HTMLElement | 'window';
+  position: number;
+  clientHeight: number;
+  scrollHeight: number;
+  uid?: string;
+  pageKey?: string;
+  scrollPercentage?: number;
+  timestamp?: number;
+};
 
 export type NavigationModeType = 'normal' | 'float' | 'autohide';
 
@@ -15,6 +25,9 @@ export interface NavigationBarProps {
   navKeys: NavItem[];
   activeId?: string;
   onChange?: (id: string, item: NavItem) => void;
+
+  /** Scroll Handler Injection */
+  onScroll?: (callback: (event: NavigationBarScrollEvent) => void) => void;
 
   /** Colors */
   activeColor?: string;
@@ -134,6 +147,7 @@ export default function NavigationBar({
   navKeys,
   activeId,
   onChange,
+  onScroll,
 
   /** Colors */
   activeColor = '#166534',
@@ -191,6 +205,7 @@ export default function NavigationBar({
   const [hidden, setHidden] = useState(false);
   const [fabClicked, setFabClicked] = useState(false); // NEW
   const prevScroll = useRef(0);
+  const tickingRef = useRef(false);
 
   // Reset hidden state when component mounts or mode changes
   useEffect(() => {
@@ -215,64 +230,86 @@ export default function NavigationBar({
     return () => window.removeEventListener('resize', checkContentHeight);
   }, [mode]);
 
-  // Track scroll state for broadcast listening
-  const scrollHandlerCallback = React.useCallback((event: any) => {
+  /** Scroll handler - listen to injected scroll events */
+  const scrollHandlerCallback = React.useCallback((event: NavigationBarScrollEvent) => {
     if (mode === 'normal') return;
 
-    const { scrollPosition, pageKey, uid } = event;
-    const atTop = scrollPosition <= 0;
-    
-    // Get viewport and content heights from the scrollable container
-    const container = event.container;
-    let contentHeight = 0;
-    if (container === 'window') {
-      contentHeight = document.documentElement.scrollHeight;
-    } else if (container instanceof HTMLElement) {
-      contentHeight = container.scrollHeight;
-      contentHeight += container.offsetTop; // Account for offset
-    }
-    
-    const clientHeight = container === 'window'
-      ? window.innerHeight
-      : container instanceof HTMLElement ? container.clientHeight : 0;
-    
-    const atBottom = clientHeight + scrollPosition >= contentHeight - 2; // small buffer
+    if (!tickingRef.current) {
+      window.requestAnimationFrame(() => {
+        const { container, position: current, clientHeight, scrollHeight } = event;
 
-    console.log(`[NavigationBar-ScrollEvent] pageKey=${pageKey} uid=${uid} position=${scrollPosition}px mode=${mode} atTop=${atTop} atBottom=${atBottom}`);
+        if (typeof current !== 'number') {
+          tickingRef.current = false;
+          return;
+        }
 
-    // ✅ Always show NavigationBar when at top
-    if (atTop) {
-      setHidden(false);
-      prevScroll.current = scrollPosition;
-      return;
-    }
+        const atTop = current <= 0;
+        const atBottom = clientHeight + current >= scrollHeight - 2; // small buffer
 
-    // 🚫 Ignore overscroll at bottom
-    if (atBottom) {
-      prevScroll.current = scrollPosition;
-      return;
-    }
+        // 🚫 Ignore overscroll on iOS
+        if (atTop || atBottom) {
+          prevScroll.current = current;
+          tickingRef.current = false;
+          return;
+        }
 
-    if (mode === 'float') {
-      const rawRatio = Math.min(1, scrollPosition / floatScrollThreshold);
-      const ratio =
-        rawRatio >= snapPoint
-          ? 1
-          : rawRatio <= snapPoint * 0.7
-          ? 0
-          : rawRatio;
-      setShrinkRatio(ratio);
-    }
+        if (mode === 'float') {
+          const rawRatio = Math.min(1, current / floatScrollThreshold);
+          const ratio =
+            rawRatio >= snapPoint
+              ? 1
+              : rawRatio <= snapPoint * 0.7
+              ? 0
+              : rawRatio;
+          setShrinkRatio(ratio);
+        }
 
-    if (mode === 'autohide') {
-      setHidden(scrollPosition > prevScroll.current && scrollPosition > 50);
-      prevScroll.current = scrollPosition;
-      console.log(`[NavigationBar-AutoHide] hidden=${scrollPosition > prevScroll.current && scrollPosition > 50}`);
+        if (mode === 'autohide') {
+          setHidden(current > prevScroll.current && current > 50);
+          prevScroll.current = current;
+        }
+
+        tickingRef.current = false;
+      });
+      tickingRef.current = true;
     }
   }, [mode, floatScrollThreshold, snapPoint]);
 
-  /** Scroll handler - listen to broadcast instead of window */
-  useScrollBroadcast(scrollHandlerCallback);
+  // Use injected onScroll prop, fallback to window scroll
+  useEffect(() => {
+    if (onScroll) {
+      // Custom scroll handler injected from parent (e.g., scrollBroadcaster)
+      onScroll(scrollHandlerCallback);
+      return;
+    }
+
+    // Final fallback: listen to window scroll if onScroll prop not provided
+    if (typeof window === 'undefined' || mode === 'normal') return;
+
+    let ticking = false;
+    const handleWindowScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const current = window.scrollY;
+          const clientHeight = window.innerHeight;
+          const scrollHeight = document.documentElement.scrollHeight;
+
+          scrollHandlerCallback({
+            container: 'window',
+            position: current,
+            clientHeight,
+            scrollHeight,
+          });
+
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    window.addEventListener('scroll', handleWindowScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleWindowScroll);
+  }, [onScroll, scrollHandlerCallback, mode]);
 
 
   const handleClick = (item: NavItem) => {

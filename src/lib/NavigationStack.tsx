@@ -25,9 +25,12 @@ const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useEffect : ()
 export type ScrollBroadcastEvent = {
   uid: string;
   pageKey: string;
+  position: number;
   scrollPosition: number;
   scrollPercentage: number;
   container: HTMLElement | 'window';
+  clientHeight: number;
+  scrollHeight: number;
   timestamp: number;
 };
 
@@ -38,15 +41,12 @@ class ScrollBroadcaster {
 
   subscribe(listener: ScrollListener): () => void {
     this.listeners.add(listener);
-    console.log(`[ScrollBroadcaster] Subscriber added. Total listeners: ${this.listeners.size}`);
     return () => {
       this.listeners.delete(listener);
-      console.log(`[ScrollBroadcaster] Subscriber removed. Total listeners: ${this.listeners.size}`);
     };
   }
 
   broadcast(event: ScrollBroadcastEvent): void {
-    console.log(`[ScrollBroadcast] Event: pageKey=${event.pageKey} uid=${event.uid} position=${event.scrollPosition}px container=${event.container === 'window' ? 'WINDOW' : 'ELEMENT'}`);
     this.listeners.forEach(listener => {
       try {
         listener(event);
@@ -62,6 +62,8 @@ class ScrollBroadcaster {
 }
 
 const scrollBroadcaster = new ScrollBroadcaster();
+
+export { scrollBroadcaster };
 
 export const useScrollBroadcast = (callback: (event: ScrollBroadcastEvent) => void) => {
   useEffect(() => {
@@ -1380,6 +1382,13 @@ export function useGroupScopedScrollRestoration(
     uid: null, 
     mountTime: 0
   });
+  
+  // Track if we just restored scroll for a UID (to avoid immediately overwriting with 0)
+  const justRestoredScrollRef = useRef<Set<string>>(new Set());
+  
+  // Track UIDs that have been explicitly pushed (not popped from history)
+  // vs UIDs that are being restored (popped back)
+  const previousStackSnapshot = useRef<StackEntry[]>([]);
 
   // UID is already composite (groupId:stackId:pageUid), just return it
   const makeScrollKey = (uid: string): string => uid;
@@ -1408,7 +1417,6 @@ export function useGroupScopedScrollRestoration(
   useEffect(() => {
     if (typeof window !== "undefined" && "scrollRestoration" in window.history) {
       window.history.scrollRestoration = "manual";
-      console.log(`[ScrollRestoration] Disabled browser scroll restoration - using manual management`);
     }
   }, []);
 
@@ -1506,7 +1514,14 @@ export function useGroupScopedScrollRestoration(
       if (cached === 'window') {
         return 'window';
       }
-      return cached.element;
+      // Verify cached element is still in DOM
+      if (document.contains(cached.element)) {
+        console.log(`[GetScrollContainer] uid=${uid} using cached ELEMENT scrollHeight=${cached.element.scrollHeight}`);
+        return cached.element;
+      } else {
+        console.log(`[GetScrollContainer-InvalidCache] uid=${uid} cached element NOT in DOM, invalidating cache...`);
+        scrollData.scrollContainers.delete(uid);
+      }
     }
 
     console.log(`[GetScrollContainer] uid=${uid} detecting...`);
@@ -1520,7 +1535,7 @@ export function useGroupScopedScrollRestoration(
     // Store the container
     scrollData.scrollContainers.set(uid, container);
     if (container !== 'window') {
-      console.log(`[GetScrollContainer] uid=${uid} cached navstack-page scrollHeight=${container.element.scrollHeight}`);
+      console.log(`[GetScrollContainer] uid=${uid} found ELEMENT scrollHeight=${container.element.scrollHeight}`);
       return container.element;
     }
     return 'window';
@@ -1538,10 +1553,8 @@ export function useGroupScopedScrollRestoration(
   // Set scroll position
   const setScrollPosition = (position: number, container: HTMLElement | 'window') => {
     if (container === 'window') {
-      console.log(`[SetScrollPosition] WINDOW target=${position}px current=${window.scrollY}px`);
       window.scrollTo(0, position);
     } else {
-      console.log(`[SetScrollPosition] NAVSTACK-PAGE target=${position}px current=${container.scrollTop}px scrollHeight=${container.scrollHeight}`);
       container.scrollTop = position;
     }
   };
@@ -1565,17 +1578,13 @@ export function useGroupScopedScrollRestoration(
   // Track scroll position for active page
   useEffect(() => {
     if (!isActiveGroup) {
-      console.log(`[ScrollListener-Skip] Group not active. groupStackKey=${groupStackKey} isActiveGroup=${isActiveGroup}`);
       return;
     }
 
     const top = stackSnapshot.at(-1);
     if (!top) {
-      console.log(`[ScrollListener-Skip] No top entry in stack`);
       return;
     }
-
-    console.log(`[ScrollListener-Setup] Attaching scroll listener. Page=${top.key} uid=${top.uid} groupStackKey=${groupStackKey} isActiveGroup=${isActiveGroup}`);
 
     const container = getScrollableContainer(top.uid);
     const scrollKey = makeScrollKey(top.uid);
@@ -1619,9 +1628,12 @@ export function useGroupScopedScrollRestoration(
       scrollBroadcaster.broadcast({
         uid: top.uid,
         pageKey: top.key,
+        position: scrollPosition,
         scrollPosition,
         scrollPercentage,
         container,
+        clientHeight,
+        scrollHeight,
         timestamp: Date.now(),
       });
     };
@@ -1636,6 +1648,7 @@ export function useGroupScopedScrollRestoration(
 
   // Reset scroll for NEW pages SYNCHRONOUSLY before React renders
   // This uses useLayoutEffect to run BEFORE paint, preventing inherited scroll
+  // Distinguishes between PUSH (new page, reset to 0) and POP (returning page, restore saved)
   useLayoutEffect(() => {
     if (!isActiveGroup) return;
     
@@ -1647,17 +1660,30 @@ export function useGroupScopedScrollRestoration(
     const now = Date.now();
     const timestamp = new Date(now).toISOString().split('T')[1]; // HH:MM:SS.mmm
     
-    // If this is a brand new page (no saved position), reset scroll to 0
-    if (savedPosition === undefined) {
+    // Determine if this is a NEW page (push) or RETURNING page (pop)
+    const previousLen = previousStackSnapshot.current.length;
+    const currentLen = stackSnapshot.length;
+    const isPush = currentLen > previousLen; // Stack grew = new page pushed
+    const isPop = currentLen < previousLen;  // Stack shrunk = page was popped
+    
+    // If this is a brand new PAGE being PUSHED (no saved position), reset scroll to 0
+    if (isPush && savedPosition === undefined) {
       const container = getScrollableContainer(uid);
-      console.log(`[ScrollReset] ${timestamp} NEW PAGE - Key: ${key} | Resetting to 0`);
+      console.log(`[ScrollReset] ${timestamp} NEW PAGE PUSH - Key: ${key} | Resetting to 0`);
       setScrollPosition(0, container);
       
       // Mark this page as newly mounted so scroll listener can detect when WebKit restores scroll
       newPageMountRef.current = { uid, mountTime: now };
-    } else {
-      console.log(`[ScrollReset-ExistingPage] key=${key} uid=${uid} savedPosition=${savedPosition}px`);
+    } else if (isPop && savedPosition !== undefined) {
+      // When popping back, don't reset - let the restore effect handle it
+      console.log(`[ScrollReset-PopBack] ${timestamp} RETURNING PAGE - Key: ${key} | Will restore to ${savedPosition}px`);
+    } else if (!isPush && !isPop) {
+      // Stack depth unchanged (e.g., replace or lateral navigation)
+      console.log(`[ScrollReset-SameLevelNav] ${timestamp} Key: ${key} | savedPosition=${savedPosition}px`);
     }
+
+    // Update previous snapshot for next render
+    previousStackSnapshot.current = stackSnapshot;
 
     return () => {
       // Cleanup: if effect unmounts and this was our new page, clear marker
@@ -1682,11 +1708,27 @@ export function useGroupScopedScrollRestoration(
     // Save current position before switching - get ACTUAL position from container, not cached value
     if (lastUid && lastActive && lastGroupStackKey && (groupStackKeyChanged || uidChanged)) {
       const lastScrollKey = lastUid;
-      // Get the ACTUAL scroll position from the container at switch time
-      const lastContainer = getScrollableContainer(lastUid);
-      const actualScrollPosition = getCurrentScrollPosition(lastContainer);
-      globalScrollData.scrollPositions.set(lastScrollKey, actualScrollPosition);
-      console.log(`[RestoreEffect-Save] savedUID=${lastUid} position=${actualScrollPosition}px`);
+      
+      // Don't save if we just restored this UID's scroll (within last 100ms)
+      if (justRestoredScrollRef.current.has(lastUid)) {
+        console.log(`[RestoreEffect-Save-Skip] savedUID=${lastUid} (just restored, skipping overwrite)`);
+        justRestoredScrollRef.current.delete(lastUid);
+      } else {
+        // Get the ACTUAL scroll position from the container at switch time
+        const lastContainer = getScrollableContainer(lastUid);
+        const actualScrollPosition = getCurrentScrollPosition(lastContainer);
+        
+        // Only save if position is meaningful (not 0 right after a restore, or if it's different from saved)
+        const previouslySaved = globalScrollData.scrollPositions.get(lastScrollKey);
+        const isPositionMeaningful = actualScrollPosition > 0 || previouslySaved === undefined;
+        
+        if (isPositionMeaningful) {
+          globalScrollData.scrollPositions.set(lastScrollKey, actualScrollPosition);
+          console.log(`[RestoreEffect-Save] savedUID=${lastUid} position=${actualScrollPosition}px (from ${lastContainer === 'window' ? 'WINDOW' : 'ELEMENT'})`);
+        } else {
+          console.log(`[RestoreEffect-Save-Skip] savedUID=${lastUid} position=${actualScrollPosition}px (skipped - meaningless 0px, prev=${previouslySaved}px)`);
+        }
+      }
     }
 
     // Restore position when becoming active
@@ -1705,6 +1747,12 @@ export function useGroupScopedScrollRestoration(
       } else if (savedPosition !== undefined) {
         // For existing pages, restore from saved position with fallbacks
         console.log(`[RestoreEffect-Restore] uid=${uid} key=${key} target=${savedPosition}px`);
+        
+        // Mark this UID as having just restored scroll
+        justRestoredScrollRef.current.add(uid);
+        setTimeout(() => {
+          justRestoredScrollRef.current.delete(uid);
+        }, 100);
         
         const restoreScroll = () => {
           const currentPos = getCurrentScrollPosition(container);
