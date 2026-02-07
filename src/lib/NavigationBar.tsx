@@ -277,6 +277,9 @@ export default function NavigationBar({
 
   // Use injected onScroll prop, fallback to window scroll
   useEffect(() => {
+    // Only set up scroll handlers AFTER hydration
+    if (!mounted) return;
+
     if (onScroll) {
       // Custom scroll handler injected from parent (e.g., scrollBroadcaster)
       onScroll(scrollHandlerCallback);
@@ -309,7 +312,7 @@ export default function NavigationBar({
 
     window.addEventListener('scroll', handleWindowScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleWindowScroll);
-  }, [onScroll, scrollHandlerCallback, mode]);
+  }, [onScroll, scrollHandlerCallback, mode, mounted]);
 
 
   const handleClick = (item: NavItem) => {
