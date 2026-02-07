@@ -26,6 +26,8 @@ const Main = () => {
   
   // Use proper ref typing for iOS compatibility
   const navBarScrollRef = useRef<((event: NavigationBarScrollEvent) => void) | null>(null);
+  // Queue scroll events that arrive before callback is ready
+  const scrollQueueRef = useRef<any[]>([]);
 
 useEffect(() => {
 
@@ -47,14 +49,29 @@ useEffect(() => {
   handleSignOut();
 }, [userData,__meta.isHydrated]);
 
-  /** Subscribe to scroll broadcaster with stable handler */
+  /** Subscribe to scroll broadcaster with event queueing for iOS */
   useEffect(() => {
-    // Memoized scroll handler to prevent unnecessary re-subscriptions
+    // Memoized scroll handler that queues events if callback isn't ready
     const handleScrollBroadcast = (e: any) => {
-      // Guard against missing ref
-      if (!navBarScrollRef.current) return;
+      if (!navBarScrollRef.current) {
+        // Queue the event if callback not ready yet
+        scrollQueueRef.current.push(e);
+        return;
+      }
       
-      // Call the NavigationBar's scroll handler
+      // Process any queued events first
+      while (scrollQueueRef.current.length > 0) {
+        const queuedEvent = scrollQueueRef.current.shift();
+        navBarScrollRef.current({
+          container: queuedEvent.container,
+          position: queuedEvent.position ?? queuedEvent.scrollPosition,
+          clientHeight: queuedEvent.clientHeight,
+          scrollHeight: queuedEvent.scrollHeight,
+          scrollPercentage: queuedEvent.scrollPercentage,
+        });
+      }
+      
+      // Then process current event
       navBarScrollRef.current({
         container: e.container,
         position: e.position ?? e.scrollPosition,
@@ -197,9 +214,20 @@ useEffect(() => {
           paddingY="0px"
           paddingX="0px"
           
-          /** Inject scroll callback from ref */
+          /** Inject scroll callback from ref and flush queued events */
           onScroll={(callback) => {
             navBarScrollRef.current = callback;
+            // Flush any queued scroll events now that callback is available
+            while (scrollQueueRef.current.length > 0) {
+              const queuedEvent = scrollQueueRef.current.shift();
+              callback({
+                container: queuedEvent.container,
+                position: queuedEvent.position ?? queuedEvent.scrollPosition,
+                clientHeight: queuedEvent.clientHeight,
+                scrollHeight: queuedEvent.scrollHeight,
+                scrollPercentage: queuedEvent.scrollPercentage,
+              });
+            }
           }}
 
           /* Bar visuals */
