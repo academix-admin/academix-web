@@ -240,8 +240,15 @@ export default function NavigationBar({
 
     console.log(`[NavigationBar-ScrollEvent] pageKey=${pageKey} uid=${uid} position=${scrollPosition}px mode=${mode} atTop=${atTop} atBottom=${atBottom}`);
 
-    // 🚫 Ignore overscroll at boundaries
-    if (atTop || atBottom) {
+    // ✅ Always show NavigationBar when at top
+    if (atTop) {
+      setHidden(false);
+      prevScroll.current = scrollPosition;
+      return;
+    }
+
+    // 🚫 Ignore overscroll at bottom
+    if (atBottom) {
       prevScroll.current = scrollPosition;
       return;
     }
