@@ -231,7 +231,6 @@ export default function QuizChallenge(props: QuizChallengeProps) {
                 withdrawBottomController.close();
                 await (await nav.goToGroupId('profile-stack')).push('security_verification', { request: 'Pin', isNew: true });
             } else {
-                //
                 setError(status);
             }
 
