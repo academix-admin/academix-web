@@ -321,6 +321,30 @@ export default function NavigationBar({
   }, [onScroll, mode]);
 
 
+  // If no scroll events arrive after mount, ensure nav is visible for non-scrollable pages.
+  useEffect(() => {
+    if (mode === 'normal' || typeof window === 'undefined') return;
+
+    // Check document scrollability (fallback behavior from original logic)
+    const checkContentHeight = () => {
+      try {
+        const content = document.documentElement;
+        const hasScrollableContent = content.scrollHeight > content.clientHeight;
+        if (!hasScrollableContent && mode === 'autohide') {
+          setHidden(false);
+        }
+      } catch (err) {}
+    };
+
+    checkContentHeight();
+    window.addEventListener('resize', checkContentHeight);
+
+    return () => {
+      window.removeEventListener('resize', checkContentHeight);
+    };
+  }, [mode]);
+
+
   const handleClick = (item: NavItem) => {
     if (!controlled) setInternalActive(item.id);
     onChange?.(item.id, item);

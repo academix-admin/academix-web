@@ -40,9 +40,22 @@ class ScrollBroadcaster {
   private listeners: Set<ScrollListener> = new Set();
   // Optional explicit container registry: uid -> HTMLElement
   private containerRegistry: Map<string, HTMLElement> = new Map();
+  // Keep the last broadcast event per uid so new subscribers can receive
+  // the current state synchronously when they subscribe.
+  private lastEvents: Map<string, ScrollBroadcastEvent> = new Map();
 
   subscribe(listener: ScrollListener): () => void {
     this.listeners.add(listener);
+    // Immediately deliver cached snapshots synchronously so subscribers
+    // have a guaranteed initial state without timeouts.
+    try {
+      this.lastEvents.forEach((evt) => {
+        try { listener(evt); } catch (e) { console.error('[ScrollBroadcaster] error delivering cached event to new subscriber', e); }
+      });
+    } catch (err) {
+      console.warn('[ScrollBroadcaster] error delivering cached snapshots on subscribe', err);
+    }
+
     return () => {
       this.listeners.delete(listener);
     };
@@ -72,6 +85,9 @@ class ScrollBroadcaster {
   }
 
   broadcast(event: ScrollBroadcastEvent): void {
+    // Cache latest event for the UID
+    try { this.lastEvents.set(event.uid, event); } catch (e) {}
+
     this.listeners.forEach(listener => {
       try {
         listener(event);
