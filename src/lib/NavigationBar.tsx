@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 
 export type NavigationBarScrollEvent = {
   container: HTMLElement | 'window';
@@ -260,46 +260,65 @@ export default function NavigationBar({
   }, [mode, floatScrollThreshold, snapPoint]);
 
   // Use injected onScroll callback if provided, otherwise fallback to window scroll
-  useEffect(() => {
-    if (!mounted) return;
+  // Keep a ref to the latest handler so broadcaster keeps a stable function reference
+  const handlerRef = useRef<(event: NavigationBarScrollEvent) => void>(() => {});
 
-    // If onScroll prop provided, use it (handles scrollBroadcaster)
+  useEffect(() => {
+    handlerRef.current = handleScrollEvent;
+  }, [handleScrollEvent]);
+
+  // Subscribe as early as possible on the client using useLayoutEffect to reduce races
+  useLayoutEffect(() => {
+    if (typeof window === 'undefined' || mode === 'normal') return;
+
+    let unsub: (() => void) | undefined;
+    const wrapped = (e: NavigationBarScrollEvent) => handlerRef.current(e);
+
     if (onScroll) {
       console.log(`[NavigationBar] registering onScroll at ${new Date().toISOString()}`);
       try {
-        onScroll(handleScrollEvent);
+        // Capture unsubscribe if broadcaster returns one
+        const res = onScroll(wrapped as any);
+        if (typeof res === 'function') unsub = res;
       } catch (err) {
         console.log(`[NavigationBar] onScroll registration error at ${new Date().toISOString()}: ${String(err)}`);
       }
-      return;
+    } else {
+      // Fallback: listen to window scroll
+      let ticking = false;
+      const handleWindowScroll = () => {
+        if (!ticking) {
+          window.requestAnimationFrame(() => {
+            wrapped({
+              container: 'window',
+              position: window.scrollY,
+              clientHeight: window.innerHeight,
+              scrollHeight: document.documentElement.scrollHeight,
+            });
+            ticking = false;
+          });
+          ticking = true;
+        }
+      };
+
+      console.log(`[NavigationBar] adding window scroll listener at ${new Date().toISOString()}`);
+      window.addEventListener('scroll', handleWindowScroll, { passive: true });
+      unsub = () => {
+        window.removeEventListener('scroll', handleWindowScroll);
+        console.log(`[NavigationBar] removed window scroll listener at ${new Date().toISOString()}`);
+      };
     }
 
-    // Fallback: listen to window scroll
-    if (typeof window === 'undefined' || mode === 'normal') return;
-
-    let ticking = false;
-    const handleWindowScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          handleScrollEvent({
-            container: 'window',
-            position: window.scrollY,
-            clientHeight: window.innerHeight,
-            scrollHeight: document.documentElement.scrollHeight,
-          });
-          ticking = false;
-        });
-        ticking = true;
+    return () => {
+      try {
+        unsub?.();
+        if (!unsub) console.log(`[NavigationBar] cleanup: no unsubscribe returned at ${new Date().toISOString()}`);
+        else console.log(`[NavigationBar] unsubscribed from onScroll at ${new Date().toISOString()}`);
+      } catch (err) {
+        console.log(`[NavigationBar] unsubscribe error at ${new Date().toISOString()}: ${String(err)}`);
       }
     };
-
-    console.log(`[NavigationBar] adding window scroll listener at ${new Date().toISOString()}`);
-    window.addEventListener('scroll', handleWindowScroll, { passive: true });
-    return () => {
-      window.removeEventListener('scroll', handleWindowScroll);
-      console.log(`[NavigationBar] removed window scroll listener at ${new Date().toISOString()}`);
-    };
-  }, [onScroll, handleScrollEvent, mode, mounted]);
+  }, [onScroll, mode]);
 
 
   const handleClick = (item: NavItem) => {

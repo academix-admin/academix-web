@@ -1373,6 +1373,11 @@ export function useGroupScopedScrollRestoration(
     scrollContainers: new Map(),
     lastWindowWidth: typeof window !== 'undefined' ? window.innerWidth : 0,
   }).current;
+  // Add observers map to track MutationObservers for UIDs that are not yet in DOM
+  // Stored on the same scrollData object so it's stable across renders
+  if (!(scrollData as any).observers) {
+    (scrollData as any).observers = new Map<string, { observer: MutationObserver; timer: number }>();
+  }
 
   const isActiveGroup = groupContext ? groupContext.isActiveStack(groupStackId || '') : true;
   const [cacheVersion, setCacheVersion] = useState(0);
@@ -1529,13 +1534,63 @@ export function useGroupScopedScrollRestoration(
 
     if (!container) {
       console.log(`[GetScrollContainer] uid=${uid} not found, using WINDOW`);
+
+      // Deterministic detection: use a MutationObserver to watch for the
+      // element being added to the DOM. This is more reliable than a blind
+      // timeout re-check and avoids races in production.
+      try {
+        const observersMap = (scrollData as any).observers as Map<string, { observer: MutationObserver; timer: number }>;
+        if (typeof MutationObserver !== 'undefined' && !observersMap.has(uid)) {
+          const observer = new MutationObserver(() => {
+            try {
+              const maybe = findScrollableContainer(uid);
+              if (maybe && maybe !== 'window' && !scrollData.scrollContainers.has(uid)) {
+                console.log(`[GetScrollContainer-Observer] uid=${uid} found ELEMENT via observer scrollHeight=${maybe.element.scrollHeight}`);
+                scrollData.scrollContainers.set(uid, maybe);
+                // bump cacheVersion so effects re-run and listeners rebind to the element
+                setCacheVersion(x => x + 1);
+
+                // cleanup observer and timer
+                const record = observersMap.get(uid);
+                if (record) {
+                  try { record.observer.disconnect(); } catch (e) {}
+                  try { clearTimeout(record.timer); } catch (e) {}
+                }
+                observersMap.delete(uid);
+              }
+            } catch (err) {
+              console.log(`[GetScrollContainer-Observer] uid=${uid} observer error: ${String(err)}`);
+            }
+          });
+
+          observer.observe(document.body, { childList: true, subtree: true });
+          // Fallback to remove observer if element never appears (avoid leaks)
+          const timer = window.setTimeout(() => {
+            try { observer.disconnect(); } catch (e) {}
+            try { observersMap.delete(uid); } catch (e) {}
+            console.log(`[GetScrollContainer-Observer] uid=${uid} observer timed out`);
+          }, 2000);
+
+          observersMap.set(uid, { observer, timer });
+          console.log(`[GetScrollContainer-Observer] uid=${uid} observing DOM for element`);
+        }
+      } catch (err) {
+        console.log(`[GetScrollContainer] uid=${uid} observer setup error: ${String(err)}`);
+      }
+
       return 'window';
     }
 
     // Store the container
+    const hadCache = scrollData.scrollContainers.has(uid);
     scrollData.scrollContainers.set(uid, container);
     if (container !== 'window') {
       console.log(`[GetScrollContainer] uid=${uid} found ELEMENT scrollHeight=${container.element.scrollHeight}`);
+      // If this is a newly discovered element (no previous cache), bump
+      // cacheVersion so any effects depending on it will re-run and rebind listeners.
+      if (!hadCache) {
+        setCacheVersion(x => x + 1);
+      }
       return container.element;
     }
     return 'window';
