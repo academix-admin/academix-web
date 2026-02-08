@@ -4,6 +4,8 @@
   align-items: center;
   justify-content: center;
   position: relative;
+  padding-bottom: var(--nav-height);
+  box-sizing: border-box;
 }
 
 .header {

@@ -5,6 +5,7 @@
   justify-content: center;
   box-sizing: border-box;
   padding-bottom: 32px;
+  padding-bottom: var(--nav-height);
 }
 
 .header {

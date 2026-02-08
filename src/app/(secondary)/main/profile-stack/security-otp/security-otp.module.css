@@ -7,6 +7,7 @@
   box-sizing: border-box;
   overflow: hidden; /* prevent scrolling */
   max-height: 813px;
+  padding-bottom: var(--nav-height);
 }
 
 .container_light {

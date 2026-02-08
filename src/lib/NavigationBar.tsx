@@ -55,11 +55,13 @@ export interface NavigationBarProps {
   mode?: NavigationModeType;
   floatScrollThreshold?: number;
   snapPoint?: number;
+  breakpointSpacing?: Record<string, string>;
 
   /** Floating Button */
   floatingButton?: React.ReactNode;
   floatingButtonPosition?: 'left' | 'right';
   floatingButtonBottom?: string;
+  floatingButtonHeight?: string;
   floatingButtonPadding?: string;
   floatingButtonColor?: string;
   floatingButtonTextColor?: string;
@@ -175,11 +177,13 @@ export default function NavigationBar({
   mode = 'normal',
   floatScrollThreshold = 200,
   snapPoint = 0.5,
+  breakpointSpacing,
 
   /** FAB */
   floatingButton,
   floatingButtonPosition = 'right',
   floatingButtonBottom = '80px',
+  floatingButtonHeight = '56px',
   floatingButtonPadding = '12px',
   floatingButtonColor = '#2563eb',
   floatingButtonTextColor = '#ffffff',
@@ -214,10 +218,8 @@ export default function NavigationBar({
 
   /** Scroll handler - process scroll events from either source */
   const handleScrollEvent = React.useCallback((event: NavigationBarScrollEvent) => {
-    console.log(`[NavigationBar] handleScrollEvent invoked at ${new Date().toISOString()} mode=${mode} pos=${String(event.position)}`);
 
     if (mode === 'normal') {
-      console.log(`[NavigationBar] mode is 'normal' - ignoring scroll at ${new Date().toISOString()}`);
       return;
     }
 
@@ -228,7 +230,6 @@ export default function NavigationBar({
     // If page is not scrollable at all, keep navbar visible
     const isScrollable = scrollHeight > clientHeight;
     if (!isScrollable) {
-      console.log(`[NavigationBar] not scrollable - scrollHeight=${scrollHeight} clientHeight=${clientHeight} at ${new Date().toISOString()}`);
       setHidden(false);
       return;
     }
@@ -237,7 +238,6 @@ export default function NavigationBar({
     const atBottom = clientHeight + current >= scrollHeight - 2;
 
     if (atTop || atBottom) {
-      console.log(`[NavigationBar] atTop:${atTop} atBottom:${atBottom} - ignoring overscroll at ${new Date().toISOString()}`);
       prevScroll.current = current;
       return;
     }
@@ -275,13 +275,11 @@ export default function NavigationBar({
     const wrapped = (e: NavigationBarScrollEvent) => handlerRef.current(e);
 
     if (onScroll) {
-      console.log(`[NavigationBar] registering onScroll at ${new Date().toISOString()}`);
       try {
         // Capture unsubscribe if broadcaster returns one
         const res = onScroll(wrapped as any);
         if (typeof res === 'function') unsub = res;
       } catch (err) {
-        console.log(`[NavigationBar] onScroll registration error at ${new Date().toISOString()}: ${String(err)}`);
       }
     } else {
       // Fallback: listen to window scroll
@@ -301,11 +299,9 @@ export default function NavigationBar({
         }
       };
 
-      console.log(`[NavigationBar] adding window scroll listener at ${new Date().toISOString()}`);
       window.addEventListener('scroll', handleWindowScroll, { passive: true });
       unsub = () => {
         window.removeEventListener('scroll', handleWindowScroll);
-        console.log(`[NavigationBar] removed window scroll listener at ${new Date().toISOString()}`);
       };
     }
 
@@ -315,7 +311,6 @@ export default function NavigationBar({
         if (!unsub) console.log(`[NavigationBar] cleanup: no unsubscribe returned at ${new Date().toISOString()}`);
         else console.log(`[NavigationBar] unsubscribed from onScroll at ${new Date().toISOString()}`);
       } catch (err) {
-        console.log(`[NavigationBar] unsubscribe error at ${new Date().toISOString()}: ${String(err)}`);
       }
     };
   }, [onScroll, mode]);
@@ -355,12 +350,85 @@ export default function NavigationBar({
       ? `calc(${normalHeight} - (${normalHeight} - ${shrinkHeight}) * ${shrinkRatio})`
       : normalHeight;
 
-  // Update CSS variable for content spacing
+  // Helper to extract border thickness from border string (e.g., "1px solid rgba(...)" -> "1px")
+  const extractBorderThickness = (borderStyle: string): string => {
+    const match = borderStyle.match(/(\d+(?:\.\d+)?)(px|em|rem|%)?/);
+    return match ? `${match[1]}${match[2] || 'px'}` : '0px';
+  };
+
+  // Update CSS variable for content spacing (nav height + padding + border + safe area + optional breakpoint spacing)
   useEffect(() => {
-    if (typeof document !== 'undefined') {
-      document.body.style.setProperty('--nav-height', currentHeight);
+    if (typeof document === 'undefined') return;
+
+    let spacingValue: string;
+
+    // Calculate nav spacing: height + border thickness + safe area + breakpoint additions
+    const borderThickness = extractBorderThickness(barBorderTop);
+    const navParts = [
+      currentHeight,
+      borderThickness,
+      'env(safe-area-inset-bottom)',
+    ];
+
+    // Add breakpoint-specific spacing if defined
+    if (breakpointSpacing && Object.keys(breakpointSpacing).length > 0) {
+      // Determine current breakpoint using window width
+      if (typeof window !== 'undefined') {
+        const width = window.innerWidth;
+        
+        // Find the largest breakpoint that is <= current width
+        const breakpointKeys = Object.keys(breakpointSpacing)
+          .map(Number)
+          .sort((a, b) => b - a); // Sort descending
+        
+        for (const bp of breakpointKeys) {
+          if (width >= bp) {
+            const spacing = breakpointSpacing[bp.toString()];
+            if (spacing) {
+              navParts.push(spacing);
+            }
+            break;
+          }
+        }
+      }
     }
-  }, [currentHeight]);
+
+    // If hidden and showing FAB, use FAB spacing instead of nav spacing
+    if (hidden && floatingButton && !fabClicked) {
+      const fabParts = [
+        floatingButtonBottom,
+        floatingButtonHeight,
+        `${floatingButtonPadding} * 2`, // top and bottom padding
+        'env(safe-area-inset-bottom)',
+      ];
+
+      // Add breakpoint-specific spacing to FAB as well
+      if (breakpointSpacing && Object.keys(breakpointSpacing).length > 0) {
+        if (typeof window !== 'undefined') {
+          const width = window.innerWidth;
+          const breakpointKeys = Object.keys(breakpointSpacing)
+            .map(Number)
+            .sort((a, b) => b - a);
+          
+          for (const bp of breakpointKeys) {
+            if (width >= bp) {
+              const spacing = breakpointSpacing[bp.toString()];
+              if (spacing) {
+                fabParts.push(spacing);
+              }
+              break;
+            }
+          }
+        }
+      }
+
+      spacingValue = `calc(${fabParts.join(' + ')})`;
+    } else {
+      spacingValue = `calc(${navParts.join(' + ')})`;
+    }
+
+    document.body.style.setProperty('--nav-height', spacingValue);
+  }, [currentHeight, barBorderTop, breakpointSpacing, hidden, floatingButton, floatingButtonBottom, floatingButtonHeight, floatingButtonPadding, fabClicked]);
 
   /** Decide FAB visibility */
   const shouldShowFab =
