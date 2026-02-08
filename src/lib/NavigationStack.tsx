@@ -38,43 +38,73 @@ type ScrollListener = (event: ScrollBroadcastEvent) => void;
 
 class ScrollBroadcaster {
   private listeners: Set<ScrollListener> = new Set();
-  // Optional explicit container registry: uid -> HTMLElement
   private containerRegistry: Map<string, HTMLElement> = new Map();
-  // Keep the last broadcast event per uid so new subscribers can receive
-  // the current state synchronously when they subscribe.
   private lastEvents: Map<string, ScrollBroadcastEvent> = new Map();
+  
+  // ✅ Track which UIDs are "ready" (container detected and initial broadcast sent)
+  private readyUids: Set<string> = new Set();
+  
+  // ✅ Queue of listeners waiting for specific UIDs to become ready
+  private pendingListeners: Map<string, Set<ScrollListener>> = new Map();
 
+  /**
+   * Subscribe to scroll events globally
+   * Immediately delivers cached events for ready UIDs
+   * Queues listener for UIDs that aren't ready yet
+   */
   subscribe(listener: ScrollListener): () => void {
     this.listeners.add(listener);
-    // Immediately deliver cached snapshots synchronously so subscribers
-    // have a guaranteed initial state without timeouts.
-    try {
-      this.lastEvents.forEach((evt) => {
+    
+    console.log(`[ScrollBroadcaster] New subscriber, ${this.listeners.size} total listeners`);
+    
+    // ✅ Deliver all cached events for READY UIDs synchronously
+    this.lastEvents.forEach((evt, uid) => {
+      // Only deliver if UID is marked as ready (container detected + initial broadcast sent)
+      if (this.readyUids.has(uid)) {
         try {
-          // Skip obviously-empty snapshots (both heights zero) to avoid
-          // delivering transient invalid states that hide UI.
-          if ((evt.clientHeight === 0 || evt.clientHeight === undefined) && (evt.scrollHeight === 0 || evt.scrollHeight === undefined)) return;
+          // Skip invalid snapshots
+          if ((evt.clientHeight === undefined) && 
+              (evt.scrollHeight === undefined)) {
+            return;
+          }
+          
+          console.log(`[ScrollBroadcaster] Delivering cached event for ready uid=${uid}`);
           listener(evt);
-        } catch (e) { console.error('[ScrollBroadcaster] error delivering cached event to new subscriber', e); }
-      });
-    } catch (err) {
-      console.warn('[ScrollBroadcaster] error delivering cached snapshots on subscribe', err);
-    }
+        } catch (e) {
+          console.error('[ScrollBroadcaster] Error delivering cached event:', e);
+        }
+      } else {
+        // ✅ Queue listener for this UID - will be notified when ready
+        if (!this.pendingListeners.has(uid)) {
+          this.pendingListeners.set(uid, new Set());
+        }
+        this.pendingListeners.get(uid)!.add(listener);
+        console.log(`[ScrollBroadcaster] Queued listener for pending uid=${uid}`);
+      }
+    });
 
     return () => {
       this.listeners.delete(listener);
+      // Clean up from pending queues
+      this.pendingListeners.forEach((set) => set.delete(listener));
     };
   }
 
-  // Allow pages to explicitly register their scroll container element.
-  // This is more reliable than DOM-watching fallbacks and avoids binding
-  // listeners to `window` when the proper element exists.
+  /**
+   * Register a container element for a UID
+   * This marks the UID as detected but not yet ready
+   */
   registerContainer(uid: string, el: HTMLElement | null) {
     try {
       if (el) {
+        console.log(`[ScrollBroadcaster] Container registered for uid=${uid}`);
         this.containerRegistry.set(uid, el);
+        // Note: NOT marking as ready yet - waiting for initial broadcast
       } else {
+        console.log(`[ScrollBroadcaster] Container unregistered for uid=${uid}`);
         this.containerRegistry.delete(uid);
+        this.readyUids.delete(uid);
+        this.pendingListeners.delete(uid);
       }
     } catch (err) {
       console.warn('[ScrollBroadcaster] registerContainer error:', err);
@@ -87,12 +117,43 @@ class ScrollBroadcaster {
 
   unregisterContainer(uid: string) {
     this.containerRegistry.delete(uid);
+    this.readyUids.delete(uid);
+    this.pendingListeners.delete(uid);
   }
 
+  /**
+   * Broadcast a scroll event
+   * If this is the first broadcast for a UID, notify all pending listeners
+   */
   broadcast(event: ScrollBroadcastEvent): void {
-    // Cache latest event for the UID
-    try { this.lastEvents.set(event.uid, event); } catch (e) {}
+    const { uid } = event;
+    const wasReady = this.readyUids.has(uid);
+    
+    // Cache the event
+    this.lastEvents.set(uid, event);
+    
+    // ✅ If this is the FIRST broadcast for this UID, mark it as ready
+    if (!wasReady) {
+      this.readyUids.add(uid);
+      console.log(`[ScrollBroadcaster] uid=${uid} is now READY (first broadcast received)`);
+      
+      // ✅ Notify all pending listeners that were waiting for this UID
+      const pending = this.pendingListeners.get(uid);
+      if (pending && pending.size > 0) {
+        console.log(`[ScrollBroadcaster] Notifying ${pending.size} pending listeners for uid=${uid}`);
+        pending.forEach(listener => {
+          try {
+            listener(event);
+          } catch (error) {
+            console.error('[ScrollBroadcaster] Error notifying pending listener:', error);
+          }
+        });
+        // Clear pending queue for this UID
+        this.pendingListeners.delete(uid);
+      }
+    }
 
+    // Broadcast to all current listeners
     this.listeners.forEach(listener => {
       try {
         listener(event);
@@ -1434,7 +1495,6 @@ export function useGroupScopedScrollRestoration(
   }
 
   const isActiveGroup = groupContext ? groupContext.isActiveStack(groupStackId || '') : true;
-  const [cacheVersion, setCacheVersion] = useState(0);
   
   // Track when a new page is mounted to detect and counter scroll restoration
   const newPageMountRef = useRef<{ uid: string | null; mountTime: number }>({ 
@@ -1479,204 +1539,6 @@ export function useGroupScopedScrollRestoration(
     }
   }, []);
 
-  // Scrollable detection
-  const analyzeContainer = (element: HTMLElement, level: number): ContainerData => {
-    const style = getComputedStyle(element);
-
-    // Calculate score
-    let score = 0;
-
-    // For max-height constraints (often indicates intentional scroll container)
-    if (style.maxHeight && style.maxHeight !== 'none') score += level + 40;
-
-    return {
-      element,
-      level,
-      maxHeight: style.maxHeight,
-      overflowX: style.overflowX,
-      overflowY: style.overflowY,
-      clientHeight: element.clientHeight,
-      clientWidth: element.clientWidth,
-      scrollHeight: element.scrollHeight,
-      scrollWidth: element.scrollWidth,
-      score
-    };
-  };
-
-  // Check if window dimensions changed significantly
-  const hasWindowDimensionsChanged = (): boolean => {
-    if (typeof window === 'undefined') return false;
-
-    const currentWidth = window.innerWidth;
-
-    const significantChange =
-      Math.abs(scrollData.lastWindowWidth - currentWidth) > 1;
-
-    if (significantChange) {
-      scrollData.lastWindowWidth = currentWidth;
-      return true;
-    }
-
-    return false;
-  };
-
-  // Invalidate cache for a specific UID
-  const invalidateContainerCache = (uid: string) => {
-    scrollData.scrollContainers.delete(uid);
-    setCacheVersion(x => x + 1); // <-- SIGNAL React to re-run effects
-  };
-
-  // Invalidate all container caches
-  const invalidateAllContainerCaches = () => {
-    scrollData.scrollContainers.clear();
-    setCacheVersion(x => x + 1); // <-- SIGNAL React to re-run effects
-  };
-
-  // Scrollable container detection with cache invalidation
-  const findScrollableContainer = (uid: string): ContainerData | 'window' | null => {
-    // The navstack-page div is the actual scrollable container
-    // It's set with overflow-y: auto for top pages, overflow-y: hidden for others
-    // It's unique across all groups and pages
-    const pageElement = document.querySelector(`[data-nav-uid="${uid}"]`) as HTMLElement;
-    
-    if (!pageElement) {
-      console.log(`[ContainerDetection-Error] No navstack-page found uid=${uid}`);
-      return null;
-    }
-
-    const style = getComputedStyle(pageElement);
-    const overflowY = style.overflowY;
-    
-    console.log(`[ContainerDetection] Found navstack-page uid=${uid} overflowY=${overflowY} scrollHeight=${pageElement.scrollHeight} clientHeight=${pageElement.clientHeight}`);
-    
-    return {
-      element: pageElement,
-      level: 0,
-      maxHeight: 'auto',
-      overflowX: style.overflowX,
-      overflowY: overflowY,
-      clientHeight: pageElement.clientHeight,
-      clientWidth: pageElement.clientWidth,
-      scrollHeight: pageElement.scrollHeight,
-      scrollWidth: pageElement.scrollWidth,
-      score: 100 // This is the container
-    };
-  };
-
-  // Get scrollable container with cache management
-  const getScrollableContainer = (uid: string): HTMLElement | 'window' => {
-    if (typeof document === 'undefined') return 'window';
-
-    // Check cache first
-    const cached = scrollData.scrollContainers.get(uid);
-    if (cached) {
-      if (cached === 'window') {
-        return 'window';
-      }
-      // Verify cached element is still in DOM
-      if (document.contains(cached.element)) {
-        console.log(`[GetScrollContainer] uid=${uid} using cached ELEMENT scrollHeight=${cached.element.scrollHeight}`);
-        return cached.element;
-      } else {
-        console.log(`[GetScrollContainer-InvalidCache] uid=${uid} cached element NOT in DOM, invalidating cache...`);
-        scrollData.scrollContainers.delete(uid);
-      }
-    }
-
-      // First, prefer an explicitly registered container from the broadcaster
-      try {
-        const reg = (scrollBroadcaster as any).getRegisteredContainer?.(uid) as HTMLElement | undefined;
-        if (reg) {
-          // store into our local cache so other effects relying on it pick it up
-          console.log(`[GetScrollContainer] uid=${uid} using REGISTERED container via scrollBroadcaster`);
-          const style = getComputedStyle(reg);
-          const containerData: ContainerData = {
-            element: reg,
-            level: 0,
-            maxHeight: 'auto',
-            overflowX: style.overflowX,
-            overflowY: style.overflowY,
-            clientHeight: reg.clientHeight,
-            clientWidth: reg.clientWidth,
-            scrollHeight: reg.scrollHeight,
-            scrollWidth: reg.scrollWidth,
-            score: 100,
-          };
-          scrollData.scrollContainers.set(uid, containerData);
-          setCacheVersion(x => x + 1);
-          return reg;
-        }
-      } catch (err) {
-        console.log(`[GetScrollContainer] uid=${uid} registered container check error: ${String(err)}`);
-      }
-
-      console.log(`[GetScrollContainer] uid=${uid} detecting...`);
-      const container = findScrollableContainer(uid);
-
-    if (!container) {
-      console.log(`[GetScrollContainer] uid=${uid} not found, using WINDOW`);
-
-      // Deterministic detection: use a MutationObserver to watch for the
-      // element being added to the DOM. This is more reliable than a blind
-      // timeout re-check and avoids races in production.
-      try {
-        const observersMap = (scrollData as any).observers as Map<string, { observer: MutationObserver; timer: number }>;
-        if (typeof MutationObserver !== 'undefined' && !observersMap.has(uid)) {
-          const observer = new MutationObserver(() => {
-            try {
-              const maybe = findScrollableContainer(uid);
-              if (maybe && maybe !== 'window' && !scrollData.scrollContainers.has(uid)) {
-                console.log(`[GetScrollContainer-Observer] uid=${uid} found ELEMENT via observer scrollHeight=${maybe.element.scrollHeight}`);
-                scrollData.scrollContainers.set(uid, maybe);
-                // bump cacheVersion so effects re-run and listeners rebind to the element
-                setCacheVersion(x => x + 1);
-
-                // cleanup observer and timer
-                const record = observersMap.get(uid);
-                if (record) {
-                  try { record.observer.disconnect(); } catch (e) {}
-                  try { clearTimeout(record.timer); } catch (e) {}
-                }
-                observersMap.delete(uid);
-              }
-            } catch (err) {
-              console.log(`[GetScrollContainer-Observer] uid=${uid} observer error: ${String(err)}`);
-            }
-          });
-
-          observer.observe(document.body, { childList: true, subtree: true });
-          // Fallback to remove observer if element never appears (avoid leaks)
-          const timer = window.setTimeout(() => {
-            try { observer.disconnect(); } catch (e) {}
-            try { observersMap.delete(uid); } catch (e) {}
-            console.log(`[GetScrollContainer-Observer] uid=${uid} observer timed out`);
-          }, 2000);
-
-          observersMap.set(uid, { observer, timer });
-          console.log(`[GetScrollContainer-Observer] uid=${uid} observing DOM for element`);
-        }
-      } catch (err) {
-        console.log(`[GetScrollContainer] uid=${uid} observer setup error: ${String(err)}`);
-      }
-
-      return 'window';
-    }
-
-    // Store the container
-    const hadCache = scrollData.scrollContainers.has(uid);
-    scrollData.scrollContainers.set(uid, container);
-    if (container !== 'window') {
-      console.log(`[GetScrollContainer] uid=${uid} found ELEMENT scrollHeight=${container.element.scrollHeight}`);
-      // If this is a newly discovered element (no previous cache), bump
-      // cacheVersion so any effects depending on it will re-run and rebind listeners.
-      if (!hadCache) {
-        setCacheVersion(x => x + 1);
-      }
-      return container.element;
-    }
-    return 'window';
-  };
-
   // Get current scroll position
   const getCurrentScrollPosition = (container: HTMLElement | 'window'): number => {
     if (container === 'window') {
@@ -1695,28 +1557,6 @@ export function useGroupScopedScrollRestoration(
     }
   };
 
-  // Add scroll listener to the appropriate element
-  const addScrollListener = (container: HTMLElement | 'window', handler: () => void) => {
-    if (container === 'window') {
-      // Avoid binding to `window` by default. Prefer explicit container
-      // registration via `scrollBroadcaster.registerContainer(uid, el)`.
-      console.log('[AddScrollListener] container is WINDOW - skipping attaching window listener');
-      return () => {};
-    }
-    const target = container as HTMLElement;
-    target.addEventListener('scroll', handler, { passive: true });
-    return () => target.removeEventListener('scroll', handler);
-  };
-
-  // Manual cache invalidation function that can be called externally
-  const invalidateCache = useCallback((uid?: string) => {
-    if (uid) {
-      invalidateContainerCache(uid);
-    } else {
-      invalidateAllContainerCaches();
-    }
-  }, []);
-
   // Track scroll position for active page
   useEffect(() => {
     if (!isActiveGroup) {
@@ -1728,91 +1568,29 @@ export function useGroupScopedScrollRestoration(
       return;
     }
 
-    const container = getScrollableContainer(top.uid);
-    const scrollKey = makeScrollKey(top.uid);
-    const now = Date.now();
-    const timestamp = new Date(now).toISOString().split('T')[1]; // HH:MM:SS.mmm
-
-    // Decide whether to emit an initial broadcast. Only send when:
-    // - we have NOT already sent one for this UID mount, AND
-    // - either there is no saved scroll position for this UID, OR
-    //   the container type changed (e.g., WINDOW -> ELEMENT)
-    try {
-      const initialBroadcastSet = (scrollData as any).initialBroadcastSent as Set<string>;
-      const prevContainerTypeMap = (scrollData as any).prevContainerType as Map<string, 'window' | 'element'>;
-
-      const savedPosition = globalScrollData.scrollPositions.get(top.uid);
-      const containerTypeNow: 'window' | 'element' = container === 'window' ? 'window' : 'element';
-      const prevType = prevContainerTypeMap.get(top.uid);
-
-      const shouldBroadcast = !initialBroadcastSet.has(top.uid) && (savedPosition === undefined || (prevType !== undefined && prevType !== containerTypeNow));
-
-      // update prev type for future comparisons
-      prevContainerTypeMap.set(top.uid, containerTypeNow);
-
-      if (shouldBroadcast) {
-        const initialScrollPosition = getCurrentScrollPosition(container);
-        const initialScrollHeight = container === 'window'
-          ? (typeof document !== 'undefined' ? document.documentElement.scrollHeight : 0)
-          : container.scrollHeight;
-        const initialClientHeight = container === 'window'
-          ? (typeof window !== 'undefined' ? window.innerHeight : 0)
-          : container.clientHeight;
-        const initialMax = Math.max(initialScrollHeight - initialClientHeight, 0);
-        const initialPercentage = initialMax > 0 ? (initialScrollPosition / initialMax) * 100 : 0;
-
-        console.log(`[ScrollListener-Initial] Page=${top.key} uid=${top.uid} position=${initialScrollPosition}px container=${container === 'window' ? 'WINDOW' : 'ELEMENT'} percentage=${initialPercentage.toFixed(1)}% scrollHeight=${initialScrollHeight} clientHeight=${initialClientHeight}`);
-
-        scrollBroadcaster.broadcast({
-          uid: top.uid,
-          pageKey: top.key,
-          position: initialScrollPosition,
-          scrollPosition: initialScrollPosition,
-          scrollPercentage: initialPercentage,
-          container,
-          clientHeight: initialClientHeight,
-          scrollHeight: initialScrollHeight,
-          timestamp: Date.now(),
-        });
-
-        initialBroadcastSet.add(top.uid);
-      }
-    } catch (err) {
-      console.log(`[ScrollListener-Initial] broadcast error for uid=${top.uid}: ${String(err)}`);
+    // Get the container from the broadcaster's registry
+    const container = (scrollBroadcaster as any).getRegisteredContainer?.(top.uid) as HTMLElement | undefined;
+    if (!container) {
+      console.log(`[ScrollListener] uid=${top.uid} container not yet registered with broadcaster`);
+      return;
     }
+
+    const scrollKey = makeScrollKey(top.uid);
 
     const handleScroll = () => {
       const scrollPosition = getCurrentScrollPosition(container);
-      const containerType = container === 'window' ? 'WINDOW' : 'ELEMENT';
-      
-      // Detect if this is a new page that just jumped to old scroll position
-      if (newPageMountRef.current.uid === top.uid && scrollPosition > 0) {
-        const timeSinceMountMs = now - newPageMountRef.current.mountTime;
-        console.log(`[ScrollListener-NewPage] Page=${top.key} uid=${top.uid} position=${scrollPosition}px container=${containerType} msSinceMountMs=${timeSinceMountMs}`);
-        
-        // This is the moment WebKit restored the scroll - reset it once right now
-        console.log(`[ScrollListener-Restore] Detected WebKit scroll restoration, resetting to 0`);
-        setScrollPosition(0, container);
-        
-        // Clear the new page marker so we don't keep resetting
-        newPageMountRef.current = { uid: null, mountTime: 0 };
-        return;
-      }
+      const containerType = 'ELEMENT';
       
       globalScrollData.scrollPositions.set(scrollKey, scrollPosition);
       globalScrollData.currentScrollY = scrollPosition;
       
       // Calculate scroll percentage
-      const scrollHeight = container === 'window' 
-        ? (typeof window !== 'undefined' ? document.documentElement.scrollHeight : 0)
-        : container.scrollHeight;
-      const clientHeight = container === 'window'
-        ? (typeof window !== 'undefined' ? window.innerHeight : 0)
-        : container.clientHeight;
+      const scrollHeight = container.scrollHeight;
+      const clientHeight = container.clientHeight;
       const maxScroll = Math.max(scrollHeight - clientHeight, 0);
       const scrollPercentage = maxScroll > 0 ? (scrollPosition / maxScroll) * 100 : 0;
       
-      console.log(`[ScrollListener] Page=${top.key} uid=${top.uid} position=${scrollPosition}px container=${containerType} percentage=${scrollPercentage.toFixed(1)}% scrollHeight=${scrollHeight} clientHeight=${clientHeight}`);
+      console.log(`[ScrollListener] Page=${top.key} uid=${top.uid} position=${scrollPosition}px percentage=${scrollPercentage.toFixed(1)}% scrollHeight=${scrollHeight} clientHeight=${clientHeight}`);
       
       // Broadcast scroll event globally
       scrollBroadcaster.broadcast({
@@ -1828,12 +1606,12 @@ export function useGroupScopedScrollRestoration(
       });
     };
 
-    const removeListener = addScrollListener(container, handleScroll);
+    container.addEventListener('scroll', handleScroll, { passive: true });
 
     return () => {
-      removeListener();
+      container.removeEventListener('scroll', handleScroll);
     };
-  }, [stackSnapshot, isActiveGroup, groupStackKey, cacheVersion]);
+  }, [stackSnapshot, isActiveGroup, groupStackKey]);
 
 
   // Reset scroll for NEW pages SYNCHRONOUSLY before React renders
@@ -1858,9 +1636,11 @@ export function useGroupScopedScrollRestoration(
     
     // If this is a brand new PAGE being PUSHED (no saved position), reset scroll to 0
     if (isPush && savedPosition === undefined) {
-      const container = getScrollableContainer(uid);
-      console.log(`[ScrollReset] ${timestamp} NEW PAGE PUSH - Key: ${key} | Resetting to 0`);
-      setScrollPosition(0, container);
+      const container = (scrollBroadcaster as any).getRegisteredContainer?.(uid) as HTMLElement | undefined;
+      if (container) {
+        console.log(`[ScrollReset] ${timestamp} NEW PAGE PUSH - Key: ${key} | Resetting to 0`);
+        setScrollPosition(0, container);
+      }
       
       // Mark this page as newly mounted so scroll listener can detect when WebKit restores scroll
       newPageMountRef.current = { uid, mountTime: now };
@@ -1905,18 +1685,20 @@ export function useGroupScopedScrollRestoration(
         justRestoredScrollRef.current.delete(lastUid);
       } else {
         // Get the ACTUAL scroll position from the container at switch time
-        const lastContainer = getScrollableContainer(lastUid);
-        const actualScrollPosition = getCurrentScrollPosition(lastContainer);
-        
-        // Only save if position is meaningful (not 0 right after a restore, or if it's different from saved)
-        const previouslySaved = globalScrollData.scrollPositions.get(lastScrollKey);
-        const isPositionMeaningful = actualScrollPosition > 0 || previouslySaved === undefined;
-        
-        if (isPositionMeaningful) {
-          globalScrollData.scrollPositions.set(lastScrollKey, actualScrollPosition);
-          console.log(`[RestoreEffect-Save] savedUID=${lastUid} position=${actualScrollPosition}px (from ${lastContainer === 'window' ? 'WINDOW' : 'ELEMENT'})`);
-        } else {
-          console.log(`[RestoreEffect-Save-Skip] savedUID=${lastUid} position=${actualScrollPosition}px (skipped - meaningless 0px, prev=${previouslySaved}px)`);
+        const lastContainer = (scrollBroadcaster as any).getRegisteredContainer?.(lastUid) as HTMLElement | undefined;
+        if (lastContainer) {
+          const actualScrollPosition = getCurrentScrollPosition(lastContainer);
+          
+          // Only save if position is meaningful (not 0 right after a restore, or if it's different from saved)
+          const previouslySaved = globalScrollData.scrollPositions.get(lastScrollKey);
+          const isPositionMeaningful = actualScrollPosition > 0 || previouslySaved === undefined;
+          
+          if (isPositionMeaningful) {
+            globalScrollData.scrollPositions.set(lastScrollKey, actualScrollPosition);
+            console.log(`[RestoreEffect-Save] savedUID=${lastUid} position=${actualScrollPosition}px (from ELEMENT)`);
+          } else {
+            console.log(`[RestoreEffect-Save-Skip] savedUID=${lastUid} position=${actualScrollPosition}px (skipped - meaningless 0px, prev=${previouslySaved}px)`);
+          }
         }
       }
     }
@@ -1925,7 +1707,12 @@ export function useGroupScopedScrollRestoration(
     if (isActiveGroup && (groupStackKeyChanged || uidChanged || activeChanged)) {
       const scrollKey = makeScrollKey(uid);
       const savedPosition = globalScrollData.scrollPositions.get(scrollKey);
-      const container = getScrollableContainer(uid);
+      const container = (scrollBroadcaster as any).getRegisteredContainer?.(uid) as HTMLElement | undefined;
+      
+      if (!container) {
+        console.log(`[RestoreEffect] uid=${uid} container not yet registered`);
+        return;
+      }
       
       // Explicitly determine if this is a new/fresh page
       const isNewPage = savedPosition === undefined;
@@ -1970,7 +1757,7 @@ export function useGroupScopedScrollRestoration(
     globalScrollData.lastGroupStackKey = groupStackKey;
     globalScrollData.lastActive = isActiveGroup;
     console.log(`[RestoreEffect-GlobalState] lastUid=${uid} isActive=${isActiveGroup} groupStackKey=${groupStackKey}`);
-  }, [stackSnapshot, isActiveGroup, groupStackKey, cacheVersion]);
+  }, [stackSnapshot, isActiveGroup, groupStackKey]);
 
 
   // Clean up scroll for pages no longer in entire navigation system
@@ -2022,48 +1809,6 @@ export function useGroupScopedScrollRestoration(
 
     keysToDelete.forEach(key => globalScrollData.scrollPositions.delete(key));
   }, [stackSnapshot, api]);
-
-  // Clean up container cache when UIDs are removed
-  useEffect(() => {
-    const currentUids = new Set(stackSnapshot.map(entry => entry.uid));
-
-    // Remove cached containers for UIDs that no longer exist
-    scrollData.scrollContainers.forEach((_, uid) => {
-      if (!currentUids.has(uid)) {
-        invalidateContainerCache(uid);
-      }
-    });
-  }, [stackSnapshot]);
-
-  // Listen for window resize events to invalidate cache
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    let timeout: ReturnType<typeof setTimeout> | null = null;
-
-    const handleResize = () => {
-      if (timeout) clearTimeout(timeout);
-
-      timeout = setTimeout(() => {
-        if (hasWindowDimensionsChanged()) {
-          invalidateAllContainerCaches();
-        }
-      }, 100); // 100ms debounce
-    };
-
-    window.addEventListener('resize', handleResize);
-
-    return () => {
-      if (timeout) clearTimeout(timeout);
-      window.removeEventListener('resize', handleResize);
-    };
-  }, []);
-
-
-  // Return the cache invalidation function so it can be used by consumers
-  return {
-    invalidateScrollContainerCache: invalidateCache
-  };
 }
 
 
@@ -3596,33 +3341,42 @@ function MissingRoute({
       className={`navstack-page ${className} ${containerClassName}`}
       inert={!isTop}
       data-nav-uid={entry.uid}
-        ref={(el) => {
+      ref={(el) => {
+        if (!el) {
           try {
-            (scrollBroadcaster as any).registerContainer?.(entry.uid, el as HTMLElement | null);
-            if (el) {
-              // Send an immediate snapshot for newly-registered containers so
-              // subscribers (e.g., NavigationBar) receive the current state.
-              try {
-                const clientHeight = el.clientHeight;
-                const scrollHeight = el.scrollHeight;
-                const position = el.scrollTop;
-                const max = Math.max(scrollHeight - clientHeight, 0);
-                const percentage = max > 0 ? (position / max) * 100 : 0;
-                (scrollBroadcaster as any).broadcast?.({
-                  uid: entry.uid,
-                  pageKey: entry.uid,
-                  position,
-                  scrollPosition: position,
-                  scrollPercentage: percentage,
-                  container: el,
-                  clientHeight,
-                  scrollHeight,
-                  timestamp: Date.now(),
-                });
-              } catch (e) {}
-            }
+            scrollBroadcaster.unregisterContainer(entry.uid);
           } catch (e) {}
-        }}
+          return;
+        }
+
+        try {
+          scrollBroadcaster.registerContainer(entry.uid, el);
+          
+          requestAnimationFrame(() => {
+            if (!document.contains(el)) return;
+            
+            const clientHeight = el.clientHeight;
+            const scrollHeight = el.scrollHeight;
+            const position = el.scrollTop;
+            const max = Math.max(scrollHeight - clientHeight, 0);
+            const percentage = max > 0 ? (position / max) * 100 : 0;
+
+            scrollBroadcaster.broadcast({
+              uid: entry.uid,
+              pageKey: entry.key || entry.uid,
+              position,
+              scrollPosition: position,
+              scrollPercentage: percentage,
+              container: el,
+              clientHeight,
+              scrollHeight,
+              timestamp: Date.now(),
+            });
+          });
+        } catch (e) {
+          console.error(`[RefCallback] Error for uid=${entry.uid}:`, e);
+        }
+      }}
     >
       <div className={`navstack-missing-route ${textClassName}`} style={{ padding: 16 }}>
         <strong>{mergedLabels.missingRoute}:</strong> {entry.key}
@@ -3681,29 +3435,40 @@ function SlideTransitionRenderer({
       inert={!isTop} 
       data-nav-uid={uid}
       ref={(el) => {
+        if (!el) {
+          try {
+            scrollBroadcaster.unregisterContainer(uid);
+          } catch (e) {}
+          return;
+        }
+
         try {
-          (scrollBroadcaster as any).registerContainer?.(uid, el as HTMLElement | null);
-          if (el) {
-            try {
-              const clientHeight = el.clientHeight;
-              const scrollHeight = el.scrollHeight;
-              const position = el.scrollTop;
-              const max = Math.max(scrollHeight - clientHeight, 0);
-              const percentage = max > 0 ? (position / max) * 100 : 0;
-              (scrollBroadcaster as any).broadcast?.({
-                uid,
-                pageKey: uid,
-                position,
-                scrollPosition: position,
-                scrollPercentage: percentage,
-                container: el,
-                clientHeight,
-                scrollHeight,
-                timestamp: Date.now(),
-              });
-            } catch (e) {}
-          }
-        } catch (e) {}
+          scrollBroadcaster.registerContainer(uid, el);
+          
+          requestAnimationFrame(() => {
+            if (!document.contains(el)) return;
+            
+            const clientHeight = el.clientHeight;
+            const scrollHeight = el.scrollHeight;
+            const position = el.scrollTop;
+            const max = Math.max(scrollHeight - clientHeight, 0);
+            const percentage = max > 0 ? (position / max) * 100 : 0;
+
+            scrollBroadcaster.broadcast({
+              uid,
+              pageKey: uid,
+              position,
+              scrollPosition: position,
+              scrollPercentage: percentage,
+              container: el,
+              clientHeight,
+              scrollHeight,
+              timestamp: Date.now(),
+            });
+          });
+        } catch (e) {
+          console.error(`[RefCallback] Error for uid=${uid}:`, e);
+        }
       }}
       style={{
         overflowY: isTop ? 'auto' : 'hidden',
@@ -3756,29 +3521,40 @@ function FadeTransitionRenderer({
       inert={!isTop} 
       data-nav-uid={uid}
       ref={(el) => {
+        if (!el) {
+          try {
+            scrollBroadcaster.unregisterContainer(uid);
+          } catch (e) {}
+          return;
+        }
+
         try {
-          (scrollBroadcaster as any).registerContainer?.(uid, el as HTMLElement | null);
-          if (el) {
-            try {
-              const clientHeight = el.clientHeight;
-              const scrollHeight = el.scrollHeight;
-              const position = el.scrollTop;
-              const max = Math.max(scrollHeight - clientHeight, 0);
-              const percentage = max > 0 ? (position / max) * 100 : 0;
-              (scrollBroadcaster as any).broadcast?.({
-                uid,
-                pageKey: uid,
-                position,
-                scrollPosition: position,
-                scrollPercentage: percentage,
-                container: el,
-                clientHeight,
-                scrollHeight,
-                timestamp: Date.now(),
-              });
-            } catch (e) {}
-          }
-        } catch (e) {}
+          scrollBroadcaster.registerContainer(uid, el);
+          
+          requestAnimationFrame(() => {
+            if (!document.contains(el)) return;
+            
+            const clientHeight = el.clientHeight;
+            const scrollHeight = el.scrollHeight;
+            const position = el.scrollTop;
+            const max = Math.max(scrollHeight - clientHeight, 0);
+            const percentage = max > 0 ? (position / max) * 100 : 0;
+
+            scrollBroadcaster.broadcast({
+              uid,
+              pageKey: uid,
+              position,
+              scrollPosition: position,
+              scrollPercentage: percentage,
+              container: el,
+              clientHeight,
+              scrollHeight,
+              timestamp: Date.now(),
+            });
+          });
+        } catch (e) {
+          console.error(`[RefCallback] Error for uid=${uid}:`, e);
+        }
       }}
       style={{
         overflowY: isTop ? 'auto' : 'hidden',
@@ -5511,29 +5287,40 @@ export default function NavigationStack(props: {
           inert={!t}
           data-nav-uid={uid}
           ref={(el) => {
+            if (!el) {
+              try {
+                scrollBroadcaster.unregisterContainer(uid);
+              } catch (e) {}
+              return;
+            }
+
             try {
-              (scrollBroadcaster as any).registerContainer?.(uid, el as HTMLElement | null);
-              if (el) {
-                try {
-                  const clientHeight = el.clientHeight;
-                  const scrollHeight = el.scrollHeight;
-                  const position = el.scrollTop;
-                  const max = Math.max(scrollHeight - clientHeight, 0);
-                  const percentage = max > 0 ? (position / max) * 100 : 0;
-                  (scrollBroadcaster as any).broadcast?.({
-                    uid,
-                    pageKey: uid,
-                    position,
-                    scrollPosition: position,
-                    scrollPercentage: percentage,
-                    container: el,
-                    clientHeight,
-                    scrollHeight,
-                    timestamp: Date.now(),
-                  });
-                } catch (e) {}
-              }
-            } catch (e) {}
+              scrollBroadcaster.registerContainer(uid, el);
+              
+              requestAnimationFrame(() => {
+                if (!document.contains(el)) return;
+                
+                const clientHeight = el.clientHeight;
+                const scrollHeight = el.scrollHeight;
+                const position = el.scrollTop;
+                const max = Math.max(scrollHeight - clientHeight, 0);
+                const percentage = max > 0 ? (position / max) * 100 : 0;
+
+                scrollBroadcaster.broadcast({
+                  uid,
+                  pageKey: uid,
+                  position,
+                  scrollPosition: position,
+                  scrollPercentage: percentage,
+                  container: el,
+                  clientHeight,
+                  scrollHeight,
+                  timestamp: Date.now(),
+                });
+              });
+            } catch (e) {
+              console.error(`[RefCallback] Error for uid=${uid}:`, e);
+            }
           }}
           style={{
             ...defaultPageStyle,
