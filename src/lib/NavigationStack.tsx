@@ -1557,59 +1557,96 @@ export function useGroupScopedScrollRestoration(
     }
   };
 
-  // Track scroll position for active page
+  // Track scroll position for ACTIVE PAGE ONLY using MutationObserver
   useEffect(() => {
     if (!isActiveGroup) {
       return;
     }
 
-    const top = stackSnapshot.at(-1);
-    if (!top) {
+    const topEntry = stackSnapshot.at(-1);
+    if (!topEntry) {
       return;
     }
 
-    // Get the container from the broadcaster's registry
-    const container = (scrollBroadcaster as any).getRegisteredContainer?.(top.uid) as HTMLElement | undefined;
-    if (!container) {
-      console.log(`[ScrollListener] uid=${top.uid} container not yet registered with broadcaster`);
-      return;
-    }
+    const { uid, key } = topEntry;
+    let container: HTMLElement | null = null;
+    let scrollListener: (() => void) | null = null;
+    let observer: MutationObserver | null = null;
 
-    const scrollKey = makeScrollKey(top.uid);
+    const attachScrollListener = (el: HTMLElement) => {
+      const handleScroll = () => {
+        const scrollPosition = el.scrollTop;
+        const scrollHeight = el.scrollHeight;
+        const clientHeight = el.clientHeight;
+        const maxScroll = Math.max(scrollHeight - clientHeight, 0);
+        const scrollPercentage = maxScroll > 0 ? (scrollPosition / maxScroll) * 100 : 0;
+        
+        console.log(`[ActivePageScroll] Page=${key} uid=${uid} position=${scrollPosition}px percentage=${scrollPercentage.toFixed(1)}% scrollHeight=${scrollHeight} clientHeight=${clientHeight}`);
+        
+        // Only broadcast for active page
+        scrollBroadcaster.broadcast({
+          uid,
+          pageKey: key,
+          position: scrollPosition,
+          scrollPosition,
+          scrollPercentage,
+          container: el,
+          clientHeight,
+          scrollHeight,
+          timestamp: Date.now(),
+        });
+      };
 
-    const handleScroll = () => {
-      const scrollPosition = getCurrentScrollPosition(container);
-      const containerType = 'ELEMENT';
+      el.addEventListener('scroll', handleScroll, { passive: true });
+      scrollListener = () => el.removeEventListener('scroll', handleScroll);
       
-      globalScrollData.scrollPositions.set(scrollKey, scrollPosition);
-      globalScrollData.currentScrollY = scrollPosition;
-      
-      // Calculate scroll percentage
-      const scrollHeight = container.scrollHeight;
-      const clientHeight = container.clientHeight;
-      const maxScroll = Math.max(scrollHeight - clientHeight, 0);
-      const scrollPercentage = maxScroll > 0 ? (scrollPosition / maxScroll) * 100 : 0;
-      
-      console.log(`[ScrollListener] Page=${top.key} uid=${top.uid} position=${scrollPosition}px percentage=${scrollPercentage.toFixed(1)}% scrollHeight=${scrollHeight} clientHeight=${clientHeight}`);
-      
-      // Broadcast scroll event globally
-      scrollBroadcaster.broadcast({
-        uid: top.uid,
-        pageKey: top.key,
-        position: scrollPosition,
-        scrollPosition,
-        scrollPercentage,
-        container,
-        clientHeight,
-        scrollHeight,
-        timestamp: Date.now(),
-      });
+      console.log(`[ActivePageScroll] Attached scroll listener for uid=${uid}`);
     };
 
-    container.addEventListener('scroll', handleScroll, { passive: true });
+    const tryAttachListener = () => {
+      if (!container) {
+        // Try to find the active page container in DOM
+        container = document.querySelector(`[data-nav-uid="${uid}"]`) as HTMLElement;
+        
+        if (container && document.contains(container)) {
+          console.log(`[ActivePageScroll] Found active page container uid=${uid}`);
+          attachScrollListener(container);
+          
+          // Stop observing once we've found and attached
+          if (observer) {
+            observer.disconnect();
+            observer = null;
+          }
+          return true;
+        }
+      }
+      return false;
+    };
+
+    // Try immediate attachment first
+    if (tryAttachListener()) {
+      return () => {
+        if (scrollListener) scrollListener();
+      };
+    }
+
+    // Set up MutationObserver to detect when active page container is added to DOM
+    observer = new MutationObserver(() => {
+      if (tryAttachListener()) {
+        // Successfully attached, stop observing
+        if (observer) {
+          observer.disconnect();
+          observer = null;
+        }
+      }
+    });
+
+    console.log(`[ActivePageScroll] Observing DOM for active page uid=${uid}`);
+    observer.observe(document.body, { childList: true, subtree: true });
 
     return () => {
-      container.removeEventListener('scroll', handleScroll);
+      if (scrollListener) scrollListener();
+      if (observer) observer.disconnect();
     };
   }, [stackSnapshot, isActiveGroup, groupStackKey]);
 
@@ -1685,7 +1722,7 @@ export function useGroupScopedScrollRestoration(
         justRestoredScrollRef.current.delete(lastUid);
       } else {
         // Get the ACTUAL scroll position from the container at switch time
-        const lastContainer = (scrollBroadcaster as any).getRegisteredContainer?.(lastUid) as HTMLElement | undefined;
+        const lastContainer = document.querySelector(`[data-nav-uid="${lastUid}"]`) as HTMLElement | null;
         if (lastContainer) {
           const actualScrollPosition = getCurrentScrollPosition(lastContainer);
           
@@ -1695,7 +1732,7 @@ export function useGroupScopedScrollRestoration(
           
           if (isPositionMeaningful) {
             globalScrollData.scrollPositions.set(lastScrollKey, actualScrollPosition);
-            console.log(`[RestoreEffect-Save] savedUID=${lastUid} position=${actualScrollPosition}px (from ELEMENT)`);
+            console.log(`[RestoreEffect-Save] savedUID=${lastUid} position=${actualScrollPosition}px`);
           } else {
             console.log(`[RestoreEffect-Save-Skip] savedUID=${lastUid} position=${actualScrollPosition}px (skipped - meaningless 0px, prev=${previouslySaved}px)`);
           }
@@ -1707,10 +1744,12 @@ export function useGroupScopedScrollRestoration(
     if (isActiveGroup && (groupStackKeyChanged || uidChanged || activeChanged)) {
       const scrollKey = makeScrollKey(uid);
       const savedPosition = globalScrollData.scrollPositions.get(scrollKey);
-      const container = (scrollBroadcaster as any).getRegisteredContainer?.(uid) as HTMLElement | undefined;
+      
+      // Try to find container in DOM (it may not be mounted yet)
+      const container = document.querySelector(`[data-nav-uid="${uid}"]`) as HTMLElement | null;
       
       if (!container) {
-        console.log(`[RestoreEffect] uid=${uid} container not yet registered`);
+        console.log(`[RestoreEffect] uid=${uid} container not yet in DOM`);
         return;
       }
       
