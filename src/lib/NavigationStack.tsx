@@ -55,8 +55,6 @@ class ScrollBroadcaster {
   subscribe(listener: ScrollListener): () => void {
     this.listeners.add(listener);
     
-    console.log(`[ScrollBroadcaster] New subscriber, ${this.listeners.size} total listeners`);
-    
     // ✅ Deliver all cached events for READY UIDs synchronously
     this.lastEvents.forEach((evt, uid) => {
       // Only deliver if UID is marked as ready (container detected + initial broadcast sent)
@@ -68,7 +66,6 @@ class ScrollBroadcaster {
             return;
           }
           
-          console.log(`[ScrollBroadcaster] Delivering cached event for ready uid=${uid}`);
           listener(evt);
         } catch (e) {
           console.error('[ScrollBroadcaster] Error delivering cached event:', e);
@@ -79,7 +76,6 @@ class ScrollBroadcaster {
           this.pendingListeners.set(uid, new Set());
         }
         this.pendingListeners.get(uid)!.add(listener);
-        console.log(`[ScrollBroadcaster] Queued listener for pending uid=${uid}`);
       }
     });
 
@@ -97,11 +93,9 @@ class ScrollBroadcaster {
   registerContainer(uid: string, el: HTMLElement | null) {
     try {
       if (el) {
-        console.log(`[ScrollBroadcaster] Container registered for uid=${uid}`);
         this.containerRegistry.set(uid, el);
         // Note: NOT marking as ready yet - waiting for initial broadcast
       } else {
-        console.log(`[ScrollBroadcaster] Container unregistered for uid=${uid}`);
         this.containerRegistry.delete(uid);
         this.readyUids.delete(uid);
         this.pendingListeners.delete(uid);
@@ -135,12 +129,10 @@ class ScrollBroadcaster {
     // ✅ If this is the FIRST broadcast for this UID, mark it as ready
     if (!wasReady) {
       this.readyUids.add(uid);
-      console.log(`[ScrollBroadcaster] uid=${uid} is now READY (first broadcast received)`);
       
       // ✅ Notify all pending listeners that were waiting for this UID
       const pending = this.pendingListeners.get(uid);
       if (pending && pending.size > 0) {
-        console.log(`[ScrollBroadcaster] Notifying ${pending.size} pending listeners for uid=${uid}`);
         pending.forEach(listener => {
           try {
             listener(event);
@@ -581,7 +573,6 @@ class ObjectReferenceRegistry {
     const timeout = timeoutMs || this.CLEANUP_TIMEOUT;
     const timer = setTimeout(() => {
       if (this.getters.has(fullKey)) {
-        console.log(`[Registry] Auto-cleanup: removing "${fullKey}" due to timeout`);
         this.getters.delete(fullKey);
         this.metadata.delete(fullKey);
         this.waitingCallbacks.delete(fullKey);
@@ -689,7 +680,6 @@ class ObjectReferenceRegistry {
     // Notify all callbacks waiting for this getter
     const callbacks = this.waitingCallbacks.get(finalKey);
     if (callbacks) {
-      console.log(`[Registry.registerWithOptions] Notifying ${callbacks.size} waiting callbacks for "${finalKey}"`);
       callbacks.forEach(callback => {
         try {
           callback();
@@ -938,7 +928,6 @@ class ObjectReferenceRegistry {
   onGetterRegistered(fullKey: string, callback: () => void): () => void {
     // If getter already exists, call immediately
     if (this.getters.has(fullKey)) {
-      console.log(`[Registry.onGetterRegistered] Getter already exists for "${fullKey}", calling immediately`);
       try {
         callback();
       } catch (err) {
@@ -952,7 +941,6 @@ class ObjectReferenceRegistry {
       this.waitingCallbacks.set(fullKey, new Set());
     }
     this.waitingCallbacks.get(fullKey)!.add(callback);
-    console.log(`[Registry.onGetterRegistered] Added waiting callback for "${fullKey}"`);
 
     // Return unsubscribe function
     return () => {
@@ -992,12 +980,10 @@ class ObjectReferenceRegistry {
     handler: (request: any) => any | Promise<any>
   ): () => void {
     this.requestHandlers.set(fullKey, handler);
-    console.log(`[Registry.registerRequestHandler] Handler registered for "${fullKey}"`);
 
     // Notify waiting consumers
     const callbacks = this.waitingRequestHandlers.get(fullKey);
     if (callbacks) {
-      console.log(`[Registry.registerRequestHandler] Notifying ${callbacks.size} waiting request handlers for "${fullKey}"`);
       callbacks.forEach(callback => {
         try {
           callback();
@@ -1042,7 +1028,6 @@ class ObjectReferenceRegistry {
   onRequestHandlerRegistered(fullKey: string, callback: () => void): () => void {
     // If handler already exists, call immediately
     if (this.requestHandlers.has(fullKey)) {
-      console.log(`[Registry.onRequestHandlerRegistered] Handler already exists for "${fullKey}", calling immediately`);
       try {
         callback();
       } catch (err) {
@@ -1056,7 +1041,6 @@ class ObjectReferenceRegistry {
       this.waitingRequestHandlers.set(fullKey, new Set());
     }
     this.waitingRequestHandlers.get(fullKey)!.add(callback);
-    console.log(`[Registry.onRequestHandlerRegistered] Added waiting callback for "${fullKey}"`);
 
     // Return unsubscribe function
     return () => {
@@ -1581,8 +1565,6 @@ export function useGroupScopedScrollRestoration(
         const maxScroll = Math.max(scrollHeight - clientHeight, 0);
         const scrollPercentage = maxScroll > 0 ? (scrollPosition / maxScroll) * 100 : 0;
         
-        console.log(`[ActivePageScroll] Page=${key} uid=${uid} position=${scrollPosition}px percentage=${scrollPercentage.toFixed(1)}% scrollHeight=${scrollHeight} clientHeight=${clientHeight}`);
-        
         // Only broadcast for active page
         scrollBroadcaster.broadcast({
           uid,
@@ -1599,8 +1581,6 @@ export function useGroupScopedScrollRestoration(
 
       el.addEventListener('scroll', handleScroll, { passive: true });
       scrollListener = () => el.removeEventListener('scroll', handleScroll);
-      
-      console.log(`[ActivePageScroll] Attached scroll listener for uid=${uid}`);
     };
 
     const tryAttachListener = () => {
@@ -1609,7 +1589,6 @@ export function useGroupScopedScrollRestoration(
         container = document.querySelector(`[data-nav-uid="${uid}"]`) as HTMLElement;
         
         if (container && document.contains(container)) {
-          console.log(`[ActivePageScroll] Found active page container uid=${uid}`);
           attachScrollListener(container);
           
           // Stop observing once we've found and attached
@@ -1641,7 +1620,6 @@ export function useGroupScopedScrollRestoration(
       }
     });
 
-    console.log(`[ActivePageScroll] Observing DOM for active page uid=${uid}`);
     observer.observe(document.body, { childList: true, subtree: true });
 
     return () => {
@@ -1675,7 +1653,6 @@ export function useGroupScopedScrollRestoration(
     if (isPush && savedPosition === undefined) {
       const container = (scrollBroadcaster as any).getRegisteredContainer?.(uid) as HTMLElement | undefined;
       if (container) {
-        console.log(`[ScrollReset] ${timestamp} NEW PAGE PUSH - Key: ${key} | Resetting to 0`);
         setScrollPosition(0, container);
       }
       
@@ -1683,10 +1660,7 @@ export function useGroupScopedScrollRestoration(
       newPageMountRef.current = { uid, mountTime: now };
     } else if (isPop && savedPosition !== undefined) {
       // When popping back, don't reset - let the restore effect handle it
-      console.log(`[ScrollReset-PopBack] ${timestamp} RETURNING PAGE - Key: ${key} | Will restore to ${savedPosition}px`);
     } else if (!isPush && !isPop) {
-      // Stack depth unchanged (e.g., replace or lateral navigation)
-      console.log(`[ScrollReset-SameLevelNav] ${timestamp} Key: ${key} | savedPosition=${savedPosition}px`);
     }
 
     // Update previous snapshot for next render
@@ -1710,15 +1684,12 @@ export function useGroupScopedScrollRestoration(
     const uidChanged = uid !== lastUid;
     const activeChanged = lastActive !== isActiveGroup;
 
-    console.log(`[RestoreEffect] key=${key} uid=${uid} groupStackKeyChanged=${groupStackKeyChanged} uidChanged=${uidChanged} activeChanged=${activeChanged}`);
-
     // Save current position before switching - get ACTUAL position from container, not cached value
     if (lastUid && lastActive && lastGroupStackKey && (groupStackKeyChanged || uidChanged)) {
       const lastScrollKey = lastUid;
       
       // Don't save if we just restored this UID's scroll (within last 100ms)
       if (justRestoredScrollRef.current.has(lastUid)) {
-        console.log(`[RestoreEffect-Save-Skip] savedUID=${lastUid} (just restored, skipping overwrite)`);
         justRestoredScrollRef.current.delete(lastUid);
       } else {
         // Get the ACTUAL scroll position from the container at switch time
@@ -1732,9 +1703,7 @@ export function useGroupScopedScrollRestoration(
           
           if (isPositionMeaningful) {
             globalScrollData.scrollPositions.set(lastScrollKey, actualScrollPosition);
-            console.log(`[RestoreEffect-Save] savedUID=${lastUid} position=${actualScrollPosition}px`);
           } else {
-            console.log(`[RestoreEffect-Save-Skip] savedUID=${lastUid} position=${actualScrollPosition}px (skipped - meaningless 0px, prev=${previouslySaved}px)`);
           }
         }
       }
@@ -1749,7 +1718,6 @@ export function useGroupScopedScrollRestoration(
       const container = document.querySelector(`[data-nav-uid="${uid}"]`) as HTMLElement | null;
       
       if (!container) {
-        console.log(`[RestoreEffect] uid=${uid} container not yet in DOM`);
         return;
       }
       
@@ -1758,12 +1726,9 @@ export function useGroupScopedScrollRestoration(
 
       if (isNewPage) {
         // For brand new pages, SYNCHRONOUSLY reset to 0 immediately
-        console.log(`[RestoreEffect-NewPage] uid=${uid} key=${key} resetting to 0`);
         setScrollPosition(0, container);
       } else if (savedPosition !== undefined) {
         // For existing pages, restore from saved position with fallbacks
-        console.log(`[RestoreEffect-Restore] uid=${uid} key=${key} target=${savedPosition}px`);
-        
         // Mark this UID as having just restored scroll
         justRestoredScrollRef.current.add(uid);
         setTimeout(() => {
@@ -1772,7 +1737,6 @@ export function useGroupScopedScrollRestoration(
         
         const restoreScroll = () => {
           const currentPos = getCurrentScrollPosition(container);
-          console.log(`[RestoreEffect-Restore-Action] uid=${uid} setting=${savedPosition}px current=${currentPos}px`);
           setScrollPosition(savedPosition, container);
         };
 
@@ -1781,11 +1745,9 @@ export function useGroupScopedScrollRestoration(
 
         // --- DOM-settled fallback ---
         requestAnimationFrame(() => {
-          console.log(`[RestoreEffect-Restore-RAF] uid=${uid} RAF fallback`);
           restoreScroll();
         });
         setTimeout(() => {
-          console.log(`[RestoreEffect-Restore-Timer] uid=${uid} timer fallback 20ms`);
           restoreScroll();
         }, 20);
       }
@@ -1795,7 +1757,6 @@ export function useGroupScopedScrollRestoration(
     globalScrollData.lastUid = uid;
     globalScrollData.lastGroupStackKey = groupStackKey;
     globalScrollData.lastActive = isActiveGroup;
-    console.log(`[RestoreEffect-GlobalState] lastUid=${uid} isActive=${isActiveGroup} groupStackKey=${groupStackKey}`);
   }, [stackSnapshot, isActiveGroup, groupStackKey]);
 
 
