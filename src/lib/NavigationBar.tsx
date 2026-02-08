@@ -214,7 +214,12 @@ export default function NavigationBar({
 
   /** Scroll handler - process scroll events from either source */
   const handleScrollEvent = React.useCallback((event: NavigationBarScrollEvent) => {
-    if (mode === 'normal') return;
+    console.log(`[NavigationBar] handleScrollEvent invoked at ${new Date().toISOString()} mode=${mode} pos=${String(event.position)}`);
+
+    if (mode === 'normal') {
+      console.log(`[NavigationBar] mode is 'normal' - ignoring scroll at ${new Date().toISOString()}`);
+      return;
+    }
 
     const { position: current, clientHeight, scrollHeight } = event;
 
@@ -223,6 +228,7 @@ export default function NavigationBar({
     // If page is not scrollable at all, keep navbar visible
     const isScrollable = scrollHeight > clientHeight;
     if (!isScrollable) {
+      console.log(`[NavigationBar] not scrollable - scrollHeight=${scrollHeight} clientHeight=${clientHeight} at ${new Date().toISOString()}`);
       setHidden(false);
       return;
     }
@@ -230,8 +236,8 @@ export default function NavigationBar({
     const atTop = current <= 0;
     const atBottom = clientHeight + current >= scrollHeight - 2;
 
-    // Ignore overscroll on iOS
     if (atTop || atBottom) {
+      console.log(`[NavigationBar] atTop:${atTop} atBottom:${atBottom} - ignoring overscroll at ${new Date().toISOString()}`);
       prevScroll.current = current;
       return;
     }
@@ -259,7 +265,12 @@ export default function NavigationBar({
 
     // If onScroll prop provided, use it (handles scrollBroadcaster)
     if (onScroll) {
-      onScroll(handleScrollEvent);
+      console.log(`[NavigationBar] registering onScroll at ${new Date().toISOString()}`);
+      try {
+        onScroll(handleScrollEvent);
+      } catch (err) {
+        console.log(`[NavigationBar] onScroll registration error at ${new Date().toISOString()}: ${String(err)}`);
+      }
       return;
     }
 
@@ -282,8 +293,12 @@ export default function NavigationBar({
       }
     };
 
+    console.log(`[NavigationBar] adding window scroll listener at ${new Date().toISOString()}`);
     window.addEventListener('scroll', handleWindowScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleWindowScroll);
+    return () => {
+      window.removeEventListener('scroll', handleWindowScroll);
+      console.log(`[NavigationBar] removed window scroll listener at ${new Date().toISOString()}`);
+    };
   }, [onScroll, handleScrollEvent, mode, mounted]);
 
 
