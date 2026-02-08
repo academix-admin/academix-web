@@ -45,20 +45,8 @@ useEffect(() => {
   handleSignOut();
 }, [userData,__meta.isHydrated]);
 
-  /** Subscribe to scroll broadcaster with proper cleanup */
-  useEffect(() => {
-    const unsubscribe = scrollBroadcaster.subscribe((e) => {
-      navBarScrollRef.current?.({
-        container: e.container,
-        position: e.position ?? e.scrollPosition,
-        clientHeight: e.clientHeight,
-        scrollHeight: e.scrollHeight,
-        scrollPercentage: e.scrollPercentage,
-      });
-    });
-
-    return () => unsubscribe?.();
-  }, []);
+  // NOTE: NavigationBar will subscribe directly via the `onScroll` prop.
+  // We no longer forward events here to avoid ordering races and duplicated delivery.
 
 
   const navStackMap = new Map([
@@ -188,10 +176,8 @@ useEffect(() => {
           paddingY="0px"
           paddingX="0px"
           
-          /** Inject scroll callback from ref */
-          onScroll={(callback) => {
-            navBarScrollRef.current = callback;
-          }}
+          /** Let NavigationBar subscribe directly to the broadcaster */
+          onScroll={(callback) => scrollBroadcaster.subscribe(callback)}
 
           /* Bar visuals */
           barBorderTop={`1px solid ${borderColor}`}

@@ -50,7 +50,12 @@ class ScrollBroadcaster {
     // have a guaranteed initial state without timeouts.
     try {
       this.lastEvents.forEach((evt) => {
-        try { listener(evt); } catch (e) { console.error('[ScrollBroadcaster] error delivering cached event to new subscriber', e); }
+        try {
+          // Skip obviously-empty snapshots (both heights zero) to avoid
+          // delivering transient invalid states that hide UI.
+          if ((evt.clientHeight === 0 || evt.clientHeight === undefined) && (evt.scrollHeight === 0 || evt.scrollHeight === undefined)) return;
+          listener(evt);
+        } catch (e) { console.error('[ScrollBroadcaster] error delivering cached event to new subscriber', e); }
       });
     } catch (err) {
       console.warn('[ScrollBroadcaster] error delivering cached snapshots on subscribe', err);
