@@ -38,12 +38,37 @@ type ScrollListener = (event: ScrollBroadcastEvent) => void;
 
 class ScrollBroadcaster {
   private listeners: Set<ScrollListener> = new Set();
+  // Optional explicit container registry: uid -> HTMLElement
+  private containerRegistry: Map<string, HTMLElement> = new Map();
 
   subscribe(listener: ScrollListener): () => void {
     this.listeners.add(listener);
     return () => {
       this.listeners.delete(listener);
     };
+  }
+
+  // Allow pages to explicitly register their scroll container element.
+  // This is more reliable than DOM-watching fallbacks and avoids binding
+  // listeners to `window` when the proper element exists.
+  registerContainer(uid: string, el: HTMLElement | null) {
+    try {
+      if (el) {
+        this.containerRegistry.set(uid, el);
+      } else {
+        this.containerRegistry.delete(uid);
+      }
+    } catch (err) {
+      console.warn('[ScrollBroadcaster] registerContainer error:', err);
+    }
+  }
+
+  getRegisteredContainer(uid: string): HTMLElement | undefined {
+    return this.containerRegistry.get(uid);
+  }
+
+  unregisterContainer(uid: string) {
+    this.containerRegistry.delete(uid);
   }
 
   broadcast(event: ScrollBroadcastEvent): void {
@@ -1537,8 +1562,35 @@ export function useGroupScopedScrollRestoration(
       }
     }
 
-    console.log(`[GetScrollContainer] uid=${uid} detecting...`);
-    const container = findScrollableContainer(uid);
+      // First, prefer an explicitly registered container from the broadcaster
+      try {
+        const reg = (scrollBroadcaster as any).getRegisteredContainer?.(uid) as HTMLElement | undefined;
+        if (reg) {
+          // store into our local cache so other effects relying on it pick it up
+          console.log(`[GetScrollContainer] uid=${uid} using REGISTERED container via scrollBroadcaster`);
+          const style = getComputedStyle(reg);
+          const containerData: ContainerData = {
+            element: reg,
+            level: 0,
+            maxHeight: 'auto',
+            overflowX: style.overflowX,
+            overflowY: style.overflowY,
+            clientHeight: reg.clientHeight,
+            clientWidth: reg.clientWidth,
+            scrollHeight: reg.scrollHeight,
+            scrollWidth: reg.scrollWidth,
+            score: 100,
+          };
+          scrollData.scrollContainers.set(uid, containerData);
+          setCacheVersion(x => x + 1);
+          return reg;
+        }
+      } catch (err) {
+        console.log(`[GetScrollContainer] uid=${uid} registered container check error: ${String(err)}`);
+      }
+
+      console.log(`[GetScrollContainer] uid=${uid} detecting...`);
+      const container = findScrollableContainer(uid);
 
     if (!container) {
       console.log(`[GetScrollContainer] uid=${uid} not found, using WINDOW`);
@@ -1624,7 +1676,13 @@ export function useGroupScopedScrollRestoration(
 
   // Add scroll listener to the appropriate element
   const addScrollListener = (container: HTMLElement | 'window', handler: () => void) => {
-    const target = container === 'window' ? window : container;
+    if (container === 'window') {
+      // Avoid binding to `window` by default. Prefer explicit container
+      // registration via `scrollBroadcaster.registerContainer(uid, el)`.
+      console.log('[AddScrollListener] container is WINDOW - skipping attaching window listener');
+      return () => {};
+    }
+    const target = container as HTMLElement;
     target.addEventListener('scroll', handler, { passive: true });
     return () => target.removeEventListener('scroll', handler);
   };
@@ -3517,6 +3575,33 @@ function MissingRoute({
       className={`navstack-page ${className} ${containerClassName}`}
       inert={!isTop}
       data-nav-uid={entry.uid}
+        ref={(el) => {
+          try {
+            (scrollBroadcaster as any).registerContainer?.(entry.uid, el as HTMLElement | null);
+            if (el) {
+              // Send an immediate snapshot for newly-registered containers so
+              // subscribers (e.g., NavigationBar) receive the current state.
+              try {
+                const clientHeight = el.clientHeight;
+                const scrollHeight = el.scrollHeight;
+                const position = el.scrollTop;
+                const max = Math.max(scrollHeight - clientHeight, 0);
+                const percentage = max > 0 ? (position / max) * 100 : 0;
+                (scrollBroadcaster as any).broadcast?.({
+                  uid: entry.uid,
+                  pageKey: entry.uid,
+                  position,
+                  scrollPosition: position,
+                  scrollPercentage: percentage,
+                  container: el,
+                  clientHeight,
+                  scrollHeight,
+                  timestamp: Date.now(),
+                });
+              } catch (e) {}
+            }
+          } catch (e) {}
+        }}
     >
       <div className={`navstack-missing-route ${textClassName}`} style={{ padding: 16 }}>
         <strong>{mergedLabels.missingRoute}:</strong> {entry.key}
@@ -3574,6 +3659,31 @@ function SlideTransitionRenderer({
       className={`${baseClass} ${slideCls}`} 
       inert={!isTop} 
       data-nav-uid={uid}
+      ref={(el) => {
+        try {
+          (scrollBroadcaster as any).registerContainer?.(uid, el as HTMLElement | null);
+          if (el) {
+            try {
+              const clientHeight = el.clientHeight;
+              const scrollHeight = el.scrollHeight;
+              const position = el.scrollTop;
+              const max = Math.max(scrollHeight - clientHeight, 0);
+              const percentage = max > 0 ? (position / max) * 100 : 0;
+              (scrollBroadcaster as any).broadcast?.({
+                uid,
+                pageKey: uid,
+                position,
+                scrollPosition: position,
+                scrollPercentage: percentage,
+                container: el,
+                clientHeight,
+                scrollHeight,
+                timestamp: Date.now(),
+              });
+            } catch (e) {}
+          }
+        } catch (e) {}
+      }}
       style={{
         overflowY: isTop ? 'auto' : 'hidden',
         overflowX: 'hidden',
@@ -3624,6 +3734,31 @@ function FadeTransitionRenderer({
       className={`${baseClass} ${fadeCls}`} 
       inert={!isTop} 
       data-nav-uid={uid}
+      ref={(el) => {
+        try {
+          (scrollBroadcaster as any).registerContainer?.(uid, el as HTMLElement | null);
+          if (el) {
+            try {
+              const clientHeight = el.clientHeight;
+              const scrollHeight = el.scrollHeight;
+              const position = el.scrollTop;
+              const max = Math.max(scrollHeight - clientHeight, 0);
+              const percentage = max > 0 ? (position / max) * 100 : 0;
+              (scrollBroadcaster as any).broadcast?.({
+                uid,
+                pageKey: uid,
+                position,
+                scrollPosition: position,
+                scrollPercentage: percentage,
+                container: el,
+                clientHeight,
+                scrollHeight,
+                timestamp: Date.now(),
+              });
+            } catch (e) {}
+          }
+        } catch (e) {}
+      }}
       style={{
         overflowY: isTop ? 'auto' : 'hidden',
         overflowX: 'hidden',
@@ -5354,6 +5489,31 @@ export default function NavigationStack(props: {
           className={`${baseClass}`}
           inert={!t}
           data-nav-uid={uid}
+          ref={(el) => {
+            try {
+              (scrollBroadcaster as any).registerContainer?.(uid, el as HTMLElement | null);
+              if (el) {
+                try {
+                  const clientHeight = el.clientHeight;
+                  const scrollHeight = el.scrollHeight;
+                  const position = el.scrollTop;
+                  const max = Math.max(scrollHeight - clientHeight, 0);
+                  const percentage = max > 0 ? (position / max) * 100 : 0;
+                  (scrollBroadcaster as any).broadcast?.({
+                    uid,
+                    pageKey: uid,
+                    position,
+                    scrollPosition: position,
+                    scrollPercentage: percentage,
+                    container: el,
+                    clientHeight,
+                    scrollHeight,
+                    timestamp: Date.now(),
+                  });
+                } catch (e) {}
+              }
+            } catch (e) {}
+          }}
           style={{
             ...defaultPageStyle,
             overflowY: t ? 'auto' : 'hidden',
