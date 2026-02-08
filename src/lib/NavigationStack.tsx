@@ -1475,19 +1475,7 @@ export function useGroupScopedScrollRestoration(
   useEffect(() => {
     if (typeof window !== 'undefined') {
       (window as any).__debugScrollState = () => {
-        console.log('%c=== SCROLL STATE DEBUG ===', 'font-weight: bold; font-size: 14px; color: blue;');
-        console.log('Current Time:', new Date().toLocaleTimeString());
-        console.log('GroupStackKey:', groupStackKey);
-        console.log('IsActiveGroup:', isActiveGroup);
-        console.log('StackSnapshot:', stackSnapshot.map(e => ({ key: e.key, uid: e.uid })));
-        console.log('WasActiveGroup (ref):', scrollData.wasActiveGroup);
-        console.log('\nGlobalScrollData:', {
-          lastUid: globalScrollData.lastUid,
-          lastGroupStackKey: globalScrollData.lastGroupStackKey,
-          scrollPositions: Object.fromEntries(globalScrollData.scrollPositions),
-        });
-        console.log('ScrollContainers (cached):', Array.from(scrollData.scrollContainers.keys()));
-        console.log('%c=== END DEBUG ===', 'font-weight: bold; font-size: 14px; color: blue;');
+        // Debug function available in console
       };
     }
   }, [stackSnapshot, isActiveGroup, groupStackKey]);
@@ -1506,7 +1494,6 @@ export function useGroupScopedScrollRestoration(
     const pageElement = document.querySelector(`[data-nav-uid="${uid}"]`) as HTMLElement;
 
     if (!pageElement) {
-      console.log(`[ContainerDetection-Error] No navstack-page found uid=${uid}`);
       return null;
     }
 
@@ -1578,29 +1565,15 @@ export function useGroupScopedScrollRestoration(
     // Get already-tracked UIDs
     const trackedUids = new Set(scrollData.activeListeners.keys());
 
-    console.log('[ScrollRestore] Scroll listener management:', {
-      isActiveGroup,
-      currentUids: Array.from(currentUids),
-      trackedUids: Array.from(trackedUids),
-      newPages: Array.from(currentUids).filter(uid => !trackedUids.has(uid)),
-    });
-
     // ✅ Add listeners for NEW pages that aren't already tracked
     currentUids.forEach(uid => {
       // Skip if already tracking or pending
       if (trackedUids.has(uid) || scrollData.pendingListeners.has(uid)) {
-        if (trackedUids.has(uid)) {
-          console.log('[ScrollRestore] Listener already exists for uid:', uid);
-        } else {
-          console.log('[ScrollRestore] Listener attachment already pending for uid:', uid);
-        }
         return;
       }
 
       const entry = stackSnapshot.find(e => e.uid === uid);
       if (!entry) return;
-
-      console.log('[ScrollRestore] Adding listener for NEW page:', { uid, key: entry.key, isActiveGroup });
       
       // Mark as pending to prevent duplicate retry chains
       scrollData.pendingListeners.add(uid);
@@ -1614,12 +1587,9 @@ export function useGroupScopedScrollRestoration(
       }
 
       // If not found, use MutationObserver to watch for DOM insertion
-      console.log(`[ScrollRestore] Container not immediately available for ${uid}, watching DOM...`);
-      
       const observer = new MutationObserver(() => {
         const container = getScrollableContainer(uid);
         if (container) {
-          console.log(`[ScrollRestore] Container detected via MutationObserver for uid: ${uid}`);
           observer.disconnect();
           attachScrollListener(uid, container, entry);
           scrollData.pendingListeners.delete(uid);
@@ -1653,14 +1623,6 @@ export function useGroupScopedScrollRestoration(
       const handleScroll = () => {
         const scrollPosition = getCurrentScrollPosition(container);
         globalScrollData.scrollPositions.set(uid, scrollPosition);
-        
-        console.log('[ScrollRestore] User scrolled (background page) - SAVING position:', { 
-          uid, 
-          key: entry.key,
-          position: scrollPosition,
-          isActiveGroup,
-          allStoredPositions: Object.fromEntries(globalScrollData.scrollPositions),
-        });
 
         // Calculate scroll percentage
         const scrollHeight = container?.scrollHeight ?? 0;
@@ -1699,7 +1661,6 @@ export function useGroupScopedScrollRestoration(
   useEffect(() => {
     const topEntry = stackSnapshot.at(-1);
     if (!topEntry) {
-      console.log('[ScrollRestore] No top entry for restoration');
       return;
     }
 
@@ -1710,37 +1671,11 @@ export function useGroupScopedScrollRestoration(
     const uidChanged = uid !== lastUid;
     const becameActive = !scrollData.wasActiveGroup && isActiveGroup;
 
-    // ✅ DEBUG: Log what's in globalScrollData BEFORE restoration
-    console.log('[ScrollRestore] DEBUG globalScrollData BEFORE restore:', {
-      allPositions: Object.fromEntries(globalScrollData.scrollPositions),
-      lookingForUid: uid,
-      foundPosition: globalScrollData.scrollPositions.get(uid),
-      totalEntriesStored: globalScrollData.scrollPositions.size,
-    });
-
-    console.log('[ScrollRestore] Restoration check:', {
-      topEntry: { uid, key: topEntry.key },
-      isActiveGroup,
-      uidChanged,
-      groupStackKeyChanged,
-      becameActive,
-      wasActiveGroup: scrollData.wasActiveGroup,
-      lastUid,
-      lastGroupStackKey,
-      savedPosition: globalScrollData.scrollPositions.get(uid) ?? 'NOT FOUND',
-    });
-
     // Update for next check
     scrollData.wasActiveGroup = isActiveGroup;
 
     // Restore position when becoming active
     if (isActiveGroup && (groupStackKeyChanged || uidChanged || becameActive)) {
-      console.log('[ScrollRestore] ATTEMPTING RESTORE with conditions:', {
-        groupStackKeyChanged,
-        uidChanged,
-        becameActive,
-      });
-      console.log('[ScrollRestore] RESTORING SCROLL for uid:', uid);
 
       const restoreScroll = () => {
         const scrollKey = uid;
@@ -1750,7 +1685,6 @@ export function useGroupScopedScrollRestoration(
           return;
         }
         const savedPosition = globalScrollData.scrollPositions.get(scrollKey) ?? 0;
-        console.log('[ScrollRestore] Restoring:', { uid, savedPosition, containerFound: !!container });
         setScrollPosition(savedPosition, container);
       };
 
@@ -1759,15 +1693,11 @@ export function useGroupScopedScrollRestoration(
 
       // --- DOM-settled fallback ---
       requestAnimationFrame(() => {
-        console.log('[ScrollRestore] RAF restore');
         restoreScroll();
       });
       setTimeout(() => {
-        console.log('[ScrollRestore] Timeout restore');
         restoreScroll();
       }, 20);
-    } else {
-      console.log('[ScrollRestore] No restoration needed');
     }
 
     // Update global state
@@ -1824,17 +1754,11 @@ export function useGroupScopedScrollRestoration(
     });
 
     if (keysToDelete.length > 0) {
-      console.log('[ScrollRestore] CLEANUP: Deleting stale scroll positions and listeners:', {
-        deletingKeys: keysToDelete,
-        remainingKeys: Array.from(globalScrollData.scrollPositions.keys()).filter(k => !keysToDelete.includes(k)),
-      });
-
       // Also remove listeners for deleted pages
       keysToDelete.forEach(key => {
         // Remove active listener
         const removeListener = scrollData.activeListeners.get(key);
         if (removeListener) {
-          console.log('[ScrollRestore] Removing listener for deleted page:', key);
           removeListener();
           scrollData.activeListeners.delete(key);
         }
@@ -1843,7 +1767,6 @@ export function useGroupScopedScrollRestoration(
         if (scrollData.pendingCleanups) {
           const cleanup = scrollData.pendingCleanups.get(key);
           if (cleanup) {
-            console.log('[ScrollRestore] Cleaning up pending MutationObserver for:', key);
             cleanup.observer.disconnect();
             clearTimeout(cleanup.timeoutId);
             scrollData.pendingCleanups.delete(key);
