@@ -1378,6 +1378,14 @@ export function useGroupScopedScrollRestoration(
   if (!(scrollData as any).observers) {
     (scrollData as any).observers = new Map<string, { observer: MutationObserver; timer: number }>();
   }
+  // Track which UIDs we've already sent the initial broadcast for (one-per-mount)
+  if (!(scrollData as any).initialBroadcastSent) {
+    (scrollData as any).initialBroadcastSent = new Set<string>();
+  }
+  // Track previous container type per UID to detect WINDOW -> ELEMENT switches
+  if (!(scrollData as any).prevContainerType) {
+    (scrollData as any).prevContainerType = new Map<string, 'window' | 'element'>();
+  }
 
   const isActiveGroup = groupContext ? groupContext.isActiveStack(groupStackId || '') : true;
   const [cacheVersion, setCacheVersion] = useState(0);
@@ -1645,6 +1653,54 @@ export function useGroupScopedScrollRestoration(
     const scrollKey = makeScrollKey(top.uid);
     const now = Date.now();
     const timestamp = new Date(now).toISOString().split('T')[1]; // HH:MM:SS.mmm
+
+    // Decide whether to emit an initial broadcast. Only send when:
+    // - we have NOT already sent one for this UID mount, AND
+    // - either there is no saved scroll position for this UID, OR
+    //   the container type changed (e.g., WINDOW -> ELEMENT)
+    try {
+      const initialBroadcastSet = (scrollData as any).initialBroadcastSent as Set<string>;
+      const prevContainerTypeMap = (scrollData as any).prevContainerType as Map<string, 'window' | 'element'>;
+
+      const savedPosition = globalScrollData.scrollPositions.get(top.uid);
+      const containerTypeNow: 'window' | 'element' = container === 'window' ? 'window' : 'element';
+      const prevType = prevContainerTypeMap.get(top.uid);
+
+      const shouldBroadcast = !initialBroadcastSet.has(top.uid) && (savedPosition === undefined || (prevType !== undefined && prevType !== containerTypeNow));
+
+      // update prev type for future comparisons
+      prevContainerTypeMap.set(top.uid, containerTypeNow);
+
+      if (shouldBroadcast) {
+        const initialScrollPosition = getCurrentScrollPosition(container);
+        const initialScrollHeight = container === 'window'
+          ? (typeof document !== 'undefined' ? document.documentElement.scrollHeight : 0)
+          : container.scrollHeight;
+        const initialClientHeight = container === 'window'
+          ? (typeof window !== 'undefined' ? window.innerHeight : 0)
+          : container.clientHeight;
+        const initialMax = Math.max(initialScrollHeight - initialClientHeight, 0);
+        const initialPercentage = initialMax > 0 ? (initialScrollPosition / initialMax) * 100 : 0;
+
+        console.log(`[ScrollListener-Initial] Page=${top.key} uid=${top.uid} position=${initialScrollPosition}px container=${container === 'window' ? 'WINDOW' : 'ELEMENT'} percentage=${initialPercentage.toFixed(1)}% scrollHeight=${initialScrollHeight} clientHeight=${initialClientHeight}`);
+
+        scrollBroadcaster.broadcast({
+          uid: top.uid,
+          pageKey: top.key,
+          position: initialScrollPosition,
+          scrollPosition: initialScrollPosition,
+          scrollPercentage: initialPercentage,
+          container,
+          clientHeight: initialClientHeight,
+          scrollHeight: initialScrollHeight,
+          timestamp: Date.now(),
+        });
+
+        initialBroadcastSet.add(top.uid);
+      }
+    } catch (err) {
+      console.log(`[ScrollListener-Initial] broadcast error for uid=${top.uid}: ${String(err)}`);
+    }
 
     const handleScroll = () => {
       const scrollPosition = getCurrentScrollPosition(container);
