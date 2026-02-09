@@ -1559,41 +1559,8 @@ export function useGroupScopedScrollRestoration(
     // ✅ Set up listeners for ALL pages in the stack, regardless of group status
     // The listeners will remain active even when the group is inactive
     
-    // Get ALL current UIDs from this stack (including nested) using recursive collection
-    const currentUids = new Set<string>();
-    const collected = new Set<string>();
-
-    const collectUidsFromStack = (stackId: string) => {
-      if (collected.has(stackId)) return;
-      collected.add(stackId);
-
-      const regEntry = globalRegistry.get(stackId);
-      if (!regEntry) return;
-
-      // Add UIDs from this stack
-      if (regEntry.stack && Array.isArray(regEntry.stack)) {
-        regEntry.stack.forEach((entry: StackEntry) => {
-          currentUids.add(entry.uid);
-        });
-      }
-
-      // Recursively add UIDs from child stacks
-      if (regEntry.childIds && regEntry.childIds.size > 0) {
-        regEntry.childIds.forEach((childId: string) => {
-          collectUidsFromStack(childId);
-        });
-      }
-    };
-
-    // Start collection from ALL root stacks to cover entire tree across all groups
-    if (typeof window !== 'undefined' && globalRegistry) {
-      globalRegistry.forEach((regEntry, stackId) => {
-        // Only start from root stacks (no parent) to traverse entire tree
-        if (!regEntry.parentId) {
-          collectUidsFromStack(stackId);
-        }
-      });
-    }
+    // Get current UIDs from the stack
+    const currentUids = new Set(stackSnapshot.map(e => e.uid));
     
     // Get already-tracked UIDs
     const trackedUids = new Set(scrollData.activeListeners.keys());
