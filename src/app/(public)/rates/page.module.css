@@ -78,7 +78,6 @@
 .container {
   padding-top: 6rem;
     padding-bottom: 4rem;
-    padding-bottom: var(--nav-height);
 }
 
 .container_ios {
@@ -717,6 +716,7 @@
   .container {
      padding-top: 6rem;
      padding-bottom: 2rem;
+     padding-bottom: var(--nav-height);
   }
   .container_ios {
      padding-top: 1rem;
@@ -751,6 +751,7 @@
   .container {
      padding-top: 6rem;
      padding-bottom: 2rem;
+     padding-bottom: var(--nav-height);
   }
 
   .container_ios {
