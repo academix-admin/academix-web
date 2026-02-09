@@ -1011,7 +1011,6 @@
   .container {
      padding-top: 6rem;
      padding-bottom: 2rem;
-     padding-bottom: var(--nav-height);
   }
   .container_ios {
      padding-top: 1rem;
@@ -1028,6 +1027,7 @@
   .container_profile {
      padding-top: 6rem;
      padding-bottom: 2rem;
+     padding-bottom: var(--nav-height);
   }
 
   .container_quiz {
@@ -1057,7 +1057,6 @@
   .container {
      padding-top: 6rem;
      padding-bottom: 2rem;
-     padding-bottom: var(--nav-height);
   }
   .container_ios {
      padding-top: 1rem;
@@ -1075,6 +1074,7 @@
   .container_profile {
      padding-top: 6rem;
      padding-bottom: 2rem;
+     padding-bottom: var(--nav-height);
   }
 
   .container_quiz {
