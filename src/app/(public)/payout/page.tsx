@@ -836,6 +836,7 @@ export default function Payout({ searchParams }: PayoutPageProps) {
     return {};
   };
 
+  
   // Determine container class
   const getContainerClass = () => {
     const baseClass = styles.container;

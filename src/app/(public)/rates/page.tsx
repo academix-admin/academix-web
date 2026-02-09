@@ -23,6 +23,7 @@ import NoResultsView from '@/components/NoResultsView/NoResultsView';
 import ErrorView from '@/components/ErrorView/ErrorView';
 import DialogCancel from '@/components/DialogCancel';
 
+
 interface Config {
   showHeader: boolean;
   showTitle: boolean;
