@@ -7,11 +7,13 @@ import { useLanguage } from '@/context/LanguageContext';
 import { useUserData } from '@/lib/stacks/user-stack';
 import { getLastNameOrSingle, capitalize } from '@/utils/textUtils';
 import { ComponentStateProps } from '@/hooks/use-component-state';
+import { useNav } from "@/lib/NavigationStack";
 
 export default function HomeTitle({ onStateChange }: ComponentStateProps) {
   const { theme } = useTheme();
   const { t } = useLanguage();
   const { userData } = useUserData();
+  const nav = useNav();
 
 // ✅ After
 useEffect(() => {
@@ -24,6 +26,11 @@ useEffect(() => {
 
   onStateChange?.("data");
 }, [userData]);
+
+  const handleNotification = () => {
+    // Handle notification click, e.g., navigate to notifications page
+    nav.push("notification_page");
+  }
 
 
   if(!userData)return null;
@@ -39,7 +46,7 @@ useEffect(() => {
         </p>
       </div>
 
-      <div className={styles.notificationIcon}>
+      <div onClick={handleNotification} className={styles.notificationIcon}>
         <svg
           className={`${styles.svgSection} ${styles[`svgSection_${theme}`]}`}
           fill="none"
