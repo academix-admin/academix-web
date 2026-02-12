@@ -373,12 +373,9 @@ interface CurrentQuizCardProps {
   onClick: () => void;
   onLeave: () => void;
   showContinue: boolean;
-  // onContinue: () => Promise<void>;
 }
 
-function CurrentQuizCard({ topic, getInitials, onClick, onLeave, showContinue,
-  //  onContinue 
-   }: CurrentQuizCardProps) {
+function CurrentQuizCard({ topic, getInitials, onClick, onLeave, showContinue }: CurrentQuizCardProps) {
   const { theme } = useTheme();
   const { t, tNode } = useLanguage();
   const [remainingTime, setRemainingTime] = useState<number>(0);

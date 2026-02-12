@@ -803,7 +803,6 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
   }, []);
 
   const returnToMain = useCallback(() => {
-    console.log('clicked new exit');
     window.location.replace('/main');
   }, []);
 

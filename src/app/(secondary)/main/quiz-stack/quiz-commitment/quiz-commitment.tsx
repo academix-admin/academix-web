@@ -703,7 +703,7 @@ export default function QuizCommitment(props: QuizChallengeProps) {
         </div>
       </BottomViewer>}
 
-      {currentQuiz && action === 'active' && <BottomViewer
+      {currentQuiz && (action === 'active' || infoState === 'deleted') && <BottomViewer
         ref={quizInfoBottomRef}
         id={quizInfoBottomViewerId}
         isOpen={quizInfoBottomIsOpen}
