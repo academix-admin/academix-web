@@ -583,13 +583,13 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
   useEffect(() => {
     if(!quizModel)return;
     determineState();
-  }, [quizSession, quizModel]);
+  }, [quizSession, quizModel, endTimeFrom]);
 
-  useEffect(() => {
-    if(quizSession.currentQuestionId)return;
-    setQuizState('quizEnd');
-    determineState();
-  }, [quizSession.currentQuestionId]);
+  // useEffect(() => {
+  //   if(quizSession.currentQuestionId)return;
+  //   // setQuizState('quizEnd');
+  //   determineState();
+  // }, [quizSession.currentQuestionId]);
 
   // Fetch initial quiz data
   useEffect(() => {

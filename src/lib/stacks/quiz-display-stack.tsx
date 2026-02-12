@@ -2,8 +2,8 @@ import { useAtom } from '../state-stack';
 
 export interface QuizDisplayEvent {
   isOpen: boolean;
-  status: string | null;
-  jobEndAt: string | null;
+  status?: string | undefined ;
+  jobEndAt?: string | undefined;
   timestamp: number;
 }
 
@@ -20,11 +20,14 @@ export function useQuizDisplay() {
 
 
     if (!status || !jobEndAt || isWaitingStatus) {
+      if(lastEvent?.isOpen) closeDisplay();
       return;
     }
+
     const now = new Date();
     const endAt = new Date(jobEndAt);
-    if(now > endAt && status != 'PoolJob.start_pool'){
+
+    if(now >= endAt){
         closeDisplay();
         return;
     }
@@ -32,7 +35,7 @@ export function useQuizDisplay() {
   };
 
   const closeDisplay = () => {
-    setLastEvent({ isOpen: false, timestamp: Date.now(), status: null, jobEndAt: null });
+    setLastEvent({ isOpen: false, timestamp: Date.now()});
   };
 
   return {

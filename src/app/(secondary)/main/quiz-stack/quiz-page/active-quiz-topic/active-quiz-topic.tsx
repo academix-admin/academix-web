@@ -474,7 +474,12 @@ function CurrentQuizCard({ topic, getInitials, onClick, onLeave, showContinue,
          if (topic.quizPool?.poolsJob && topic.quizPool?.poolsJobEndAt) {
                controlDisplayMessage(topic.quizPool.poolsJob, topic.quizPool.poolsJobEndAt);
          }
-      }
+      },
+      onPause: ({ stack, current }) => {
+         if (topic.quizPool?.poolsJob && topic.quizPool?.poolsJobEndAt) {
+               controlDisplayMessage(topic.quizPool.poolsJob, topic.quizPool.poolsJobEndAt);
+         }
+      },
     }, [topic]);
 
   const handleCopyCode = async () => {
@@ -503,7 +508,7 @@ function CurrentQuizCard({ topic, getInitials, onClick, onLeave, showContinue,
   const onContinueClick = async () => {
     if(!userData || !topic.quizPool?.poolsId)return;
     await nav.popToRoot();
-    quizStarterBottomController.close();
+    handleQuizDisplayClose();
     await replaceAndWait(`/quiz/${topic.quizPool?.poolsId}`);
   };
 

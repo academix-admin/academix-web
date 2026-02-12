@@ -170,12 +170,12 @@ export default function GameChallenge({ onChallengeSelect, topicsId, gameModeId 
           {/* Navigation Buttons */}
           <div className={`${styles.navButton} ${styles.navPrev} ${styles[`navButton_${theme}`]}`}>
             <svg viewBox="0 0 24 24" width="24" height="24">
-              <path fill="currentColor" d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6z"/>
+              <path fill="currentColor" d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6z" />
             </svg>
           </div>
           <div className={`${styles.navButton} ${styles.navNext} ${styles[`navButton_${theme}`]}`}>
             <svg viewBox="0 0 24 24" width="24" height="24">
-              <path fill="currentColor" d="M8.59 16.59L13.17 12l-4.58-4.59L10 6l6 6-6 6z"/>
+              <path fill="currentColor" d="M8.59 16.59L13.17 12l-4.58-4.59L10 6l6 6-6 6z" />
             </svg>
           </div>
 
@@ -241,19 +241,44 @@ function ChallengeCard({ challenge, isSelected, onClick }: ChallengeCardProps) {
     return new Intl.NumberFormat().format(num);
   };
 
+  // const formatTime = (seconds?: number | null): string => {
+  //   if (!seconds) return '0 min';
+  //   const minutes = Math.ceil(seconds / 60);
+  //   return `${minutes} min`;
+  // };
   const formatTime = (seconds?: number | null): string => {
-    if (!seconds) return '0 min';
-    const minutes = Math.ceil(seconds / 60);
-    return `${minutes} min`;
+    // Handle invalid inputs
+    if (seconds === undefined || seconds === null || seconds < 0) return '0 min';
+    if (seconds === 0) return '0 min';
+
+    // Less than 1 minute
+    if (seconds < 60) {
+      return `${Math.ceil(seconds)} sec`;
+    }
+
+    // 1-60 minutes
+    if (seconds < 3600) {
+      const minutes = Math.ceil(seconds / 60);
+      return `${minutes} ${minutes === 1 ? 'min' : 'mins'}`;
+    }
+
+    // Hours and minutes
+    const hours = Math.floor(seconds / 3600);
+    const remainingMinutes = Math.ceil((seconds % 3600) / 60);
+
+    if (remainingMinutes === 0) {
+      return `${hours} ${hours === 1 ? 'hr' : 'hrs'}`;
+    }
+
+    return `${hours} ${hours === 1 ? 'hr' : 'hrs'} ${remainingMinutes} ${remainingMinutes === 1 ? 'min' : 'mins'}`;
   };
 
   const hasMultipleTiers = challenge.challengeMaxParticipant > challenge.challengeMinParticipant;
 
   return (
     <div
-      className={`${styles.challengeCard} ${styles[`challengeCard_${theme}`]} ${
-        isSelected ? styles.selected : ''
-      }`}
+      className={`${styles.challengeCard} ${styles[`challengeCard_${theme}`]} ${isSelected ? styles.selected : ''
+        }`}
       onClick={onClick}
       role="button"
       tabIndex={0}
