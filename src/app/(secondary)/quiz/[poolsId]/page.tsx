@@ -570,10 +570,10 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
       return;
     }
 
-    if (!quizSession.currentQuestionId && pendingQuestions.length === 0 && (endTimeFrom === null || endTimeFrom !== 'tracker')) {
-      setQuizState('questionTrack');
-      return;
-    }
+    // if (!quizSession.currentQuestionId && pendingQuestions.length === 0 && (endTimeFrom === null || endTimeFrom !== 'tracker')) {
+    //   setQuizState('questionTrack');
+    //   return;
+    // }
 
   }, [quizSession, quizModel, checkEnd, validForNotSubmitted, automateSubmit, quizState, endTimeFrom]);
 
@@ -808,6 +808,8 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
 
   // Render quiz content based on current state
   const renderQuizContent = () => {
+    const currentQuestion = getCurrentQuestion(quizSession.currentQuestionId);
+
     switch (quizState) {
       case 'loading':
         return (<LoadingView text="Please wait while we load your quiz..." />);
@@ -828,10 +830,9 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
         return <QuizResults poolsId={quizModel?.poolsId || null} clickMenu={()=> setDrawerIsOpen(!isDrawerOpen)} clickExit={returnToMain}/>;
 
       case 'quizPlay':
-        const currentQuestion = getCurrentQuestion(quizSession.currentQuestionId);
-        if (!currentQuestion) {
-           setQuizState('quizEnd');
-        }
+        // if (!currentQuestion) {
+        //    setQuizState('quizEnd');
+        // }
         return <QuestionDisplay question={currentQuestion} onAnswer={handleAnswer} onSubmit={handleSubmitQuestion} getQuestionNumber={()=> quizSession.totalQuestions - quizSession.pendingQuestions.length + 1} totalNumber={quizSession.totalQuestions} clickMenu={()=> setDrawerIsOpen(!isDrawerOpen)} clickExit={returnToMain} />;
 
       case 'quizEnd':
