@@ -813,7 +813,6 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
 
   // Render quiz content based on current state
   const renderQuizContent = () => {
-    const currentQuestion = getCurrentQuestion(quizSession.currentQuestionId);
 
     switch (quizState) {
       case 'loading':
@@ -835,6 +834,7 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
         return <QuizResults poolsId={quizModel?.poolsId || null} clickMenu={()=> setDrawerIsOpen(!isDrawerOpen)} clickExit={returnToMain}/>;
 
       case 'quizPlay':
+        const currentQuestion = getCurrentQuestion(quizSession.currentQuestionId);
         // if (!currentQuestion) {
         //    setQuizState('quizEnd');
         // }
