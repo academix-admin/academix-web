@@ -445,6 +445,8 @@ export default function QuizCommitment(props: QuizChallengeProps) {
   const onContinueClick = async () => {
     setToQuizLoading(true);
     if (!userData || !currentQuiz?.quizPool?.poolsId) return;
+    await nav.popToRoot();
+    quizInfoBottomController.close();
     await replaceAndWait(`/quiz/${currentQuiz.quizPool?.poolsId}`);
     setToQuizLoading(false);
   };

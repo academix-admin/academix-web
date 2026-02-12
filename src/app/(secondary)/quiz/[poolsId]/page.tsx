@@ -539,7 +539,7 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
     const pendingQuestions = quizSession.pendingQuestions;
 
     // Check if quiz has ended
-    if (checkEnd()) {
+    if (checkEnd() || endTimeFrom === 'timer') {
       if (quizState !== 'quizEnd') {
         setQuizState('quizEnd');
       }
@@ -549,7 +549,7 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
     // Check if there are questions that need automatic submission
     const hasUnsubmittedValidQuestions = completedQuestions.some(validForNotSubmitted);
 
-    if (pendingQuestions.length === 0 && hasUnsubmittedValidQuestions && completedQuestions.length === quizSession.totalQuestions && (endTimeFrom === null || endTimeFrom !== 'timer')) {
+    if (pendingQuestions.length === 0 && hasUnsubmittedValidQuestions && completedQuestions.length === quizSession.totalQuestions && (endTimeFrom === null || endTimeFrom !== 'tracker')) {
       setQuizState('questionTrack');
       automateSubmit();
       return;
@@ -559,7 +559,7 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
     const allSubmitted = completedQuestions.filter(validForNotSubmitted).length === 0 &&
                        completedQuestions.length === quizSession.totalQuestions;
 
-    if (setupTimeLapse(quizModel) && pendingQuestions.length === 0 && allSubmitted && (endTimeFrom === null || endTimeFrom !== 'timer')) {
+    if ((setupTimeLapse(quizModel) && pendingQuestions.length === 0 && allSubmitted) || endTimeFrom === 'tracker') {
        setQuizState('quizTime');
       return;
     }
@@ -570,8 +570,8 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
       return;
     }
 
-    if ((!quizSession.currentQuestionId && pendingQuestions.length === 0)) {
-      setQuizState('quizEnd');
+    if (!quizSession.currentQuestionId && pendingQuestions.length === 0 && (endTimeFrom === null || endTimeFrom !== 'tracker')) {
+      setQuizState('questionTrack');
       return;
     }
 
@@ -820,10 +820,10 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
         return (<ErrorView text="Something went wrong while loading the quiz." buttonText="Try Again" onButtonClick={()=> window.location.reload()} />);
 
       case 'quizTime':
-        return <QuizTimer quizTimerValue={quizTimerValue} onSkip={() => {setEndTimeFrom('timer'); setQuizState('quizEnd');}} clickMenu={()=> setDrawerIsOpen(!isDrawerOpen)} clickExit={returnToMain}/>;
+        return <QuizTimer quizTimerValue={quizTimerValue} onSkip={() => {setEndTimeFrom('timer');}} clickMenu={()=> setDrawerIsOpen(!isDrawerOpen)} clickExit={returnToMain}/>;
 
       case 'questionTrack':
-        return <QuizTracker trackerState={getQuestionTrackers()} onRetry={handleRetry} onEndClick={()=> {setEndTimeFrom('tracker'); setQuizState('quizEnd');}} />;
+        return <QuizTracker trackerState={getQuestionTrackers()} onRetry={handleRetry} onEndClick={()=> {setEndTimeFrom('tracker');}} />;
 
       case 'quizReward':
         return <QuizResults poolsId={quizModel?.poolsId || null} clickMenu={()=> setDrawerIsOpen(!isDrawerOpen)} clickExit={returnToMain}/>;

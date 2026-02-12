@@ -31,11 +31,11 @@ const StatusSection = ({
     web: `${styles.webStatusContainer} ${styles[`webStatusContainer_${theme}`]}`
   };
 
-  const isEnded = (endTime: string | null | undefined) => {
+  const isEnded = (endTime: string | null | undefined, job: string | null | undefined) => {
     if (!endTime) return false;
     const endDate = new Date(endTime);
     const now = new Date();
-    return endDate < now;
+    return endDate < now && job === 'PoolJob.pool_ended';
   };
 
   const formatTime = (timeAt: string | null | undefined) => {
@@ -53,7 +53,7 @@ const StatusSection = ({
 
   const timestamps = [
     {
-      label: isEnded(quizPool.poolsJobEndAt)
+      label: isEnded(quizPool.poolsJobEndAt, quizPool.poolsJob)
         ? capitalize(t('ended_text'))
         : capitalize(t('ending_text')),
       value: formatTime(quizPool.poolsJobEndAt),

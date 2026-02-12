@@ -43,7 +43,6 @@ export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) 
   const { userData, userData$, __meta } = useUserData();
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isMountedRef = useRef(true);
-  const { replaceAndWait } = useAwaitableRouter();
   const isRefreshingRef = useRef(false);
 
   const [firstLoaded, setFirstLoaded] = useState(false);
@@ -353,12 +352,6 @@ export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) 
   };
 
 
-  const onContinueClick = async () => {
-    if(!userData || !activeQuiz.quizPool?.poolsId)return;
-    await replaceAndWait(`/quiz/${activeQuiz.quizPool?.poolsId}`);
-    await nav.popToRoot();
-  };
-
   return (
     <div className={styles.container}>
             {activeQuiz &&
@@ -368,7 +361,6 @@ export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) 
                     onClick={()=> handleTopicClick(activeQuiz)}
                     onLeave={handleLeave}
                     showContinue={getIsContinueEnabled(activeQuiz)}
-                    onContinue={onContinueClick}
                   /> }
     </div>
   );
@@ -381,20 +373,25 @@ interface CurrentQuizCardProps {
   onClick: () => void;
   onLeave: () => void;
   showContinue: boolean;
-  onContinue: () => Promise<void>;
+  // onContinue: () => Promise<void>;
 }
 
-function CurrentQuizCard({ topic, getInitials, onClick, onLeave, showContinue, onContinue  }: CurrentQuizCardProps) {
+function CurrentQuizCard({ topic, getInitials, onClick, onLeave, showContinue,
+  //  onContinue 
+   }: CurrentQuizCardProps) {
   const { theme } = useTheme();
   const { t, tNode } = useLanguage();
   const [remainingTime, setRemainingTime] = useState<number>(0);
   const [imageError, setImageError] = useState(false);
   const timelapseManager = useTimelapseManager();
   const nav = useNav();
+  const { replaceAndWait } = useAwaitableRouter();
 
   const [codeBottomViewerId, codeBottomController, codeBottomIsOpen] = useBottomController();
   const [quizStarterBottomViewerId, quizStarterBottomController, quizStarterBottomIsOpen] = useBottomController();
   const [leaving, setLeaving] = useState(false);
+
+  const { userData, userData$, __meta } = useUserData();
 
   // Track previous values to detect changes
   const previousJobRef = useRef<string | null>(null);
@@ -503,6 +500,13 @@ function CurrentQuizCard({ topic, getInitials, onClick, onLeave, showContinue, o
       }
     };
 
+  const onContinueClick = async () => {
+    if(!userData || !topic.quizPool?.poolsId)return;
+    await nav.popToRoot();
+    quizStarterBottomController.close();
+    await replaceAndWait(`/quiz/${topic.quizPool?.poolsId}`);
+  };
+
    useEffect(() => {
        if (lastEvent?.isOpen) {
          // Show your quiz starter component
@@ -520,8 +524,7 @@ function CurrentQuizCard({ topic, getInitials, onClick, onLeave, showContinue, o
    };
    const handleContinue =  async () => {
       setToQuizLoading(true);
-      await onContinue();
-      handleQuizDisplayClose();
+      await onContinueClick();
       setToQuizLoading(false);
    };
 
