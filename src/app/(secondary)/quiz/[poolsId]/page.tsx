@@ -561,17 +561,12 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
     const allSubmitted = completedQuestions.filter(validForNotSubmitted).length === 0 &&
                        completedQuestions.length === quizSession.totalQuestions;
 
-    // Check if tracker was skipped - go to timer
-    // if (endTimeFrom === 'tracker') {
-    //   setQuizState('quizTime');
-    //   return;
-    // }
 
     // Check if all questions completed and timer not skipped
     if (pendingQuestions.length === 0 && endTimeFrom !== 'timer') {
       if(setupTimeLapse(quizModel)){
         setQuizState('quizTime');
-      }else{
+      }else if(endTimeFrom !== 'tracker'){
         setQuizState('questionTrack');
       } 
       
@@ -581,6 +576,12 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
     // Default to quiz play state if there are pending questions
     if (pendingQuestions.length > 0 && quizState !== 'quizPlay') {
       setQuizState('quizPlay');
+      return;
+    }
+
+    // Check if tracker was skipped - go to timer
+    if (endTimeFrom === 'tracker') {
+      setQuizState('quizTime');
       return;
     }
 
