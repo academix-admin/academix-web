@@ -114,6 +114,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Navigate only once on mount
         if (!hasNavigated.current && initialUser && userData && matchesRoutePattern(pathname, internalRoutes)) {
           hasNavigated.current = true;
+          console.log('[AUTH] Navigating to /main from ', pathname);
           await replaceAndWait("/main");
         }
 
