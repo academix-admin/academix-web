@@ -561,15 +561,8 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
     const allSubmitted = completedQuestions.filter(validForNotSubmitted).length === 0 &&
                        completedQuestions.length === quizSession.totalQuestions;
 
-    // Check if tracker was skipped - go to timer
-    if (endTimeFrom === 'tracker') {
-      setQuizState('quizTime');
-      return;
-    }
-
-    // Check if all questions completed and timer not skipped
-    if (pendingQuestions.length === 0 && endTimeFrom !== 'timer') {
-      if(setupTimeLapse(quizModel)){
+    if ((pendingQuestions.length === 0) || endTimeFrom === 'tracker') {
+      if(setupTimeLapse(quizModel) || endTimeFrom === 'tracker'){
         setQuizState('quizTime');
       }else{
         setQuizState('questionTrack');
