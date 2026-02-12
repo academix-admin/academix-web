@@ -76,6 +76,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
+    console.log('pathname', pathname);
+    console.log('__meta.isHydrated', __meta.isHydrated);
+    console.log('hasNavigated.current', hasNavigated.current);
+    console.log('userData', userData);
     if (matchesRoutePattern(pathname, publicRoutes) && typeof window !== "undefined") {
       setInitialized(true);
       return;
