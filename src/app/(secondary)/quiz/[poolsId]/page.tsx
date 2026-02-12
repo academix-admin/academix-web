@@ -25,6 +25,7 @@ import QuizTracker from './quiz-tracker/quiz-tracker'
 import SideDrawer from '@/lib/SideDrawer';
 import SideTracker from './side-tracker/side-tracker'
 import QuizResults from './quiz-results/quiz-results'
+import { useAwaitableRouter } from "@/hooks/useAwaitableRouter";
 
 // Quiz state types
 type QuizState =
@@ -71,6 +72,7 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
   const { t, lang } = useLanguage();
   const { userData } = useUserData();
   const isMountedRef = useRef(true);
+  const { replaceAndWait } = useAwaitableRouter();
 
   // Main quiz state
   const [quizState, setQuizState] = useState<QuizState>('loading');
@@ -575,11 +577,6 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
       return;
     }
 
-    // if (!quizSession.currentQuestionId && pendingQuestions.length === 0 && (endTimeFrom === null || endTimeFrom !== 'tracker')) {
-    //   setQuizState('questionTrack');
-    //   return;
-    // }
-
   }, [quizSession, quizModel, checkEnd, validForNotSubmitted, automateSubmit, quizState, endTimeFrom]);
 
 
@@ -589,12 +586,6 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
     if(!quizModel)return;
     determineState();
   }, [quizSession, quizModel, endTimeFrom]);
-
-  // useEffect(() => {
-  //   if(quizSession.currentQuestionId)return;
-  //   // setQuizState('quizEnd');
-  //   determineState();
-  // }, [quizSession.currentQuestionId]);
 
   // Fetch initial quiz data
   useEffect(() => {
@@ -807,8 +798,9 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
     };
   }, []);
 
-  const returnToMain = useCallback(() => {
-    window.location.replace('/main');
+  const returnToMain = useCallback( async () => {
+    // window.location.replace('/main');
+    await replaceAndWait('/main');
   }, []);
 
   // Render quiz content based on current state
@@ -835,9 +827,6 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
 
       case 'quizPlay':
         const currentQuestion = getCurrentQuestion(quizSession.currentQuestionId);
-        // if (!currentQuestion) {
-        //    setQuizState('quizEnd');
-        // }
         return <QuestionDisplay question={currentQuestion} onAnswer={handleAnswer} onSubmit={handleSubmitQuestion} getQuestionNumber={()=> quizSession.totalQuestions - quizSession.pendingQuestions.length + 1} totalNumber={quizSession.totalQuestions} clickMenu={()=> setDrawerIsOpen(!isDrawerOpen)} clickExit={returnToMain} />;
 
       case 'quizEnd':

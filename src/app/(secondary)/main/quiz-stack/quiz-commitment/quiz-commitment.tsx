@@ -104,7 +104,7 @@ export default function QuizCommitment(props: QuizChallengeProps) {
         await handleEngage(pin);
       }
     };
-  }, { scope: 'pin_scope', dependencies: [selectedRule, selectedPayout] });
+  }, { scope: 'pin_scope', dependencies: [selectedRule, selectedPayout, selectedRedeemCodeModel] });
 
   // Subscribe to changes
   const handlePoolChange = (event: PoolChangeEvent) => {

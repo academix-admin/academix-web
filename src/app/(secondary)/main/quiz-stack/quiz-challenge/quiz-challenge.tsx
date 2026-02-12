@@ -87,7 +87,7 @@ export default function QuizChallenge(props: QuizChallengeProps) {
                 await handleEngage(pin);
             }
         };
-    }, { scope: 'pin_scope', dependencies: [selectedRule, selectedPayout] });
+    }, { scope: 'pin_scope', dependencies: [selectedRule, selectedPayout, selectedRedeemCodeModel] });
 
     useEffect(() => {
         if (!isHydrated) return;
@@ -190,7 +190,7 @@ export default function QuizChallenge(props: QuizChallengeProps) {
                 setError(t('error_occurred'));
                 return;
             }
-
+         console.log('redeemCodeValue2',selectedRedeemCodeModel);
             const requestData = {
                 userId: userData.usersId,
                 topicsId: topicsId,
@@ -204,6 +204,7 @@ export default function QuizChallenge(props: QuizChallengeProps) {
                 userPin: userPin
             };
 
+            console.log("Engage Quiz Request Data:", requestData);
             const engagement = await engageQuiz(jwt, requestData);
             const status = engagement.status;
 
