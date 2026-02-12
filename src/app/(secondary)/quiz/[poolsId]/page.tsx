@@ -521,7 +521,7 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
 
           return true;
         }
-        return false;
+        return true;
       } catch (error) {
         console.error('Error setting up quiz timer:', error);
         cleanUpQuizTimer();
@@ -549,7 +549,7 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
     // Check if there are questions that need automatic submission
     const hasUnsubmittedValidQuestions = completedQuestions.some(validForNotSubmitted);
 
-    if (pendingQuestions.length === 0 && hasUnsubmittedValidQuestions && completedQuestions.length === quizSession.totalQuestions && (endTimeFrom === null || endTimeFrom !== 'tracker')) {
+    if (hasUnsubmittedValidQuestions && completedQuestions.length === quizSession.totalQuestions) {
       setQuizState('questionTrack');
       automateSubmit();
       return;
@@ -559,8 +559,13 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
     const allSubmitted = completedQuestions.filter(validForNotSubmitted).length === 0 &&
                        completedQuestions.length === quizSession.totalQuestions;
 
-    if ((setupTimeLapse(quizModel) && pendingQuestions.length === 0 && allSubmitted) || endTimeFrom === 'tracker') {
-       setQuizState('quizTime');
+    if ((pendingQuestions.length === 0) || endTimeFrom === 'tracker') {
+      if(setupTimeLapse(quizModel) || endTimeFrom === 'tracker'){
+        setQuizState('quizTime');
+      }else{
+        setQuizState('questionTrack');
+      } 
+      
       return;
     }
 
