@@ -29,7 +29,7 @@ export function useAuthContext() {
 function matchesRoutePattern(
   pathname: string,
   patterns: RoutePattern[],
-  matchType: 'exact' | 'startsWith' | 'endsWith' = 'startsWith'
+  matchType: 'exact' | 'startsWith' | 'endsWith' = 'exact'
 ): boolean {
   return patterns.some(pattern => {
     if (typeof pattern === 'string') {
@@ -41,7 +41,7 @@ function matchesRoutePattern(
         case 'endsWith':
           return pathname.endsWith(pattern);
         default:
-          return pathname.startsWith(pattern);
+          return pathname === pattern;
       }
     } else if (pattern instanceof RegExp) {
       return pattern.test(pathname);
@@ -57,9 +57,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const { userData, __meta } = useUserData();
   const { replaceAndWait } = useAwaitableRouter({ timeout: 8000, enableLogging: true });
-  const hasNavigated = useRef(false);
 
-  const publicRoutes = ['/rules', '/payout', '/redirect', /^\/redirect\/[a-f0-9-]+$/, '/rewards', '/rates', '/about', '/help', '/instructions'];
+  const publicRoutes = ['/rules', '/payout', '/rewards', '/rates', '/about', '/help', '/instructions', /^\/redirect(\/[a-f0-9-]+)?$/];
   const internalRoutes = ['/', '/login', '/signup', '/welcome'];
   const protectedRoutes = ['/main', '/quiz', /^\/quiz\/[a-f0-9-]+$/];
 
@@ -76,11 +75,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    console.log('pathname', pathname);
-    console.log('matchesRoutePattern', matchesRoutePattern(pathname, internalRoutes));
-    console.log('__meta.isHydrated', __meta.isHydrated);
-    console.log('hasNavigated.current', hasNavigated.current);
-    console.log('userData', userData);
     if (matchesRoutePattern(pathname, publicRoutes) && typeof window !== "undefined") {
       setInitialized(true);
       return;
@@ -111,11 +105,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setSession(initialSession);
         }
 
-        // Navigate only once on mount
-        if (!hasNavigated.current && initialUser && userData && matchesRoutePattern(pathname, internalRoutes)) {
-          hasNavigated.current = true;
-          console.log('[AUTH] Navigating to /main from ', pathname);
-          await replaceAndWait("/main");
+        if (initialUser && userData && matchesRoutePattern(pathname, internalRoutes)) {
+           await replaceAndWait("/main");
         }
 
         const { data: { subscription } } = supabaseBrowser.auth.onAuthStateChange(
