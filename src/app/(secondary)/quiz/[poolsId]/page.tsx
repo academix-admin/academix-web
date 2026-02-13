@@ -512,7 +512,7 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
               if (newValue <= 0 || closed) {
                 cleanUpQuizTimer();
                 if (status === 'PoolJob.pool_period') {
-                  determineState();
+                  setEndTimeFrom('timer');
                 }
                 return 0;
               }
@@ -561,12 +561,10 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
     const allSubmitted = completedQuestions.filter(validForNotSubmitted).length === 0 &&
                        completedQuestions.length === quizSession.totalQuestions;
 
-
-    // Check if all questions completed and timer not skipped
-    if (pendingQuestions.length === 0 && endTimeFrom !== 'timer') {
-      if(setupTimeLapse(quizModel)){
+    if ((pendingQuestions.length === 0) || endTimeFrom === 'tracker') {
+      if(setupTimeLapse(quizModel) || endTimeFrom === 'tracker'){
         setQuizState('quizTime');
-      }else if(endTimeFrom !== 'tracker'){
+      }else{
         setQuizState('questionTrack');
       } 
       
@@ -579,12 +577,6 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
       return;
     }
 
-    // Check if tracker was skipped - go to timer
-    if (endTimeFrom === 'tracker') {
-      setQuizState('quizTime');
-      return;
-    }
-
   }, [quizSession, quizModel, checkEnd, validForNotSubmitted, automateSubmit, quizState, endTimeFrom]);
 
 
@@ -594,6 +586,7 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
     if(!quizModel)return;
     determineState();
   }, [quizSession, quizModel, endTimeFrom]);
+
 
   // Fetch initial quiz data
   useEffect(() => {
@@ -663,7 +656,7 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
     if (!quizPool) return false;
 
     const { poolsStatus, poolsJob, poolsJobEndAt } = quizPool;
-    if (poolsStatus === 'Pools.close' || !poolsJobEndAt || poolsJob === 'PoolJob.pool_ended') return false;
+    if (poolsStatus === 'Pools.closed' || !poolsJobEndAt || poolsJob === 'PoolJob.pool_ended') return false;
 
     const now = new Date();
     const endAt = new Date(poolsJobEndAt);
