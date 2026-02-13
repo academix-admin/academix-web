@@ -337,7 +337,7 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
           return { ...prev, submissions: newSubmissions };
         });
         setClosed(true);
-        setEndTimeFrom('timer');
+        determineState();
       }else{
 
       setQuizSession(prev => {
