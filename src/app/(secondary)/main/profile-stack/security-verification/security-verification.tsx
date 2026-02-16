@@ -14,6 +14,7 @@ import { useOtp } from '@/lib/stacks/otp-stack';
 interface SecurityVerificationProps {
   request: 'Pin' | 'Password';
   isNew?: boolean;
+  returnGroup?: string;
 }
 
 interface VerificationSelection {
@@ -28,7 +29,7 @@ export default function SecurityVerification(props: SecurityVerificationProps) {
   const { userData } = useUserData();
   const { otpTimer, otpTimer$ } = useOtp();
 
-  const { request, isNew } = props;
+  const { request, isNew, returnGroup } = props;
 
   const [verificationSelected, setVerificationSelected] = useState<VerificationSelection | null>();
   const [error, setError] = useState('');
@@ -61,7 +62,7 @@ export default function SecurityVerification(props: SecurityVerificationProps) {
         await resetPasswordForPhone(verificationSelected.value);
       }
       otpTimer$.start(300);
-      nav.pushAndPopUntil('security_otp', (entry)=> entry.key === (isNew ? 'profile_page' : 'security_page'), {request: request, verification: verificationSelected?.type, isNew: isNew ?? false, value: verificationSelected?.value });
+      nav.pushAndPopUntil('security_otp', (entry)=> entry.key === (isNew ? 'profile_page' : 'security_page'), {request: request, verification: verificationSelected?.type, isNew: isNew ?? false, value: verificationSelected?.value, returnGroup: returnGroup });
       setLoading(false);
     } catch (err) {
       setLoading(false);

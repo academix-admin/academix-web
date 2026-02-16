@@ -190,7 +190,6 @@ export default function QuizChallenge(props: QuizChallengeProps) {
                 setError(t('error_occurred'));
                 return;
             }
-         console.log('redeemCodeValue2',selectedRedeemCodeModel);
             const requestData = {
                 userId: userData.usersId,
                 topicsId: topicsId,
@@ -230,7 +229,7 @@ export default function QuizChallenge(props: QuizChallengeProps) {
                 });
             } else if (status === 'PoolStatus.pinError') {
                 withdrawBottomController.close();
-                await (await nav.goToGroupId('profile-stack')).push('security_verification', { request: 'Pin', isNew: true });
+                await (await nav.goToGroupId('profile-stack')).push('security_verification', { request: 'Pin', isNew: true, returnGroup: 'quiz-stack' });
             } else {
                 setError(status);
             }
