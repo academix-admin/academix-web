@@ -250,7 +250,9 @@ export default function PinManagement(props: { isNew: boolean, returnGroup?: str
         <div className={styles.headerContent}>
           <button
             className={styles.backButton}
-            onClick={() => nav.pop()}
+            onClick={async () => {if (returnGroup) { 
+          await nav.goToGroupId(returnGroup);
+        } else { nav.pop(); }}}
             aria-label="Go back"
           >
             <svg className={styles.backIcon} viewBox="0 0 16 22" fill="none" xmlns="http://www.w3.org/2000/svg">
