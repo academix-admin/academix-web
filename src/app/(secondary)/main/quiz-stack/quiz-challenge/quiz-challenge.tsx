@@ -49,6 +49,9 @@ interface EngageQuizResponse {
     status: string;
     quiz_pool: any;
     transaction_details?: BackendTransactionModel;
+    attempts_left?: number | null;
+    locked_until?: string | null;
+    not_set?: boolean | null
 }
 
 
