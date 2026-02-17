@@ -12,6 +12,7 @@ interface DialogLayoutProps {
   backgroundColor?: string;
   maxWidth?: string;
   borderRadius?: string;
+  margin?: string;
 }
 
 interface DialogViewerProps {
@@ -40,6 +41,11 @@ const createStyles = () => `
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  padding: 16px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.dialog-overlay.dialog-entering {
   animation: fadeIn 0.2s ease-out;
 }
 
@@ -47,12 +53,16 @@ const createStyles = () => `
   background: white;
   border-radius: 12px;
   max-width: 400px;
-  width: calc(100% - 32px);
+  width: 100%;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  animation: scaleIn 0.2s ease-out;
   display: flex;
   flex-direction: column;
-  max-height: 90vh;
+  max-height: calc(100vh - 32px);
+  position: relative;
+}
+
+.dialog-entering .dialog-container {
+  animation: scaleIn 0.2s ease-out;
 }
 
 .dialog-header {
@@ -72,6 +82,12 @@ const createStyles = () => `
   padding: 0 20px 20px;
   overflow-y: auto;
   flex: 1;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+.dialog-content-with-margin {
+  margin: 0 16px;
 }
 
 .dialog-message {
@@ -87,6 +103,17 @@ const createStyles = () => `
   gap: 8px;
   padding: 12px 20px 20px;
   flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 400px) {
+  .dialog-actions {
+    flex-direction: column;
+  }
+  
+  .dialog-button {
+    width: 100%;
+  }
 }
 
 .dialog-button {
@@ -130,6 +157,9 @@ const createStyles = () => `
 
 .body-dialog-open {
   overflow: hidden;
+  position: fixed;
+  width: 100%;
+  height: 100%;
 }
 
 @keyframes fadeIn {
@@ -140,36 +170,49 @@ const createStyles = () => `
 @keyframes scaleIn {
   from { 
     opacity: 0;
-    transform: scale(0.95);
+    transform: scale(0.9) translateY(20px);
   }
   to { 
     opacity: 1;
-    transform: scale(1);
+    transform: scale(1) translateY(0);
+  }
+}
+
+@media (max-width: 480px) {
+  .dialog-overlay {
+    padding: 12px;
+  }
+  
+  .dialog-container {
+    max-height: calc(100vh - 24px);
+    border-radius: 16px;
+  }
+  
+  .dialog-header {
+    padding: 16px 16px 8px;
+  }
+  
+  .dialog-content {
+    padding: 0 16px 16px;
+  }
+  
+  .dialog-actions {
+    padding: 8px 16px 16px;
   }
 }
 `;
 
 // ==================== Hook to inject CSS ====================
-const useInjectStyles = (isOpen?: boolean) => {
+const useInjectStyles = () => {
   useEffect(() => {
-    if (!isOpen) return;
-
     const styleId = "dialog-viewer-styles";
-    let styleTag = document.getElementById(styleId) as HTMLStyleElement | null;
+    if (document.getElementById(styleId)) return;
     
-    if (!styleTag) {
-      styleTag = document.createElement("style");
-      styleTag.id = styleId;
-      styleTag.innerHTML = createStyles();
-      document.head.appendChild(styleTag);
-    }
-
-    return () => {
-      if (styleTag && document.head.contains(styleTag)) {
-        document.head.removeChild(styleTag);
-      }
-    };
-  }, [isOpen]);
+    const styleTag = document.createElement("style");
+    styleTag.id = styleId;
+    styleTag.innerHTML = createStyles();
+    document.head.appendChild(styleTag);
+  }, []);
 };
 
 // ==================== DialogViewer Component ====================
@@ -191,9 +234,10 @@ const DialogViewer = React.forwardRef<any, DialogViewerProps>(({
   const dialogRef = useRef<HTMLDivElement>(null);
   const previousActiveElement = useRef<Element | null>(null);
   const [currentContent, setCurrentContent] = useState<React.ReactNode>(customView);
+  const [isAnimating, setIsAnimating] = useState(false);
   const isControlledInternally = useRef(false);
 
-  useInjectStyles(isOpen);
+  useInjectStyles();
 
   useEffect(() => {
     if (!isControlledInternally.current) {
@@ -203,10 +247,12 @@ const DialogViewer = React.forwardRef<any, DialogViewerProps>(({
 
   useEffect(() => {
     if (isOpen) {
+      setIsAnimating(true);
       previousActiveElement.current = document.activeElement;
       document.body.classList.add('body-dialog-open');
       setTimeout(() => dialogRef.current?.focus(), 100);
     } else {
+      setIsAnimating(false);
       document.body.classList.remove('body-dialog-open');
       if (previousActiveElement.current instanceof HTMLElement) {
         previousActiveElement.current.focus();
@@ -245,6 +291,7 @@ const DialogViewer = React.forwardRef<any, DialogViewerProps>(({
   }));
 
   if (!isOpen && unmountOnClose) return null;
+  if (!isOpen && !isAnimating) return null;
 
   const defaultButtons: DialogButton[] = buttons || [
     { text: "OK", variant: "primary" }
@@ -252,9 +299,12 @@ const DialogViewer = React.forwardRef<any, DialogViewerProps>(({
 
   return (
     <div 
-      className="dialog-overlay" 
+      className={`dialog-overlay ${isAnimating ? 'dialog-entering' : ''}`}
       onClick={handleBackdropClick}
-      style={{ zIndex }}
+      style={{ 
+        zIndex,
+        display: isOpen ? 'flex' : 'none'
+      }}
     >
       <div 
         ref={dialogRef}
@@ -273,7 +323,7 @@ const DialogViewer = React.forwardRef<any, DialogViewerProps>(({
           </div>
         )}
 
-        <div className="dialog-content">
+        <div className="dialog-content" style={{ margin: layoutProp?.margin }}>
           {currentContent || (message && <p className="dialog-message">{message}</p>)}
         </div>
 

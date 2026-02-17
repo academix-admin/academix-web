@@ -36,7 +36,11 @@ export default function SecurityVerification(props: SecurityVerificationProps) {
   const [loading, setLoading] = useState(false);
   const [isFormValid, setIsFormValid] = useState(false);
 
-  const goBack = () => nav.pop();
+  const goBack = () => {
+    if (returnGroup) {
+      nav.goToGroupId(returnGroup);
+    } else { nav.pop(); }
+  }
 
   useEffect(() => {
     setIsFormValid(!!verificationSelected);
@@ -62,7 +66,7 @@ export default function SecurityVerification(props: SecurityVerificationProps) {
         await resetPasswordForPhone(verificationSelected.value);
       }
       otpTimer$.start(300);
-      nav.pushAndPopUntil('security_otp', (entry)=> entry.key === (isNew ? 'profile_page' : 'security_page'), {request: request, verification: verificationSelected?.type, isNew: isNew ?? false, value: verificationSelected?.value, returnGroup: returnGroup });
+      nav.pushAndPopUntil('security_otp', (entry) => entry.key === (isNew ? 'profile_page' : 'security_page'), { request: request, verification: verificationSelected?.type, isNew: isNew ?? false, value: verificationSelected?.value, returnGroup: returnGroup });
       setLoading(false);
     } catch (err) {
       setLoading(false);
@@ -73,7 +77,7 @@ export default function SecurityVerification(props: SecurityVerificationProps) {
 
   const getVerificationLabel = () => {
     if (request === 'Pin') {
-      if(isNew){
+      if (isNew) {
         return t('create_new_pin');
       }
       return t('change_pin');

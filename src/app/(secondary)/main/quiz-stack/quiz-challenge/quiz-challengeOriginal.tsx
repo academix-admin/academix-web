@@ -39,7 +39,6 @@ import { useUserBalance } from '@/lib/stacks/user-balance-stack';
 import { poolsSubscriptionManager } from '@/lib/managers/PoolsQuizTopicSubscriptionManager';
 import { useActiveQuiz } from "@/lib/stacks/active-quiz-stack";
 import { PinData } from '@/models/pin-data';
-import { useDialog } from '@/lib/DialogViewer';
 
 interface QuizChallengeProps {
     topicsId: string;
@@ -80,8 +79,6 @@ export default function QuizChallenge(props: QuizChallengeProps) {
 
 
     const [withdrawBottomViewerId, withdrawBottomController, withdrawBottomIsOpen, , withdrawBottomRef] = useBottomController();
-    const pinErrorDialog = useDialog();
-    const [pinErrorType, setPinErrorType] = useState<'not_set' | 'incorrect' | 'locked' | null>(null);
 
     const [activeQuiz, , setActiveQuizTopicModel] = useActiveQuiz(lang);
 
@@ -234,43 +231,18 @@ export default function QuizChallenge(props: QuizChallengeProps) {
                     action: 'active'
                 });
             } else if (status === 'PoolStatus.pinError') {
+                // close bottom viewer
+
                 withdrawBottomController.close();
 
                 if (engagement.not_set) {
-                    setPinErrorType('not_set');
-                    if (!pinErrorDialog.isOpen) {
-                        pinErrorDialog.open(
-                            <div style={{ textAlign: 'center' }}>
-                                <p>{t('pin_not_set_message')}</p>
-                            </div>
-                        );
-                    }
+                    // Pin not set. So show message not set and on okay 
+                    // close dialog and perform action to go to group and push page
+                    await (await nav.goToGroupId('profile-stack')).push('security_verification', { request: 'Pin', isNew: true, returnGroup: 'quiz-stack' });
                 } else if ((engagement.attempts_left ?? 0) > 0) {
-                    setPinErrorType('incorrect');
-                    if (!pinErrorDialog.isOpen) {
-                        pinErrorDialog.open(
-                            <div style={{ textAlign: 'center' }}>
-                                <p>{t('incorrect_pin_message')}</p>
-                                <p style={{ color: '#FF3B30', fontWeight: 600, marginTop: '8px' }}>
-                                    {engagement.attempts_left} {t('attempts_remaining')}
-                                </p>
-                            </div>
-                        );
-                    }
-                } else if (engagement.locked_until) {
-                    setPinErrorType('locked');
-                    if (!pinErrorDialog.isOpen) {
-                        pinErrorDialog.open(
-                            <div style={{ textAlign: 'center' }}>
-                                <p style={{ color: '#FF3B30' }}>{t('pin_locked_message')}</p>
-                                <p style={{ marginTop: '8px' }}>
-                                    {t('locked_until')}: {new Date(engagement.locked_until).toLocaleString()}
-                                </p>
-                            </div>
-                        );
-                    }
-                }else{
-                    
+                    //Pin is incorrect, show warning and how may engagement.attempts_left  
+                }else if(engagement.locked_until){
+                    //pin is temporarily blocked, so show danger and engagement.locked_until
                 }
             } else {
                 setError(status);
@@ -490,34 +462,6 @@ export default function QuizChallenge(props: QuizChallengeProps) {
                     </div>
                 </div>
             </BottomViewer>}
-
-            <pinErrorDialog.DialogViewer
-                title={t('pin_error')}
-                buttons={[
-                    {
-                        text: t('ok_text'),
-                        variant: 'primary',
-                        onClick: async () => {
-                            pinErrorDialog.close();
-                            if (pinErrorType === 'not_set') {
-                                setPinErrorType(null);
-                                await (await nav.goToGroupId('profile-stack')).push('security_verification', {
-                                    request: 'Pin',
-                                    isNew: true,
-                                    returnGroup: 'quiz-stack'
-                                });
-                            }
-                        }
-                    }
-                ]}
-                showCancel={true}
-                cancelText={t('cancel_text')}
-                closeOnBackdrop={false}
-                layoutProp={{
-                    backgroundColor: theme === 'light' ? '#fff' : '#121212',
-                    margin: '16px 16px'
-                }}
-            />
         </main>
     );
 }
