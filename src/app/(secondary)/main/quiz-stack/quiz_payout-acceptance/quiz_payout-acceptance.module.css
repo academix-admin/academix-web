@@ -9,7 +9,6 @@
   width: calc(100% - 48px);
   cursor: pointer;
   transition: all 0.2s ease;
-  padding-bottom: var(--nav-height);
 }
 
 .historyContainer_light {

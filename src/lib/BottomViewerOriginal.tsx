@@ -7,7 +7,7 @@ interface LayoutProps {
   handleColor?: string;
   handleWidth?: string;
   maxHeight?: string;
-  maxWidth?: string;
+  maxWidth?: string; // Added maxWidth to LayoutProps
 }
 
 interface CancelButtonProps {
@@ -62,6 +62,7 @@ const createStyles = (maxHeight?: string) => `
   flex-direction: column;
   gap: 8px;
   box-sizing: border-box;
+  /* ✅ Prevent layout thrashing during measurement */
   contain: layout style paint;
 }
 .bottom-viewer-cancel-btn {
@@ -81,7 +82,7 @@ const createStyles = (maxHeight?: string) => `
 .bottom-viewer-cancel-btn.right { right: 0px; }
 .react-modal-sheet-container {
   max-height: ${maxHeight ? `calc(${maxHeight} - env(safe-area-inset-top) - 34px)` : 'calc(100% - env(safe-area-inset-top) - 34px)'} !important;
-  max-width: 500px;
+  max-width: 500px; /* Default max-width */
   margin: 0 auto;
   border-top-left-radius: 16px;
   border-top-right-radius: 16px;
@@ -101,9 +102,20 @@ const createStyles = (maxHeight?: string) => `
   height: 100%;
   display: flex;
   flex-direction: column;
+  /* ✅ Prevent layout thrashing on large screens */
   contain: layout style;
 }
 @media (max-width: 500px) {
+  .react-modal-sheet-container {
+    max-width: 100%;
+    border-radius: 0;
+    margin-left: env(safe-area-inset-left, 0px);
+    margin-right: env(safe-area-inset-right, 0px);
+    width: calc(100% - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px));
+  }
+}
+/* Dynamic media query for custom max-width */
+@media (max-width: var(--bottom-viewer-max-width, 500px)) {
   .react-modal-sheet-container {
     max-width: 100%;
     border-radius: 0;
@@ -133,11 +145,11 @@ const createStyles = (maxHeight?: string) => `
 // ==================== Hook to inject CSS once ====================
 const useInjectStyles = (maxHeight?: string, isOpen?: boolean) => {
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) return; // Only inject when open
 
     const styleId = maxHeight ? `bottom-viewer-styles-${maxHeight}` : "bottom-viewer-styles";
     let styleTag = document.getElementById(styleId) as HTMLStyleElement | null;
-
+    
     if (!styleTag) {
       styleTag = document.createElement("style");
       styleTag.id = styleId;
@@ -145,6 +157,7 @@ const useInjectStyles = (maxHeight?: string, isOpen?: boolean) => {
       document.head.appendChild(styleTag);
     }
 
+    // Cleanup: Remove style tag when component unmounts or closes
     return () => {
       if (styleTag && document.head.contains(styleTag)) {
         document.head.removeChild(styleTag);
@@ -170,115 +183,125 @@ const BottomViewer = React.forwardRef<any, BottomViewerProps>(({
   closeThreshold = 0.2,
 }, ref) => {
   const sheetRef = useRef<any>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
-  const previousActiveElement = useRef<Element | null>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
+    const contentRef = useRef<HTMLDivElement>(null);
+    const previousActiveElement = useRef<Element | null>(null);
 
-  const initialChildrenRef = useRef<React.ReactNode>(children);
-  const [currentContent, setCurrentContent] = useState<React.ReactNode>(children);
+    // FIX: Use a ref to track the initial children and manage state properly
+    const initialChildrenRef = useRef<React.ReactNode>(children);
+    const [currentContent, setCurrentContent] = useState<React.ReactNode>(children);
 
-  useInjectStyles(layoutProp?.maxHeight, isOpen);
+    useInjectStyles(layoutProp?.maxHeight, isOpen);
 
-  const isControlledInternally = useRef(false);
+    // FIX: Only update currentContent when children prop changes AND we're not controlling content internally
+    const isControlledInternally = useRef(false);
 
-  useEffect(() => {
-    if (!isControlledInternally.current) {
-      setCurrentContent(children);
-      initialChildrenRef.current = children;
-    }
-  }, [children]);
-
-  useEffect(() => {
-    const updateVh = () => {
-      const vh = window.visualViewport
-        ? window.visualViewport.height * 0.01
-        : window.innerHeight * 0.01;
-      document.documentElement.style.setProperty('--vh', `${vh}px`);
-    };
-
-    updateVh();
-    window.visualViewport?.addEventListener('resize', updateVh);
-    window.visualViewport?.addEventListener('scroll', updateVh);
-    window.addEventListener('resize', updateVh);
-
-    return () => {
-      window.visualViewport?.removeEventListener('resize', updateVh);
-      window.visualViewport?.removeEventListener('scroll', updateVh);
-      window.removeEventListener('resize', updateVh);
-    };
-  }, []);
-
-  const getMaxWidth = useCallback(() => {
-    return layoutProp?.maxWidth || '500px';
-  }, [layoutProp?.maxWidth]);
-
-  useEffect(() => {
-    if (isOpen) {
-      previousActiveElement.current = document.activeElement;
-      document.body.classList.add('body-bottom-sheet-open');
-      setTimeout(() => contentRef.current?.focus(), 100);
-    } else {
-      document.body.classList.remove('body-bottom-sheet-open');
-      if (previousActiveElement.current instanceof HTMLElement) {
-        previousActiveElement.current.focus();
+    useEffect(() => {
+      if (!isControlledInternally.current) {
+        setCurrentContent(children);
+        initialChildrenRef.current = children;
       }
-      isControlledInternally.current = false;
-    }
-    return () => {
-      document.body.classList.remove('body-bottom-sheet-open');
-    };
-  }, [isOpen]);
+    }, [children]);
 
-  const handleBackdropTap = useCallback((event: any) => {
-    if (event && typeof event.stopPropagation === 'function') {
-      event.stopPropagation();
-    }
-    if (backDrop) onClose();
-  }, [backDrop, onClose]);
+    useEffect(() => {
+      const updateVh = () => {
+        const vh = window.visualViewport
+          ? window.visualViewport.height * 0.01
+          : window.innerHeight * 0.01;
+        document.documentElement.style.setProperty('--vh', `${vh}px`);
+      };
 
-  const handleCancelClick = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (cancelButton?.onClick) cancelButton.onClick();
-    else onClose();
-  }, [cancelButton, onClose]);
+      updateVh();
+
+      window.visualViewport?.addEventListener('resize', updateVh);
+      window.visualViewport?.addEventListener('scroll', updateVh);
+      window.addEventListener('resize', updateVh);
+
+      return () => {
+        window.visualViewport?.removeEventListener('resize', updateVh);
+        window.visualViewport?.removeEventListener('scroll', updateVh);
+        window.removeEventListener('resize', updateVh);
+      };
+    }, []);
+
+    const getMaxWidth = useCallback(() => {
+      return layoutProp?.maxWidth || '500px';
+    }, [layoutProp?.maxWidth]);
+
+    // Body scroll and focus management
+    useEffect(() => {
+      if (isOpen) {
+        previousActiveElement.current = document.activeElement;
+        document.body.classList.add('body-bottom-sheet-open');
+
+        setTimeout(() => contentRef.current?.focus(), 100);
+      } else {
+        document.body.classList.remove('body-bottom-sheet-open');
+        if (previousActiveElement.current instanceof HTMLElement) {
+          previousActiveElement.current.focus();
+        }
+        // FIX: Reset control state when closed
+        isControlledInternally.current = false;
+      }
+      return () => {
+        document.body.classList.remove('body-bottom-sheet-open');
+      };
+    }, [isOpen]);
+
+
+    const handleBackdropTap = useCallback((event: MouseEvent | PointerEvent | TouchEvent | any) => {
+      if (event && typeof event.stopPropagation === 'function') {
+         event.stopPropagation();
+      }
+      if (backDrop) onClose();
+    }, [backDrop, onClose]);
+
+    const handleCancelClick = useCallback((e: React.MouseEvent) => {
+      e.stopPropagation(); // Prevent event from bubbling up
+      if (cancelButton?.onClick) cancelButton.onClick();
+      else onClose();
+    }, [cancelButton, onClose]);
+
+    // FIX: Enhanced imperative handle that properly manages internal state
+    React.useImperativeHandle(ref, () => ({
+      updateContent: (content: React.ReactNode) => {
+        isControlledInternally.current = true;
+        setCurrentContent(content);
+      },
+      replaceContent: (content: React.ReactNode) => {
+        isControlledInternally.current = true;
+        setCurrentContent(content);
+      },
+      clearContent: () => {
+        isControlledInternally.current = true;
+        setCurrentContent(null);
+      },
+      resetContent: () => {
+        isControlledInternally.current = false;
+        setCurrentContent(initialChildrenRef.current);
+      },
+      // NEW: Function to check if event target is inside the sheet
+      isEventFromSheet: (event: React.MouseEvent | MouseEvent) => {
+        const target = event.target as HTMLElement;
+        return !!(
+          target.closest('.react-modal-sheet-container') ||
+          target.closest('.react-modal-sheet-backdrop') ||
+          target.closest('.bottom-viewer-container')
+        );
+      }
+    }));
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if ((e.target as HTMLElement).classList.contains("bottom-viewer-container")) {
-        e.stopPropagation();
-        e.stopImmediatePropagation();
+        e.stopPropagation(); // <-- stops DOM bubbling
+        e.stopImmediatePropagation(); // <-- stops DOM bubbling
       }
     };
-    document.addEventListener("click", handler, true);
+    document.addEventListener("click", handler, true); // capture phase
     return () => document.removeEventListener("click", handler, true);
   }, []);
 
-  React.useImperativeHandle(ref, () => ({
-    updateContent: (content: React.ReactNode) => {
-      isControlledInternally.current = true;
-      setCurrentContent(content);
-    },
-    replaceContent: (content: React.ReactNode) => {
-      isControlledInternally.current = true;
-      setCurrentContent(content);
-    },
-    clearContent: () => {
-      isControlledInternally.current = true;
-      setCurrentContent(null);
-    },
-    resetContent: () => {
-      isControlledInternally.current = false;
-      setCurrentContent(initialChildrenRef.current);
-    },
-    isEventFromSheet: (event: React.MouseEvent | MouseEvent) => {
-      const target = event.target as HTMLElement;
-      return !!(
-        target.closest('.react-modal-sheet-container') ||
-        target.closest('.react-modal-sheet-backdrop') ||
-        target.closest('.bottom-viewer-container')
-      );
-    }
-  }));
 
   if (!isOpen && unmountOnClose) return null;
 
@@ -345,7 +368,7 @@ const BottomViewer = React.forwardRef<any, BottomViewerProps>(({
             flex: 1,
             overflow: "hidden",
             height: '100%',
-            willChange: 'transform',
+            willChange: 'transform',  // ✅ Hint browser to use GPU
           }}
         >
           <div
@@ -354,7 +377,7 @@ const BottomViewer = React.forwardRef<any, BottomViewerProps>(({
             className="bottom-viewer-content bottom-viewer-content-dynamic"
             onClick={e => e.stopPropagation()}
             style={{
-              contain: 'layout style paint',
+              contain: 'layout style paint',  // ✅ Explicit contain for safety
             }}
           >
             {currentContent}
@@ -364,16 +387,14 @@ const BottomViewer = React.forwardRef<any, BottomViewerProps>(({
 
       <Sheet.Backdrop
         {...({
-          onTap: handleBackdropTap,
-          onClick: handleBackdropTap,
+            onTap: handleBackdropTap,
+            onClick: handleBackdropTap, // allowed at runtime
         } as any)}
         style={{ cursor: backDrop ? 'pointer' : 'default' }}
       />
     </Sheet>
   );
 });
-
-BottomViewer.displayName = 'BottomViewer';
 
 // ==================== Controller Hook ====================
 interface Operation {
@@ -383,16 +404,16 @@ interface Operation {
   updateContent: (content: React.ReactNode) => void;
   replaceContent: (content: React.ReactNode) => void;
   clearContent: () => void;
-  isEventFromSheet: (event: React.MouseEvent | MouseEvent) => boolean;
+  isEventFromSheet: (event: React.MouseEvent | MouseEvent) => boolean; // NEW
 }
 
 const useBottomController = (): [
-  string,
-  Operation,
-  boolean,
-  React.Dispatch<React.SetStateAction<boolean>>,
-  React.RefObject<any>,
-  React.ReactNode
+  string,                     // bottom sheet id
+  Operation,                   // operations
+  boolean,                     // isOpen
+  React.Dispatch<React.SetStateAction<boolean>>, // setIsOpen
+  React.RefObject<any>, // ref to BottomViewer
+  React.ReactNode              // current content
 ] => {
   const [isOpen, setIsOpen] = useState(false);
   const [currentContent, setCurrentContent] = useState<React.ReactNode>(null);
@@ -428,6 +449,7 @@ const useBottomController = (): [
       }
     }, []),
 
+    // NEW: Expose the event checking function
     isEventFromSheet: useCallback((event: React.MouseEvent | MouseEvent) => {
       if (sheetRef.current?.isEventFromSheet) {
         return sheetRef.current.isEventFromSheet(event);
@@ -439,82 +461,26 @@ const useBottomController = (): [
   return [bottomViewId, operations, isOpen, setIsOpen, sheetRef, currentContent];
 };
 
-// ==================== Stable wrapper — defined ONCE at module level ====================
-// CRITICAL: Must live outside useBottomSheet. A component type defined inside a
-// hook body gets a new function reference on every render, so React unmounts and
-// remounts the entire subtree each time — causing the infinite flicker loop.
-interface BottomViewerWrapperInternalProps extends Omit<BottomViewerProps, 'id' | 'isOpen' | 'onClose' | 'children'> {
-  _stateRef: React.RefObject<{
-    id: string;
-    isOpen: boolean;
-    onClose: () => void;
-    children: React.ReactNode;
-    sheetRef: React.RefObject<any>;
-  }>;
-}
-
-// Reads live state from a ref — stable identity, always fresh values.
-const StableBottomViewerWrapper = React.memo(
-  React.forwardRef<any, BottomViewerWrapperInternalProps>(({ _stateRef, ...props }, _ref) => {
-    const s = _stateRef.current!;
-    return (
-      <BottomViewer
-        ref={s.sheetRef}
-        id={s.id}
-        isOpen={s.isOpen}
-        onClose={s.onClose}
-        unmountOnClose={false}
-        {...props}
-      >
-        {s.children}
-      </BottomViewer>
-    );
-  })
-);
-StableBottomViewerWrapper.displayName = 'StableBottomViewerWrapper';
-
 // ==================== Enhanced BottomSheet Hook ====================
 const useBottomSheet = (initialContent?: React.ReactNode) => {
-  const [id, operations, isOpen, , sheetRef, currentContent] = useBottomController();
+  const [id, operations, isOpen, setIsOpen, sheetRef, currentContent] = useBottomController();
   const [internalContent, setInternalContent] = useState<React.ReactNode>(initialContent || null);
 
+  // Sync internal content with controller content
   useEffect(() => {
     if (currentContent !== undefined) {
       setInternalContent(currentContent);
     }
   }, [currentContent]);
 
-  // Ref that always holds the latest state — StableBottomViewerWrapper reads
-  // from here so it sees current values without needing to be recreated.
-  const stateRef = useRef({
-    id,
-    isOpen,
-    onClose: operations.close,
-    children: internalContent,
-    sheetRef,
-  });
-
-  // Keep ref up-to-date on every render (synchronous, before any paint)
-  stateRef.current = {
-    id,
-    isOpen,
-    onClose: operations.close,
-    children: internalContent,
-    sheetRef,
-  };
-
   const enhancedOps = {
     ...operations,
     open: (content?: React.ReactNode) => {
       if (content) {
-        // Push content imperatively before isOpen flips so first frame is correct
-        if (sheetRef.current?.updateContent) {
-          sheetRef.current.updateContent(content);
-        }
         setInternalContent(content);
         operations.updateContent(content);
       }
-      if (!isOpen) operations.open();
+      if(!isOpen)operations.open();
     },
     updateContent: (content: React.ReactNode) => {
       setInternalContent(content);
@@ -530,15 +496,18 @@ const useBottomSheet = (initialContent?: React.ReactNode) => {
     },
   };
 
-  // Stable component reference — useCallback with [] gives permanent identity.
-  // stateRef.current is always up-to-date so fresh values are read on every render.
   const BottomViewerWrapper: React.FC<Omit<BottomViewerProps, 'id' | 'isOpen' | 'onClose' | 'children'>> =
-    useCallback(
-      (props: Omit<BottomViewerProps, 'id' | 'isOpen' | 'onClose' | 'children'>) =>
-        <StableBottomViewerWrapper _stateRef={stateRef} {...props} />,
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-      []
-    ) as any;
+    React.memo((props) => (
+      <BottomViewer
+        ref={sheetRef}
+        id={id}
+        isOpen={isOpen}
+        onClose={operations.close}
+        {...props}
+      >
+        {internalContent}
+      </BottomViewer>
+    ));
 
   return {
     isOpen,
@@ -548,7 +517,7 @@ const useBottomSheet = (initialContent?: React.ReactNode) => {
     updateContent: enhancedOps.updateContent,
     replaceContent: enhancedOps.replaceContent,
     clearContent: enhancedOps.clearContent,
-    isEventFromSheet: operations.isEventFromSheet,
+    isEventFromSheet: operations.isEventFromSheet, // NEW: Expose the event checker
     BottomViewer: BottomViewerWrapper,
     currentContent: internalContent,
   };

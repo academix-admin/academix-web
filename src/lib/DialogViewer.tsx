@@ -510,6 +510,7 @@
 
 // export { DialogViewer, useDialogController, useDialog };
 // export default DialogViewer;
+
 'use client';
 
 import { useEffect, useState, useRef, useCallback } from 'react';
@@ -941,9 +942,45 @@ const useDialogController = (): [
   return [dialogId, operations, isOpen, setIsOpen, dialogRef, currentContent];
 };
 
+// ==================== Stable wrapper — defined ONCE at module level ====================
+// CRITICAL: This must live outside of useDialog. Defining a component type
+// inside a hook body creates a new function reference on every render, which
+// makes React treat it as a different component type and unmount/remount the
+// DOM node on every render — causing the infinite flicker loop.
+interface DialogViewerWrapperProps extends Omit<DialogViewerProps, 'id' | 'isOpen' | 'onClose' | 'customView'> {
+  _stateRef: React.RefObject<{
+    id: string;
+    isOpen: boolean;
+    onClose: () => void;
+    customView: React.ReactNode;
+    dialogRef: React.RefObject<any>;
+  }>;
+}
+
+// The wrapper reads live state from a ref so it never needs to re-create itself.
+// It re-renders only when its own props change (passed from the usage site like
+// title, buttons, layoutProp etc.), not when hook-internal state cycles.
+const StableDialogViewerWrapper = React.memo(
+  React.forwardRef<any, DialogViewerWrapperProps>(({ _stateRef, ...props }, _ref) => {
+    const s = _stateRef.current!;
+    return (
+      <DialogViewer
+        ref={s.dialogRef}
+        id={s.id}
+        isOpen={s.isOpen}
+        onClose={s.onClose}
+        customView={s.customView}
+        unmountOnClose={false}
+        {...props}
+      />
+    );
+  })
+);
+StableDialogViewerWrapper.displayName = 'StableDialogViewerWrapper';
+
 // ==================== Enhanced Dialog Hook ====================
 const useDialog = (initialContent?: React.ReactNode) => {
-  const [id, operations, isOpen, setIsOpen, dialogRef, currentContent] = useDialogController();
+  const [id, operations, isOpen, , dialogRef, currentContent] = useDialogController();
   const [internalContent, setInternalContent] = useState<React.ReactNode>(initialContent || null);
 
   useEffect(() => {
@@ -952,12 +989,32 @@ const useDialog = (initialContent?: React.ReactNode) => {
     }
   }, [currentContent]);
 
+  // A ref that always holds the latest state values.
+  // StableDialogViewerWrapper reads from this ref, so it sees current values
+  // on every render of its *parent* without needing to be recreated itself.
+  const stateRef = useRef({
+    id,
+    isOpen,
+    onClose: operations.close,
+    customView: internalContent,
+    dialogRef,
+  });
+
+  // Keep the ref up-to-date on every render
+  stateRef.current = {
+    id,
+    isOpen,
+    onClose: operations.close,
+    customView: internalContent,
+    dialogRef,
+  };
+
   const enhancedOps = {
     ...operations,
     open: (content?: React.ReactNode) => {
       if (content) {
-        // FIX: Set content first via the ref so the component has it
-        // before isOpen flips to true — eliminates the "empty flash" on open.
+        // Push content into the component imperatively before flipping isOpen,
+        // so the first rendered frame already has the right content.
         if (dialogRef.current?.updateContent) {
           dialogRef.current.updateContent(content);
         }
@@ -976,23 +1033,11 @@ const useDialog = (initialContent?: React.ReactNode) => {
     },
   };
 
-  // FIX: Use unmountOnClose=false so the DOM node persists between open/close
-  // cycles. This prevents the full remount that causes the flicker when
-  // open() is called while content is already being set.
   const DialogViewerWrapper: React.FC<Omit<DialogViewerProps, 'id' | 'isOpen' | 'onClose' | 'customView'>> =
-    React.memo((props) => (
-      <DialogViewer
-        ref={dialogRef}
-        id={id}
-        isOpen={isOpen}
-        onClose={operations.close}
-        customView={internalContent}
-        unmountOnClose={false}
-        {...props}
-      />
-    ));
-
-  DialogViewerWrapper.displayName = 'DialogViewerWrapper';
+    useCallback(
+      (props: Omit<DialogViewerProps, 'id' | 'isOpen' | 'onClose' | 'customView'>) => <StableDialogViewerWrapper _stateRef={stateRef} {...props} />,
+      []
+    ) as any;
 
   return {
     isOpen,
