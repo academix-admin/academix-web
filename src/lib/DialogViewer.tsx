@@ -1646,7 +1646,7 @@ const useDialog = (initialContent?: React.ReactNode) => {
         setInternalContent(content);
         operations.updateContent(content);
       }
-      if (!isOpen) operations.open();
+      operations.open();
     },
     updateContent: (content: React.ReactNode) => {
       setInternalContent(content);
