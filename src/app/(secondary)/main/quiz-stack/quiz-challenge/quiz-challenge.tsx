@@ -238,16 +238,16 @@ export default function QuizChallenge(props: QuizChallengeProps) {
 
                 if (engagement.not_set) {
                     setPinErrorType('not_set');
-                    if (!pinErrorDialog.isOpen) {
+                    // if (!pinErrorDialog.isOpen) {
                         pinErrorDialog.open(
                             <div style={{ textAlign: 'center' }}>
                                 <p>{t('pin_not_set_message')}</p>
                             </div>
                         );
-                    }
+                    // }
                 } else if ((engagement.attempts_left ?? 0) > 0) {
                     setPinErrorType('incorrect');
-                    if (!pinErrorDialog.isOpen) {
+                    // if (!pinErrorDialog.isOpen) {
                         pinErrorDialog.open(
                             <div style={{ textAlign: 'center' }}>
                                 <p>{t('incorrect_pin_message')}</p>
@@ -256,10 +256,10 @@ export default function QuizChallenge(props: QuizChallengeProps) {
                                 </p>
                             </div>
                         );
-                    }
+                    // }
                 } else if (engagement.locked_until) {
                     setPinErrorType('locked');
-                    if (!pinErrorDialog.isOpen) {
+                    // if (!pinErrorDialog.isOpen) {
                         pinErrorDialog.open(
                             <div style={{ textAlign: 'center' }}>
                                 <p style={{ color: '#FF3B30' }}>{t('pin_locked_message')}</p>
@@ -268,7 +268,7 @@ export default function QuizChallenge(props: QuizChallengeProps) {
                                 </p>
                             </div>
                         );
-                    }
+                    // }
                 }else{
                     
                 }
