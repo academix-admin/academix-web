@@ -799,6 +799,16 @@ const DialogViewer = React.forwardRef<any, DialogViewerProps>(({
     if (closeOnBackdrop) onClose();
   }, [closeOnBackdrop, onClose]);
 
+  const handleBackdropWheel = useCallback((e: React.WheelEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
+
+  const handleBackdropTouchMove = useCallback((e: React.TouchEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
+
   const handleButtonClick = useCallback((button: DialogButton) => {
     if (button.onClick) button.onClick();
     else onClose();
@@ -833,6 +843,8 @@ const DialogViewer = React.forwardRef<any, DialogViewerProps>(({
     <div
       className={`dialog-overlay ${isOpen ? 'dialog-overlay-animate' : ''}`}
       onClick={handleBackdropClick}
+      onWheel={handleBackdropWheel}
+      onTouchMove={handleBackdropTouchMove}
       // FIX: Use visibility + pointer-events instead of display:none to avoid
       // layout remount flicker when unmountOnClose=false
       style={{
