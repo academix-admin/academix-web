@@ -412,7 +412,7 @@ const useBottomController = (): [
   Operation,                   // operations
   boolean,                     // isOpen
   React.Dispatch<React.SetStateAction<boolean>>, // setIsOpen
-  React.MutableRefObject<any>, // ref to BottomViewer
+  React.RefObject<any>, // ref to BottomViewer
   React.ReactNode              // current content
 ] => {
   const [isOpen, setIsOpen] = useState(false);

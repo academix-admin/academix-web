@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useEffect, useRef, useCallback } from "react";
 
 // ==================== Types ====================
@@ -207,7 +209,7 @@ const useInjectStyles = () => {
   useEffect(() => {
     const styleId = "dialog-viewer-styles";
     if (document.getElementById(styleId)) return;
-    
+
     const styleTag = document.createElement("style");
     styleTag.id = styleId;
     styleTag.innerHTML = createStyles();
@@ -259,13 +261,17 @@ const DialogViewer = React.forwardRef<any, DialogViewerProps>(({
       }
       isControlledInternally.current = false;
     }
+
     return () => {
       document.body.classList.remove('body-dialog-open');
     };
   }, [isOpen]);
 
   const handleBackdropClick = useCallback((e: React.MouseEvent) => {
-    if (e.target === e.currentTarget && closeOnBackdrop) {
+    if (e && typeof e.stopPropagation === 'function') {
+      e.stopPropagation();
+    }
+    if (closeOnBackdrop) {
       onClose();
     }
   }, [closeOnBackdrop, onClose]);
@@ -293,20 +299,31 @@ const DialogViewer = React.forwardRef<any, DialogViewerProps>(({
   if (!isOpen && unmountOnClose) return null;
   if (!isOpen && !isAnimating) return null;
 
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if ((e.target as HTMLElement).classList.contains("dialog-container")) {
+        e.stopPropagation(); // <-- stops DOM bubbling
+        e.stopImmediatePropagation(); // <-- stops DOM bubbling
+      }
+    };
+    document.addEventListener("click", handler, true); // capture phase
+    return () => document.removeEventListener("click", handler, true);
+  }, []);
+
   const defaultButtons: DialogButton[] = buttons || [
     { text: "OK", variant: "primary" }
   ];
 
   return (
-    <div 
+    <div
       className={`dialog-overlay ${isAnimating ? 'dialog-entering' : ''}`}
       onClick={handleBackdropClick}
-      style={{ 
+      style={{
         zIndex,
         display: isOpen ? 'flex' : 'none'
       }}
     >
-      <div 
+      <div
         ref={dialogRef}
         className="dialog-container"
         tabIndex={-1}
