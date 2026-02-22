@@ -40,8 +40,12 @@ export default function HomeStatistics({ onStateChange }: ComponentStateProps) {
   if (!userEngagement) return null;
 
   const questions = userEngagement.userEngagementProgressQuestions;
-  const quiz = userEngagement.userEngagementProgressQuizCount;
+  const quiz = userEngagement.userEngagementProgressWinCount;
   const time = userEngagement.userEngagementProgressTime;
+
+  const tQuestions = userEngagement.userEngagementTotalQuestions;
+  const tQuiz = userEngagement.userEngagementProgressQuizCount;
+  const tTime = userEngagement.userEngagementTotalTime;
 
   const wrapNumber = (number: number) => {
     if (number < 1000) {
@@ -97,8 +101,9 @@ export default function HomeStatistics({ onStateChange }: ComponentStateProps) {
               />
             </div>
             <div className={styles.cardContent}>
-              <span className={styles.cardLabel}>{t('questions_text')}</span>
               <span className={styles.cardValue}>{wrapNumber(questions)}</span>
+              <span className={styles.cardLabel}>{t('questions_text')}</span>
+              <span className={styles.cardValue}>{wrapNumber(tQuestions)}</span>
             </div>
           </div>
 
@@ -113,8 +118,9 @@ export default function HomeStatistics({ onStateChange }: ComponentStateProps) {
               />
             </div>
             <div className={styles.cardContent}>
-              <span className={styles.cardLabel}>{t('quizzes_text')}</span>
               <span className={styles.cardValue}>{wrapNumber(quiz)}</span>
+              <span className={styles.cardLabel}>{t('quizzes_text')}</span>
+              <span className={styles.cardValue}>{wrapNumber(tQuiz)}</span>
             </div>
           </div>
 
@@ -129,8 +135,9 @@ export default function HomeStatistics({ onStateChange }: ComponentStateProps) {
               />
             </div>
             <div className={styles.cardContent}>
-              <span className={styles.cardLabel}>{t('time_text')}</span>
               <span className={styles.cardValue}>{formatTime(time)}</span>
+              <span className={styles.cardLabel}>{t('time_text')}</span>
+              <span className={styles.cardValue}>{formatTime(tTime)}</span>
             </div>
           </div>
         </div>

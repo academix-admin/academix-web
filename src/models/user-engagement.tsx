@@ -19,6 +19,9 @@ interface BackendHomeEngagementProgress {
 }
 
 interface BackendUserEngagementModel {
+  user_engagement_total_time: number;
+  user_engagement_total_questions: number;
+  user_engagement_progress_win_count: number;
   user_engagement_progress_time: number;
   user_engagement_progress_questions: number;
   user_engagement_progress_quiz_count: number;
@@ -26,12 +29,18 @@ interface BackendUserEngagementModel {
 }
 
 export class UserEngagementModel {
+  userEngagementTotalTime: number;
+  userEngagementTotalQuestions: number;
+  userEngagementProgressWinCount: number;
   userEngagementProgressTime: number;
   userEngagementProgressQuestions: number;
   userEngagementProgressQuizCount: number;
   userEngagementProgressPointsDetails: HomeEngagementProgress;
 
   constructor(data?: BackendUserEngagementModel | null) {
+    this.userEngagementTotalTime = data?.user_engagement_total_time ?? 0;
+    this.userEngagementTotalQuestions = data?.user_engagement_total_questions ?? 0;
+    this.userEngagementProgressWinCount = data?.user_engagement_progress_win_count ?? 0;
     this.userEngagementProgressTime = data?.user_engagement_progress_time ?? 0;
     this.userEngagementProgressQuestions = data?.user_engagement_progress_questions ?? 0;
     this.userEngagementProgressQuizCount = data?.user_engagement_progress_quiz_count ?? 0;
@@ -60,6 +69,18 @@ export class UserEngagementModel {
 
   copyWith(data: Partial<UserEngagementModel>): UserEngagementModel {
     return new UserEngagementModel({
+      user_engagement_total_time:
+        data.userEngagementTotalTime !== undefined
+          ? data.userEngagementTotalTime
+          : this.userEngagementTotalTime,
+      user_engagement_total_questions:
+        data.userEngagementTotalQuestions !== undefined
+          ? data.userEngagementTotalQuestions
+          : this.userEngagementTotalQuestions,
+      user_engagement_progress_win_count:
+        data.userEngagementProgressWinCount !== undefined
+          ? data.userEngagementProgressWinCount
+          : this.userEngagementProgressWinCount,
       user_engagement_progress_time:
         data.userEngagementProgressTime !== undefined
           ? data.userEngagementProgressTime
@@ -91,10 +112,14 @@ export class UserEngagementModel {
             current_points: this.userEngagementProgressPointsDetails.currentPoints,
             engagement_levels_id: this.userEngagementProgressPointsDetails.engagementLevelsId,
             points_to_next_level: this.userEngagementProgressPointsDetails.pointsToNextLevel,
-            current_progress_percent: this.userEngagementProgressPointsDetails.currentProgressPercent,
-            next_engagement_levels_id: this.userEngagementProgressPointsDetails.nextEngagementLevelsId,
-            engagement_levels_identity: this.userEngagementProgressPointsDetails.engagementLevelsIdentity,
-            next_engagement_levels_identity: this.userEngagementProgressPointsDetails.nextEngagementLevelsIdentity,
+            current_progress_percent:
+              this.userEngagementProgressPointsDetails.currentProgressPercent,
+            next_engagement_levels_id:
+              this.userEngagementProgressPointsDetails.nextEngagementLevelsId,
+            engagement_levels_identity:
+              this.userEngagementProgressPointsDetails.engagementLevelsIdentity,
+            next_engagement_levels_identity:
+              this.userEngagementProgressPointsDetails.nextEngagementLevelsIdentity,
           }
         : {
             current_points: 0,

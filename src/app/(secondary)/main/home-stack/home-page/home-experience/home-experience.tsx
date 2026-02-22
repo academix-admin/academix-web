@@ -50,7 +50,6 @@ export default function HomeExperience({ onStateChange }: ComponentStateProps) {
         if (error || data?.error) throw error || data.error;
 
         const engagement = new UserEngagementModel(data.user_engagement_details);
-
         if (data.status === "EngagementStatus.success") {
           set(engagement);
                 onStateChange?.('data');
