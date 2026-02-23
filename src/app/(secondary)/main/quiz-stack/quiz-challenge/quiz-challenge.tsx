@@ -76,7 +76,8 @@ export default function QuizChallenge(props: QuizChallengeProps) {
     const [selectedRedeemCodeModel, setSelectedRedeemCodeModel] = useState<RedeemCodeModel | null>(null);
     const [selectedSkip, setSelectedSkip] = useState(false);
     const [quizLoading, setQuizLoading] = useState(false);
-    const [error, setError] = useState('');
+
+    const errorDialog = useDialog();
 
 
     const [withdrawBottomViewerId, withdrawBottomController, withdrawBottomIsOpen, , withdrawBottomRef] = useBottomController();
@@ -158,7 +159,6 @@ export default function QuizChallenge(props: QuizChallengeProps) {
 
         try {
             setQuizLoading(true);
-            setError('');
             const location = await checkLocation();
             const paramatical = await getParamatical(
                 userData.usersId,
@@ -169,7 +169,11 @@ export default function QuizChallenge(props: QuizChallengeProps) {
 
             if (!paramatical) {
                 setQuizLoading(false);
-                setError(t('error_occurred'));
+                errorDialog.open(
+                    <div style={{ textAlign: 'center' }}>
+                        <p>{t('error_occurred')}</p>
+                    </div>
+                );
                 return;
             }
 
@@ -184,7 +188,11 @@ export default function QuizChallenge(props: QuizChallengeProps) {
             if (!feature) {
                 setQuizLoading(false);
                 console.log('feature not available');
-                setError(t('feature_unavailable'));
+                errorDialog.open(
+                    <div style={{ textAlign: 'center' }}>
+                        <p>{t('feature_unavailable')}</p>
+                    </div>
+                );
                 return;
             }
 
@@ -194,7 +202,11 @@ export default function QuizChallenge(props: QuizChallengeProps) {
             if (!jwt) {
                 console.log('no JWT token');
                 setQuizLoading(false);
-                setError(t('error_occurred'));
+                errorDialog.open(
+                    <div style={{ textAlign: 'center' }}>
+                        <p>{t('error_occurred')}</p>
+                    </div>
+                );
                 return;
             }
             const requestData = {
@@ -274,7 +286,11 @@ export default function QuizChallenge(props: QuizChallengeProps) {
                     
                 }
             } else {
-                setError(status);
+                errorDialog.open(
+                    <div style={{ textAlign: 'center' }}>
+                        <p>{status}</p>
+                    </div>
+                );
             }
 
             setQuizLoading(false);
@@ -282,7 +298,11 @@ export default function QuizChallenge(props: QuizChallengeProps) {
         } catch (error: any) {
             console.error("Top up error:", error);
             setQuizLoading(false);
-            setError(t('error_occurred'));
+            errorDialog.open(
+                <div style={{ textAlign: 'center' }}>
+                    <p>{t('error_occurred')}</p>
+                </div>
+            );
         }
     };
 
@@ -478,7 +498,6 @@ export default function QuizChallenge(props: QuizChallengeProps) {
                         </div>
 
                         {/* Pay Button */}
-                        {error && <p className={`${styles.errorText} ${styles[`errorText_${theme}`]}`}>{error}</p>}
                         <button
                             onClick={getUserPin}
                             type="button"
@@ -514,6 +533,23 @@ export default function QuizChallenge(props: QuizChallengeProps) {
                 showCancel={true}
                 cancelText={t('cancel_text')}
                 closeOnBackdrop={false}
+                layoutProp={{
+                    backgroundColor: theme === 'light' ? '#fff' : '#121212',
+                    margin: '16px 16px'
+                }}
+            />
+
+            <errorDialog.DialogViewer
+                title={t('error_text')}
+                buttons={[
+                    {
+                        text: t('ok_text'),
+                        variant: 'primary',
+                        onClick: () => errorDialog.close()
+                    }
+                ]}
+                showCancel={false}
+                closeOnBackdrop={true}
                 layoutProp={{
                     backgroundColor: theme === 'light' ? '#fff' : '#121212',
                     margin: '16px 16px'

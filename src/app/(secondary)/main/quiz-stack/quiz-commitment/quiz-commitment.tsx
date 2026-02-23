@@ -703,7 +703,7 @@ export default function QuizCommitment(props: QuizChallengeProps) {
               </div>
             </div>
 
-            {error && <p className={`${styles.errorText} ${styles[`errorText_${theme}`]}`}>{error}</p>}
+
 
             {/* Pay Button */}
             <button

@@ -68,10 +68,10 @@ export default function TopUpPage() {
   const [currentTransactionId, setCurrentTransactionId] = useState<string | null>(null);
   const [pinErrorType, setPinErrorType] = useState<'not_set' | 'incorrect' | 'locked' | null>(null);
 
-  const [error, setError] = useState('');
-  const [continueState, setContinueState] = useState('initial');
   const [topUpLoading, setTopUpLoading] = useState(false);
   const redirectController = useRedirectController();
+
+  const errorDialog = useDialog();
 
   // derived booleans
   const showMethods = !!selectedWalletData && amount > 0 && amount >= (selectedWalletData.paymentWalletMin || 0);
@@ -101,7 +101,6 @@ export default function TopUpPage() {
       // reset if amount is invalid for current wallet
       setSelectedMethodData(null);
       setSelectedWalletProfileData(null);
-      setError('');
     }
   }, [selectedWalletData, isTop]);
 
@@ -114,7 +113,6 @@ export default function TopUpPage() {
       setSelectedWalletProfileData(null);
       topUpBottomController.close();
       setSelectedWalletData(wallet);
-      setError('');
     }
   }, [selectedWalletData, clearMethod, clearProfile, isTop]);
 
@@ -123,7 +121,6 @@ export default function TopUpPage() {
     if (method && selectedMethodData?.paymentMethodId !== method.paymentMethodId && isTop) {
       clearProfile();
       setSelectedWalletProfileData(null);
-      setError('');
       topUpBottomController.close();
       setSelectedMethodData(method);
     }
@@ -132,7 +129,6 @@ export default function TopUpPage() {
   /** profile handler */
   const handleProfileData = useCallback((profile: PaymentProfileModel) => {
     if (profile && selectedWalletProfileData?.paymentProfileId !== profile.paymentProfileId) {
-      setError('');
       topUpBottomController.close();
       setSelectedWalletProfileData(profile);
     }
@@ -149,6 +145,8 @@ export default function TopUpPage() {
     if(!selectedWalletData || !selectedMethodData)return;
     nav.push('new_profile', {  walletId: selectedWalletData.paymentWalletId, methodId: selectedMethodData.paymentMethodId, profileType: 'ProfileType.buy'});
   };
+
+  const [continueState, setContinueState] = useState('initial');
 
   const handleSubmit = async () => {
     if (!userData) return;
@@ -280,7 +278,6 @@ export default function TopUpPage() {
 
     try {
       setTopUpLoading(true);
-      setError('');
       const location = await checkLocation();
       const paramatical = await getParamatical(
         userData.usersId,
@@ -291,7 +288,11 @@ export default function TopUpPage() {
 
       if (!paramatical) {
         setTopUpLoading(false);
-        setError(t('error_occurred'));
+        errorDialog.open(
+          <div style={{ textAlign: 'center' }}>
+            <p>{t('error_occurred')}</p>
+          </div>
+        );
         return;
       }
 
@@ -306,7 +307,11 @@ export default function TopUpPage() {
       if (!feature) {
         setTopUpLoading(false);
         console.log('feature not available');
-        setError(t('feature_unavailable'));
+        errorDialog.open(
+          <div style={{ textAlign: 'center' }}>
+            <p>{t('feature_unavailable')}</p>
+          </div>
+        );
         return;
       }
 
@@ -316,7 +321,11 @@ export default function TopUpPage() {
       if (!jwt) {
         console.log('no JWT token');
         setTopUpLoading(false);
-        setError(t('error_occurred') );
+        errorDialog.open(
+          <div style={{ textAlign: 'center' }}>
+            <p>{t('error_occurred')}</p>
+          </div>
+        );
         return;
       }
 
@@ -393,7 +402,11 @@ export default function TopUpPage() {
     } catch (error: any) {
       console.error("Top up error:", error);
       setTopUpLoading(false);
-      setError(t('error_occurred'));
+      errorDialog.open(
+        <div style={{ textAlign: 'center' }}>
+          <p>{t('error_occurred')}</p>
+        </div>
+      );
     }
   };
 
@@ -655,7 +668,6 @@ export default function TopUpPage() {
               </div>
 
               {/* Pay Button */}
-              {error && <p className={`${styles.errorText} ${styles[`errorText_${theme}`]}`}>{error}</p>}
               <button
                 onClick={getUserPin}
                 type="button"
@@ -736,6 +748,23 @@ export default function TopUpPage() {
                 await nav.pushAndPopUntil('view_transaction',(entry) => entry.key === 'payment_page', {transactionId: currentTransactionId});
               }
             }
+          }
+        ]}
+        showCancel={false}
+        closeOnBackdrop={true}
+        layoutProp={{
+          backgroundColor: theme === 'light' ? '#fff' : '#121212',
+          margin: '16px 16px'
+        }}
+      />
+
+      <errorDialog.DialogViewer
+        title={t('error_text')}
+        buttons={[
+          {
+            text: t('ok_text'),
+            variant: 'primary',
+            onClick: () => errorDialog.close()
           }
         ]}
         showCancel={false}

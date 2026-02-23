@@ -67,9 +67,9 @@ export default function WithdrawPage() {
   const [currentTransactionId, setCurrentTransactionId] = useState<string | null>(null);
   const [pinErrorType, setPinErrorType] = useState<'not_set' | 'incorrect' | 'locked' | null>(null);
 
-  const [error, setError] = useState('');
-  const [continueState, setContinueState] = useState('initial');
   const [withdrawLoading, setWithdrawLoading] = useState(false);
+
+  const errorDialog = useDialog();
 
   // derived booleans
   const showMethods = !!selectedWalletData && amount > 0 && amount >= (selectedWalletData.paymentWalletMin || 0);
@@ -99,7 +99,6 @@ export default function WithdrawPage() {
       // reset if amount is invalid for current wallet
       setSelectedMethodData(null);
       setSelectedWalletProfileData(null);
-      setError('');
     }
   }, [selectedWalletData, isTop]);
 
@@ -112,7 +111,6 @@ export default function WithdrawPage() {
       setSelectedWalletProfileData(null);
       withdrawBottomController.close();
       setSelectedWalletData(wallet);
-      setError('');
     }
   }, [selectedWalletData, clearMethod, clearProfile, isTop]);
 
@@ -121,7 +119,6 @@ export default function WithdrawPage() {
     if (method && selectedMethodData?.paymentMethodId !== method.paymentMethodId && isTop) {
       clearProfile();
       setSelectedWalletProfileData(null);
-      setError('');
       withdrawBottomController.close();
       setSelectedMethodData(method);
     }
@@ -130,7 +127,6 @@ export default function WithdrawPage() {
   /** profile handler */
   const handleProfileData = useCallback((profile: PaymentProfileModel) => {
     if (profile && selectedWalletProfileData?.paymentProfileId !== profile.paymentProfileId) {
-      setError('');
       withdrawBottomController.close();
       setSelectedWalletProfileData(profile);
     }
@@ -147,6 +143,8 @@ export default function WithdrawPage() {
     if(!selectedWalletData || !selectedMethodData)return;
     nav.push('new_profile', {  walletId: selectedWalletData.paymentWalletId, methodId: selectedMethodData.paymentMethodId, profileType: 'ProfileType.sell'});
   };
+
+  const [continueState, setContinueState] = useState('initial');
 
   const handleSubmit = async () => {
     if (!userData) return;
@@ -278,7 +276,6 @@ export default function WithdrawPage() {
 
     try {
       setWithdrawLoading(true);
-      setError('');
       const location = await checkLocation();
       const paramatical = await getParamatical(
         userData.usersId,
@@ -289,7 +286,11 @@ export default function WithdrawPage() {
 
       if (!paramatical) {
         setWithdrawLoading(false);
-        setError(t('error_occurred'));
+        errorDialog.open(
+          <div style={{ textAlign: 'center' }}>
+            <p>{t('error_occurred')}</p>
+          </div>
+        );
         return;
       }
 
@@ -304,7 +305,11 @@ export default function WithdrawPage() {
       if (!feature) {
         setWithdrawLoading(false);
         console.log('feature not available');
-        setError(t('feature_unavailable'));
+        errorDialog.open(
+          <div style={{ textAlign: 'center' }}>
+            <p>{t('feature_unavailable')}</p>
+          </div>
+        );
         return;
       }
 
@@ -314,7 +319,11 @@ export default function WithdrawPage() {
       if (!jwt) {
         console.log('no JWT token');
         setWithdrawLoading(false);
-        setError(t('error_occurred') );
+        errorDialog.open(
+          <div style={{ textAlign: 'center' }}>
+            <p>{t('error_occurred')}</p>
+          </div>
+        );
         return;
       }
 
@@ -391,7 +400,11 @@ export default function WithdrawPage() {
     } catch (error: any) {
       console.error("Withdraw error:", error);
       setWithdrawLoading(false);
-      setError(t('error_occurred') || 'An error occurred');
+      errorDialog.open(
+        <div style={{ textAlign: 'center' }}>
+          <p>{t('error_occurred')}</p>
+        </div>
+      );
     }
   };
 
@@ -663,8 +676,6 @@ export default function WithdrawPage() {
               </div>
 
               {/* Pay Button */}
-              {error && <p className={`${styles.errorText} ${styles[`errorText_${theme}`]}`}>{error}</p>}
-              
               <button
                 onClick={getUserPin}
                 type="button"
@@ -741,6 +752,23 @@ export default function WithdrawPage() {
                 await nav.pushAndPopUntil('view_transaction',(entry) => entry.key === 'payment_page', {transactionId: currentTransactionId});
               }
             }
+          }
+        ]}
+        showCancel={false}
+        closeOnBackdrop={true}
+        layoutProp={{
+          backgroundColor: theme === 'light' ? '#fff' : '#121212',
+          margin: '16px 16px'
+        }}
+      />
+
+      <errorDialog.DialogViewer
+        title={t('error_text')}
+        buttons={[
+          {
+            text: t('ok_text'),
+            variant: 'primary',
+            onClick: () => errorDialog.close()
           }
         ]}
         showCancel={false}
