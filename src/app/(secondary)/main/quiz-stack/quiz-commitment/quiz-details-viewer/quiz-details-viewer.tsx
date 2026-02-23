@@ -44,9 +44,23 @@ export default function QuizDetailsViewer({ topicsModel }: QuizDetailsViewerProp
 
   return (
     <div className={styles.experienceContainer}>
-      <h2 className={`${styles.details} ${styles[`details_${theme}`]}`}>
-        {topicsModel.topicsIdentity}
-      </h2>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+        <h2 className={`${styles.details} ${styles[`details_${theme}`]}`}>
+          {topicsModel.topicsIdentity}
+        </h2>
+        {topicsModel.quizPool?.poolsLocale && (
+          <span style={{ 
+            padding: '4px 8px', 
+            borderRadius: '6px', 
+            fontSize: '12px', 
+            fontWeight: 600,
+            backgroundColor: theme === 'light' ? '#e3f2fd' : '#1e3a5f',
+            color: theme === 'light' ? '#1976d2' : '#64b5f6'
+          }}>
+            {topicsModel.quizPool.poolsLocale.toUpperCase()}
+          </span>
+        )}
+      </div>
           <div className={styles.codeContainer} onClick={() => codeBottomController.open()}>
             <div className={styles.codeIcon}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">

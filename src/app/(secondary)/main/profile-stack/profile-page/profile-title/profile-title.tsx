@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import styles from './profile-title.module.css';
 import { useLanguage } from '@/context/LanguageContext';
@@ -10,21 +10,45 @@ import { useUserData } from '@/lib/stacks/user-stack';
 import { useAwaitableRouter } from "@/hooks/useAwaitableRouter";
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { StateStack } from '@/lib/state-stack';
+import { useDialog } from '@/lib/DialogViewer';
 
 export default function ProfileTitle({ onStateChange }: ComponentStateProps) {
   const { theme } = useTheme();
   const { t, lang } = useLanguage();
   const { userData, userData$, __meta } = useUserData();
   const { replaceAndWait } = useAwaitableRouter();
+  const signOutDialog = useDialog();
+  const [signingOut, setSigningOut] = useState(false);
 
- // ✅ After
   useEffect(() => {
-  onStateChange?.("data");
-}, []);
+    onStateChange?.("data");
+  }, [onStateChange]);
 
   const handleSignOut = async () => {
+    signOutDialog.open(
+      <div style={{ textAlign: 'center' }}>
+        <p>{t('confirm_sign_out')}</p>
+        {signingOut && (
+          <div style={{ marginTop: '16px' }}>
+            <div style={{ 
+              display: 'inline-block',
+              width: '24px',
+              height: '24px',
+              border: '3px solid #f3f3f3',
+              borderTop: '3px solid #007AFF',
+              borderRadius: '50%',
+              animation: 'spin 1s linear infinite'
+            }} />
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const confirmSignOut = async () => {
     if (userData) {
       try {
+        setSigningOut(true);
         await supabaseBrowser.auth.signOut();
         await StateStack.core.clearScope('secondary_flow');
         await StateStack.core.clearScope('mission_flow');
@@ -35,6 +59,7 @@ export default function ProfileTitle({ onStateChange }: ComponentStateProps) {
         await replaceAndWait("/");
       } catch (error) {
         console.error('Sign out error:', error);
+        setSigningOut(false);
       }
     }
   };
@@ -55,6 +80,32 @@ export default function ProfileTitle({ onStateChange }: ComponentStateProps) {
         </svg>
 
       </div>
+
+      <signOutDialog.DialogViewer
+        title={t('sign_out')}
+        buttons={[
+          {
+            text: signingOut ? '' : t('yes_text'),
+            variant: 'primary',
+            loading: signingOut,
+            onClick: async () => {
+              await confirmSignOut();
+            }
+          },
+          {
+            text: t('no_text'),
+            variant: 'secondary',
+            disabled: signingOut,
+            onClick: () => signOutDialog.close()
+          }
+        ]}
+        showCancel={false}
+        closeOnBackdrop={!signingOut}
+        layoutProp={{
+          backgroundColor: theme === 'light' ? '#fff' : '#121212',
+          margin: '16px 16px'
+        }}
+      />
     </div>
   );
 }

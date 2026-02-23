@@ -30,6 +30,7 @@ import { useTransactionModel } from '@/lib/stacks/transactions-stack';
 import { useAwaitableRouter } from "@/hooks/useAwaitableRouter";
 import QuizStarter from '../quiz-starter/quiz-starter'
 import { useQuizDisplay } from "@/lib/stacks/quiz-display-stack";
+import { useDialog } from '@/lib/DialogViewer';
 
 interface LeaveQuizResponse {
   status: string;
@@ -398,6 +399,7 @@ function CurrentQuizCard({ topic, getInitials, onClick, onLeave, showContinue }:
   const [codeBottomViewerId, codeBottomController, codeBottomIsOpen] = useBottomController();
   const [quizStarterBottomViewerId, quizStarterBottomController, quizStarterBottomIsOpen] = useBottomController();
   const [leaving, setLeaving] = useState(false);
+  const leaveDialog = useDialog();
 
   const { userData, userData$, __meta } = useUserData();
 
@@ -503,13 +505,22 @@ function CurrentQuizCard({ topic, getInitials, onClick, onLeave, showContinue }:
     }
   };
 
-   const handleLeaveClick = async (e: React.MouseEvent) => {
+  const handleLeaveClick = async (e: React.MouseEvent) => {
       e.stopPropagation();
+      leaveDialog.open(
+        <div style={{ textAlign: 'center' }}>
+          <p>{t('confirm_leave_quiz')}</p>
+        </div>
+      );
+    };
+
+  const confirmLeave = async () => {
       setLeaving(true);
       try {
         await onLeave();
       } finally {
         setLeaving(false);
+        leaveDialog.close();
       }
     };
 
@@ -592,6 +603,14 @@ function CurrentQuizCard({ topic, getInitials, onClick, onLeave, showContinue }:
                 <span className={styles.challengeIdentity}>
                   {topic.quizPool?.challengeModel?.challengeIdentity?.toUpperCase()}
                 </span>
+                {topic.quizPool?.poolsLocale && (
+                  <>
+                    <span className={styles.progressDot}>●</span>
+                    <span className={styles.challengeIdentity}>
+                      {topic.quizPool.poolsLocale.toUpperCase()}
+                    </span>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -644,6 +663,32 @@ function CurrentQuizCard({ topic, getInitials, onClick, onLeave, showContinue }:
           </button>}
         </div>
       </div>
+
+      <leaveDialog.DialogViewer
+        title={t('leave_quiz')}
+        buttons={[
+          {
+            text: leaving ? '' : t('yes_text'),
+            variant: 'primary',
+            loading: leaving,
+            onClick: async () => {
+              await confirmLeave();
+            }
+          },
+          {
+            text: t('no_text'),
+            variant: 'secondary',
+            disabled: leaving,
+            onClick: () => leaveDialog.close()
+          }
+        ]}
+        showCancel={false}
+        closeOnBackdrop={!leaving}
+        layoutProp={{
+          backgroundColor: theme === 'light' ? '#fff' : '#121212',
+          margin: '16px 16px'
+        }}
+      />
 
       {/* QR Code Bottom Sheet */}
       <BottomViewer

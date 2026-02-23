@@ -333,9 +333,23 @@ function TopicCard({ topic, theme, getInitials, formatDate, onClick }: TopicCard
             <h3 className={`${styles.topicTitle} ${styles[`topicTitle_${theme}`]}`}>
               {capitalize(topic.topicsIdentity)}
             </h3>
-            <span className={`${styles.topicDate} ${styles[`topicDate_${theme}`]}`}>
-              {formatDate(topic.topicsCreatedAt)}
-            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              {topic.quizPool?.poolsLocale && (
+                <span style={{ 
+                  padding: '2px 6px', 
+                  borderRadius: '4px', 
+                  fontSize: '10px', 
+                  fontWeight: 600,
+                  backgroundColor: theme === 'light' ? '#e3f2fd' : '#1e3a5f',
+                  color: theme === 'light' ? '#1976d2' : '#64b5f6'
+                }}>
+                  {topic.quizPool.poolsLocale.toUpperCase()}
+                </span>
+              )}
+              <span className={`${styles.topicDate} ${styles[`topicDate_${theme}`]}`}>
+                {formatDate(topic.topicsCreatedAt)}
+              </span>
+            </div>
           </div>
 
           {/* Creator Info */}

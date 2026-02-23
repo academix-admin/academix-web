@@ -1114,6 +1114,8 @@ interface DialogButton {
   onClick?: () => void;
   style?: React.CSSProperties;
   variant?: "primary" | "secondary" | "danger";
+  loading?: boolean;
+  disabled?: boolean;
 }
 
 interface DialogLayoutProps {
@@ -1250,6 +1252,36 @@ const createStyles = () => `
 
 .dialog-button-danger:hover {
   background-color: #D70015;
+}
+
+.dialog-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.dialog-button-loading {
+  position: relative;
+  color: transparent !important;
+}
+
+.dialog-button-loading::after {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  top: 50%;
+  left: 50%;
+  margin-left: -8px;
+  margin-top: -8px;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  border-top-color: transparent;
+  animation: spin 0.6s linear infinite;
+  color: white;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 .body-dialog-open {
@@ -1504,9 +1536,10 @@ const DialogViewer = React.forwardRef<any, DialogViewerProps>(({
           {defaultButtons.map((button, index) => (
             <button
               key={index}
-              className={`dialog-button dialog-button-${button.variant || "primary"}`}
+              className={`dialog-button dialog-button-${button.variant || "primary"} ${button.loading ? 'dialog-button-loading' : ''}`}
               style={button.style}
               onClick={() => handleButtonClick(button)}
+              disabled={button.disabled || button.loading}
             >
               {button.text}
             </button>

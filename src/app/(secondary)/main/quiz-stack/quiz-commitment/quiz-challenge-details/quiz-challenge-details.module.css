@@ -276,3 +276,23 @@
     font-size: 16px;
   }
 }
+
+
+.localeValue {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.performanceItem_light .localeValue {
+  color: #6d6c6c;
+}
+
+.performanceItem_dark .localeValue {
+  color: #fff;
+}
+
+@media screen and (max-width: 500px) {
+  .localeValue {
+    font-size: 16px;
+  }
+}

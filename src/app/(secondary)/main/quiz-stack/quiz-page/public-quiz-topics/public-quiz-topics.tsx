@@ -514,6 +514,12 @@ function OpenQuizCard({ topic, length, getInitials, onClick  }: OpenQuizCardProp
             <div className={styles.textContent}>
               <div className={styles.challengeIdentity}>
                 {topic.quizPool?.challengeModel?.challengeIdentity?.toUpperCase()}
+                {topic.quizPool?.poolsLocale && (
+                  <>
+                    <span style={{ margin: '0 8px' }}>•</span>
+                    {topic.quizPool.poolsLocale.toUpperCase()}
+                  </>
+                )}
               </div>
               <h3 className={styles.topicTitle}>
                 {topic.topicsIdentity}

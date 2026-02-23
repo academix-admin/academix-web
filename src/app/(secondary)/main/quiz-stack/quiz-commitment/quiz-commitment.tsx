@@ -43,6 +43,7 @@ import { PoolChangeEvent } from '@/lib/managers/PoolsQuizTopicSubscriptionManage
 import { useAwaitableRouter } from "@/hooks/useAwaitableRouter";
 import { useQuizDisplay } from "@/lib/stacks/quiz-display-stack";
 import { PinData } from '@/models/pin-data';
+import { useDialog } from '@/lib/DialogViewer';
 
 interface LeaveQuizResponse {
   status: string;
@@ -99,6 +100,7 @@ export default function QuizCommitment(props: QuizChallengeProps) {
   const { controlDisplayMessage, closeDisplay } = useQuizDisplay();
 
   const [toQuizLoading, setToQuizLoading] = useState(false);
+  const leaveDialog = useDialog();
 
   useProvideObject<PinData>('pin_controller', () => {
     return {
@@ -223,9 +225,18 @@ export default function QuizCommitment(props: QuizChallengeProps) {
   const handleLeave = async () => {
     if (!userData || !currentQuiz) return;
 
+    leaveDialog.open(
+      <div style={{ textAlign: 'center' }}>
+        <p>{t('confirm_leave_quiz')}</p>
+      </div>
+    );
+  };
+
+  const confirmLeave = async () => {
+    if (!userData) return;
+
     try {
       setQuizLoading(true);
-      setError('');
       const location = await checkLocation();
       const paramatical = await getParamatical(
         userData.usersId,
@@ -287,10 +298,12 @@ export default function QuizCommitment(props: QuizChallengeProps) {
         }
       }
       setQuizLoading(false);
+      leaveDialog.close();
 
     } catch (error: any) {
       console.error("Top up error:", error);
       setQuizLoading(false);
+      leaveDialog.close();
       setError(t('error_occurred'));
     }
   };
@@ -316,6 +329,7 @@ export default function QuizCommitment(props: QuizChallengeProps) {
 
       if (!paramatical) {
         setQuizLoading(false);
+        withdrawBottomController.close();
         setError(t('error_occurred'));
         return;
       }
@@ -331,6 +345,7 @@ export default function QuizCommitment(props: QuizChallengeProps) {
       if (!feature) {
         setQuizLoading(false);
         console.log('feature not available');
+        withdrawBottomController.close();
         setError(t('feature_unavailable'));
         return;
       }
@@ -341,6 +356,7 @@ export default function QuizCommitment(props: QuizChallengeProps) {
       if (!jwt) {
         console.log('no JWT token');
         setQuizLoading(false);
+        withdrawBottomController.close();
         setError(t('error_occurred'));
         return;
       }
@@ -400,6 +416,7 @@ export default function QuizCommitment(props: QuizChallengeProps) {
         }
         return;
       } else {
+        withdrawBottomController.close();
         setError(status);
       }
 
@@ -408,6 +425,7 @@ export default function QuizCommitment(props: QuizChallengeProps) {
     } catch (error: any) {
       console.error("Top up error:", error);
       setQuizLoading(false);
+      withdrawBottomController.close();
       setError(t('error_occurred'));
     }
   };
@@ -586,6 +604,32 @@ export default function QuizCommitment(props: QuizChallengeProps) {
           </div>
         )}
       </div>
+
+      <leaveDialog.DialogViewer
+        title={t('leave_quiz')}
+        buttons={[
+          {
+            text: quizLoading ? '' : t('yes_text'),
+            variant: 'primary',
+            loading: quizLoading,
+            onClick: async () => {
+              await confirmLeave();
+            }
+          },
+          {
+            text: t('no_text'),
+            variant: 'secondary',
+            disabled: quizLoading,
+            onClick: () => leaveDialog.close()
+          }
+        ]}
+        showCancel={false}
+        closeOnBackdrop={!quizLoading}
+        layoutProp={{
+          backgroundColor: theme === 'light' ? '#fff' : '#121212',
+          margin: '16px 16px'
+        }}
+      />
 
       {showBottom && action != 'active' && <BottomViewer
         id={withdrawBottomViewerId}

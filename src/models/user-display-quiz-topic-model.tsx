@@ -26,6 +26,7 @@ export interface BackendQuizPool {
   sort_created_id: string;
   sort_updated_id: string;
   pools_id: string;
+  pools_locale: string;
   pools_visible: boolean;
   pools_allow_submission?: boolean;
   pools_status: string;
@@ -195,6 +196,7 @@ export class QuizPool {
   sortCreatedId: string;
   sortUpdatedId: string;
   poolsId: string;
+  poolsLocale: string;
   poolsVisible: boolean;
   poolsAllowSubmission: boolean;
   poolsStatus: string;
@@ -216,6 +218,7 @@ export class QuizPool {
     this.sortCreatedId = data?.sort_created_id ?? "";
     this.sortUpdatedId = data?.sort_updated_id ?? "";
     this.poolsId = data?.pools_id ?? "";
+    this.poolsLocale = data?.pools_locale ?? "";
     this.poolsVisible = data?.pools_visible ?? false;
     this.poolsAllowSubmission = data?.pools_allow_submission ?? false;
     this.poolsStatus = data?.pools_status ?? "";
@@ -240,6 +243,7 @@ export class QuizPool {
       sort_created_id: data.sortCreatedId,
       sort_updated_id: data.sortUpdatedId,
       pools_id: data.poolsId,
+      pools_locale: data.poolsLocale,
       pools_visible: data.poolsVisible,
       pools_allow_submission: data.poolsAllowSubmission,
       pools_status: data.poolsStatus,
@@ -264,6 +268,7 @@ export class QuizPool {
       sort_created_id: this.sortCreatedId,
       sort_updated_id: this.sortUpdatedId,
       pools_id: this.poolsId,
+      pools_locale: this.poolsLocale,
       pools_visible: this.poolsVisible,
       pools_allow_submission: this.poolsAllowSubmission,
       pools_status: this.poolsStatus,
@@ -288,6 +293,7 @@ export class QuizPool {
       sort_created_id: update.sortCreatedId ?? this.sortCreatedId,
       sort_updated_id: update.sortUpdatedId ?? this.sortUpdatedId,
       pools_id: update.poolsId ?? this.poolsId,
+      pools_locale: update.poolsLocale ?? this.poolsLocale,
       pools_visible: update.poolsVisible ?? this.poolsVisible,
       pools_allow_submission: update.poolsAllowSubmission ?? this.poolsAllowSubmission,
       pools_status: update.poolsStatus ?? this.poolsStatus,

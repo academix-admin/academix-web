@@ -169,6 +169,7 @@ export default function QuizChallenge(props: QuizChallengeProps) {
 
             if (!paramatical) {
                 setQuizLoading(false);
+                withdrawBottomController.close();
                 errorDialog.open(
                     <div style={{ textAlign: 'center' }}>
                         <p>{t('error_occurred')}</p>
@@ -188,6 +189,7 @@ export default function QuizChallenge(props: QuizChallengeProps) {
             if (!feature) {
                 setQuizLoading(false);
                 console.log('feature not available');
+                withdrawBottomController.close();
                 errorDialog.open(
                     <div style={{ textAlign: 'center' }}>
                         <p>{t('feature_unavailable')}</p>
@@ -202,6 +204,7 @@ export default function QuizChallenge(props: QuizChallengeProps) {
             if (!jwt) {
                 console.log('no JWT token');
                 setQuizLoading(false);
+                withdrawBottomController.close();
                 errorDialog.open(
                     <div style={{ textAlign: 'center' }}>
                         <p>{t('error_occurred')}</p>
@@ -286,6 +289,7 @@ export default function QuizChallenge(props: QuizChallengeProps) {
                     
                 }
             } else {
+                withdrawBottomController.close();
                 errorDialog.open(
                     <div style={{ textAlign: 'center' }}>
                         <p>{status}</p>
@@ -298,6 +302,7 @@ export default function QuizChallenge(props: QuizChallengeProps) {
         } catch (error: any) {
             console.error("Top up error:", error);
             setQuizLoading(false);
+            withdrawBottomController.close();
             errorDialog.open(
                 <div style={{ textAlign: 'center' }}>
                     <p>{t('error_occurred')}</p>
@@ -434,6 +439,12 @@ export default function QuizChallenge(props: QuizChallengeProps) {
                         <div className={styles.infoRow}>
                             <span className={styles.infoLabel}>{t('fee_text')}:</span>
                             <span className={styles.infoValue}>0.00</span>
+                        </div>
+
+                        {/* Locale */}
+                        <div className={styles.infoRow}>
+                            <span className={styles.infoLabel}>{t('locale_text')}:</span>
+                            <span className={styles.infoValue}>{lang.toUpperCase()}</span>
                         </div>
 
                         <div className={styles.divider} />
