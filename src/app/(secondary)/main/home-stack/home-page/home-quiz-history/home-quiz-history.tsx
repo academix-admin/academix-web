@@ -30,7 +30,7 @@ export default function HomeQuizHistory({ onStateChange }: ComponentStateProps) 
   const [historyLoading, setHistoryLoading] = useState(false);
 
 
-  const [quizHistoryData, demandQuizHistoryData, setQuizHistoryData] = useDemandState<QuizHistory[]>(
+  const [quizHistoryData, demandQuizHistoryData, setQuizHistoryData, { isHydrated }] = useDemandState<QuizHistory[]>(
     [],
     {
       key: "quizHistoryData",

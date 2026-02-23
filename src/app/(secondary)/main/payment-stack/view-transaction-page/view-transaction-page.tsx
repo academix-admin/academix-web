@@ -4,9 +4,9 @@ import { useEffect, useState, useMemo } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import styles from './view-transaction-page.module.css';
-import { useNav, usePageLifecycle  } from "@/lib/NavigationStack";
+import { useNav, usePageLifecycle, useObject } from "@/lib/NavigationStack";
 import { TransactionModel } from '@/models/transaction-model';
-import { useTransactionModel } from '@/lib/stacks/transactions-stack';
+
 import { PaymentDetails } from '@/models/payment-details';
 
 interface ViewTransactionProps {
@@ -19,14 +19,11 @@ export default function ViewTransactionPage(props: ViewTransactionProps) {
   const nav = useNav();
   const isTop = nav.isTop();
   const { transactionId } = props;
+  const getTransactionByIdObj = useObject<(id: string) => TransactionModel | undefined>('getTransactionById', { global: true, scope: 'payment-transactions' });
 
-  
- 
   const [currentTransaction, setCurrentTransaction] = useState<TransactionModel | null>(null);
-  const [transactionModels,,, { isHydrated }] = useTransactionModel(lang);
 
-    // ✅ Clean lifecycle management with embedded hook
-    usePageLifecycle(nav, {
+  usePageLifecycle(nav, {
       onEnter: ({ current, previous }) => {
         console.log(`onEnter: ${JSON.stringify(current.key)}`);
         // Analytics, data loading, animations, etc.
@@ -57,15 +54,17 @@ export default function ViewTransactionPage(props: ViewTransactionProps) {
     }, [transactionId]);
 
   useEffect(() => {
-    if(!isHydrated)return;
-    const getTransaction = transactionModels.find((e) => e.transactionId === transactionId);
+    if (!getTransactionByIdObj.isProvided) return;
+    
+    const getTransaction = getTransactionByIdObj.getter();
+    const transaction = getTransaction?.(transactionId);
 
-    if (getTransaction) {
-      setCurrentTransaction(getTransaction);
-    } else if(isTop){
+    if (transaction) {
+      setCurrentTransaction(transaction);
+    } else if (isTop) {
       nav.popToRoot();
     }
-  }, [transactionModels, transactionId, isHydrated, isTop]);
+  }, [getTransactionByIdObj.isProvided, getTransactionByIdObj.getter, transactionId, isTop, nav]);
 
   /** back nav */
   const goBack = async () => {

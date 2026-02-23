@@ -16,7 +16,7 @@ import { QuizPool } from '@/models/user-display-quiz-topic-model';
 import Image from 'next/image';
 import { ComponentStateProps } from '@/hooks/use-component-state';
 import { usePinnedState } from '@/hooks/pinned-state-hook';
-import { useNav, usePageLifecycle } from "@/lib/NavigationStack";
+import { useNav, usePageLifecycle, useProvideObject } from "@/lib/NavigationStack";
 import { useActiveQuiz } from "@/lib/stacks/active-quiz-stack";
 import { poolsSubscriptionManager } from '@/lib/managers/PoolsQuizTopicSubscriptionManager';
 import { PoolChangeEvent } from '@/lib/managers/PoolsQuizTopicSubscriptionManager';
@@ -49,9 +49,18 @@ export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) 
   const [quizLoading, setQuizLoading] = useState(false);
 
 
-  const [activeQuiz, demandActiveQuizTopicModel, setActiveQuizTopicModel] = useActiveQuiz(lang);
+  const [activeQuiz, demandActiveQuizTopicModel, setActiveQuizTopicModel, { isHydrated }] = useActiveQuiz(lang);
   const [transactionModels, demandTransactionModels, setTransactionModels] = useTransactionModel(lang);
   const { closeDisplay, controlDisplayMessage } = useQuizDisplay();
+
+  useEffect(() => {
+    if (!isHydrated) return;
+    nav.provideObject(
+      'getActiveQuiz',
+      () => activeQuiz,
+      { global: true, scope: 'quiz-topics' }
+    );
+  }, [isHydrated, activeQuiz, nav]);
 
   const [toQuizLoading, setToQuizLoading] = useState(false);
 
@@ -322,6 +331,7 @@ export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) 
          const updatedModels = transactionModels.filter(
              (m) => m.poolsId !== leave.pools_id
          );
+         console.log('Updated Transaction Models after leaving quiz:', updatedModels);
          setTransactionModels(updatedModels);
       }else if(status === 'PoolActive.no_active' && activeQuiz){
          if(activeQuiz?.quizPool?.poolsId)poolsSubscriptionManager.removeQuizTopicPool(activeQuiz.quizPool.poolsId);
@@ -329,6 +339,7 @@ export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) 
          const updatedModels = transactionModels.filter(
              (m) => m.poolsId !== leave.pools_id
          );
+         console.log('Updated Transaction Models after leaving quiz:', updatedModels);
          setTransactionModels(updatedModels);
       }
     } catch (error: any) {

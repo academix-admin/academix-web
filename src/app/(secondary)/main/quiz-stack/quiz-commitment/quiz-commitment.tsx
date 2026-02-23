@@ -6,7 +6,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import Image from 'next/image';
 import styles from './quiz-commitment.module.css';
 import { supabaseBrowser } from '@/lib/supabase/client';
-import { useNav, usePageLifecycle, useProvideObject } from "@/lib/NavigationStack";
+import { useNav, usePageLifecycle, useProvideObject, useObject } from "@/lib/NavigationStack";
 import { capitalizeWords } from '@/utils/textUtils';
 import { getParamatical } from '@/utils/checkers';
 import { useUserData } from '@/lib/stacks/user-stack';
@@ -58,6 +58,9 @@ interface EngageQuizResponse {
   status: string;
   quiz_pool: any;
   transaction_details?: BackendTransactionModel;
+  attempts_left?: number | null;
+  locked_until?: string | null;
+  not_set?: boolean | null
 }
 
 
@@ -76,7 +79,8 @@ export default function QuizCommitment(props: QuizChallengeProps) {
   const [transactionModels, demandTransactionModels, setTransactionModels] = useTransactionModel(lang);
 
   const [currentQuiz, setCurrentQuiz] = useState<UserDisplayQuizTopicModel | null>(null);
-  const [quizModels, , , { isHydrated: availableHydrated }] = usePublicQuiz(lang, action === 'active' ? 'public' : action);
+  const getQuizByPoolsIdObj = useObject<(id: string) => UserDisplayQuizTopicModel | undefined>('getQuizByPoolsId', { global: true, scope: 'quiz-topics' });
+  const getActiveQuizObj = useObject<UserDisplayQuizTopicModel | null>('getActiveQuiz', { global: true, scope: 'quiz-topics' });
   const [selectedRule, setSelectedRule] = useState(false);
   const [selectedPayout, setSelectedPayout] = useState(false);
   const [selectedRedeemCodeModel, setSelectedRedeemCodeModel] = useState<RedeemCodeModel | null>(null);
@@ -87,7 +91,7 @@ export default function QuizCommitment(props: QuizChallengeProps) {
 
   const [withdrawBottomViewerId, withdrawBottomController, withdrawBottomIsOpen] = useBottomController();
 
-  const [activeQuiz, , setActiveQuizTopicModel, { isHydrated: activeHydrated }] = useActiveQuiz(lang);
+  const [activeQuiz, , setActiveQuizTopicModel] = useActiveQuiz(lang);
   const [membersCount, setMembersCount] = useState<number | null>(null);
 
   const [quizInfoBottomViewerId, quizInfoBottomController, quizInfoBottomIsOpen, , quizInfoBottomRef] = useBottomController();
@@ -142,8 +146,10 @@ export default function QuizCommitment(props: QuizChallengeProps) {
   };
 
   useEffect(() => {
-    if (!availableHydrated || !activeHydrated) return;
-    const getQuiz = action === 'active' ? activeQuiz : quizModels.find((e) => e.quizPool?.poolsId === poolsId);
+    if (!getQuizByPoolsIdObj.isProvided || !getActiveQuizObj.isProvided) return;
+
+    const activeQuiz = getActiveQuizObj.getter();
+    const getQuiz = action === 'active' ? activeQuiz : getQuizByPoolsIdObj.getter()?.(poolsId);
 
     if (getQuiz && !currentQuiz) {
       fetchPoolMembers(getQuiz);
@@ -151,13 +157,10 @@ export default function QuizCommitment(props: QuizChallengeProps) {
       if (getQuiz.quizPool?.poolsJob && getQuiz.quizPool?.poolsJobEndAt) {
         controlDisplayMessage(getQuiz.quizPool.poolsJob, getQuiz.quizPool.poolsJobEndAt);
       }
-    } else if (isTop) {
-      if (!currentQuiz) {
-        nav.popToRoot();
-      }
+    } else if (isTop && !currentQuiz) {
+      nav.popToRoot();
     }
-  }, [poolsId, availableHydrated, activeHydrated, isTop, action, controlDisplayMessage
-  ]);
+  }, [poolsId, isTop, action, controlDisplayMessage, getQuizByPoolsIdObj.isProvided, getActiveQuizObj.isProvided]);
 
   useEffect(() => {
     poolsSubscriptionManager.attachListener(handlePoolChange, !currentQuiz);
@@ -380,10 +383,23 @@ export default function QuizCommitment(props: QuizChallengeProps) {
           poolsId: quizModel?.quizPool?.poolsId,
           action: 'active'
         });
-      }else if(status === 'PoolStatus.pinError'){
+      } else if (status === 'PoolStatus.pinError') {
         withdrawBottomController.close();
-        await (await nav.goToGroupId('profile-stack')).push('security_verification', { request: 'Pin', isNew: true });
-      }else if(status === 'PoolStatus.pinError'){
+        setQuizLoading(false);
+
+        if (engagement.not_set) {
+          await (await nav.goToGroupId('profile-stack')).push('security_verification', {
+            request: 'Pin',
+            isNew: true,
+            returnGroup: 'quiz-stack'
+          });
+        } else if ((engagement.attempts_left ?? 0) > 0) {
+          setError(`${t('incorrect_pin_message')} ${engagement.attempts_left} ${t('attempts_remaining')}`);
+        } else if (engagement.locked_until) {
+          setError(`${t('pin_locked_message')} ${t('locked_until')}: ${new Date(engagement.locked_until).toLocaleString()}`);
+        }
+        return;
+      } else {
         setError(status);
       }
 
@@ -686,7 +702,7 @@ export default function QuizCommitment(props: QuizChallengeProps) {
                 </div>
               </div>
             </div>
-            
+
             {error && <p className={`${styles.errorText} ${styles[`errorText_${theme}`]}`}>{error}</p>}
 
             {/* Pay Button */}

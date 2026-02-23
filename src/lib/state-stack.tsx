@@ -1306,6 +1306,7 @@ export function useDemandState<T>(
             core.setState(scope, keyStr, v, persist, storage);
             if(ttl)core.setTTL(scope, keyStr, ttl);
             core.markDemanded(scope, keyStr);
+            core.markHydrated(scope, keyStr);
           },
         };
 
@@ -1324,6 +1325,7 @@ export function useDemandState<T>(
       core.setState(scope, keyStr, next, persist, storage);
       if(ttl)core.setTTL(scope, keyStr, ttl);
       core.markDemanded(scope, keyStr);
+      core.markHydrated(scope, keyStr); // ✅ Mark as hydrated when data is set
     },
     [scope, keyStr, ttl, persist, storage, core, initial]
   );

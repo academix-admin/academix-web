@@ -4,7 +4,7 @@ import { useState, useCallback } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import styles from './top-up-page.module.css';
-import { useNav } from "@/lib/NavigationStack";
+import { useNav, useProvideObject } from "@/lib/NavigationStack";
 import { StateStack } from '@/lib/state-stack';
 import { getParamatical } from '@/utils/checkers';
 import { checkLocation, checkFeatures } from '@/utils/checkers';
@@ -28,6 +28,8 @@ import ErrorView from '@/components/ErrorView/ErrorView';
 import { TransactionModel } from '@/models/transaction-model';
 import { useTransactionModel } from '@/lib/stacks/transactions-stack';
 import { PaymentCompletionData } from '@/models/completion-data';
+import { PinData } from '@/models/pin-data';
+import { useDialog } from '@/lib/DialogViewer';
 
 
 interface PaymentResponse {
@@ -35,6 +37,9 @@ interface PaymentResponse {
   transaction_details: any;
   payment_completion_mode?: string;
   payment_completion_data?: PaymentCompletionData;
+  not_set?: boolean | null;
+  attempts_left?: number | null;
+  locked_until?: string | null;
 }
 
 export default function TopUpPage() {
@@ -57,11 +62,32 @@ export default function TopUpPage() {
   const [academixProfileData, setAcademixProfileData] = useState<PaymentProfileModel | null>(null);
 
   const [topUpBottomViewerId, topUpBottomController, topUpBottomIsOpen] = useBottomController();
+  const pinErrorDialog = useDialog();
+  const ussdDialog = useDialog();
+  const bankTransferDialog = useDialog();
+  const [currentTransactionId, setCurrentTransactionId] = useState<string | null>(null);
+  const [pinErrorType, setPinErrorType] = useState<'not_set' | 'incorrect' | 'locked' | null>(null);
 
   const [error, setError] = useState('');
   const [continueState, setContinueState] = useState('initial');
   const [topUpLoading, setTopUpLoading] = useState(false);
   const redirectController = useRedirectController();
+
+  // derived booleans
+  const showMethods = !!selectedWalletData && amount > 0 && amount >= (selectedWalletData.paymentWalletMin || 0);
+  const showProfile = !!selectedMethodData && showMethods;
+  const showTopUp = !!selectedWalletProfileData && showProfile;
+  const showConfirm = !!selectedWalletProfileData && !!selectedMethodData && !!academixProfileData;
+
+  useProvideObject<PinData>('pin_controller', () => {
+    return {
+      inUse: showConfirm,
+      action: async (pin: string) => {
+        topUpBottomController.open();
+        await handleTopUp(pin);
+      }
+    };
+  }, { scope: 'pin_scope', dependencies: [showConfirm, selectedWalletProfileData, academixProfileData] });
 
   /** amount handler */
   const handleAmount = useCallback((newAmount: number) => {
@@ -161,7 +187,6 @@ export default function TopUpPage() {
 
   // Function to make payment API call
   const makePayment = async (jwt: string, data: any): Promise<PaymentResponse> => {
-    // Use the App Router API endpoint
     const proxyUrl = '/api/payment';
 
     try {
@@ -185,20 +210,29 @@ export default function TopUpPage() {
     paymentCompletionMode: string | undefined,
     paymentCompletionData: PaymentCompletionData | undefined,
     transactionModel: TransactionModel
-  ) => {
+  ): Promise<boolean> => {
     if (paymentCompletionMode === 'PaymentCompletion.redirect') {
       const link = paymentCompletionData?.link;
       if (link) {
         await redirectController.open(link);
       }
+      return false;
     }
 
     if (paymentCompletionMode === 'PaymentCompletion.ussd') {
       const code = paymentCompletionData?.code;
       if (code) {
-        // For USSD, we can't directly dial from web, so we show the code to user
-        alert(`Please dial this USSD code: ${code}`);
+        setCurrentTransactionId(transactionModel.transactionId);
+        ussdDialog.open(
+          <div style={{ textAlign: 'center' }}>
+            <p>{t('ussd_code_message')}</p>
+            <p style={{ fontSize: '24px', fontWeight: 'bold', margin: '16px 0', color: theme === 'light' ? '#000' : '#fff' }}>
+              {code}
+            </p>
+          </div>
+        );
       }
+      return true;
     }
 
     if (paymentCompletionMode === 'PaymentCompletion.banktransfer') {
@@ -209,24 +243,44 @@ export default function TopUpPage() {
       const note = paymentCompletionData?.note;
       const expire = paymentCompletionData?.expire;
 
-      // Show bank transfer details to user
-      alert(`Bank Transfer Details:
-Bank: ${bank}
-Account: ${account}
-Amount: ${amount}
-Reference: ${reference}
-Note: ${note}
-Expires: ${expire}`);
+      setCurrentTransactionId(transactionModel.transactionId);
+      bankTransferDialog.open(
+        <div style={{ textAlign: 'left' }}>
+          <div style={{ marginBottom: '12px' }}>
+            <strong>{t('bank_text')}:</strong> {bank}
+          </div>
+          <div style={{ marginBottom: '12px' }}>
+            <strong>{t('account_text')}:</strong> {account}
+          </div>
+          <div style={{ marginBottom: '12px' }}>
+            <strong>{t('amount_text')}:</strong> {amount}
+          </div>
+          <div style={{ marginBottom: '12px' }}>
+            <strong>{t('reference_text')}:</strong> {reference}
+          </div>
+          {note && (
+            <div style={{ marginBottom: '12px' }}>
+              <strong>{t('note_text')}:</strong> {note}
+            </div>
+          )}
+          {expire && (
+            <div style={{ marginBottom: '12px', color: '#FF3B30' }}>
+              <strong>{t('expires_text', { date: new Date(expire).toLocaleString() })}:</strong>
+            </div>
+          )}
+        </div>
+      );
+      return true;
     }
+    return false;
   };
 
-  const handleTopUp = async () => {
+  const handleTopUp = async (userPin: string) => {
     if (!userData || !selectedWalletProfileData || !academixProfileData) return;
 
     try {
-
-        setTopUpLoading(true);
-        setError('');
+      setTopUpLoading(true);
+      setError('');
       const location = await checkLocation();
       const paramatical = await getParamatical(
         userData.usersId,
@@ -276,11 +330,47 @@ Expires: ${expire}`);
         locale: paramatical.locale,
         country: paramatical.country,
         gender: paramatical.gender,
-        age: paramatical.age
+        age: paramatical.age,
+        userPin: userPin
       };
 
       const payment = await makePayment(jwt, requestData);
       const status = payment.status;
+
+      if (status === 'TransactionStatus.pinError') {
+        topUpBottomController.close();
+        setTopUpLoading(false);
+        
+        if (payment.not_set) {
+          setPinErrorType('not_set');
+          pinErrorDialog.open(
+            <div style={{ textAlign: 'center' }}>
+              <p>{t('pin_not_set_message')}</p>
+            </div>
+          );
+        } else if ((payment.attempts_left ?? 0) > 0) {
+          setPinErrorType('incorrect');
+          pinErrorDialog.open(
+            <div style={{ textAlign: 'center' }}>
+              <p>{t('incorrect_pin_message')}</p>
+              <p style={{ color: '#FF3B30', fontWeight: 600, marginTop: '8px' }}>
+                {payment.attempts_left} {t('attempts_remaining')}
+              </p>
+            </div>
+          );
+        } else if (payment.locked_until) {
+          setPinErrorType('locked');
+          pinErrorDialog.open(
+            <div style={{ textAlign: 'center' }}>
+              <p style={{ color: '#FF3B30' }}>{t('pin_locked_message')}</p>
+              <p style={{ marginTop: '8px' }}>
+                {t('locked_until')}: {new Date(payment.locked_until).toLocaleString()}
+              </p>
+            </div>
+          );
+        }
+        return;
+      }
 
       const transaction = new TransactionModel(payment.transaction_details);
       const completionMode = payment.payment_completion_mode;
@@ -290,10 +380,13 @@ Expires: ${expire}`);
         setTransactionModels([transaction,...transactionModels]);
 
         if (completionMode) {
-          await handlePaymentCompletion(completionMode, completionData, transaction);
+          const shouldWaitForDialog = await handlePaymentCompletion(completionMode, completionData, transaction);
+          if (!shouldWaitForDialog) {
+            await nav.pushAndPopUntil('view_transaction',(entry) => entry.key === 'payment_page', {transactionId: transaction.transactionId});
+          }
+        } else {
+          await nav.pushAndPopUntil('view_transaction',(entry) => entry.key === 'payment_page', {transactionId: transaction.transactionId});
         }
-
-        await nav.pushAndPopUntil('view_transaction',(entry) => entry.key === 'payment_page', {transactionId: transaction.transactionId})
       }
      setTopUpLoading(false);
      topUpBottomController.close();
@@ -302,6 +395,11 @@ Expires: ${expire}`);
       setTopUpLoading(false);
       setError(t('error_occurred'));
     }
+  };
+
+  const getUserPin = () => {
+    topUpBottomController.close();
+    nav.pushWith('pin', { requireObjects: ['pin_controller'] });
   };
 
   // Format number with commas
@@ -370,12 +468,6 @@ Expires: ${expire}`);
         );
     }
   };
-
-  // derived booleans
-  const showMethods = !!selectedWalletData && amount > 0 && amount >= (selectedWalletData.paymentWalletMin || 0);
-  const showProfile = !!selectedMethodData && showMethods;
-  const showTopUp = !!selectedWalletProfileData && showProfile;
-  const showConfirm = !!selectedWalletProfileData && !!selectedMethodData && !!academixProfileData;
 
   const rate = selectedWalletData?.paymentWalletRate ?? 0;
   const fee = selectedWalletData ?
@@ -563,8 +655,9 @@ Expires: ${expire}`);
               </div>
 
               {/* Pay Button */}
+              {error && <p className={`${styles.errorText} ${styles[`errorText_${theme}`]}`}>{error}</p>}
               <button
-                onClick={handleTopUp}
+                onClick={getUserPin}
                 type="button"
                 className={styles.continueButton}
                 disabled={topUpLoading}
@@ -576,11 +669,82 @@ Expires: ${expire}`);
           )}
         </div>
       </BottomViewer>
-      {(
-        <PaymentRedirect
-          controller={redirectController}
-        />
-      )}
+
+      <PaymentRedirect
+        controller={redirectController}
+      />
+
+      <pinErrorDialog.DialogViewer
+        title={t('pin_error')}
+        buttons={[
+          {
+            text: t('ok_text'),
+            variant: 'primary',
+            onClick: async () => {
+              pinErrorDialog.close();
+              if (pinErrorType === 'not_set') {
+                setPinErrorType(null);
+                await (await nav.goToGroupId('profile-stack')).push('security_verification', {
+                  request: 'Pin',
+                  isNew: true,
+                  returnGroup: 'payment-stack'
+                });
+              }
+            }
+          }
+        ]}
+        showCancel={true}
+        cancelText={t('cancel_text')}
+        closeOnBackdrop={false}
+        layoutProp={{
+          backgroundColor: theme === 'light' ? '#fff' : '#121212',
+          margin: '16px 16px'
+        }}
+      />
+
+      <ussdDialog.DialogViewer
+        title={t('ussd_code')}
+        buttons={[
+          {
+            text: t('ok_text'),
+            variant: 'primary',
+            onClick: async () => {
+              ussdDialog.close();
+              if (currentTransactionId) {
+                await nav.pushAndPopUntil('view_transaction',(entry) => entry.key === 'payment_page', {transactionId: currentTransactionId});
+              }
+            }
+          }
+        ]}
+        showCancel={false}
+        closeOnBackdrop={true}
+        layoutProp={{
+          backgroundColor: theme === 'light' ? '#fff' : '#121212',
+          margin: '16px 16px'
+        }}
+      />
+
+      <bankTransferDialog.DialogViewer
+        title={t('bank_transfer_details')}
+        buttons={[
+          {
+            text: t('ok_text'),
+            variant: 'primary',
+            onClick: async () => {
+              bankTransferDialog.close();
+              if (currentTransactionId) {
+                await nav.pushAndPopUntil('view_transaction',(entry) => entry.key === 'payment_page', {transactionId: currentTransactionId});
+              }
+            }
+          }
+        ]}
+        showCancel={false}
+        closeOnBackdrop={true}
+        layoutProp={{
+          backgroundColor: theme === 'light' ? '#fff' : '#121212',
+          margin: '16px 16px'
+        }}
+      />
     </main>
   );
 }

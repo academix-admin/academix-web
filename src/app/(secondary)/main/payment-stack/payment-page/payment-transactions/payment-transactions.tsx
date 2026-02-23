@@ -38,9 +38,20 @@ export default function PaymentTransactions({ onStateChange }: ComponentStatePro
   const [firstLoaded, setFirstLoaded] = useState(false);
   const [transactionsLoading, setTransactionsLoading] = useState(false);
 
-  const [transactionModels, demandTransactionModels, setTransactionModels] = useTransactionModel(lang);
+  const [transactionModels, demandTransactionModels, setTransactionModels, { isHydrated }] = useTransactionModel(lang);
 
-  // Subscribe to changes
+  useEffect(() => {
+    // Only provide when hydrated AND we have data (either from storage or from demand)
+    if (!isHydrated) return;
+    
+    const cleanup = nav.provideObject(
+      'getTransactionById',
+      () => (transactionId: string) => transactionModels.find(t => t.transactionId === transactionId),
+      { global: true, scope: 'payment-transactions' }
+    );
+    return cleanup;
+  }, [isHydrated, transactionModels, nav]);
+
   const handlePoolChange = (event: PoolChangeEvent) => {
     const { eventType, newRecord: quizPool, oldRecordId: poolsId } = event;
     if (eventType === 'DELETE' && poolsId) {
@@ -207,6 +218,7 @@ export default function PaymentTransactions({ onStateChange }: ComponentStatePro
 
   useEffect(() => {
     if (!userData) return;
+    
     demandTransactionModels(async ({ get, set }) => {
       const models = await fetchTransactionModels(userData, 10,  new PaginateModel());
       extractLatest(models);
@@ -216,6 +228,12 @@ export default function PaymentTransactions({ onStateChange }: ComponentStatePro
       refreshData(true);
     });
   }, [demandTransactionModels, userData]);
+
+  useEffect(() => {
+    if (transactionModels.length > 0) {
+      onStateChange?.('data');
+    }
+  }, [transactionModels]);
 
   const callPaginate = async () => {
     if (!userData || transactionModels.length <= 0) return;

@@ -17,7 +17,7 @@ import { PaginateModel } from '@/models/paginate-model';
 import Image from 'next/image';
 import { ComponentStateProps } from '@/hooks/use-component-state';
 import { usePinnedState } from '@/hooks/pinned-state-hook';
-import { useNav } from "@/lib/NavigationStack";
+import { useNav, useProvideObject } from "@/lib/NavigationStack";
 import { usePublicQuiz } from "@/lib/stacks/public-quiz-stack";
 import { poolsSubscriptionManager } from '@/lib/managers/PoolsQuizTopicSubscriptionManager';
 import { PoolChangeEvent } from '@/lib/managers/PoolsQuizTopicSubscriptionManager';
@@ -49,8 +49,17 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
 
 
 
-  const [quizModels, demandUserDisplayQuizTopicModel, setUserDisplayQuizTopicModel] = usePublicQuiz(lang, pType);
+  const [quizModels, demandUserDisplayQuizTopicModel, setUserDisplayQuizTopicModel, { isHydrated }] = usePublicQuiz(lang, pType);
   const [activeQuiz, , ] = useActiveQuiz(lang);
+
+  useEffect(() => {
+    if (!isHydrated) return;
+    nav.provideObject(
+      'getQuizByPoolsId',
+      () => (poolsId: string) => quizModels.find(q => q.quizPool?.poolsId === poolsId),
+      { global: true, scope: 'quiz-topics' }
+    );
+  }, [isHydrated, quizModels, nav]);
 
   // Subscribe to changes
   const handlePoolChange = (event: PoolChangeEvent) => {

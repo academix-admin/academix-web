@@ -300,7 +300,7 @@ const SelectionViewer: React.FC<SelectionViewerProps> = ({
   childrenDirection = "vertical",
   children,
   onPaginate,
-  snapPoints = [0.5, 0.8],
+  snapPoints = [0, 1],
   initialSnap = 1,
   unmountOnClose = true,
   zIndex = 1000,

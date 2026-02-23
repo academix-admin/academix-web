@@ -37,14 +37,14 @@ export default function PaymentPage() {
     const loading = loadedCount < 4 && errorCount === 0 && loadingCount > 0;
 
     // show ui
-    const show = !error && !loading;
+    const show = !error && !loading && loadedCount >= 3;
 
   return (
     <div className={styles.mainContainer}>
 
-     {show && (<PaymentTitle onStateChange={(state) => handleStateChange('paymentTitle', state)}/>)}
-     {show && (<UserBalance onStateChange={(state) => handleStateChange('userBalance', state)}/>)}
-     {show && (<PaymentAction onStateChange={(state) => handleStateChange('paymentAction', state)}/>)}
+     <PaymentTitle onStateChange={(state) => handleStateChange('paymentTitle', state)}/>
+     <UserBalance onStateChange={(state) => handleStateChange('userBalance', state)}/>
+     <PaymentAction onStateChange={(state) => handleStateChange('paymentAction', state)}/>
      {show && (<PaymentTransactions onStateChange={(state) => handleStateChange('paymentTransactions', state)}/>)}
 
            <div>

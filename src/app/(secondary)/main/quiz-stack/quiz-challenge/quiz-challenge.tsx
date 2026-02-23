@@ -6,7 +6,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import Image from 'next/image';
 import styles from './quiz-challenge.module.css';
 import { supabaseBrowser } from '@/lib/supabase/client';
-import { useNav, useProvideObject } from "@/lib/NavigationStack";
+import { useNav, useProvideObject, useObject } from "@/lib/NavigationStack";
 import { capitalizeWords } from '@/utils/textUtils';
 import { getParamatical } from '@/utils/checkers';
 import { useUserData } from '@/lib/stacks/user-stack';
@@ -68,7 +68,7 @@ export default function QuizChallenge(props: QuizChallengeProps) {
     const [transactionModels, demandTransactionModels, setTransactionModels] = useTransactionModel(lang);
 
     const [currentQuiz, setCurrentQuiz] = useState<UserDisplayQuizTopicModel | null>(null);
-    const [quizModels, , , { isHydrated }] = useAvailableQuiz(lang, pType);
+    const getQuizByTopicsIdObj = useObject<(id: string) => UserDisplayQuizTopicModel | undefined>('getQuizByTopicsId', { global: true, scope: 'quiz-topics' });
     const [selectedGameModeModel, setSelectedGameModeModel] = useState<GameModeModel | null>(null);
     const [selectedChallengeModel, setSelectedChallengeModel] = useState<ChallengeModel | null>(null);
     const [selectedRule, setSelectedRule] = useState(false);
@@ -96,15 +96,16 @@ export default function QuizChallenge(props: QuizChallengeProps) {
     }, { scope: 'pin_scope', dependencies: [selectedRule, selectedPayout, selectedRedeemCodeModel] });
 
     useEffect(() => {
-        if (!isHydrated) return;
-        const getQuiz = quizModels.find((e: UserDisplayQuizTopicModel) => e.topicsId === topicsId);
+        if (!getQuizByTopicsIdObj.isProvided) return;
+        
+        const getQuiz = getQuizByTopicsIdObj.getter()?.(topicsId);
 
         if (getQuiz) {
             setCurrentQuiz(getQuiz);
         } else if (isTop) {
             nav.popToRoot();
         }
-    }, [quizModels, topicsId, isHydrated, isTop]);
+    }, [getQuizByTopicsIdObj.isProvided, topicsId, isTop]);
 
 
     useEffect(() => {

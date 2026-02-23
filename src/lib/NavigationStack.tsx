@@ -4152,9 +4152,21 @@ export function useObject<T>(
 
       // Subscribe to getter registration
       unsubscribeRef.current = nav.onGetterRegistered?.(key, () => {
-        // Getter registered - force effect rerun
+        // Getter registered - force state update by setting a timestamp
         if (isMountedRef.current) {
+          // Force re-run by updating both states
+          setIsProvided(false); // Reset first
           setGetter(undefined);
+          // Trigger immediate re-check
+          setTimeout(() => {
+            if (isMountedRef.current) {
+              const newGetter = nav.getObject<() => T>(key, finalOptions);
+              if (newGetter) {
+                setGetter(() => newGetter);
+                setIsProvided(true);
+              }
+            }
+          }, 0);
         }
       }, finalOptions) || (() => { });
       return;

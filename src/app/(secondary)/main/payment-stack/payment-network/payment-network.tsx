@@ -191,7 +191,7 @@ export default function PaymentNetwork({ paymentMethodId, onNetworkSelect }: Pay
           handleWidth: "48px",
         }}
         childrenDirection="vertical"
-        snapPoints={[1]}
+        snapPoints={[0, 1]}
         initialSnap={1}
         minHeight="65vh"
         maxHeight="90vh"

@@ -16,7 +16,7 @@ import { PaginateModel } from '@/models/paginate-model';
 import Image from 'next/image';
 import { ComponentStateProps } from '@/hooks/use-component-state';
 import { usePinnedState } from '@/hooks/pinned-state-hook';
-import { useNav } from "@/lib/NavigationStack";
+import { useNav, useProvideObject } from "@/lib/NavigationStack";
 import { useAvailableQuiz } from "@/lib/stacks/available-quiz-stack";
 import { useActiveQuiz } from "@/lib/stacks/active-quiz-stack";
 
@@ -40,9 +40,18 @@ export default function AvailableQuizTopics({ onStateChange, pType }: AvailableQ
   const [quizLoading, setQuizLoading] = useState(false);
 
 
-  const [quizModels, demandUserDisplayQuizTopicModel, setUserDisplayQuizTopicModel] = useAvailableQuiz(lang, pType);
+  const [quizModels, demandUserDisplayQuizTopicModel, setUserDisplayQuizTopicModel, { isHydrated }] = useAvailableQuiz(lang, pType);
 
   const [activeQuiz, , ] = useActiveQuiz(lang);
+
+  useEffect(() => {
+    if (!isHydrated) return;
+    nav.provideObject(
+      'getQuizByTopicsId',
+      () => (topicsId: string) => quizModels.find(q => q.topicsId === topicsId),
+      { global: true, scope: 'quiz-topics' }
+    );
+  }, [isHydrated, quizModels, nav]);
 
   useEffect(() => {
     if(!activeQuiz)return;

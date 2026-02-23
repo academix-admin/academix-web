@@ -428,7 +428,7 @@ const buildProfileView = (profile: PaymentProfileModel, methodType: string) => {
           handleWidth: "48px",
         }}
         childrenDirection="vertical"
-        snapPoints={[1]}
+        snapPoints={[0, 1]}
         initialSnap={1}
         minHeight="65vh"
         maxHeight="90vh"

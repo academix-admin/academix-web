@@ -10,6 +10,7 @@ import WithdrawPage from "./withdraw-page/withdraw-page";
 import ViewTransactionPage from "./view-transaction-page/view-transaction-page";
 import NewProfilePage from "./new-profile-page/new-profile-page";
 import RatesPage from "../shared/rates-page/rates-page";
+import Pin from "../shared/pin/pin";
 
 const paymentStackNavLink = {
   payment_page: PaymentPage,
@@ -17,7 +18,8 @@ const paymentStackNavLink = {
   view_transaction: ViewTransactionPage,
   new_profile: NewProfilePage,
   withdraw_page: WithdrawPage,
-  rates_page: RatesPage
+  rates_page: RatesPage,
+  pin: Pin
 };
 
 export const PaymentStack = () => (
