@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback, useMemo,} from 'react';
+import { useEffect, useState, useCallback, useMemo, } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import Image from 'next/image';
@@ -38,7 +38,7 @@ const GenderItem = ({ onClick, text }: GenderItemProps) => {
 export default function SignUpStep4() {
   const { theme } = useTheme();
   const { t, lang } = useLanguage();
-  const { signup, signup$, __meta  } = useSignup();
+  const { signup, signup$, __meta } = useSignup();
   const nav = useNav();
   const isTop = nav.isTop();
 
@@ -48,15 +48,15 @@ export default function SignUpStep4() {
   const [continueLoading, setContinueLoading] = useState(false);
   const [isFormValid, setIsFormValid] = useState(false);
 
- const [birthdayBottomViewerId, birthdayViewerController, birthdayViewerIsOpen] = useBottomController();
- const [genderBottomViewerId, genderBottomController, genderBottomIsOpen] = useBottomController();
+  const [birthdayBottomViewerId, birthdayViewerController, birthdayViewerIsOpen] = useBottomController();
+  const [genderBottomViewerId, genderBottomController, genderBottomIsOpen] = useBottomController();
 
   const [birthdayState, setBirthdayState] = useState('initial');
 
   useEffect(() => {
-    if(!signup.fullName && __meta.isHydrated && isTop){nav.go('step1');}
+    if (!signup.fullName && __meta.isHydrated && isTop) { nav.go('step1'); }
     setFirstname(capitalize(getLastNameOrSingle(signup.fullName)));
-  }, [signup.fullName,__meta.isHydrated, isTop]);
+  }, [signup.fullName, __meta.isHydrated, isTop]);
 
   useEffect(() => {
     setCanGoBack(window.history.length > 1);
@@ -64,19 +64,20 @@ export default function SignUpStep4() {
 
 
   useEffect(() => {
-   const dateObj = typeof signup.birthday === 'string' ? new Date(signup.birthday) : signup.birthday;
+    const dateObj = typeof signup.birthday === 'string' ? new Date(signup.birthday) : signup.birthday;
 
-    if(!!dateObj){
-        const today = new Date();
-            const fiveYearsAgo = new Date();
-            fiveYearsAgo.setFullYear(today.getFullYear() - 5);
-            if (dateObj > fiveYearsAgo) {
-                setBirthdayState('less');
-                setIsFormValid(false);
-                return;
-            }
-            setIsFormValid(!!signup.gender);
-            setBirthdayState('initial');}
+    if (!!dateObj) {
+      const today = new Date();
+      const fiveYearsAgo = new Date();
+      fiveYearsAgo.setFullYear(today.getFullYear() - 5);
+      if (dateObj > fiveYearsAgo) {
+        setBirthdayState('less');
+        setIsFormValid(false);
+        return;
+      }
+      setIsFormValid(!!signup.gender);
+      setBirthdayState('initial');
+    }
 
   }, [signup.birthday, signup.gender]);
 
@@ -125,16 +126,16 @@ export default function SignUpStep4() {
     genderBottomController.open();
   };
 
-  const handleDateChange = (date: Date ) => {
+  const handleDateChange = (date: Date) => {
     signup$.setField({ field: 'birthday', value: date });
     console.log('Selected date:', date);
   };
 
   const genderList = useMemo(() => {
 
-        return ['Male', 'Female'];
+    return ['Male', 'Female'];
   }, []);
-  
+
 
   return (
     <main className={`${styles.container} ${styles[`container_${theme}`]}`}>
@@ -184,19 +185,19 @@ export default function SignUpStep4() {
         <h2 className={styles.stepTitle}>{t('hi_name', { name: firstname })}</h2>
         <p className={styles.stepSubtitle}>{t('step_x_of_y', { current: 4, total: 7 })}</p>
 
-        <div  className={styles.form}>
-          <div  className={styles.formGroup}>
-           <label htmlFor="birthday" className={styles.label}>
-                        {t('birthday')}
+        <div className={styles.form}>
+          <div className={styles.formGroup}>
+            <label htmlFor="birthday" className={styles.label}>
+              {t('birthday')}
             </label>
             <button onClick={openBirthday} className={styles.select}> {formatBirthday(signup.birthday) || 'Select'} </button>
             {birthdayState === 'less' && (
-                                      <p className={`${styles.errorText} ${styles[`errorText_${theme}`]}`}>{t('date_less')}</p>
-                                    )}
+              <p className={`${styles.errorText} ${styles[`errorText_${theme}`]}`}>{t('date_less')}</p>
+            )}
           </div>
-          <div  className={styles.formGroup}>
-           <label htmlFor="gender" className={styles.label}>
-                        {t('gender')}
+          <div className={styles.formGroup}>
+            <label htmlFor="gender" className={styles.label}>
+              {t('gender')}
             </label>
             <button onClick={openGender} className={styles.select}> {signup.gender || 'Select'} </button>
           </div>
@@ -207,7 +208,7 @@ export default function SignUpStep4() {
             aria-disabled={!isFormValid || continueLoading}
             onClick={handleSubmit}
           >
-                {continueLoading ? <span className={styles.spinner}></span> : t('continue')}
+            {continueLoading ? <span className={styles.spinner}></span> : t('continue')}
           </button>
         </div>
       </div>
@@ -215,85 +216,85 @@ export default function SignUpStep4() {
 
 
       <BottomViewer
-                      id={birthdayBottomViewerId}
-                      isOpen={birthdayViewerIsOpen}
-                      onClose={birthdayViewerController.close}
+        id={birthdayBottomViewerId}
+        isOpen={birthdayViewerIsOpen}
+        onClose={birthdayViewerController.close}
 
-                      cancelButton={{
-                        position: "right",
-                        onClick: birthdayViewerController.close,
-                        view: <DialogCancel />
-                        }}
-                      layoutProp={{
-                        backgroundColor:  theme === 'light' ?  "#fff" : "#121212",
-                        handleColor: "#888",
-                        handleWidth: "48px",
-                      }}
-                      closeThreshold={0.2}
-                      zIndex={1000}
-                    >
-                      <div className={`${styles.dialogContainer} ${styles[`dialogContainer_${theme}`]}`}>
-                      <div className={`${styles.dialogHeaderContainer} ${styles[`dialogHeaderContainer_${theme}`]}`}>
-                      <h3 className={`${styles.dialogTitle} ${styles[`dialogTitle_${theme}`]}`}>SELECT BIRTHDAY DATE</h3>
-                      <span className={`${styles.dialogDescription} ${styles[`dialogDescription_${theme}`]}`}>*Age Rating: <strong>5+</strong></span>
-                      </div>
+        cancelButton={{
+          position: "right",
+          onClick: birthdayViewerController.close,
+          view: <DialogCancel />
+        }}
+        layoutProp={{
+          backgroundColor: theme === 'light' ? "#fff" : "#121212",
+          handleColor: "#888",
+          handleWidth: "48px",
+        }}
+        closeThreshold={0.2}
+        zIndex={1000}
+      >
+        <div className={`${styles.dialogContainer} ${styles[`dialogContainer_${theme}`]}`}>
+          <div className={`${styles.dialogHeaderContainer} ${styles[`dialogHeaderContainer_${theme}`]}`}>
+            <h3 className={`${styles.dialogTitle} ${styles[`dialogTitle_${theme}`]}`}>SELECT BIRTHDAY DATE</h3>
+            <span className={`${styles.dialogDescription} ${styles[`dialogDescription_${theme}`]}`}>*Age Rating: <strong>5+</strong></span>
+          </div>
 
-                                <CustomScrollDatePicker
-                                        onChange={handleDateChange}
-                                        defaultDate={true}
-                                        quickDate={true}
-                                        opacity={0.5}
-                                        itemExtent={30}
-                                        useMagnifier={true}
-                                        magnification={1.5}
-                                        textSize={18}
-                                        height={100}
-                                        startFromDate={!!signup.birthday ? typeof signup.birthday === 'string' ? new Date(signup.birthday) : signup.birthday : null}
-                                        backgroundColor = {theme === "light" ? "#f8f9fa" : "#1a1a1a"}
-                                        primaryTextColor = {theme === "light" ? "#2c3e50" : "#ecf0f1"}
-                                        secondaryTextColor = {theme === "light" ? "#7f8c8d" : "#bdc3c7"}
-                                        todayText="Today"
-                                        yesterdayText="Yesterday"
-                                      />
-                                      <div className={`${styles.dialogBottomContainer} ${styles[`dialogBottomContainer_${theme}`]}`}>
-                                          <button className={`${styles.selectButton} ${styles[`selectButton_${theme}`]}`} onClick={birthdayViewerController.close}>Select Date</button>
-                                      </div>
-                              </div>
-                    </BottomViewer>
+          <CustomScrollDatePicker
+            onChange={handleDateChange}
+            defaultDate={true}
+            quickDate={true}
+            opacity={0.5}
+            itemExtent={30}
+            useMagnifier={true}
+            magnification={1.5}
+            textSize={18}
+            height={100}
+            startFromDate={!!signup.birthday ? typeof signup.birthday === 'string' ? new Date(signup.birthday) : signup.birthday : null}
+            backgroundColor={theme === "light" ? "#f8f9fa" : "#1a1a1a"}
+            primaryTextColor={theme === "light" ? "#2c3e50" : "#ecf0f1"}
+            secondaryTextColor={theme === "light" ? "#7f8c8d" : "#bdc3c7"}
+            todayText="Today"
+            yesterdayText="Yesterday"
+          />
+          <div className={`${styles.dialogBottomContainer} ${styles[`dialogBottomContainer_${theme}`]}`}>
+            <button className={`${styles.selectButton} ${styles[`selectButton_${theme}`]}`} onClick={birthdayViewerController.close}>Select Date</button>
+          </div>
+        </div>
+      </BottomViewer>
 
       <BottomViewer
-                      id={genderBottomViewerId}
-                      isOpen={genderBottomIsOpen}
-                      onClose={genderBottomController.close}
-                      cancelButton={{
-                        position: "right",
-                        onClick: genderBottomController.close,
-                        view: <DialogCancel />
-                        }}
-                      layoutProp={{
-                        backgroundColor:  theme === 'light' ?  "#fff" : "#121212",
-                        handleColor: "#888",
-                        handleWidth: "48px",
-                      }}
-                      closeThreshold={0.2}
-                      zIndex={1000}
-                    >
-                       <div className={`${styles.dialogContainer} ${styles[`dialogContainer_${theme}`]}`}>
-                                            <div className={`${styles.dialogHeaderContainer} ${styles[`dialogHeaderContainer_${theme}`]}`}>
-                                            <h3 className={`${styles.dialogTitle} ${styles[`dialogTitle_${theme}`]}`}>SELECT YOUR GENDER</h3>
-                                            <div className={`${styles.itemContainer} ${styles[`itemContainer_${theme}`]}`} >
-                                            {genderList.map((gender, index) => (
-                                                                    <GenderItem
-                                                                      key={index}
-                                                                      onClick={() => handleGender(gender)}
-                                                                      text={gender}
-                                                                    />
-                                            ))}
-                                            </div>
-                                            </div>
+        id={genderBottomViewerId}
+        isOpen={genderBottomIsOpen}
+        onClose={genderBottomController.close}
+        cancelButton={{
+          position: "right",
+          onClick: genderBottomController.close,
+          view: <DialogCancel />
+        }}
+        layoutProp={{
+          backgroundColor: theme === 'light' ? "#fff" : "#121212",
+          handleColor: "#888",
+          handleWidth: "48px",
+        }}
+        closeThreshold={0.2}
+        zIndex={1000}
+      >
+        <div className={`${styles.dialogContainer} ${styles[`dialogContainer_${theme}`]}`}>
+          <div className={`${styles.dialogHeaderContainer} ${styles[`dialogHeaderContainer_${theme}`]}`}>
+            <h3 className={`${styles.dialogTitle} ${styles[`dialogTitle_${theme}`]}`}>SELECT YOUR GENDER</h3>
+            <div className={`${styles.itemContainer} ${styles[`itemContainer_${theme}`]}`} >
+              {genderList.map((gender, index) => (
+                <GenderItem
+                  key={index}
+                  onClick={() => handleGender(gender)}
+                  text={gender}
+                />
+              ))}
+            </div>
+          </div>
 
-                      </div>
-                    </BottomViewer>
+        </div>
+      </BottomViewer>
 
     </main>
   );

@@ -23,6 +23,7 @@ export default function SignUpStep1() {
   const [continueLoading, setContinueLoading] = useState(false);
   const [isFormValid, setIsFormValid] = useState(false);
   const [emailExists, setEmailExists] = useState(false);
+  const [fullNameState, setFullNameState] = useState('initial');
 
   useEffect(() => {
     setCanGoBack(window.history.length > 1);
@@ -35,6 +36,15 @@ export default function SignUpStep1() {
   const validateForm = (fullName: string, email: string) => {
     const isFullNameValid = fullName.trim().length > 3;
     const isEmailValid = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email);
+    
+    if (fullName.trim().length > 0 && fullName.trim().length <= 3) {
+      setFullNameState('invalid');
+    } else if (fullName.trim().length > 3) {
+      setFullNameState('valid');
+    } else {
+      setFullNameState('initial');
+    }
+    
     setIsFormValid(isFullNameValid && isEmailValid);
   };
 
@@ -140,6 +150,12 @@ export default function SignUpStep1() {
               disabled={continueLoading}
               required
             />
+            {fullNameState === 'invalid' && (
+              <p className={styles.errorText}>{t('fullname_too_short')}</p>
+            )}
+            {fullNameState === 'valid' && (
+              <p className={styles.validText}>{t('fullname_valid')}</p>
+            )}
           </div>
 
           <div className={styles.formGroup}>

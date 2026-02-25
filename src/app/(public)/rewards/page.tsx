@@ -4,6 +4,7 @@ import { use, useEffect, useState, useMemo, useLayoutEffect } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { getSupportedLang } from '@/context/LanguageContext';
+import CurrencySymbol from '@/components/CurrencySymbol/CurrencySymbol';
 import Image from 'next/image';
 import Link from 'next/link';
 import styles from './page.module.css';
@@ -427,7 +428,7 @@ export default function Rewards({ searchParams }: RewardsPageProps) {
                 <div className={styles.milestoneType}>
                   <div className={styles.milestoneHeader}>
                     <h3>{content.milestones.missions.title}</h3>
-                    <div className={styles.rewardTag}>+50 ADC</div>
+                    <div className={styles.rewardTag}><CurrencySymbol size={12} color="white" />50</div>
                   </div>
                   <p className={styles.milestoneDescription}>
                     {content.milestones.missions.description}
@@ -443,7 +444,7 @@ export default function Rewards({ searchParams }: RewardsPageProps) {
                 <div className={styles.milestoneType}>
                   <div className={styles.milestoneHeader}>
                     <h3>{content.milestones.achievements.title}</h3>
-                    <div className={styles.rewardTag}>+100 ADC</div>
+                    <div className={styles.rewardTag}><CurrencySymbol size={12} color="white" />100</div>
                   </div>
                   <p className={styles.milestoneDescription}>
                     {content.milestones.achievements.description}
@@ -499,7 +500,7 @@ export default function Rewards({ searchParams }: RewardsPageProps) {
                           <div className={styles.friendName}>{friend.name}</div>
                           <div className={styles.friendUsername}>{friend.username}</div>
                         </div>
-                        <div className={styles.friendReward}>+300 ADC</div>
+                        <div className={styles.friendReward}><CurrencySymbol size={12} />300</div>
                       </div>
                     ))}
                   </div>
@@ -513,7 +514,7 @@ export default function Rewards({ searchParams }: RewardsPageProps) {
                 </div>
 
                 <div className={styles.rewardHighlight}>
-                  <span className={styles.rewardAmount}>+300 ADC</span>
+                  <span className={styles.rewardAmount}><CurrencySymbol size={16} />300</span>
                   <span className={styles.rewardDescription}>per qualified friend</span>
                 </div>
               </div>

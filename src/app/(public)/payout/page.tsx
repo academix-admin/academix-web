@@ -4,6 +4,7 @@ import { use, useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { getSupportedLang } from '@/context/LanguageContext';
+import CurrencySymbol from '@/components/CurrencySymbol/CurrencySymbol';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Autoplay } from 'swiper/modules';
 import 'swiper/css';

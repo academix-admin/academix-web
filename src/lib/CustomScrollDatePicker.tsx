@@ -98,6 +98,9 @@ const WheelColumn = ({
   return (
     <div
       ref={containerRef}
+      onTouchStart={(e) => e.stopPropagation()}
+      onTouchMove={(e) => e.stopPropagation()}
+      onWheel={(e) => e.stopPropagation()}
       style={{
         flex: 1,
         height,

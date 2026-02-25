@@ -190,7 +190,7 @@
   border-color: #333;
 }
 
-.errorText {
+.errorText, .validText {
   font-size: 0.75rem;
   margin-top: 0.25rem;
   text-align: left;
@@ -206,6 +206,14 @@
 
 .container_dark .errorText {
   color: #F87171;
+}
+
+.container_light .validText {
+  color: green;
+}
+
+.container_dark .validText {
+  color: green;
 }
 
 .continueButton {

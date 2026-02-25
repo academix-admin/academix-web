@@ -13,6 +13,7 @@ import { ChallengeModel } from '@/models/user-display-quiz-topic-model';
 import LoadingView from '@/components/LoadingView/LoadingView';
 import NoResultsView from '@/components/NoResultsView/NoResultsView';
 import ErrorView from '@/components/ErrorView/ErrorView';
+import CurrencySymbol from '@/components/CurrencySymbol/CurrencySymbol';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Autoplay } from 'swiper/modules';
 import 'swiper/css';
@@ -293,7 +294,7 @@ function ChallengeCard({ challenge, isSelected, onClick }: ChallengeCardProps) {
           </h3>
         </div>
         <div className={styles.priceContainer}>
-          <span className={styles.currencySymbol}>A</span>
+          <CurrencySymbol size={16} className={styles.currencySymbol} />
           <span className={styles.price}>{formatNumber(challenge.challengePrice)}</span>
         </div>
       </div>
@@ -391,8 +392,8 @@ function PrizeRow({
       <span className={styles.prizeLabel}>{label}</span>
       <span className={styles.prizeValue}>
         {value !== undefined ? (
-          < >
-            <span className={styles.currencySymbol}>A</span>
+          <>
+            <CurrencySymbol size={12} className={styles.currencySymbol} />
             {formatNumber(value)}
           </>
         ) : (
