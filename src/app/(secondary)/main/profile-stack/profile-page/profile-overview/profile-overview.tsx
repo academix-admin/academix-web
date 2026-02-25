@@ -13,12 +13,25 @@ import { supabaseBrowser } from '@/lib/supabase/client';
 import { ComponentStateProps } from '@/hooks/use-component-state';
 import Image from 'next/image';
 import { useNav } from "@/lib/NavigationStack";
+import { QRCodeSVG } from 'qrcode.react';
+import { useDialog } from '@/lib/DialogViewer';
 
 export default function ProfileOverview({ onStateChange }: ComponentStateProps) {
   const { theme } = useTheme();
   const { t, lang, tNode } = useLanguage();
   const { userData, userData$ } = useUserData();
   const nav = useNav();
+  const { open, close, DialogViewer } = useDialog();
+
+  const handleQRClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    open(
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+        <QRCodeSVG value={userData?.usersUsername || ''} size={256} />
+        <p style={{ margin: 0, color: '#666', fontSize: '14px' }}>{userData?.usersUsername}</p>
+      </div>
+    );
+  };
 
   useEffect(() => {
     if(userData){
@@ -120,7 +133,7 @@ export default function ProfileOverview({ onStateChange }: ComponentStateProps) 
               </div>
             </div>
 
-            <div className={styles.qrCode}>
+            <div className={styles.qrCode} onClick={handleQRClick}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M3 11H11V3H3V11ZM5 5H9V9H5V5Z" fill="currentColor"/>
                 <path d="M3 21H11V13H3V21ZM5 15H9V19H5V15Z" fill="currentColor"/>
@@ -169,6 +182,7 @@ export default function ProfileOverview({ onStateChange }: ComponentStateProps) 
           </div>
         </div>
       </div>
+      <DialogViewer title="QR Code" showCancel={false} buttons={[{ text: 'Close', variant: 'secondary', onClick: close }]} />
     </div>
   );
 }
