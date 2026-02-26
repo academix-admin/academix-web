@@ -29,6 +29,7 @@ import { TransactionModel } from '@/models/transaction-model';
 import { useTransactionModel } from '@/lib/stacks/transactions-stack';
 import { PaymentCompletionData } from '@/models/completion-data';
 import { PinData } from '@/models/pin-data';
+import CurrencySymbol from '@/components/CurrencySymbol/CurrencySymbol';
 import { useDialog } from '@/lib/DialogViewer';
 
 
@@ -601,7 +602,7 @@ export default function TopUpPage() {
                   {currency} {formatNumber(amount)}
                 </div>
                 <div className={styles.academixAmount}>
-                  <span className={styles.academixIcon}>A</span>
+                  <CurrencySymbol className={styles.academixIcon} />
                   {formatNumber(amount * rate)}
                 </div>
               </div>
@@ -659,7 +660,7 @@ export default function TopUpPage() {
                     <div className={styles.walletName}>
                       {t('wallet_text')} (
                       <span className={styles.academixBalance}>
-                        A {formatNumber(balance)}
+                        <CurrencySymbol /> {formatNumber(balance)}
                       </span>
                       )
                     </div>

@@ -176,6 +176,7 @@
   border: none;
   cursor: pointer;
   transition: background-color 0.2s;
+  margin-top: 2rem;
 }
 
 .continueButton:hover {
@@ -434,6 +435,10 @@
 
   .title {
     font-size: 1.2rem;
+  }
+
+  .continueButton {
+    margin-top: 1.5rem;
   }
 
     .dialogContainer {

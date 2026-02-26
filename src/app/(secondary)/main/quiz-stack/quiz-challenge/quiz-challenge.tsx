@@ -39,6 +39,7 @@ import { useUserBalance } from '@/lib/stacks/user-balance-stack';
 import { poolsSubscriptionManager } from '@/lib/managers/PoolsQuizTopicSubscriptionManager';
 import { useActiveQuiz } from "@/lib/stacks/active-quiz-stack";
 import { PinData } from '@/models/pin-data';
+import CurrencySymbol from '@/components/CurrencySymbol/CurrencySymbol';
 import { useDialog } from '@/lib/DialogViewer';
 
 interface QuizChallengeProps {
@@ -409,7 +410,7 @@ export default function QuizChallenge(props: QuizChallengeProps) {
                         {/* Amount */}
                         <div className={styles.amountSection}>
                             <div className={styles.currencyAmount}>
-                                A {formatNumber(selectedChallengeModel?.challengePrice || 0)}
+                                <CurrencySymbol /> {formatNumber(selectedChallengeModel?.challengePrice || 0)}
                             </div>
                         </div>
 
@@ -431,7 +432,7 @@ export default function QuizChallenge(props: QuizChallengeProps) {
                         <div className={styles.infoRow}>
                             <span className={styles.infoLabel}>{t('amount_text')}:</span>
                             <span className={styles.infoValue}>
-                                A {selectedChallengeModel?.challengePrice}
+                                <CurrencySymbol /> {selectedChallengeModel?.challengePrice}
                             </span>
                         </div>
 
@@ -472,7 +473,7 @@ export default function QuizChallenge(props: QuizChallengeProps) {
                                     <div className={styles.walletName}>
                                         {t('redeem_code_text')} (
                                         <span className={styles.academixBalance}>
-                                            A {formatNumber(codeBalance)}
+                                            <CurrencySymbol /> {formatNumber(codeBalance)}
                                         </span>
                                         )
                                     </div>
@@ -499,7 +500,7 @@ export default function QuizChallenge(props: QuizChallengeProps) {
                                     <div className={styles.walletName}>
                                         {t('wallet_text')} (
                                         <span className={styles.academixBalance}>
-                                            A {formatNumber(balance)}
+                                            <CurrencySymbol /> {formatNumber(balance)}
                                         </span>
                                         )
                                     </div>

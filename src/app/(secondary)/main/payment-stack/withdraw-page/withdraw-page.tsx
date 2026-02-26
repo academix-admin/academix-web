@@ -28,6 +28,7 @@ import { TransactionModel } from '@/models/transaction-model';
 import { useTransactionModel } from '@/lib/stacks/transactions-stack';
 import { PaymentCompletionData } from '@/models/completion-data';
 import { PinData } from '@/models/pin-data';
+import CurrencySymbol from '@/components/CurrencySymbol/CurrencySymbol';
 import { useDialog } from '@/lib/DialogViewer';
 
 
@@ -605,7 +606,7 @@ export default function WithdrawPage() {
               {/* Amounts */}
               <div className={styles.amountSection}>
                 <div className={styles.academixAmount}>
-                  <span className={styles.academixIcon}>A</span>
+                  <CurrencySymbol className={styles.academixIcon} />
                   {formatNumber(amount * rate)}
                 </div>
                 <div className={styles.currencyAmount}>
@@ -637,7 +638,7 @@ export default function WithdrawPage() {
               <div className={styles.infoRow}>
                 <span className={styles.infoLabel}>{t('fee_text')}:</span>
                 <span className={styles.infoValue}>
-                  A {fee.toFixed(2)}
+                  <CurrencySymbol /> {fee.toFixed(2)}
                 </span>
               </div>
 
@@ -666,7 +667,7 @@ export default function WithdrawPage() {
                     <div className={styles.walletName}>
                       {t('wallet_text')} (
                       <span className={styles.academixBalance}>
-                        A {formatNumber(balance)}
+                        <CurrencySymbol /> {formatNumber(balance)}
                       </span>
                       )
                     </div>
