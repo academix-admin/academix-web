@@ -424,5 +424,12 @@
   "you_pay": "Vous payez",
   "charged_text": "Facturé",
   "rates_text": "Taux",
-  "links_text": "Liens"
+  "links_text": "Liens",
+  "about_text": "À propos",
+  "about_academix": "À propos d'Academix",
+  "about_description": "Academix est une plateforme d'apprentissage ludifiée qui transforme l'éducation en une expérience engageante, compétitive et enrichissante pour les apprenants du monde entier.",
+  "our_mission": "Notre Mission",
+  "mission_description": "Révolutionner l'éducation en rendant l'apprentissage interactif, compétitif et financièrement gratifiant tout en responsabilisant les éducateurs et les créateurs de contenu.",
+  "our_vision": "Notre Vision",
+  "vision_description": "Devenir la principale plateforme éducative mondiale où la connaissance rencontre l'opportunité, créant une communauté mondiale d'apprenants, d'éducateurs et d'innovateurs."
 }

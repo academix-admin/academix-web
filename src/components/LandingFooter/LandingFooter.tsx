@@ -3,6 +3,7 @@ import styles from './LandingFooter.module.css';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import Image from 'next/image';
+import Link from 'next/link';
 
 const SOCIAL_LINKS = [
   {
@@ -44,16 +45,18 @@ const SOCIAL_LINKS = [
 ];
 
 const FOOTER_NAV_LINKS = [
-  { key: 'how_2_play', href: '#how-to-play' },
-  { key: 'features_text', href: '#features' },
-  { key: 'developer_text', href: '#developer' }
+  { key: 'instructions_text', href: '/instructions' },
+  { key: 'about_text', href: '/about' },
+  { key: 'payout_text', href: '/payout' },
+  { key: 'rates_text', href: '/rates' },
+  { key: 'rewards_text', href: '/rewards' },
+  { key: 'rules_text', href: '/rules' },
 ];
 
 const LEGAL_LINKS = [
   { key: 'privacy_policy', href: '#' },
   { key: 'terms_of_service', href: '#' },
-  { key: 'contact_us', href: '#' },
-  { key: 'faq', href: '#' },
+  { key: 'help_text', href: '/help' },
 ];
 
 export default function LandingFooter() {
@@ -92,12 +95,12 @@ export default function LandingFooter() {
             <ul className={styles.linksList}>
               {FOOTER_NAV_LINKS.map((link) => (
                 <li key={link.key}>
-                  <a
+                  <Link
                     href={link.href}
                     className={`${styles.footerLink} ${styles[`footerLink_${theme}`]}`}
                   >
                     {t(link.key)}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>

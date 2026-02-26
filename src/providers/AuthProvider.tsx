@@ -16,6 +16,7 @@ interface AuthContextType {
   initialized: boolean;
   session: Session | null;
   userData: UserData | null;
+  hasValidSession: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -75,9 +76,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    if (matchesRoutePattern(pathname, publicRoutes) && typeof window !== "undefined") {
+    const isPublicRoute = matchesRoutePattern(pathname, publicRoutes);
+    
+    if (isPublicRoute && typeof window !== "undefined") {
       setInitialized(true);
-      return;
     }
 
     if (!__meta.isHydrated || typeof window === "undefined") return;
@@ -105,6 +107,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setSession(initialSession);
         }
 
+        // Only redirect if not on public route
         if (initialUser && userData && matchesRoutePattern(pathname, internalRoutes)) {
            await replaceAndWait("/main");
         }
@@ -166,7 +169,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [__meta.isHydrated, pathname]);
 
   return (
-    <AuthContext.Provider value={{ initialized, session, userData }}>
+    <AuthContext.Provider value={{ initialized, session, userData, hasValidSession: !!session && !isSessionExpired(session) }}>
       <AuthBlocker children={children}/>
     </AuthContext.Provider>
   );

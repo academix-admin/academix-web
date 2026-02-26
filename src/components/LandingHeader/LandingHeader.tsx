@@ -14,9 +14,12 @@ const LANGUAGE_OPTIONS = [
 
 // Navigation links configuration
 const NAV_LINKS = [
-  { key: 'how_2_play', href: '#how-to-play' },
-  { key: 'features_text', href: '#features' },
-  { key: 'developer_text', href: '#developer' },
+  { key: 'instructions_text', href: '/instructions' },
+  { key: 'about_text', href: '/about' },
+  { key: 'payout_text', href: '/payout' },
+  { key: 'rates_text', href: '/rates' },
+  { key: 'rewards_text', href: '/rewards' },
+  { key: 'rules_text', href: '/rules' },
 ];
 
 export default function LandingHeader() {

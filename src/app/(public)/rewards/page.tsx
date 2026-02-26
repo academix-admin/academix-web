@@ -154,7 +154,7 @@ export default function Rewards({ searchParams }: RewardsPageProps) {
   const { col, lan, req, to } = useAppParams(resolvedSearchParams);
   const { theme } = useTheme();
   const { t, tNode, lang } = useLanguage();
-  const { initialized } = useAuthContext();
+  const { initialized, hasValidSession } = useAuthContext();
   const router = useRouter();
   const [canGoBack, setCanGoBack] = useState(false);
   const [calledFind, setCalledFind] = useState(false);
@@ -207,15 +207,8 @@ export default function Rewards({ searchParams }: RewardsPageProps) {
   };
 
   const goBack = () => {
-    if (initialized) {
-      router.replace('/main');
-      return;
-    }
-    if (window.history.length <= 1) {
-      router.replace('/main');
-    } else {
-      router.back();
-    }
+    if (hasValidSession) { router.replace('/main'); return; }
+    if (window.history.length <= 1) { router.replace('/main'); } else { router.back(); }
   };
 
   const scrollToSection = (sectionId: string) => {
@@ -267,7 +260,7 @@ export default function Rewards({ searchParams }: RewardsPageProps) {
       {config.showHeader && (
         <header className={`${styles.header} ${styles[`header_${resolvedTheme}`]}`}>
           <div className={styles.headerContent}>
-            {(canGoBack || initialized) && (
+            {(canGoBack || hasValidSession) && (
               <button
                 className={styles.backButton}
                 onClick={goBack}
@@ -284,7 +277,7 @@ export default function Rewards({ searchParams }: RewardsPageProps) {
 
             <h1 className={styles.title}>{t('reward_text')}</h1>
 
-            {!initialized && <Link className={styles.logoContainer} href="/">
+            {!hasValidSession && <Link className={styles.logoContainer} href="/">
               <Image
                 className={styles.logo}
                 src="/assets/image/academix-logo.png"

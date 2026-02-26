@@ -423,7 +423,12 @@
   "you_pay": "You pay",
   "charged_text": "Charged",
   "rates_text": "Rates",
-  "links_text": "Links"
+  "links_text": "Links",
+  "about_text": "About",
+  "about_academix": "About Academix",
+  "about_description": "Academix is a gamified Learning-as-a-Service platform that transforms education into an engaging, competitive, and rewarding experience for learners worldwide.",
+  "our_mission": "Our Mission",
+  "mission_description": "To revolutionize education by making learning interactive, competitive, and financially rewarding while empowering educators and content creators.",
+  "our_vision": "Our Vision",
+  "vision_description": "To become the world's leading educational platform where knowledge meets opportunity, creating a global community of learners, educators, and innovators."
 }
-
-

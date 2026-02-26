@@ -775,7 +775,7 @@ export default function Payout({ searchParams }: PayoutPageProps) {
   const { challengeId, col, lan, req } = useAppParams(resolvedSearchParams);
   const { theme } = useTheme();
   const { t, tNode, lang } = useLanguage();
-  const { initialized } = useAuthContext();
+  const { initialized, hasValidSession } = useAuthContext();
   const router = useRouter();
   const [canGoBack, setCanGoBack] = useState(false);
 
@@ -865,17 +865,8 @@ export default function Payout({ searchParams }: PayoutPageProps) {
 
 
   const goBack = () => {
-    if (initialized) {
-      router.replace('/main');
-      return;
-    }
-
-    // fallback if no history
-    if (window.history.length <= 1) {
-      router.replace('/main');
-    } else {
-      router.back();
-    }
+    if (hasValidSession) { router.replace('/main'); return; }
+    if (window.history.length <= 1) { router.replace('/main'); } else { router.back(); }
   };
 
 
@@ -888,7 +879,7 @@ export default function Payout({ searchParams }: PayoutPageProps) {
       {config.showHeader && (
         <header className={`${styles.header} ${styles[`header_${resolvedTheme}`]}`}>
           <div className={styles.headerContent}>
-            {(canGoBack || initialized) && (
+            {(canGoBack || hasValidSession) && (
               <button
                 className={styles.backButton}
                 onClick={goBack}
@@ -905,7 +896,7 @@ export default function Payout({ searchParams }: PayoutPageProps) {
 
             <h1 className={styles.title}>{t('payout_text')}</h1>
 
-            {!initialized && <Link className={styles.logoContainer} href="/">
+            {!hasValidSession && <Link className={styles.logoContainer} href="/">
               <Image
                 className={styles.logo}
                 src="/assets/image/academix-logo.png"

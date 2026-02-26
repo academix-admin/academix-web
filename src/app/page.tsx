@@ -13,6 +13,7 @@ import LandingRoles from '@/components/LandingRoles/LandingRoles';
 import LandingMoreAbout from '@/components/LandingMoreAbout/LandingMoreAbout';
 import LandingFeatures from '@/components/LandingFeatures/LandingFeatures';
 import LandingAcademixCalculator from '@/components/LandingAcademixCalculator/LandingAcademixCalculator';
+import Instructions from './(public)/instructions/page';
 import Payout from './(public)/payout/page';
 import Rates from './(public)/rates/page';
 
@@ -27,7 +28,10 @@ export default function LandingPage() {
       <LandingAccounting />
       <LandingShortAbout />
       <LandingRoles />
-      <LandingMoreAbout />
+      {/* <LandingMoreAbout /> */}
+      <Suspense>
+        <Instructions searchParams={Promise.resolve({ req: 'landing' })} />
+      </Suspense>
       <LandingFeatures />
       <Suspense>
         <Payout searchParams={Promise.resolve({ req: 'landing' })} />
