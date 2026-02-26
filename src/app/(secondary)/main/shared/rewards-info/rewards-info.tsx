@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState, useRef, useCallback, useMemo, Suspense } from 'react';
+import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
+import CachedSuspense from '@/components/CachedSuspense';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import Image from 'next/image';
@@ -45,9 +46,9 @@ export default function RewardsInfo(props: RewardsInfoProps) {
         </div>
       </header>
 
-      <Suspense>
+      <CachedSuspense cached={true}>
         <Rewards searchParams={Promise.resolve({ req: 'reward', to: sectionId })} />
-      </Suspense>
+      </CachedSuspense>
     </main>
   );
 }
