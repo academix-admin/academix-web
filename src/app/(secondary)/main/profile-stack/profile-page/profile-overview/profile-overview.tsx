@@ -51,8 +51,28 @@ export default function ProfileOverview({ onStateChange }: ComponentStateProps) 
     switch (role) {
       case 'Roles.celebrity':
         return t('celebrity_text');
+      case 'Roles.academic_institution':
+        return t('academic_institution_text');
+      case 'Roles.manager':
+        return t('manager_text');
+      case 'Roles.administrator':
+        return t('administrator_text');
+      case 'Roles.organization':
+        return t('organization_text');
+      case 'Roles.student':
+        return t('student_text');
       case 'Roles.creator':
         return t('creator_text');
+      case 'Roles.reviewer':
+        return t('reviewer_text');
+      case 'Roles.teacher':
+        return t('teacher_text');
+      case 'Roles.parent':
+        return t('parent_text');
+      case 'Roles.academix_creator':
+        return t('academix_creator_text');
+      case 'Roles.academix_reviewer':
+        return t('academix_reviewer_text');
       default:
         return t('unknown_role_text');
     }
