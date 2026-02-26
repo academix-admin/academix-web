@@ -62,7 +62,6 @@
   transition: all 0.3s ease;
   padding-bottom: var(--nav-height);
   align-items: center;
-  padding: 2rem 1rem;
   border: none;
   background-color: transparent;
   box-shadow: none;
@@ -397,7 +396,6 @@
 
   .innerBody {
     width: 100%;
-    padding: 1rem;
   }
 
   .headerContent {

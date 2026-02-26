@@ -62,12 +62,11 @@
   box-sizing: border-box;
   border-radius: 12px;
   transition: all 0.3s ease;
-  padding-bottom: var(--nav-height);
   align-items: center;
-  padding: 2rem 1rem;
   border: none;
   background-color: transparent;
   box-shadow: none;
+  padding-bottom: var(--nav-height);
 }
 
 .innerBody_ios {
@@ -389,7 +388,6 @@
 
   .innerBody {
     width: 100%;
-    padding: 1rem;
   }
 
   .headerContent {

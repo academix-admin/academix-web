@@ -1,6 +1,6 @@
 'use client';
 
-import {  Suspense } from 'react';
+import CachedSuspense from '@/components/CachedSuspense';
 import styles from './page.module.css';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
@@ -29,14 +29,14 @@ export default function LandingPage() {
       <LandingShortAbout />
       <LandingRoles />
       {/* <LandingMoreAbout /> */}
-      <Suspense>
+      <CachedSuspense cached={true}>
         <Instructions searchParams={Promise.resolve({ req: 'landing' })} />
-      </Suspense>
+      </CachedSuspense>
       <LandingFeatures />
-      <Suspense>
+      <CachedSuspense cached={true}>
         <Payout searchParams={Promise.resolve({ req: 'landing' })} />
         <Rates searchParams={Promise.resolve({ req: 'landing'})} />
-      </Suspense>
+      </CachedSuspense>
       <LandingFooter />
     </div>
   );
