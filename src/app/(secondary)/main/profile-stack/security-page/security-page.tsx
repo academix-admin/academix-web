@@ -101,7 +101,6 @@ export default function SecurityPage() {
       </header>
 
       <div className={styles.content}>
-        <div className={styles.container}>
           <div className={`${styles.securitySection} ${styles[`securitySection_${theme}`]}`}>
             <div className={styles.menuList}>
               <SecurityMenuItem
@@ -149,7 +148,6 @@ export default function SecurityPage() {
                 theme={theme}
               />
             </div>
-          </div>
         </div>
       </div>
     </main>
