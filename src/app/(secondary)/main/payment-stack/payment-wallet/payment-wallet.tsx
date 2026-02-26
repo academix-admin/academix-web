@@ -410,7 +410,7 @@ export default function PaymentWallet({ profileType, onWalletData, onWalletAmoun
             {isFocused ? (
               <div className={styles.swapIcon}>
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M16 17V10l-4 4 4 4v-7h2v7h-2zm-8-7V7H6v7h2v-3l4 4-4 4v-3H6c-1.1 0-2-.9-2-2V7c0-1.1.9-2 2-2h2v2H6v10h2v-3z"/>
+                  <path d="M6.99 11L3 15l3.99 4v-3H14v-2H6.99v-3zM21 9l-3.99-4v3H10v2h7.01v3L21 9z"/>
                 </svg>
               </div>
             ) : (
