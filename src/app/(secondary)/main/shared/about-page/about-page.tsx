@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense } from 'react';
+import CachedSuspense from '@/components/CachedSuspense';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import styles from './about-page.module.css';
@@ -29,9 +29,9 @@ export default function AboutPage() {
         </div>
       </header>
 
-      <Suspense>
+      <CachedSuspense cached={true}>
         <About searchParams={Promise.resolve({ req: 'profile' })} />
-      </Suspense>
+      </CachedSuspense>
     </main>
   );
 }

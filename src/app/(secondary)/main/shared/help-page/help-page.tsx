@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense } from 'react';
+import CachedSuspense from '@/components/CachedSuspense';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import styles from './help-page.module.css';
@@ -29,9 +29,9 @@ export default function HelpPage() {
         </div>
       </header>
 
-      <Suspense>
+      <CachedSuspense cached={true}>
         <Help searchParams={Promise.resolve({ req: 'profile' })} />
-      </Suspense>
+      </CachedSuspense>
     </main>
   );
 }
