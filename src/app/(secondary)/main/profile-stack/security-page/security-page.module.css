@@ -702,7 +702,8 @@
 /* Responsive Styles */
 @media screen and (min-width: 801px) {
   .container {
-    padding: 0 28px;
+    padding-left: 28px;
+    padding-right: 28px;
   }
 
   .securitySection {
@@ -731,7 +732,8 @@
 
 @media screen and (max-width: 500px) {
   .container {
-    padding: 0 16px;
+    padding-left: 16px;
+    padding-right: 16px;
   }
 
   .securitySection {
