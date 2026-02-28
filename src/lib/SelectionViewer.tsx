@@ -82,7 +82,7 @@ type LayoutProps = {
 };
 
 type SelectionViewerProps = {
-  id: string;
+  id?: string;
   isOpen: boolean;
   backDrop?: boolean;
   onClose: () => void;
@@ -107,8 +107,8 @@ type SelectionViewerProps = {
 };
 
 // ==================== Styles ====================
-const styles = `
-.selection-viewer-header {
+const getStyles = (id: string) => `
+#${id} .selection-viewer-header {
   padding: 0px;
   display: flex;
   flex-direction: column;
@@ -117,19 +117,19 @@ const styles = `
   width: 100%;
 }
 
-.selection-viewer-drag-handle {
+#${id} .selection-viewer-drag-handle {
   height: 5px;
   border-radius: 3px;
   margin-top: 16px;
 }
 
-.selection-viewer-container {
+#${id} .selection-viewer-container {
   display: flex;
   align-items: flex-start;
   width: 100%;
 }
 
-.selection-viewer-title {
+#${id} .selection-viewer-title {
   margin: 0px;
   font-size: 18px;
   font-weight: 600;
@@ -138,38 +138,39 @@ const styles = `
     white-space: normal;      /* allow wrapping */
 }
 
-.selection-viewer-search {
+#${id} .selection-viewer-search {
   display: flex;
   align-items: center;
   margin: 0 16px 0px 16px;
-  border-radius: 8px;
+  border-radius: 12px;
   box-sizing: border-box;
+  border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
-.selection-viewer-search-input {
+#${id} .selection-viewer-search-input {
   flex: 1;
   border: none;
   background: transparent;
-  padding: 8px;
+  padding: 12px 8px;
   outline: none;
   font-size: 16px;
   width: 100%;
 }
 
-.selection-viewer-content {
+#${id} .selection-viewer-content {
   height: 100%;
   overflow-y: auto;
   padding: 0 0px 0px 0px;
   -webkit-overflow-scrolling: touch;
 }
 
-.selection-viewer-content.vertical {
+#${id} .selection-viewer-content.vertical {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.selection-viewer-content.horizontal {
+#${id} .selection-viewer-content.horizontal {
   display: flex;
   flex-direction: row;
   gap: 8px;
@@ -177,27 +178,27 @@ const styles = `
   overflow-y: hidden;
 }
 
-.selection-viewer-no-results,
-.selection-viewer-error,
-.selection-viewer-loading {
+#${id} .selection-viewer-no-results,
+#${id} .selection-viewer-error,
+#${id} .selection-viewer-loading {
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 120px;
 }
 
-.selection-viewer-default-no-results {
+#${id} .selection-viewer-default-no-results {
   color: #666;
   font-size: 14px;
 }
 
-.selection-viewer-default-error {
+#${id} .selection-viewer-default-error {
   color: red;
   font-size: 14px;
 }
 
 /* Full screen search mode */
-.selection-viewer-fullscreen-search {
+#${id} .selection-viewer-fullscreen-search {
 //   position: fixed;
   top: 0;
   left: 0;
@@ -207,40 +208,52 @@ const styles = `
   width: 100%;
 }
 
-.selection-viewer-search-back-button {
+#${id} .selection-viewer-search-back-button {
   background: none;
   border: none;
   padding: 8px;
-  margin-right: 8px;
+  margin-right: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
+  transition: opacity 0.2s;
 }
 
-.selection-viewer-search-clear-button {
+#${id} .selection-viewer-search-back-button:hover {
+  opacity: 0.7;
+}
+
+#${id} .selection-viewer-search-clear-button {
   background: none;
   border: none;
   padding: 8px;
-  margin-left: 8px;
+  margin-left: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+#${id} .selection-viewer-search-clear-button:hover {
+  opacity: 0.7;
 }
 
 /* React Modal Sheet overrides */
-.react-modal-sheet-container {
+#${id} .react-modal-sheet-container {
   max-width: 500px;
   margin: 0 auto;
   border-top-left-radius: 16px;
   border-top-right-radius: 16px;
 }
 
-.react-modal-sheet-backdrop {
+#${id} .react-modal-sheet-backdrop {
   background-color: rgba(0, 0, 0, 0.5) !important;
   pointer-events: auto !important;
 }
 
-.react-modal-sheet-content {
+#${id} .react-modal-sheet-content {
   padding: 0 0px 0px 0px;
   height: 100%;
 }
@@ -248,7 +261,7 @@ const styles = `
 
 /* Mobile full-width behavior */
 @media (max-width: 500px) {
-  .react-modal-sheet-container {
+  #${id} .react-modal-sheet-container {
     max-width: 100%;
     border-radius: 0;
   }
@@ -256,22 +269,22 @@ const styles = `
 
 /* Prevent iOS zooming */
 @media screen and (-webkit-min-device-pixel-ratio: 0) {
-  .selection-viewer-search-input {
+  #${id} .selection-viewer-search-input {
     font-size: 16px !important;
   }
 }
 `;
 
-// ==================== Hook to inject CSS once ====================
-const useInjectStyles = () => {
+// ==================== Hook to inject CSS per instance ====================
+const useInjectStyles = (id: string) => {
   useEffect(() => {
-    const styleId = "selection-viewer-styles";
+    const styleId = `selection-viewer-styles-${id}`;
     let styleTag = document.getElementById(styleId) as HTMLStyleElement | null;
     
     if (!styleTag) {
       styleTag = document.createElement("style");
       styleTag.id = styleId;
-      styleTag.innerHTML = styles;
+      styleTag.innerHTML = getStyles(id);
       document.head.appendChild(styleTag);
     }
 
@@ -281,12 +294,12 @@ const useInjectStyles = () => {
         document.head.removeChild(styleTag);
       }
     };
-  }, []);
+  }, [id]);
 };
 
 // ==================== Component ====================
 const SelectionViewer: React.FC<SelectionViewerProps> = ({
-  id,
+  id: providedId,
   isOpen,
   backDrop = true,
   onClose,
@@ -309,6 +322,7 @@ const SelectionViewer: React.FC<SelectionViewerProps> = ({
   selectionState = "initial",
   closeThreshold = 0.2,
 }) => {
+  const [id] = useState(() => providedId || `selection-${Math.random().toString(36).substr(2, 9)}`);
   const [searchValue, setSearchValue] = useState("");
   const [activeSnap, setActiveSnap] = useState(initialSnap);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
@@ -316,7 +330,7 @@ const SelectionViewer: React.FC<SelectionViewerProps> = ({
   const searchInputRef = useRef<HTMLInputElement>(null);
   const sheetRef = useRef<any>(null);
 
-  useInjectStyles();
+  useInjectStyles(id);
 
   // Auto-focus on search
   useEffect(() => {
@@ -397,6 +411,7 @@ const SelectionViewer: React.FC<SelectionViewerProps> = ({
       style={{ zIndex }}
     >
       <Sheet.Container
+        id={id}
         style={{
           maxHeight,
           minHeight: isSearchFocused ? "100%" : minHeight,

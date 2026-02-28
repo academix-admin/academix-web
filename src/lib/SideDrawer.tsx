@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useEffect, useRef, useCallback } from 'react';
+import React, { useEffect, useRef, useCallback, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 interface SideDrawerProps {
+  id?: string;
   isOpen: boolean;
   onClose: () => void;
   children: React.ReactNode;
@@ -22,19 +23,13 @@ interface SideDrawerProps {
   };
 }
 
-const useInjectSideDrawerStyles = (width?: SideDrawerProps['width']) => {
-  useEffect(() => {
-    if (typeof document === 'undefined') return;
-    if (document.getElementById('sidedrawer-styles')) return;
+const getStyles = (id: string, width?: SideDrawerProps['width']) => {
+  const mobileWidth = width?.mobile || '80%';
+  const tabletWidth = width?.tablet || '70%';
+  const desktopWidth = width?.desktop || '60%';
 
-    const mobileWidth = width?.mobile || '80%';
-    const tabletWidth = width?.tablet || '70%';
-    const desktopWidth = width?.desktop || '60%';
-
-    const styleTag = document.createElement('style');
-    styleTag.id = 'sidedrawer-styles';
-    styleTag.innerHTML = `
-      .sidedrawer-backdrop {
+  return `
+      #${id} .sidedrawer-backdrop {
         position: fixed;
         inset: 0;
         background-color: rgba(0, 0, 0, var(--sidedrawer-backdrop-opacity, 0.5));
@@ -46,13 +41,13 @@ const useInjectSideDrawerStyles = (width?: SideDrawerProps['width']) => {
         pointer-events: none;
       }
 
-      .sidedrawer-backdrop.open {
+      #${id} .sidedrawer-backdrop.open {
         opacity: 1;
         visibility: visible;
         pointer-events: auto;
       }
 
-      .sidedrawer {
+      #${id} .sidedrawer {
         position: fixed;
         top: 0;
         height: 100vh;
@@ -68,83 +63,94 @@ const useInjectSideDrawerStyles = (width?: SideDrawerProps['width']) => {
       }
 
       /* Positioning */
-      .sidedrawer.left {
+      #${id} .sidedrawer.left {
         left: 0;
         transform: translateX(-100%);
       }
 
-      .sidedrawer.right {
+      #${id} .sidedrawer.right {
         right: 0;
         transform: translateX(100%);
       }
 
-      .sidedrawer.open.left,
-      .sidedrawer.open.right {
+      #${id} .sidedrawer.open.left,
+      #${id} .sidedrawer.open.right {
         pointer-events: auto;
         transform: translateX(0);
       }
 
       /* Mobile Design (max-width: 500px) */
       @media screen and (max-width: 500px) {
-        .sidedrawer {
+        #${id} .sidedrawer {
           width: ${mobileWidth};
           border-radius: 0 12px 12px 0;
         }
 
-        .sidedrawer.right {
+        #${id} .sidedrawer.right {
           border-radius: 12px 0 0 12px;
         }
       }
 
       /* Tablet Design (max-width: 800px) and (min-width: 501px) */
       @media screen and (max-width: 800px) and (min-width: 501px) {
-        .sidedrawer {
+        #${id} .sidedrawer {
           width: ${tabletWidth};
           max-width: 500px;
           border-radius: 0 12px 12px 0;
         }
 
-        .sidedrawer.right {
+        #${id} .sidedrawer.right {
           border-radius: 12px 0 0 12px;
         }
       }
 
       /* Web Design (min-width: 801px) */
       @media screen and (min-width: 801px) {
-        .sidedrawer {
+        #${id} .sidedrawer {
           width: ${desktopWidth};
           max-width: 800px;
           border-radius: 0 12px 12px 0;
         }
 
-        .sidedrawer.right {
+        #${id} .sidedrawer.right {
           border-radius: 12px 0 0 12px;
         }
       }
 
       /* Accessibility */
-      .sidedrawer :focus-visible {
+      #${id} .sidedrawer :focus-visible {
         outline: 2px solid dodgerblue;
         outline-offset: 2px;
       }
 
       /* Prevent body scroll when drawer is open */
-      .sidedrawer-body-scroll-lock {
+      #${id} .sidedrawer-body-scroll-lock {
         overflow: hidden;
       }
-    `;
+`;
+};
 
+const useInjectSideDrawerStyles = (id: string, width?: SideDrawerProps['width']) => {
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    
+    const styleId = `sidedrawer-styles-${id}`;
+    if (document.getElementById(styleId)) return;
+
+    const styleTag = document.createElement('style');
+    styleTag.id = styleId;
+    styleTag.innerHTML = getStyles(id, width);
     document.head.appendChild(styleTag);
 
     return () => {
-      if (styleTag && document.head.contains(styleTag)) {
-        document.head.removeChild(styleTag);
-      }
+      const tag = document.getElementById(styleId);
+      if (tag) document.head.removeChild(tag);
     };
-  }, [width]);
+  }, [id, width]);
 };
 
 export default function SideDrawer({
+  id: providedId,
   isOpen,
   onClose,
   children,
@@ -158,12 +164,13 @@ export default function SideDrawer({
   preventScroll = true,
   width,
 }: SideDrawerProps) {
+  const [id] = useState(() => providedId || `sidedrawer-${Math.random().toString(36).substr(2, 9)}`);
   const drawerRef = useRef<HTMLDivElement>(null);
   const portalRoot = typeof window !== 'undefined' ? document.body : null;
   const [isMounted, setIsMounted] = React.useState(false);
 
   // Inject styles with width configuration
-  useInjectSideDrawerStyles(width);
+  useInjectSideDrawerStyles(id, width);
 
   useEffect(() => {
     setIsMounted(true);
@@ -230,6 +237,7 @@ export default function SideDrawer({
     <>
       {/* Backdrop */}
       <div
+        id={`${id}-backdrop`}
         className={`sidedrawer-backdrop ${isOpen ? 'open' : ''} ${backdropClassName}`}
         style={{
           '--sidedrawer-backdrop-opacity': backdropOpacity,
@@ -240,6 +248,7 @@ export default function SideDrawer({
 
       {/* Drawer */}
       <div
+        id={id}
         ref={drawerRef}
         className={`sidedrawer ${position} ${isOpen ? 'open' : ''} ${className}`}
         style={{

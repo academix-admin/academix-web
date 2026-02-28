@@ -9,6 +9,7 @@ export interface NavItem {
 }
 
 export interface SidebarProps {
+  id?: string;
   navKeys: NavItem[];
   activeId?: string;
   onChange?: (id: string, item: NavItem) => void;
@@ -36,18 +37,8 @@ export interface SidebarProps {
   className?: string;
 }
 
-const useInjectSidebarStyles = () => {
-  useEffect(() => {
-    if (typeof document === 'undefined') return;
-    
-    const styleId = 'sidebar-styles';
-    let styleTag = document.getElementById(styleId) as HTMLStyleElement | null;
-
-    if (!styleTag) {
-      styleTag = document.createElement('style');
-      styleTag.id = styleId;
-      styleTag.innerHTML = `
-      .sidebar {
+const getStyles = (id: string) => `
+      #${id}.sidebar {
         display: flex;
         flex-direction: column;
         justify-content: space-between;
@@ -57,17 +48,17 @@ const useInjectSidebarStyles = () => {
         position: relative;
       }
 
-      .sidebar-item-text {
+      #${id} .sidebar-item-text {
         white-space: nowrap;
         overflow: hidden;
         transition: opacity 0.3s ease;
       }
 
-      .sidebar-item-icon {
+      #${id} .sidebar-item-icon {
         transition: all 0.3s ease;
       }
 
-      .sidebar-resize-handle {
+      #${id} .sidebar-resize-handle {
         position: absolute;
         right: 0;
         top: 0;
@@ -79,11 +70,11 @@ const useInjectSidebarStyles = () => {
         z-index: 100;
       }
 
-      .sidebar-resize-handle:hover {
+      #${id} .sidebar-resize-handle:hover {
         background: rgba(255, 255, 255, 0.2);
       }
 
-      .sidebar-header {
+      #${id} .sidebar-header {
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -91,7 +82,7 @@ const useInjectSidebarStyles = () => {
         border-bottom: 1px solid rgba(255,255,255,0.1);
       }
 
-      .sidebar-nav {
+      #${id} .sidebar-nav {
         display: flex;
         flex-direction: column;
         flex-grow: 1;
@@ -99,7 +90,7 @@ const useInjectSidebarStyles = () => {
         overflow-y: auto;
       }
 
-      .sidebar-item {
+      #${id} .sidebar-item {
         display: flex;
         align-items: center;
         gap: 12px;
@@ -110,20 +101,20 @@ const useInjectSidebarStyles = () => {
         border-radius: 6px;
       }
 
-      .sidebar-item:hover {
+      #${id} .sidebar-item:hover {
         background-color: rgba(255, 255, 255, 0.05);
       }
 
-      .sidebar-item.active {
+      #${id} .sidebar-item.active {
         background-color: rgba(255, 255, 255, 0.1);
       }
 
-      .sidebar-footer {
+      #${id} .sidebar-footer {
         padding: 16px;
         border-top: 1px solid rgba(255,255,255,0.1);
       }
 
-      .sidebar-toggle {
+      #${id} .sidebar-toggle {
         cursor: pointer;
         display: flex;
         align-items: center;
@@ -135,12 +126,12 @@ const useInjectSidebarStyles = () => {
         color: #9ca3af;
       }
 
-      .sidebar-toggle:hover {
+      #${id} .sidebar-toggle:hover {
         background-color: rgba(255, 255, 255, 0.1);
         color: #e5e7eb;
       }
 
-      .sidebar-logo-collapsed {
+      #${id} .sidebar-logo-collapsed {
         cursor: pointer;
         display: flex;
         align-items: center;
@@ -149,45 +140,47 @@ const useInjectSidebarStyles = () => {
         transition: all 0.2s ease;
       }
 
-      .sidebar-logo-collapsed:hover {
+      #${id} .sidebar-logo-collapsed:hover {
         background-color: rgba(255, 255, 255, 0.05);
         border-radius: 6px;
       }
 
-      .sidebar-item-text {
-        white-space: nowrap;
-        overflow: hidden;
-        transition: opacity 0.2s ease;
-      }
-
       /* Scrollbar styling */
-      .sidebar-nav::-webkit-scrollbar {
+      #${id} .sidebar-nav::-webkit-scrollbar {
         width: 4px;
       }
 
-      .sidebar-nav::-webkit-scrollbar-track {
+      #${id} .sidebar-nav::-webkit-scrollbar-track {
         background: transparent;
       }
 
-      .sidebar-nav::-webkit-scrollbar-thumb {
+      #${id} .sidebar-nav::-webkit-scrollbar-thumb {
         background: rgba(255, 255, 255, 0.2);
         border-radius: 4px;
       }
 
-      .sidebar-nav::-webkit-scrollbar-thumb:hover {
+      #${id} .sidebar-nav::-webkit-scrollbar-thumb:hover {
         background: rgba(255, 255, 255, 0.3);
       }
-    `;
-      document.head.appendChild(styleTag);
-    }
+`;
 
-    // Cleanup on unmount
+const useInjectSidebarStyles = (id: string) => {
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    
+    const styleId = `sidebar-styles-${id}`;
+    if (document.getElementById(styleId)) return;
+
+    const styleTag = document.createElement('style');
+    styleTag.id = styleId;
+    styleTag.innerHTML = getStyles(id);
+    document.head.appendChild(styleTag);
+
     return () => {
-      if (styleTag && document.head.contains(styleTag)) {
-        document.head.removeChild(styleTag);
-      }
+      const tag = document.getElementById(styleId);
+      if (tag) document.head.removeChild(tag);
     };
-  }, []);
+  }, [id]);
 };
 
 // Default expand icon (right arrow)
@@ -209,6 +202,7 @@ const getBorderWidth = (borderRight: string): number => {
 };
 
 export default function Sidebar({
+  id: providedId,
   navKeys,
   activeId,
   onChange,
@@ -232,7 +226,8 @@ export default function Sidebar({
   shadow = '2px 0 8px rgba(0,0,0,0.2)',
   className = '',
 }: SidebarProps) {
-  useInjectSidebarStyles();
+  const [id] = useState(() => providedId || `sidebar-${Math.random().toString(36).substr(2, 9)}`);
+  useInjectSidebarStyles(id);
 
   const [mounted, setMounted] = useState(false);
   useEffect(() =>  {
@@ -406,6 +401,7 @@ export default function Sidebar({
 
   return (
     <aside
+      id={id}
       className={`sidebar ${className}`}
       style={{
         width: `${currentWidth}px`,

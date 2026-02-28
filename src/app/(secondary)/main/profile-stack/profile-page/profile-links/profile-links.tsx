@@ -53,83 +53,45 @@ export default function ProfileLinks({ onStateChange }: ComponentStateProps) {
     switch (iconName) {
       case 'rules':
         return (
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-          >
-            {/* clipboard + list */}
-            <path d="M9 2h6a1 1 0 0 1 1 1v2h-8V3a1 1 0 0 1 1-1z" fill="currentColor" />
-            <path
-              d="M7 7h10a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z"
-              fill="currentColor"
-              opacity="0.12"
-            />
-            <path d="M8 11h8v1H8zM8 14h8v1H8zM8 17h5v1H8z" fill="currentColor" />
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V8L14 2Z" fill="currentColor" opacity="0.2"/>
+            <path d="M14 2V8H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M16 13H8M16 17H8M10 9H8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         );
 
       case 'payout':
         return (
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="22"
-            height="22"
-            viewBox="0 0 24 24"
-            fill="none"
-          >
-            {/* wallet + coin */}
-            <path d="M2 7c0-1.1.9-2 2-2h12v12H4a2 2 0 0 1-2-2V7z" fill="currentColor" opacity="0.12" />
-            <path d="M20 8h-2v8h2a1 1 0 0 0 1-1V9a1 1 0 0 0-1-1z" fill="currentColor" />
-            <path d="M17 11a2 2 0 1 0 0 4 2 2 0 0 0 0-4z" stroke="currentColor" strokeWidth="0" fill="currentColor" />
-            <circle cx="17" cy="13" r="1" fill="#fff" opacity="0.15" />
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="2" y="5" width="20" height="14" rx="2" fill="currentColor" opacity="0.2"/>
+            <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2"/>
+            <path d="M2 10H7M17 10H22M2 14H7M17 14H22" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
           </svg>
         );
 
       case 'rates':
         return (
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-          >
-            {/* bar chart */}
-            <rect x="3" y="12" width="3.5" height="8" rx="0.5" fill="currentColor" />
-            <rect x="9" y="8" width="3.5" height="12" rx="0.5" fill="currentColor" opacity="0.9" />
-            <rect x="15" y="4" width="3.5" height="16" rx="0.5" fill="currentColor" opacity="0.7" />
-            <path d="M2 21h20v1H2z" fill="currentColor" opacity="0.12" />
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M3 17V21M9 13V21M15 9V21M21 5V21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <circle cx="3" cy="17" r="2" fill="currentColor"/>
+            <circle cx="9" cy="13" r="2" fill="currentColor"/>
+            <circle cx="15" cy="9" r="2" fill="currentColor"/>
+            <circle cx="21" cy="5" r="2" fill="currentColor"/>
           </svg>
         );
 
       case 'reward':
         return (
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="22"
-            height="22"
-            viewBox="0 0 24 24"
-            fill="none"
-          >
-            {/* star (reward / achievement) */}
-            <path
-              d="M12 2.5l2.6 5.27L20.8 8.6l-4 3.9.95 6.2L12 17.9l-5.75 1.8L7.2 12.5 3.2 8.6l6.2-.83L12 2.5z"
-              fill="currentColor"
-            />
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="currentColor"/>
           </svg>
         );
 
       case "instructions":
         return (
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-            <circle cx="10" cy="10" r="8" stroke="currentColor" strokeWidth="1.6" />
-            <path
-              d="M10 6.5a.75.75 0 110-1.5.75.75 0 010 1.5zM9.25 8.5h1.5v6h-1.5v-6z"
-              fill="currentColor"
-            />
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="12" r="10" fill="currentColor" opacity="0.2"/>
+            <path d="M12 16V12M12 8H12.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         );
 

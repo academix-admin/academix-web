@@ -73,18 +73,8 @@ export interface NavigationBarProps {
   className?: string;
 }
 
-const useInjectStyles = () => {
-  useEffect(() => {
-    if (typeof document === 'undefined') return;
-    
-    const styleId = 'navigation-bar-styles';
-    let styleTag = document.getElementById(styleId) as HTMLStyleElement | null;
-
-    if (!styleTag) {
-      styleTag = document.createElement('style');
-      styleTag.id = styleId;
-      styleTag.innerHTML = `
-      .navigation-bar {
+const getStyles = (id: string) => `
+      #${id}.navigation-bar {
         position: fixed;
         bottom: 0;
         left: 0;
@@ -98,7 +88,7 @@ const useInjectStyles = () => {
           box-sizing: border-box;
       }
 
-      .nav-item {
+      #${id} .nav-item {
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -111,16 +101,16 @@ const useInjectStyles = () => {
         outline: none;
       }
 
-      .nav-item:hover {
+      #${id} .nav-item:hover {
         color: var(--hoverColor);
       }
 
-      .nav-item svg {
+      #${id} .nav-item svg {
         margin-bottom: 2px;
         transition: transform 0.2s ease;
       }
 
-      .fab {
+      #${id}.fab {
         position: fixed;
         display: flex;
         align-items: center;
@@ -129,20 +119,31 @@ const useInjectStyles = () => {
         transition: transform 0.2s ease, opacity 0.2s ease;
       }
 
-      .fab.left { left: 16px; }
-      .fab.right { right: 16px; }
-      .fab.hidden { opacity: 0; transform: scale(0.9); pointer-events: none; }
+      #${id}.fab.left { left: 16px; }
+      #${id}.fab.right { right: 16px; }
+      #${id}.fab.hidden { opacity: 0; transform: scale(0.9); pointer-events: none; }
     `;
+
+const useInjectStyles = (id: string) => {
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    
+    const styleId = `navigation-bar-styles-${id}`;
+    let styleTag = document.getElementById(styleId) as HTMLStyleElement | null;
+
+    if (!styleTag) {
+      styleTag = document.createElement('style');
+      styleTag.id = styleId;
+      styleTag.innerHTML = getStyles(id);
       document.head.appendChild(styleTag);
     }
 
-    // Cleanup on unmount
     return () => {
       if (styleTag && document.head.contains(styleTag)) {
         document.head.removeChild(styleTag);
       }
     };
-  }, []);
+  }, [id]);
 };
 
 export default function NavigationBar({
@@ -194,7 +195,8 @@ export default function NavigationBar({
   /** Extra */
   className = '',
 }: NavigationBarProps) {
-  useInjectStyles();
+  const navId = useRef(`nav-${Math.random().toString(36).substr(2, 9)}`).current;
+  useInjectStyles(navId);
 
   const [mounted, setMounted] = useState(false); // ✅ NEW
     useEffect(() => {
@@ -454,6 +456,7 @@ export default function NavigationBar({
   return (
     <>
       <nav
+        id={navId}
         role="navigation"
         className={`navigation-bar ${className}`}
         style={{
@@ -501,6 +504,7 @@ export default function NavigationBar({
 
       {shouldShowFab && (
         <div
+          id={navId}
           className={`fab ${floatingButtonPosition}`}
           style={{
             bottom: `calc(${floatingButtonBottom} + env(safe-area-inset-bottom))`,

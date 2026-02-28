@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useCallback, useEffect} from "react";
 
 interface CustomScrollDatePickerProps {
+  id?: string;
   onChange: (date: Date) => void;
   defaultDate?: boolean;
   quickDate?: boolean;
@@ -16,12 +17,13 @@ interface CustomScrollDatePickerProps {
   secondaryTextColor?: string;
   todayText?: string;
   yesterdayText?: string;
-  formatMonthsNames?: ((monthIndex: number) => string) | string; // Make this optional
+  formatMonthsNames?: ((monthIndex: number) => string) | string;
   minYear?: number;
   maxYear?: number;
 };
 
 interface WheelColumnProps {
+  id: string;
   options: (string | number)[];
   selectedIndex: number;
   onChange: (index: number) => void;
@@ -46,8 +48,77 @@ const isLeapYear = (year: number) =>
 const getDaysInMonth = (month : number, year: number) =>
   (month === 1 && isLeapYear(year) ? 29 : monthDays[month]);
 
+const getStyles = (id: string) => `
+  #${id} .wheel-column {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scroll-snap-type: y mandatory;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    -webkit-overflow-scrolling: touch;
+    mask-image: linear-gradient(to bottom, transparent 0%, black 25%, black 75%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 25%, black 75%, transparent 100%);
+  }
+
+  #${id} .wheel-column::-webkit-scrollbar {
+    display: none;
+  }
+
+  #${id} .wheel-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    scroll-snap-align: center;
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+
+  #${id} .date-picker-container {
+    padding: 32px 16px 16px 16px;
+    border-radius: 8px;
+  }
+
+  #${id} .pickers-wrapper {
+    display: flex;
+    justify-content: center;
+  }
+
+  #${id} .quick-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    margin-top: 32px;
+  }
+
+  #${id} .quick-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
+`;
+
+const useInjectStyles = (id: string) => {
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    
+    const styleId = `datepicker-styles-${id}`;
+    if (document.getElementById(styleId)) return;
+
+    const styleTag = document.createElement('style');
+    styleTag.id = styleId;
+    styleTag.innerHTML = getStyles(id);
+    document.head.appendChild(styleTag);
+
+    return () => {
+      const tag = document.getElementById(styleId);
+      if (tag) document.head.removeChild(tag);
+    };
+  }, [id]);
+};
 
 const WheelColumn = ({
+  id,
   options,
   selectedIndex,
   onChange,
@@ -60,7 +131,7 @@ const WheelColumn = ({
   secondaryTextColor,
   textSize,
 }: WheelColumnProps) => {
-  const containerRef = React.useRef<HTMLDivElement>(null); // Add proper type here
+  const containerRef = React.useRef<HTMLDivElement>(null);
 
   // Sync scroll position when selectedIndex changes
   React.useEffect(() => {
@@ -77,7 +148,7 @@ const WheelColumn = ({
     const el = containerRef.current;
     if (!el) return;
 
-    let timeout: NodeJS.Timeout; // Add explicit type here
+    let timeout: NodeJS.Timeout;
     const handleScroll = () => {
       clearTimeout(timeout);
       timeout = setTimeout(() => {
@@ -85,7 +156,7 @@ const WheelColumn = ({
         const newIndex = Math.max(0, Math.min(options.length - 1, rawIndex));
         el.scrollTo({ top: newIndex * itemExtent, behavior: "smooth" });
         if (newIndex !== selectedIndex) onChange(newIndex);
-      }, 100); // wait for scroll to finish
+      }, 100);
     };
 
     el.addEventListener("scroll", handleScroll);
@@ -98,22 +169,12 @@ const WheelColumn = ({
   return (
     <div
       ref={containerRef}
+      className="wheel-column"
       onTouchStart={(e) => e.stopPropagation()}
       onTouchMove={(e) => e.stopPropagation()}
       onWheel={(e) => e.stopPropagation()}
       style={{
-        flex: 1,
         height,
-        overflowY: "auto",
-        overflowX: "hidden",
-        scrollSnapType: "y mandatory",
-        scrollbarWidth: "none",
-        msOverflowStyle: "none",
-        WebkitOverflowScrolling: "touch",
-        maskImage:
-          "linear-gradient(to bottom, transparent 0%, black 25%, black 75%, transparent 100%)",
-        WebkitMaskImage:
-          "linear-gradient(to bottom, transparent 0%, black 25%, black 75%, transparent 100%)",
       }}
     >
       {/* top spacer */}
@@ -124,30 +185,26 @@ const WheelColumn = ({
         return (
           <div
             key={index}
+            className="wheel-item"
             onClick={() => {
-                      const el = containerRef.current;
-                      if (el) {
-                        el.scrollTo({
-                          top: index * itemExtent,
-                          behavior: "smooth",
-                        });
-                      }
-                      onChange(index);
-                    }}
+              const el = containerRef.current;
+              if (el) {
+                el.scrollTo({
+                  top: index * itemExtent,
+                  behavior: "smooth",
+                });
+              }
+              onChange(index);
+            }}
             style={{
               height: itemExtent,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
               fontSize: textSize,
-              scrollSnapAlign: "center",
               fontWeight: isSelected ? "bold" : "normal",
               color: isSelected ? primaryTextColor : secondaryTextColor,
               transform: `scale(${
                 isSelected && useMagnifier ? magnification : 1
               })`,
               opacity: isSelected ? 1 : opacity,
-              transition: "all 0.2s ease",
             }}
           >
             {opt}
@@ -161,9 +218,8 @@ const WheelColumn = ({
   );
 };
 
-
-
 const CustomScrollDatePicker : React.FC<CustomScrollDatePickerProps> =  ({
+  id: providedId,
   onChange,
   defaultDate = true,
   quickDate = true,
@@ -183,6 +239,9 @@ const CustomScrollDatePicker : React.FC<CustomScrollDatePickerProps> =  ({
   minYear = 1900,
   maxYear = new Date().getFullYear() + 1,
 }) => {
+  const [id] = useState(() => providedId || `datepicker-${Math.random().toString(36).substr(2, 9)}`);
+  useInjectStyles(id);
+
   const today = new Date();
   const initDate = useMemo(
     () => (defaultDate ? startFromDate || today : new Date(minYear, 0, 1)),
@@ -215,13 +274,10 @@ const CustomScrollDatePicker : React.FC<CustomScrollDatePickerProps> =  ({
       if (typeof formatMonthsNames === 'function') {
         return defaultMonthNames.map((_, i) => formatMonthsNames(i));
       } else if (typeof formatMonthsNames === 'string') {
-        // Handle string format types if needed
-        return defaultMonthNames; // or implement format logic based on string
+        return defaultMonthNames;
       }
       return defaultMonthNames;
     }, [formatMonthsNames]);
-
-
 
   const updateDate = useCallback(
     (d: number, m: number, y: number) => {
@@ -275,22 +331,22 @@ const CustomScrollDatePicker : React.FC<CustomScrollDatePickerProps> =  ({
 
   return (
     <div
+      id={id}
+      className="date-picker-container"
       style={{
         backgroundColor,
-        padding: "32px 16px 16px 16px",
-        borderRadius: "8px",
         color: primaryTextColor,
       }}
     >
       {/* Pickers */}
       <div
+        className="pickers-wrapper"
         style={{
-          display: "flex",
-          justifyContent: "center",
           marginBottom: quickDate ? "32px" : "16px",
         }}
       >
         <WheelColumn
+          id={id}
           options={dayOptions}
           selectedIndex={dayIndex}
           onChange={handleDayChange}
@@ -306,6 +362,7 @@ const CustomScrollDatePicker : React.FC<CustomScrollDatePickerProps> =  ({
           }}
         />
         <WheelColumn
+          id={id}
           options={monthOptions}
           selectedIndex={monthIndex}
           onChange={handleMonthChange}
@@ -321,6 +378,7 @@ const CustomScrollDatePicker : React.FC<CustomScrollDatePickerProps> =  ({
           }}
         />
         <WheelColumn
+          id={id}
           options={years}
           selectedIndex={yearIndex}
           onChange={handleYearChange}
@@ -339,27 +397,23 @@ const CustomScrollDatePicker : React.FC<CustomScrollDatePickerProps> =  ({
 
       {/* Quick buttons */}
       {quickDate && (
-        <div style={{ display: "flex", justifyContent: "center", gap: "24px" }}>
+        <div className="quick-buttons">
           <button
+            className="quick-button"
             onClick={setToYesterday}
             style={{
-              background: "none",
-              border: "none",
               color: isYesterday ? primaryTextColor : secondaryTextColor,
               fontSize: textSize * 0.8,
-              cursor: "pointer",
             }}
           >
             {yesterdayText}
           </button>
           <button
+            className="quick-button"
             onClick={setToToday}
             style={{
-              background: "none",
-              border: "none",
               color: isToday ? primaryTextColor : secondaryTextColor,
               fontSize: textSize * 0.8,
-              cursor: "pointer",
             }}
           >
             {todayText}

@@ -19,7 +19,7 @@ interface CancelButtonProps {
 }
 
 interface BottomViewerProps {
-  id: string;
+  id?: string;
   isOpen: boolean;
   backDrop?: boolean;
   onClose: () => void;
@@ -35,17 +35,17 @@ interface BottomViewerProps {
 }
 
 // ==================== Styles ====================
-const createStyles = (maxHeight?: string) => `
-.bottom-viewer-drag-handle {
+const getStyles = (id: string, maxHeight?: string) => `
+#${id} .bottom-viewer-drag-handle {
   height: 5px;
   border-radius: 3px;
   margin: 16px auto;
   cursor: grab;
 }
-.bottom-viewer-drag-handle:active {
+#${id} .bottom-viewer-drag-handle:active {
   cursor: grabbing;
 }
-.bottom-viewer-header {
+#${id} .bottom-viewer-header {
   padding: 0px;
   display: flex;
   flex-direction: column;
@@ -54,7 +54,7 @@ const createStyles = (maxHeight?: string) => `
   width: 100%;
   flex-shrink: 0;
 }
-.bottom-viewer-content {
+#${id} .bottom-viewer-content {
   height: 100%;
   overflow-y: auto;
   padding: 0 0px 0px 0px;
@@ -64,7 +64,7 @@ const createStyles = (maxHeight?: string) => `
   box-sizing: border-box;
   contain: layout style paint;
 }
-.bottom-viewer-cancel-btn {
+#${id} .bottom-viewer-cancel-btn {
   position: absolute;
   top: 8px;
   border: none;
@@ -76,10 +76,10 @@ const createStyles = (maxHeight?: string) => `
   z-index: 1;
   min-height: 44px;
 }
-.bottom-viewer-cancel-btn:hover { opacity: 0.7; }
-.bottom-viewer-cancel-btn.left { left: 0px; }
-.bottom-viewer-cancel-btn.right { right: 0px; }
-.react-modal-sheet-container {
+#${id} .bottom-viewer-cancel-btn:hover { opacity: 0.7; }
+#${id} .bottom-viewer-cancel-btn.left { left: 0px; }
+#${id} .bottom-viewer-cancel-btn.right { right: 0px; }
+#${id} .react-modal-sheet-container {
   max-height: ${maxHeight ? `calc(${maxHeight} - env(safe-area-inset-top) - 34px)` : 'calc(100% - env(safe-area-inset-top) - 34px)'} !important;
   max-width: 500px;
   margin: 0 auto;
@@ -92,11 +92,11 @@ const createStyles = (maxHeight?: string) => `
   left: 0;
   right: 0;
 }
-.react-modal-sheet-backdrop {
+#${id} .react-modal-sheet-backdrop {
   background-color: rgba(0, 0, 0, 0.5) !important;
   pointer-events: auto !important;
 }
-.react-modal-sheet-content {
+#${id} .react-modal-sheet-content {
   padding: 0;
   height: 100%;
   display: flex;
@@ -104,7 +104,7 @@ const createStyles = (maxHeight?: string) => `
   contain: layout style;
 }
 @media (max-width: 500px) {
-  .react-modal-sheet-container {
+  #${id} .react-modal-sheet-container {
     max-width: 100%;
     border-radius: 0;
     margin-left: env(safe-area-inset-left, 0px);
@@ -112,16 +112,16 @@ const createStyles = (maxHeight?: string) => `
     width: calc(100% - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px));
   }
 }
-.body-bottom-sheet-open {
+#${id} .body-bottom-sheet-open {
   overflow: hidden;
   position: fixed;
   width: 100%;
   height: 100%;
 }
-.bottom-viewer-content-dynamic {
+#${id} .bottom-viewer-content-dynamic {
   transition: all 0.3s ease-out;
 }
-.bottom-viewer-loading {
+#${id} .bottom-viewer-loading {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -130,18 +130,18 @@ const createStyles = (maxHeight?: string) => `
 }
 `;
 
-// ==================== Hook to inject CSS once ====================
-const useInjectStyles = (maxHeight?: string, isOpen?: boolean) => {
+// ==================== Hook to inject CSS per instance ====================
+const useInjectStyles = (id: string, maxHeight?: string, isOpen?: boolean) => {
   useEffect(() => {
     if (!isOpen) return;
 
-    const styleId = maxHeight ? `bottom-viewer-styles-${maxHeight}` : "bottom-viewer-styles";
+    const styleId = `bottom-viewer-styles-${id}`;
     let styleTag = document.getElementById(styleId) as HTMLStyleElement | null;
 
     if (!styleTag) {
       styleTag = document.createElement("style");
       styleTag.id = styleId;
-      styleTag.innerHTML = createStyles(maxHeight);
+      styleTag.innerHTML = getStyles(id, maxHeight);
       document.head.appendChild(styleTag);
     }
 
@@ -150,12 +150,12 @@ const useInjectStyles = (maxHeight?: string, isOpen?: boolean) => {
         document.head.removeChild(styleTag);
       }
     };
-  }, [maxHeight, isOpen]);
+  }, [id, maxHeight, isOpen]);
 };
 
 // ==================== BottomViewer Component ====================
 const BottomViewer = React.forwardRef<any, BottomViewerProps>(({
-  id,
+  id: providedId,
   isOpen,
   backDrop = true,
   onClose,
@@ -169,6 +169,7 @@ const BottomViewer = React.forwardRef<any, BottomViewerProps>(({
   avoidKeyboard = true,
   closeThreshold = 0.2,
 }, ref) => {
+  const [id] = useState(() => providedId || `bottomviewer-${Math.random().toString(36).substr(2, 9)}`);
   const sheetRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -177,7 +178,7 @@ const BottomViewer = React.forwardRef<any, BottomViewerProps>(({
   const initialChildrenRef = useRef<React.ReactNode>(children);
   const [currentContent, setCurrentContent] = useState<React.ReactNode>(children);
 
-  useInjectStyles(layoutProp?.maxHeight, isOpen);
+  useInjectStyles(id, layoutProp?.maxHeight, isOpen);
 
   const isControlledInternally = useRef(false);
 
@@ -295,6 +296,7 @@ const BottomViewer = React.forwardRef<any, BottomViewerProps>(({
       avoidKeyboard={avoidKeyboard}
     >
       <Sheet.Container
+        id={id}
         ref={containerRef}
         style={{
           maxWidth: getMaxWidth(),
