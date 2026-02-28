@@ -49,6 +49,11 @@ const getDaysInMonth = (month : number, year: number) =>
   (month === 1 && isLeapYear(year) ? 29 : monthDays[month]);
 
 const getStyles = (id: string) => `
+  #${id}.date-picker-container {
+    padding: 32px 16px 16px 16px;
+    border-radius: 8px;
+  }
+
   #${id} .wheel-column {
     flex: 1;
     overflow-y: auto;
@@ -72,11 +77,6 @@ const getStyles = (id: string) => `
     scroll-snap-align: center;
     transition: all 0.2s ease;
     cursor: pointer;
-  }
-
-  #${id} .date-picker-container {
-    padding: 32px 16px 16px 16px;
-    border-radius: 8px;
   }
 
   #${id} .pickers-wrapper {
@@ -132,16 +132,25 @@ const WheelColumn = ({
   textSize,
 }: WheelColumnProps) => {
   const containerRef = React.useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = React.useState(false);
+
+  // Initial scroll on mount
+  React.useEffect(() => {
+    if (containerRef.current && !mounted) {
+      containerRef.current.scrollTop = selectedIndex * itemExtent;
+      setMounted(true);
+    }
+  }, [selectedIndex, itemExtent]);
 
   // Sync scroll position when selectedIndex changes
   React.useEffect(() => {
-    if (containerRef.current) {
+    if (containerRef.current && mounted) {
       containerRef.current.scrollTo({
         top: selectedIndex * itemExtent,
         behavior: "smooth",
       });
     }
-  }, [selectedIndex, itemExtent]);
+  }, [selectedIndex, itemExtent, mounted]);
 
   // Snap on scroll end
   React.useEffect(() => {
@@ -178,7 +187,7 @@ const WheelColumn = ({
       }}
     >
       {/* top spacer */}
-      <div style={{ height: height / 2 }} />
+      <div style={{ height: height / 2 - itemExtent / 2 }} />
 
       {options.map((opt, index) => {
         const isSelected = index === selectedIndex;
@@ -213,7 +222,7 @@ const WheelColumn = ({
       })}
 
       {/* bottom spacer */}
-      <div style={{ height: height / 2 }} />
+      <div style={{ height: height / 2 - itemExtent / 2 }} />
     </div>
   );
 };
@@ -242,10 +251,10 @@ const CustomScrollDatePicker : React.FC<CustomScrollDatePickerProps> =  ({
   const [id] = useState(() => providedId || `datepicker-${Math.random().toString(36).substr(2, 9)}`);
   useInjectStyles(id);
 
-  const today = new Date();
+  const today = useMemo(() => new Date(), []);
   const initDate = useMemo(
-    () => (defaultDate ? startFromDate || today : new Date(minYear, 0, 1)),
-    [defaultDate, startFromDate, today, minYear]
+    () => (defaultDate ? (startFromDate || today) : new Date(minYear, 0, 1)),
+    [defaultDate, startFromDate, minYear]
   );
 
   const years = useMemo(

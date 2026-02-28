@@ -38,7 +38,7 @@ interface DialogViewerProps {
 
 // ==================== Styles ====================
 const getStyles = (id: string) => `
-#${id} .dialog-overlay {
+#${id}.dialog-overlay {
   position: fixed;
   inset: 0;
   background-color: rgba(0, 0, 0, 0.5);
@@ -46,21 +46,28 @@ const getStyles = (id: string) => `
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 16px;
+  padding: 0;
+  margin: 0;
   -webkit-overflow-scrolling: touch;
+  box-sizing: border-box;
 }
 
+#${id}.dialog-overlay-animate {
+  animation: fadeIn 0.2s ease-out;
+}
 #${id} .dialog-container {
   background: white;
   border-radius: 12px;
   max-width: 400px;
-  width: 100%;
+  width: calc(100% - 32px);
+  margin: 16px;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
   display: flex;
   flex-direction: column;
   max-height: calc(100vh - 32px);
   position: relative;
   animation: scaleIn 0.2s ease-out;
+  box-sizing: border-box;
 }
 
 #${id} .dialog-header {
@@ -207,11 +214,9 @@ const getStyles = (id: string) => `
 }
 
 @media (max-width: 480px) {
-  #${id} .dialog-overlay {
-    padding: 12px;
-  }
-  
   #${id} .dialog-container {
+    width: calc(100% - 24px);
+    margin: 12px;
     max-height: calc(100vh - 24px);
     border-radius: 16px;
   }
