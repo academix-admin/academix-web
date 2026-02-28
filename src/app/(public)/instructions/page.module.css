@@ -10,16 +10,6 @@
   width: 100%;
 }
 
-.container_light {
-  background-color: #ffffff;
-  color: #000;
-}
-
-.container_dark {
-  background-color: #121212;
-  color: #ffffff;
-}
-
 .header {
   position: fixed;
   top: 0;

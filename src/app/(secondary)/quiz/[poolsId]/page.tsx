@@ -26,6 +26,7 @@ import SideDrawer from '@/lib/SideDrawer';
 import SideTracker from './side-tracker/side-tracker'
 import QuizResults from './quiz-results/quiz-results'
 import { useAwaitableRouter } from "@/hooks/useAwaitableRouter";
+import { FraudDetectionService } from '@/utils/fraudDetection';
 
 // Quiz state types
 type QuizState =
@@ -250,6 +251,27 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
     const submission = quizSession.submissions.get(question.poolsQuestionId);
     if ((submission?.status === 'loading' || submission?.status === 'data') && !override) {
           return;
+    }
+
+    // Fraud check before submission
+    const fraudCheck = await FraudDetectionService.checkAction(
+      userData.usersId,
+      poolsId,
+      'submit_question'
+    );
+
+    if (!fraudCheck.allowed) {
+      console.warn('Submission blocked by fraud detection:', fraudCheck.reasons);
+      setQuizSession(prev => {
+        const newSubmissions = new Map(prev.submissions);
+        newSubmissions.set(question.poolsQuestionId, {
+          status: 'error',
+          questionId: question.poolsQuestionId,
+          time: timeTaken
+        });
+        return { ...prev, submissions: newSubmissions };
+      });
+      return;
     }
 
     // Get user paramatical data for submission

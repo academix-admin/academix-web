@@ -15,6 +15,7 @@ import ProfileTitle from './profile-title/profile-title'
 import ProfileOverview from './profile-overview/profile-overview'
 import ProfileAccounts from './profile-accounts/profile-accounts'
 import ProfileContacts from './profile-contacts/profile-contacts'
+import ProfileLegal from './profile-legal/profile-legal'
 import ProfileLinks from './profile-links/profile-links'
 import LoadingView from '@/components/LoadingView/LoadingView'
 import NoResultsView from '@/components/NoResultsView/NoResultsView';
@@ -50,6 +51,7 @@ export default function ProfilePage() {
       {show && (<ProfileAccounts onStateChange={(state) => handleStateChange('profileAccounts', state)}/>)}
       {show && (<ProfileLinks onStateChange={(state) => handleStateChange('profileLinks', state)}/>)}
       {show && (<ProfileContacts onStateChange={(state) => handleStateChange('profileContacts', state)}/>)}
+      {show && (<ProfileLegal onStateChange={(state) => handleStateChange('profileLegal', state)}/>)}
 
                  <div>
                  {error && (<ErrorView text="Error occurred." buttonText="Try Again" onButtonClick={()=> console.log('error')} />)}

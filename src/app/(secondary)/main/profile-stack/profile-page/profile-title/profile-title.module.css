@@ -53,6 +53,26 @@
   margin-top: 0.25rem;
 }
 
+.iconButton {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  background-color: transparent;
+}
+
+.iconButton:hover {
+  transform: scale(1.1);
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.iconButton:active {
+  transform: scale(0.95);
+}
+
 /* Base SVG size for web (default) */
 .svgSection {
 
@@ -139,4 +159,19 @@
     color: #e0e0e0;
   }
 
+}
+
+.languageItem {
+  padding: 16px;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  transition: background-color 0.2s ease;
+}
+
+.languageItem:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.languageItem:last-child {
+  border-bottom: none;
 }

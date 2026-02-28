@@ -18,6 +18,8 @@ import RatesPage from "../shared/rates-page/rates-page";
 import RulesPage from "../shared/rules-page/rules-page";
 import PayoutPage from "../shared/payout-page/payout-page";
 import InstructionsPage from "../shared/instructions-page/instructions-page";
+import TermsPage from "../shared/terms-page/terms-page";
+import PrivacyPage from "../shared/privacy-page/privacy-page";
 
 
 const profileStackNavLink = {
@@ -35,7 +37,9 @@ const profileStackNavLink = {
   security_verification: SecurityVerification,
   security_otp: SecurityOtp,
   pin_mangement: PinManagement,
-  password_management: PasswordManagement
+  password_management: PasswordManagement,
+  privacy_page: PrivacyPage,
+  terms_page: TermsPage,
 };
 
 export const ProfileStack = () => (

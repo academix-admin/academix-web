@@ -5,7 +5,7 @@ import en from '@/i18n/en.json';
 import fr from '@/i18n/fr.json';
 
 // Language support
-const SUPPORTED_LANGUAGES = ['en', 'fr'] as const;
+export const SUPPORTED_LANGUAGES = ['en', 'fr'] as const;
 type SupportedLang = typeof SUPPORTED_LANGUAGES[number];
 
 // Translation shape from en.json
@@ -159,4 +159,5 @@ export const getSupportedLang = (lang: string | null): SupportedLang => {
     : 'en';
 };
 
+export type { SupportedLang };
 export const useLanguage = () => useContext(LanguageContext);
