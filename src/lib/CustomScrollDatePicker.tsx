@@ -181,9 +181,12 @@ const WheelColumn = ({
       className="wheel-column"
       onTouchStart={(e) => e.stopPropagation()}
       onTouchMove={(e) => e.stopPropagation()}
+      onTouchEnd={(e) => e.stopPropagation()}
       onWheel={(e) => e.stopPropagation()}
+      onMouseDown={(e) => e.stopPropagation()}
       style={{
         height,
+        touchAction: 'pan-y',
       }}
     >
       {/* top spacer */}
@@ -342,9 +345,13 @@ const CustomScrollDatePicker : React.FC<CustomScrollDatePickerProps> =  ({
     <div
       id={id}
       className="date-picker-container"
+      onTouchStart={(e) => e.stopPropagation()}
+      onTouchMove={(e) => e.stopPropagation()}
+      onTouchEnd={(e) => e.stopPropagation()}
       style={{
         backgroundColor,
         color: primaryTextColor,
+        touchAction: 'pan-y',
       }}
     >
       {/* Pickers */}
