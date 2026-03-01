@@ -415,7 +415,7 @@
   padding: 12px 16px;
   width: calc(100% - 32px);
   max-width: 650px;
-  z-index: 10;
+  z-index: 5;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   box-sizing: border-box;
 }
