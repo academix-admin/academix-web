@@ -16,10 +16,12 @@ import { PaginateModel } from '@/models/paginate-model';
 import Image from 'next/image';
 import { ComponentStateProps } from '@/hooks/use-component-state';
 import { usePinnedState } from '@/hooks/pinned-state-hook';
+import { useNav } from '@/lib/NavigationStack';
 
 export default function HomeQuizHistory({ onStateChange }: ComponentStateProps) {
   const { theme } = useTheme();
   const { t, lang, tNode } = useLanguage();
+  const nav = useNav();
   const { userData, userData$ } = useUserData();
   const { ref: pinnedRef, stuck } = usePinnedState<HTMLHeadingElement>({ offset: 0 });
   const loaderRef = useRef<HTMLDivElement | null>(null);
@@ -230,7 +232,9 @@ useEffect(() => {
 
   if(!firstLoaded && quizHistoryData.length <= 0)return null;
 
-
+  const handleQuizClick = (quiz: QuizHistory) => {
+    nav.push('quiz_result_page',{poolsId: quiz.poolsId});
+  };
 
   return (
     <div className={styles.historyContainer}>
@@ -241,7 +245,8 @@ useEffect(() => {
 
       <div className={styles.historyList}>
         {quizHistoryData.map((quiz, index) => (
-          <div key={index} className={styles.historyItemContainer}>
+          <div key={index} className={styles.historyItemContainer}
+          onClick={() => handleQuizClick(quiz)}>
 
             {
                 quiz.topicsImage ? (
