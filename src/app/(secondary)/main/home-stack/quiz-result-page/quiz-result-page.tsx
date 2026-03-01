@@ -553,25 +553,25 @@ const TabSwitcher = ({ viewType, setViewType, maxWidth }: TabSwitcherProps) => {
   const { t } = useLanguage();
 
   return (
-          <div className={styles.tabSwitcherContainer}>
+    <div className={styles.tabSwitcherContainer}>
 
-    <div
-      className={`${styles.tabSwitcher} ${styles[`tabSwitcher_${theme}`]}`}
-      style={maxWidth ? { maxWidth: `${maxWidth}px`, margin: '16px auto' } : { margin: '16px' }}
-    >
-      <button
-        className={`${styles.tab} ${viewType === 'rank' ? styles.tabActive : ''} ${styles[`tab_${theme}`]}`}
-        onClick={() => setViewType('rank')}
+      <div
+        className={`${styles.tabSwitcher} ${styles[`tabSwitcher_${theme}`]}`}
+        style={maxWidth ? { maxWidth: `${maxWidth}px`, margin: '16px auto' } : { margin: '16px' }}
       >
-        {t('rank_text')}
-      </button>
-      <button
-        className={`${styles.tab} ${viewType === 'reward' ? styles.tabActive : ''} ${styles[`tab_${theme}`]}`}
-        onClick={() => setViewType('reward')}
-      >
-        {t('reward_text')}
-      </button>
-    </div>
+        <button
+          className={`${styles.tab} ${viewType === 'rank' ? styles.tabActive : ''} ${styles[`tab_${theme}`]}`}
+          onClick={() => setViewType('rank')}
+        >
+          {t('rank_text')}
+        </button>
+        <button
+          className={`${styles.tab} ${viewType === 'reward' ? styles.tabActive : ''} ${styles[`tab_${theme}`]}`}
+          onClick={() => setViewType('reward')}
+        >
+          {t('reward_text')}
+        </button>
+      </div>
     </div>
   );
 }
@@ -597,11 +597,11 @@ const WebView = ({
   return (
     <div className={styles.innerBody}>
 
-        <TabSwitcher
-          viewType={resultViewType}
-          setViewType={setResultViewType}
-          maxWidth={400}
-        />
+      <TabSwitcher
+        viewType={resultViewType}
+        setViewType={setResultViewType}
+        maxWidth={400}
+      />
 
       {resultsLoading ? (
         <div className={styles.loadingContainer}>
