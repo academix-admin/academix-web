@@ -677,7 +677,7 @@ const SelectionViewer: React.FC<SelectionViewerProps> = ({
           </div>
         </Sheet.Content>
       </Sheet.Container>
-      <Sheet.Backdrop onTap={onClose} />
+      <Sheet.Backdrop onTap={backDrop ? onClose : undefined} />
     </Sheet>
   );
 };

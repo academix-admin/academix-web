@@ -79,7 +79,7 @@ const getStyles = (id: string, maxHeight?: string) => `
 #${id} .bottom-viewer-cancel-btn:hover { opacity: 0.7; }
 #${id} .bottom-viewer-cancel-btn.left { left: 0px; }
 #${id} .bottom-viewer-cancel-btn.right { right: 0px; }
-#${id} .react-modal-sheet-container {
+#${id} {
   max-height: ${maxHeight ? `calc(${maxHeight} - env(safe-area-inset-top) - 34px)` : 'calc(100% - env(safe-area-inset-top) - 34px)'} !important;
   max-width: 500px;
   margin: 0 auto;
@@ -104,7 +104,7 @@ const getStyles = (id: string, maxHeight?: string) => `
   contain: layout style;
 }
 @media (max-width: 500px) {
-  #${id} .react-modal-sheet-container {
+  #${id} {
     max-width: 100%;
     border-radius: 0;
     margin-left: env(safe-area-inset-left, 0px);
@@ -288,9 +288,7 @@ const BottomViewer = React.forwardRef<any, BottomViewerProps>(({
       ref={sheetRef}
       isOpen={isOpen}
       onClose={onClose}
-      snapPoints={[0, 1]}
-      initialSnap={1}
-      detent={detent}
+      detent="content"
       style={{ zIndex }}
       disableDrag={disableDrag}
       avoidKeyboard={avoidKeyboard}
@@ -303,6 +301,7 @@ const BottomViewer = React.forwardRef<any, BottomViewerProps>(({
           margin: "0 auto",
           width: "100%",
           background: layoutProp?.backgroundColor || "#fff",
+          maxHeight: layoutProp?.maxHeight ? `calc(${layoutProp.maxHeight} - env(safe-area-inset-top) - 34px)` : undefined,
         }}
         className="bottom-viewer-container"
       >
