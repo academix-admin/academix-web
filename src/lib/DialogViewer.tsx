@@ -18,6 +18,7 @@ interface DialogLayoutProps {
   maxWidth?: string;
   borderRadius?: string;
   margin?: string;
+  titleColor?: string;
 }
 
 interface DialogViewerProps {
@@ -423,7 +424,7 @@ const DialogViewer = React.forwardRef<any, DialogViewerProps>(({
       >
         {title && (
           <div className="dialog-header">
-            <h2 className="dialog-title">{title}</h2>
+            <h2 className="dialog-title" style={{ color: layoutProp?.titleColor || '#1a1a1a' }}>{title}</h2>
           </div>
         )}
 
