@@ -234,10 +234,9 @@ export default function SideDrawer({
   }
 
   const drawer = (
-    <>
+    <div id={id}>
       {/* Backdrop */}
       <div
-        id={`${id}-backdrop`}
         className={`sidedrawer-backdrop ${isOpen ? 'open' : ''} ${backdropClassName}`}
         style={{
           '--sidedrawer-backdrop-opacity': backdropOpacity,
@@ -248,12 +247,11 @@ export default function SideDrawer({
 
       {/* Drawer */}
       <div
-        id={id}
         ref={drawerRef}
         className={`sidedrawer ${position} ${isOpen ? 'open' : ''} ${className}`}
         style={{
           ...style,
-          '--sidedrawer-bg': style?.backgroundColor || 'white', // Use the provided bg color or default to white
+          '--sidedrawer-bg': style?.backgroundColor || 'white',
         } as React.CSSProperties}
         role="dialog"
         aria-modal="true"
@@ -264,7 +262,7 @@ export default function SideDrawer({
       >
         {children}
       </div>
-    </>
+    </div>
   );
 
   return createPortal(drawer, portalRoot);
