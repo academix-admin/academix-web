@@ -59,25 +59,6 @@
   padding-bottom: 4rem;
 }
 
-.innerBody_ios {
-  border: 1px solid #e0e0e0;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-}
-
-.innerBody_android {
-  border: 1px solid #444444;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-}
-
-.innerBody_light {
-  border: 1px solid #e0e0e0;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-}
-
-.innerBody_dark {
-  border: 1px solid #444444;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-}
 
 .innerBody_profile {
   border: none;
