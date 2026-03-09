@@ -30,6 +30,7 @@ export default function HomeQuizHistory({ onStateChange }: ComponentStateProps) 
   const [paginateModel, setPaginateModel] = useState<PaginateModel>(new PaginateModel());
   const [firstLoaded, setFirstLoaded] = useState(false);
   const [historyLoading, setHistoryLoading] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
 
   const [quizHistoryData, demandQuizHistoryData, setQuizHistoryData, { isHydrated }] = useDemandState<QuizHistory[]>(
@@ -136,7 +137,7 @@ export default function HomeQuizHistory({ onStateChange }: ComponentStateProps) 
 
 
   const callPaginate = async () => {
-    if (!userData || quizHistoryData.length <= 0) return;
+    if (!userData || quizHistoryData.length <= 0 || isRefreshing) return;
     setHistoryLoading(true);
     const quizHistories = await fetchQuizHistory(userData, 20, paginateModel);
     setHistoryLoading(false);
@@ -146,13 +147,18 @@ export default function HomeQuizHistory({ onStateChange }: ComponentStateProps) 
     }
   };
   const refreshData = async () => {
-    if (!userData || quizHistoryData.length > 0) return;
-    setHistoryLoading(true);
-    const quizHistories = await fetchQuizHistory(userData, 10, paginateModel);
-    setHistoryLoading(false);
-    if (quizHistories.length > 0) {
-      extractLatest(quizHistories);
-      setQuizHistoryData(quizHistories);
+    if (!userData || isRefreshing) return;
+    try {
+      setIsRefreshing(true);
+      const quizHistories = await fetchQuizHistory(userData, 10, new PaginateModel());
+      setIsRefreshing(false);
+      if (quizHistories.length > 0) {
+        extractLatest(quizHistories);
+        setQuizHistoryData(quizHistories);
+      }
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      setIsRefreshing(false);
     }
   };
 
@@ -239,9 +245,43 @@ useEffect(() => {
   return (
     <div className={styles.historyContainer}>
 
-      <h2 ref={pinnedRef} className={`${styles.historyTitle} ${styles[`historyTitle_${theme}`]}`}>
-         {t('history_text')}
-      </h2>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+        <h2 ref={pinnedRef} className={`${styles.historyTitle} ${styles[`historyTitle_${theme}`]}`} style={{ margin: 0 }}>
+          {t('history_text')}
+        </h2>
+        <button
+          onClick={() => refreshData()}
+          className={`${styles[`refreshIcon_${theme}`]}`}
+          style={{
+            background: 'none',
+            border: 'none',
+            cursor: isRefreshing ? 'default' : 'pointer',
+            padding: '8px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            opacity: isRefreshing ? 0.6 : 1
+          }}
+          aria-label="Refresh history"
+          disabled={isRefreshing}
+        >
+          {isRefreshing ? (
+            <span className={`${styles.refreshSpinner} ${styles[`refreshSpinner_${theme}`]}`}></span>
+          ) : (
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2" />
+            </svg>
+          )}
+        </button>
+      </div>
 
       <div className={styles.historyList}>
         {quizHistoryData.map((quiz, index) => (

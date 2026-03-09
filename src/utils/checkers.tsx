@@ -51,8 +51,16 @@ export type ParamaticalData = {
   gender: string;
 }
 
+let locationCache: { data: LocationData; timestamp: number } | null = null;
+const LOCATION_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
 const checkLocation = async (): Promise<LocationData | null> => {
   try {
+    // Return cached data if still valid
+    if (locationCache && Date.now() - locationCache.timestamp < LOCATION_CACHE_TTL) {
+      return locationCache.data;
+    }
+
     const res = await fetch("/api/ipwho");
     if (!res.ok) throw new Error("Failed to fetch location");
 
@@ -60,6 +68,9 @@ const checkLocation = async (): Promise<LocationData | null> => {
 
     // Normalize country_code to lowercase for consistency
     data.country_code = data.country_code?.toLowerCase?.() ?? "";
+
+    // Cache the result
+    locationCache = { data, timestamp: Date.now() };
 
     return data;
   } catch (err) {

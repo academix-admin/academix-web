@@ -7,7 +7,7 @@
   height: auto;
   transition: background-color 0.3s ease;
   overflow: visible;
-  padding-bottom: var(--nav-height);
+  padding-bottom: 4rem;
 }
 
 /* Default theme backgrounds - only applied when no config background */
@@ -77,11 +77,13 @@
 
 .innerBody_profile {
    padding-top: 6rem;
+   padding-bottom: var(--nav-height);;
 }
 
 
 .innerBody_quiz {
    padding-top: 2rem;
+   padding-bottom: var(--nav-height);
 }
 
 .rulesContainer {

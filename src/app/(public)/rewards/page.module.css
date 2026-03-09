@@ -9,7 +9,7 @@
   overflow: visible;
   box-sizing: border-box;
   width: 100%;
-  padding-bottom: var(--nav-height);
+  padding-bottom: 4rem;
 }
 
 /* Default theme backgrounds - only applied when no config background */
@@ -79,6 +79,7 @@
 
 .innerBody_reward {
    padding-top: 6rem;
+   padding-bottom: var(--nav-height);
 }
 
 .backButton {

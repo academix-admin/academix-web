@@ -31,6 +31,7 @@ import { useAwaitableRouter } from "@/hooks/useAwaitableRouter";
 import QuizStarter from '../quiz-starter/quiz-starter'
 import { useQuizDisplay } from "@/lib/stacks/quiz-display-stack";
 import { useDialog } from '@/lib/DialogViewer';
+import { refreshSessionIfNeeded } from '@/utils/sessionRefresh';
 
 interface LeaveQuizResponse {
   status: string;
@@ -526,6 +527,9 @@ function CurrentQuizCard({ topic, getInitials, onClick, onLeave, showContinue }:
 
   const onContinueClick = async () => {
     if(!userData || !topic.quizPool?.poolsId)return;
+    
+    await refreshSessionIfNeeded();
+    
     await nav.popToRoot();
     handleQuizDisplayClose();
     await replaceAndWait(`/quiz/${topic.quizPool?.poolsId}`);

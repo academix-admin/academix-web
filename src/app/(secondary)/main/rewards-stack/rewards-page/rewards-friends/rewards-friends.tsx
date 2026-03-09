@@ -25,13 +25,12 @@ export default function RewardsFriends({ onStateChange }: ComponentStateProps) {
   const { t, lang, tNode } = useLanguage();
   const { userData, userData$ } = useUserData();
   const loaderRef = useRef<HTMLDivElement | null>(null);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const isMountedRef = useRef(true);
 
 
   const [paginateModel, setPaginateModel] = useState<PaginateModel>(new PaginateModel());
   const [firstLoaded, setFirstLoaded] = useState(false);
   const [friendsLoading, setFriendsLoading] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
 
   const [friendsModel, demandFriendsModel, setFriendsModel] = useDemandState<FriendsModel[]>(
@@ -190,13 +189,12 @@ export default function RewardsFriends({ onStateChange }: ComponentStateProps) {
       extractLatest(friendHistories);
       set(friendHistories);
       setFirstLoaded(true);
-      refreshData(true);
     });
   }, [demandFriendsModel,userData]);
 
 
   const callPaginate = async () => {
-    if (!userData || friendsModel.length <= 0) return;
+    if (!userData || friendsModel.length <= 0 || isRefreshing) return;
     setFriendsLoading(true);
     const friendHistories = await fetchFriendsModel(userData, 20, paginateModel);
     setFriendsLoading(false);
@@ -205,39 +203,23 @@ export default function RewardsFriends({ onStateChange }: ComponentStateProps) {
       processFriendsModelPaginate(friendHistories);
     }
   };
-  const refreshData = async (interval?: boolean) => {
-    if (!userData) return;
+  const refreshData = async () => {
+    if (!userData || isRefreshing) return;
     try{
-      if(!interval)setFriendsLoading(true);
-      const friendHistories = await fetchFriendsModel(userData, 10, paginateModel);
-      if(!interval)setFriendsLoading(false);
+      setIsRefreshing(true);
+      const friendHistories = await fetchFriendsModel(userData, 10, new PaginateModel());
+      setIsRefreshing(false);
       if (friendHistories.length > 0) {
         extractLatest(friendHistories);
         setFriendsModel(friendHistories);
       }
     } catch (error) {
        console.error('Error fetching data:', error);
-    } finally {
-       // Schedule next call only if component is still mounted
-       if (isMountedRef.current) {
-           timeoutRef.current = setTimeout(() => {
-               refreshData(true);
-           }, 10000);
-       }
+       setIsRefreshing(false);
     }
   };
 
 
-  useEffect(() => {
-    isMountedRef.current = true;
-    // Cleanup function
-    return () => {
-      isMountedRef.current = false;
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, []);
 
   // Format date to match the screenshot (e.g., "Apr 27 at 3:00AM")
   const formatDate = (dateString: string): string => {
@@ -320,9 +302,43 @@ useEffect(() => {
 
   return (
     <div className={styles.historyContainer}>
-      <h2 className={`${styles.historyTitle} ${styles[`historyTitle_${theme}`]}`}>
-         {t('friends_text')}
-      </h2>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+        <h2 className={`${styles.historyTitle} ${styles[`historyTitle_${theme}`]}`} style={{ margin: 0 }}>
+          {t('friends_text')}
+        </h2>
+        <button
+          onClick={() => refreshData()}
+          className={`${styles[`refreshIcon_${theme}`]}`}
+          style={{
+            background: 'none',
+            border: 'none',
+            cursor: isRefreshing ? 'default' : 'pointer',
+            padding: '8px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            opacity: isRefreshing ? 0.6 : 1
+          }}
+          aria-label="Refresh friends"
+          disabled={isRefreshing}
+        >
+          {isRefreshing ? (
+            <span className={`${styles.refreshSpinner} ${styles[`refreshSpinner_${theme}`]}`}></span>
+          ) : (
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2" />
+            </svg>
+          )}
+        </button>
+      </div>
 
       <div className={styles.historyList}>
         {friendsModel.map((friend, index) => (

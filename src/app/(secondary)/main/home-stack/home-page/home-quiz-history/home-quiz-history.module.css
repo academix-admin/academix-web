@@ -349,3 +349,33 @@
   }
 
 }
+
+.refreshIcon_light svg {
+  stroke: #000;
+}
+
+.refreshIcon_dark svg {
+  stroke: #fff;
+}
+
+.refreshSpinner {
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  animation: spin 0.8s linear infinite;
+  display: inline-block;
+}
+
+.refreshSpinner_light {
+  border-top-color: #000;
+}
+
+.refreshSpinner_dark {
+  border-top-color: #fff;
+}
+
+.counter {
+  color: red;
+}

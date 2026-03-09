@@ -56,30 +56,26 @@
   border: none;
   background-color: transparent;
   box-shadow: none;
-  padding-bottom: var(--nav-height);
+  padding-bottom: 4rem;
 }
 
 .innerBody_ios {
   border: 1px solid #e0e0e0;
-  background-color: #ffffff;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .innerBody_android {
   border: 1px solid #444444;
-  background-color: #2d2d2d;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .innerBody_light {
   border: 1px solid #e0e0e0;
-  background-color: #ffffff;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .innerBody_dark {
   border: 1px solid #444444;
-  background-color: #2d2d2d;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
@@ -89,11 +85,11 @@
   box-shadow: none;
   width: 100%;
   max-width: 100%;
+  padding-bottom: var(--nav-height);
 }
 
 .container {
-  padding-top: 6rem;
-  padding-bottom: 4rem;
+  padding-top: 5rem;
 }
 
 .container_ios {
@@ -315,9 +311,7 @@
   }
 
   .container {
-    padding-top: 6rem;
-    padding-bottom: 2rem;
-    padding-bottom: var(--nav-height);
+    padding-top: 5rem;
   }
 
   .container_ios {
@@ -355,9 +349,7 @@
 
 @media screen and (max-width: 500px) {
   .container {
-    padding-top: 6rem;
-    padding-bottom: 2rem;
-    padding-bottom: var(--nav-height);
+    padding-top: 4rem;
   }
 
   .container_ios {

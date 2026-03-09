@@ -45,6 +45,7 @@ import { useQuizDisplay } from "@/lib/stacks/quiz-display-stack";
 import { PinData } from '@/models/pin-data';
 import CurrencySymbol from '@/components/CurrencySymbol/CurrencySymbol';
 import { useDialog } from '@/lib/DialogViewer';
+import { refreshSessionIfNeeded } from '@/utils/sessionRefresh';
 
 interface LeaveQuizResponse {
   status: string;
@@ -480,6 +481,9 @@ export default function QuizCommitment(props: QuizChallengeProps) {
   const onContinueClick = async () => {
     setToQuizLoading(true);
     if (!userData || !currentQuiz?.quizPool?.poolsId) return;
+    
+    await refreshSessionIfNeeded();
+    
     await nav.popToRoot();
     quizInfoBottomController.close();
     await replaceAndWait(`/quiz/${currentQuiz.quizPool?.poolsId}`);

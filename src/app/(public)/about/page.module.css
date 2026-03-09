@@ -60,7 +60,7 @@
   box-sizing: border-box;
   border-radius: 12px;
   transition: all 0.3s ease;
-  padding-bottom: var(--nav-height);
+  padding-bottom: 4rem;
   align-items: center;
   border: none;
   background-color: transparent;
@@ -73,11 +73,12 @@
   box-shadow: none;
   width: 100%;
   max-width: 100%;
+    padding-bottom: var(--nav-height);
+
 }
 
 .container {
   padding-top: 6rem;
-  padding-bottom: 4rem;
 }
 
 .container_ios {
@@ -335,8 +336,6 @@
 
   .container {
     padding-top: 6rem;
-    padding-bottom: 2rem;
-    padding-bottom: var(--nav-height);
   }
 
   .container_ios {
@@ -374,8 +373,6 @@
 @media screen and (max-width: 500px) {
   .container {
     padding-top: 6rem;
-    padding-bottom: 2rem;
-    padding-bottom: var(--nav-height);
   }
 
   .container_ios {
