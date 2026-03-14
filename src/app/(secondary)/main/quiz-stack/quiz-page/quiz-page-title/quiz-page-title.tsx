@@ -1,35 +1,40 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import styles from './quiz-page-title.module.css';
 import { useLanguage } from '@/context/LanguageContext';
 import { getLastNameOrSingle, capitalize } from '@/utils/textUtils';
 import { ComponentStateProps } from '@/hooks/use-component-state';
+import { BottomViewer, useBottomController } from "@/lib/BottomViewer";
+import DialogCancel from '@/components/DialogCancel';
+import { supabaseBrowser } from '@/lib/supabase/client';
+import { useUserData } from '@/lib/stacks/user-stack';
+import { getParamatical } from '@/utils/checkers';
+import { UserDisplayQuizTopicModel } from '@/models/user-display-quiz-topic-model';
+import dynamic from 'next/dynamic';
+
+const Scanner = dynamic(() => import('@yudiel/react-qr-scanner').then(mod => ({ default: mod.Scanner })), { ssr: false });
 
 export default function QuizPageTitle({ onStateChange }: ComponentStateProps) {
   const { theme } = useTheme();
   const { t } = useLanguage();
+  const [bottomViewerId, bottomController, bottomIsOpen] = useBottomController();
 
-  // ✅ After
+  const handleDisplayClose = () => {
+    bottomController.close();
+  };
+
   useEffect(() => {
     onStateChange?.("data");
   }, []);
 
-  // Click event handlers for icons
   const handleInfoClick = () => {
     console.log('Info icon clicked');
-    // Add your info icon functionality here
   };
 
   const handleAddClick = () => {
-    console.log('Add icon clicked');
-    // Add your add icon functionality here
-  };
-
-  const handleSearchClick = () => {
-    console.log('Search icon clicked');
-    // Add your search icon functionality here
+    bottomController.open();
   };
 
   return (
@@ -67,23 +72,195 @@ export default function QuizPageTitle({ onStateChange }: ComponentStateProps) {
               fillRule="evenodd" />
           </svg>
         </button>
-
       </div>
+
+      <BottomViewer
+        id={bottomViewerId}
+        isOpen={bottomIsOpen}
+        onClose={handleDisplayClose}
+        cancelButton={{
+          position: "right",
+          onClick: handleDisplayClose,
+          view: <DialogCancel />
+        }}
+        layoutProp={{
+          backgroundColor: theme === 'light' ? "#fff" : "#121212",
+          handleColor: "#888",
+          handleWidth: "48px",
+          maxWidth: '800px'
+        }}
+        closeThreshold={0.2}
+        zIndex={1000}
+      >
+        <QuizJoinContent theme={theme} t={t} onClose={handleDisplayClose} />
+      </BottomViewer>
     </div>
   );
 }
 
-//         <button
-//           className={`${styles.svgSection} ${styles[`svgSection_${theme}`]} ${styles.iconButton}`}
-//           onClick={handleSearchClick}
-//           aria-label="Search"
-//         >
-//           <svg fill="none" height="22" viewBox="0 0 22 22" width="22" xmlns="http://www.w3.org/2000/svg">
-//             <path
-//               d="M11 0C4.93453 0 0 4.93453 0 11C0 17.0655 4.93453 22 11 22C17.0655 22 22 17.0655 22 11C22 4.93453 17.0655 0 11 0ZM15.5833 16.8798L12.481 13.7775C11.4441 14.491 10.178 14.7913 8.93113 14.6193C7.68426 14.4474 6.54665 13.8157 5.74154 12.8483C4.93643 11.8808 4.52193 10.6473 4.5794 9.38999C4.63686 8.13264 5.16214 6.94216 6.05215 6.05215C6.94216 5.16214 8.13264 4.63686 9.38999 4.5794C10.6473 4.52193 11.8808 4.93643 12.8483 5.74154C13.8157 6.54665 14.4474 7.68426 14.6193 8.93113C14.7913 10.178 14.491 11.4441 13.7775 12.481L16.8798 15.5833L15.5833 16.8798Z"
-//               fill="currentColor" />
-//             <path
-//               d="M9.62533 12.8333C11.3972 12.8333 12.8337 11.3969 12.8337 9.62496C12.8337 7.85305 11.3972 6.41663 9.62533 6.41663C7.85341 6.41663 6.41699 7.85305 6.41699 9.62496C6.41699 11.3969 7.85341 12.8333 9.62533 12.8333Z"
-//               fill="currentColor" />
-//           </svg>
-//         </button>
+function QuizJoinContent({ theme, t, onClose }: { theme: string; t: any; onClose: () => void }) {
+  const [activeTab, setActiveTab] = useState(0);
+  const [code, setCode] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
+  const { userData } = useUserData();
+  const { lang } = useLanguage();
+
+  const handleCodeSubmit = async (submittedCode: string) => {
+    if (!userData || !submittedCode || submittedCode.length === 0) return;
+    
+    setLoading(true);
+    setError(false);
+    
+    try {
+      const paramatical = await getParamatical(
+        userData.usersId,
+        lang,
+        userData.usersSex,
+        userData.usersDob
+      );
+
+      if (!paramatical) {
+        setError(true);
+        setCode('');
+        return;
+      }
+
+      const { data, error: rpcError } = await supabaseBrowser.rpc("get_public_auth_quiz_pool", {
+        p_user_id: paramatical.usersId,
+        p_locale: paramatical.locale ?? "",
+        p_country: paramatical.country ?? "",
+        p_gender: paramatical.gender ?? "",
+        p_age: paramatical.age ?? "",
+        p_pool_auth_code: submittedCode.toUpperCase()
+      });
+
+      if (rpcError || data?.error) {
+        setError(true);
+        setCode('');
+        return;
+      }
+
+      if (data?.status && data?.quiz_pool) {
+        const quizPool = new UserDisplayQuizTopicModel(data.quiz_pool);
+        console.log('Quiz pool found:', quizPool);
+        onClose();
+      } else {
+        setError(true);
+        setCode('');
+      }
+    } catch (err) {
+      console.error('Error submitting code:', err);
+      setError(true);
+      setCode('');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && code.length > 0) {
+      handleCodeSubmit(code);
+    }
+  };
+
+  const handleScanResult = (result: any) => {
+    if (result?.[0]?.rawValue) {
+      handleCodeSubmit(result[0].rawValue);
+    }
+  };
+
+  const handleError = (err: any) => {
+    console.error('QR Scanner error:', err);
+  };
+
+  useEffect(() => {
+    if (code.length === 9) {
+      handleCodeSubmit(code);
+    }
+  }, [code]);
+
+  return (
+    <div className={`${styles.joinContainer} ${styles[`joinContainer_${theme}`]}`}>
+      <div className={`${styles.joinHeader} ${styles[`joinHeader_${theme}`]}`}>
+        <h2 className={`${styles.joinTitle} ${styles[`joinTitle_${theme}`]}`}>
+          {t('join_quiz_pool')}
+        </h2>
+      </div>
+
+      {loading && (
+        <div className={styles.joinContent}>
+          <div className={`${styles.loadingText} ${styles[`loadingText_${theme}`]}`}>{t('loading')}</div>
+        </div>
+      )}
+
+      {error && (
+        <div className={styles.errorContainer}>
+          <p className={`${styles.errorText} ${styles[`errorText_${theme}`]}`}>{t('no_result_text')}</p>
+          <button onClick={() => setError(false)} className={`${styles.errorButton} ${styles[`errorButton_${theme}`]}`}>
+            {t('continue')}
+          </button>
+        </div>
+      )}
+
+      {!loading && !error && (
+        <>
+          <div className={styles.joinContent}>
+            {activeTab === 0 ? (
+              <div className={styles.cameraContainer}>
+                <div className={`${styles.cameraBox} ${styles[`cameraBox_${theme}`]}`}>
+                  {Scanner && (
+                    <Scanner
+                      onScan={handleScanResult}
+                      onError={handleError}
+                      styles={{
+                        container: { width: '100%', height: '100%' }
+                      }}
+                    />
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className={styles.codeContainer}>
+                <div className={`${styles.codeLabel} ${styles[`codeLabel_${theme}`]}`}>
+                  {t('code_placeholder')}
+                </div>
+                <div className={styles.codeInputWrapper}>
+                  <input 
+                    type="text" 
+                    value={code} 
+                    onChange={(e) => setCode(e.target.value.toUpperCase())} 
+                    onKeyPress={handleKeyPress}
+                    maxLength={9} 
+                    autoFocus
+                    className={`${styles.codeInput} ${styles[`codeInput_${theme}`]}`}
+                  />
+                  <div className={`${styles.codeCounter} ${styles[`codeCounter_${theme}`]}`}>
+                    {code.length}/9
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className={`${styles.tabSwitcher} ${styles[`tabSwitcher_${theme}`]}`}>
+            <div className={`${styles.tabContainer} ${styles[`tabContainer_${theme}`]}`}>
+              <button 
+                onClick={() => setActiveTab(0)} 
+                className={`${styles.tabButton} ${styles[`tabButton_${theme}`]} ${activeTab === 0 ? styles[`tabButton_active_${theme}`] : styles.tabButton_inactive}`}
+              >
+                {t('qr_code')}
+              </button>
+              <button 
+                onClick={() => setActiveTab(1)} 
+                className={`${styles.tabButton} ${styles[`tabButton_${theme}`]} ${activeTab === 1 ? styles[`tabButton_active_${theme}`] : styles.tabButton_inactive}`}
+              >
+                {t('enter_text')}
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}

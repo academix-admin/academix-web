@@ -92,6 +92,263 @@
   color: #ffffff;
 }
 
+/* Quiz Join Content Styles */
+.joinContainer {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  min-height: 65dvh;
+}
+
+
+.joinHeader {
+  padding: 20px 16px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.joinHeader_light {
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.joinHeader_dark {
+  border-bottom: 1px solid #333;
+}
+
+.joinTitle {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.joinTitle_light {
+  color: #1a1a1a;
+}
+
+.joinTitle_dark {
+  color: #ffffff;
+}
+
+.joinContent {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  overflow: hidden;
+}
+
+.loadingText {
+  font-size: 16px;
+}
+
+.loadingText_light {
+  color: #666;
+}
+
+.loadingText_dark {
+  color: #999;
+}
+
+.errorContainer {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.errorText {
+  font-weight: bold;
+  font-size: 17px;
+  margin-bottom: 16px;
+}
+
+.errorText_light {
+  color: #666;
+}
+
+.errorText_dark {
+  color: #c4c4c4;
+}
+
+.errorButton {
+  padding: 12px 32px;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.errorButton_light {
+  background-color: #007bff;
+}
+
+.errorButton_dark {
+  background-color: #0056b3;
+}
+
+.cameraContainer {
+  text-align: center;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cameraBox {
+  width: 40vh;
+  height: 40vh;
+  max-width: 90vw;
+  max-height: 90vw;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+
+.cameraBox_light {
+  background-color: #f5f5f5;
+}
+
+.cameraBox_dark {
+  background-color: #2a2a2a;
+}
+
+.cameraPlaceholder {
+  font-size: 14px;
+}
+
+.cameraPlaceholder_light {
+  color: #999;
+}
+
+.cameraPlaceholder_dark {
+  color: #666;
+}
+
+.codeContainer {
+  width: 100%;
+  text-align: center;
+}
+
+.codeLabel {
+  font-size: 56px;
+  font-weight: bold;
+  letter-spacing: 8px;
+  margin-bottom: 40px;
+}
+
+.codeLabel_light {
+  color: #1a1a1a;
+}
+
+.codeLabel_dark {
+  color: #ffffff;
+}
+
+.codeInputWrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.codeInput {
+  width: 100%;
+  min-width: 280px;
+  padding: 0;
+  font-size: 48px;
+  font-weight: bold;
+  text-align: center;
+  background-color: transparent;
+  border: none;
+  outline: none;
+  letter-spacing: 4px;
+}
+
+.codeInput_light {
+  color: #1a1a1a;
+  caret-color: #007bff;
+}
+
+.codeInput_dark {
+  color: #ffffff;
+  caret-color: #0056b3;
+}
+
+.codeCounter {
+  position: absolute;
+  right: -40px;
+  bottom: 0;
+  font-size: 16px;
+}
+
+.codeCounter_light {
+  color: #999;
+}
+
+.codeCounter_dark {
+  color: #666;
+}
+
+.tabSwitcher {
+  padding: 16px;
+  flex-shrink: 0;
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+}
+
+.tabContainer {
+  display: flex;
+  gap: 8px;
+  border-radius: 12px;
+  padding: 4px;
+}
+
+.tabContainer_light {
+  background-color: #f0f0f0;
+}
+
+.tabContainer_dark {
+  background-color: #2a2a2a;
+}
+
+.tabButton {
+  flex: 1;
+  padding: 14px;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tabButton_light {
+  color: #1a1a1a;
+}
+
+.tabButton_dark {
+  color: #fff;
+}
+
+.tabButton_active_light {
+  background-color: #d0d0d0;
+}
+
+.tabButton_active_dark {
+  background-color: #444;
+}
+
+.tabButton_inactive {
+  background-color: transparent;
+}
+
 /* Responsive Styles */
 @media screen and (min-width: 801px) {
   /* Web styles */
@@ -153,12 +410,29 @@
   .titleBot {
     font-size: 0.8125rem;
   }
+
+  .codeLabel {
+    font-size: 42px;
+    letter-spacing: 6px;
+    margin-bottom: 30px;
+  }
+
+  .codeInput {
+    font-size: 36px;
+    min-width: 220px;
+  }
+
+  .codeCounter {
+    right: -30px;
+    font-size: 14px;
+  }
 }
 
 /* Reduced motion for accessibility */
 @media (prefers-reduced-motion: reduce) {
   .svgSection,
-  .iconButton {
+  .iconButton,
+  .tabButton {
     transition: none;
   }
 

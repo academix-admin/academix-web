@@ -567,5 +567,12 @@
   "terms_contact_title": "Contact Us",
   "terms_contact_text": "For any questions about these terms, contact us at:",
   "terms_last_updated": "Last Updated",
-  "quiz_results": "Quiz Results"
+  "quiz_results": "Quiz Results",
+  "join_quiz_pool": "Join quiz pool",
+  "qr_code": "QR Code",
+  "enter_text": "Enter Text",
+  "code_placeholder": "CODE",
+  "submit": "Submit",
+  "camera_view_placeholder": "Camera view would appear here",
+  "no_result_text": "No result found"
 }

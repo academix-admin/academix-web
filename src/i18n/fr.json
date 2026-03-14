@@ -567,5 +567,13 @@
   "terms_contact_title": "Nous contacter",
   "terms_contact_text": "Pour toute question concernant ces conditions, contactez-nous à :",
   "terms_last_updated": "Dernière mise à jour",
-  "quiz_results": "Résultats du Quiz"
+  "quiz_results": "Résultats du Quiz",
+  "rewards_text": "Récompenses",
+  "join_quiz_pool": "Rejoindre le groupe de quiz",
+  "qr_code": "Code QR",
+  "enter_text": "Entrer le texte",
+  "code_placeholder": "CODE",
+  "submit": "Soumettre",
+  "camera_view_placeholder": "La vue de la caméra apparaîtrait ici",
+  "no_result_text": "Aucun résultat trouvé"
 }
