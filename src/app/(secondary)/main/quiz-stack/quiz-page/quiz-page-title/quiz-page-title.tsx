@@ -13,6 +13,7 @@ import { useUserData } from '@/lib/stacks/user-stack';
 import { getParamatical } from '@/utils/checkers';
 import { UserDisplayQuizTopicModel } from '@/models/user-display-quiz-topic-model';
 import dynamic from 'next/dynamic';
+import { useNav, useProvideObject } from "@/lib/NavigationStack";
 
 const Scanner = dynamic(() => import('@yudiel/react-qr-scanner').then(mod => ({ default: mod.Scanner })), { ssr: false });
 
@@ -105,13 +106,27 @@ function QuizJoinContent({ theme, t, onClose }: { theme: string; t: any; onClose
   const [error, setError] = useState(false);
   const { userData } = useUserData();
   const { lang } = useLanguage();
+  const nav = useNav();
+  const [scannedQuizPool, setScannedQuizPool] = useState<UserDisplayQuizTopicModel | null>(null);
+
+  useProvideObject(
+    'getActiveQuiz',
+    () => scannedQuizPool,
+    { global: true, scope: 'quiz-topics', dependencies: [scannedQuizPool] }
+  );
+
+  useProvideObject(
+    'getCodeQuiz',
+    () => scannedQuizPool,
+    { global: true, scope: 'quiz-topics', dependencies: [scannedQuizPool] }
+  );
 
   const handleCodeSubmit = async (submittedCode: string) => {
     if (!userData || !submittedCode || submittedCode.length === 0) return;
-    
+
     setLoading(true);
     setError(false);
-    
+
     try {
       const paramatical = await getParamatical(
         userData.usersId,
@@ -143,7 +158,14 @@ function QuizJoinContent({ theme, t, onClose }: { theme: string; t: any; onClose
 
       if (data?.status && data?.quiz_pool) {
         const quizPool = new UserDisplayQuizTopicModel(data.quiz_pool);
-        console.log('Quiz pool found:', quizPool);
+        const memberStatus = data?.is_member === true;
+        
+        setScannedQuizPool(quizPool);
+        
+        nav.push('quiz_commitment', { 
+          poolsId: quizPool?.quizPool?.poolsId, 
+          action: memberStatus ? 'active' : 'code' 
+        });
         onClose();
       } else {
         setError(true);
@@ -226,12 +248,12 @@ function QuizJoinContent({ theme, t, onClose }: { theme: string; t: any; onClose
                   {t('code_placeholder')}
                 </div>
                 <div className={styles.codeInputWrapper}>
-                  <input 
-                    type="text" 
-                    value={code} 
-                    onChange={(e) => setCode(e.target.value.toUpperCase())} 
+                  <input
+                    type="text"
+                    value={code}
+                    onChange={(e) => setCode(e.target.value.toUpperCase())}
                     onKeyPress={handleKeyPress}
-                    maxLength={9} 
+                    maxLength={9}
                     autoFocus
                     className={`${styles.codeInput} ${styles[`codeInput_${theme}`]}`}
                   />
@@ -245,14 +267,14 @@ function QuizJoinContent({ theme, t, onClose }: { theme: string; t: any; onClose
 
           <div className={`${styles.tabSwitcher} ${styles[`tabSwitcher_${theme}`]}`}>
             <div className={`${styles.tabContainer} ${styles[`tabContainer_${theme}`]}`}>
-              <button 
-                onClick={() => setActiveTab(0)} 
+              <button
+                onClick={() => setActiveTab(0)}
                 className={`${styles.tabButton} ${styles[`tabButton_${theme}`]} ${activeTab === 0 ? styles[`tabButton_active_${theme}`] : styles.tabButton_inactive}`}
               >
                 {t('qr_code')}
               </button>
-              <button 
-                onClick={() => setActiveTab(1)} 
+              <button
+                onClick={() => setActiveTab(1)}
                 className={`${styles.tabButton} ${styles[`tabButton_${theme}`]} ${activeTab === 1 ? styles[`tabButton_active_${theme}`] : styles.tabButton_inactive}`}
               >
                 {t('enter_text')}

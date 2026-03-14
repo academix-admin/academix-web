@@ -84,6 +84,7 @@ export default function QuizCommitment(props: QuizChallengeProps) {
   const [currentQuiz, setCurrentQuiz] = useState<UserDisplayQuizTopicModel | null>(null);
   const getQuizByPoolsIdObj = useObject<(id: string) => UserDisplayQuizTopicModel | undefined>('getQuizByPoolsId', { global: true, scope: 'quiz-topics' });
   const getActiveQuizObj = useObject<UserDisplayQuizTopicModel | null>('getActiveQuiz', { global: true, scope: 'quiz-topics' });
+  const getCodeQuizObj = useObject<UserDisplayQuizTopicModel | null>('getCodeQuiz', { global: true, scope: 'quiz-topics' });
   const [selectedRule, setSelectedRule] = useState(false);
   const [selectedPayout, setSelectedPayout] = useState(false);
   const [selectedRedeemCodeModel, setSelectedRedeemCodeModel] = useState<RedeemCodeModel | null>(null);
@@ -150,10 +151,11 @@ export default function QuizCommitment(props: QuizChallengeProps) {
   };
 
   useEffect(() => {
-    if (!getQuizByPoolsIdObj.isProvided || !getActiveQuizObj.isProvided) return;
+    if (!getQuizByPoolsIdObj.isProvided || !getActiveQuizObj.isProvided || !getCodeQuizObj.isProvided) return;
 
     const activeQuiz = getActiveQuizObj.getter();
-    const getQuiz = action === 'active' ? activeQuiz : getQuizByPoolsIdObj.getter()?.(poolsId);
+    const codeQuiz = getCodeQuizObj.getter();
+    const getQuiz = action === 'active' ? activeQuiz : action === 'code' ? codeQuiz : getQuizByPoolsIdObj.getter()?.(poolsId);
 
     if (getQuiz && !currentQuiz) {
       fetchPoolMembers(getQuiz);
@@ -164,7 +166,7 @@ export default function QuizCommitment(props: QuizChallengeProps) {
     } else if (isTop && !currentQuiz) {
       nav.popToRoot();
     }
-  }, [poolsId, isTop, action, controlDisplayMessage, getQuizByPoolsIdObj.isProvided, getActiveQuizObj.isProvided]);
+  }, [poolsId, isTop, action, controlDisplayMessage, getQuizByPoolsIdObj.isProvided, getActiveQuizObj.isProvided, getCodeQuizObj.isProvided]);
 
   useEffect(() => {
     poolsSubscriptionManager.attachListener(handlePoolChange, !currentQuiz);

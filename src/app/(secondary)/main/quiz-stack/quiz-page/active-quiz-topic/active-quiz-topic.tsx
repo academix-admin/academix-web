@@ -5,7 +5,7 @@ import { useTheme } from '@/context/ThemeContext';
 import styles from './active-quiz-topic.module.css';
 import { useLanguage } from '@/context/LanguageContext';
 import { getLastNameOrSingle, capitalize } from '@/utils/textUtils';
-import { getParamatical, ParamaticalData} from '@/utils/checkers';
+import { getParamatical, ParamaticalData } from '@/utils/checkers';
 import { useUserData } from '@/lib/stacks/user-stack';
 import { useDemandState } from '@/lib/state-stack';
 import { supabaseBrowser } from '@/lib/supabase/client';
@@ -21,7 +21,7 @@ import { useActiveQuiz } from "@/lib/stacks/active-quiz-stack";
 import { poolsSubscriptionManager } from '@/lib/managers/PoolsQuizTopicSubscriptionManager';
 import { PoolChangeEvent } from '@/lib/managers/PoolsQuizTopicSubscriptionManager';
 import { BottomViewer, useBottomController } from "@/lib/BottomViewer";
-import { TimelapseManager, useTimelapseManager, TimelapseType  } from '@/lib/managers/TimelapseManager';
+import { TimelapseManager, useTimelapseManager, TimelapseType } from '@/lib/managers/TimelapseManager';
 import DialogCancel from '@/components/DialogCancel';
 import { QRCodeSVG } from 'qrcode.react';
 import { checkLocation, checkFeatures, fetchUserPartialDetails, fetchUserDetails } from '@/utils/checkers';
@@ -92,10 +92,10 @@ export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) 
   function shouldRemoveOtherQuizPool(updatedPool?: QuizPool | null): boolean {
     if (!updatedPool) return false;
 
-//     // Convert the UTC timestamp (from Supabase) to a local Date object
-//     const date = updatedPool.poolsStartingAt
-//       ? new Date(updatedPool.poolsStartingAt)
-//       : null;
+    //     // Convert the UTC timestamp (from Supabase) to a local Date object
+    //     const date = updatedPool.poolsStartingAt
+    //       ? new Date(updatedPool.poolsStartingAt)
+    //       : null;
 
 
     // Check if the pool is closed
@@ -107,7 +107,7 @@ export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) 
       updatedPool.poolsJob === 'PoolJob.cancelled' ||
       updatedPool.poolsJob === 'PoolJob.pool_ended';
 
-    return  statusCheck || jobCheck;
+    return statusCheck || jobCheck;
   }
 
   useEffect(() => {
@@ -119,24 +119,24 @@ export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) 
   }, [handlePoolChange]);
 
   useEffect(() => {
-    if (!activeQuiz){
-         closeDisplay();
-        return;
+    if (!activeQuiz) {
+      closeDisplay();
+      return;
+    }
+
+
+    const topicsId = activeQuiz.topicsId;
+    const poolsId = activeQuiz.quizPool?.poolsId;
+
+    if (poolsId) {
+      poolsSubscriptionManager.addQuizTopicPool(
+        {
+          poolsId: poolsId,
+          poolsSubscriptionType: 'active'
         }
+      );
 
-
-      const topicsId = activeQuiz.topicsId;
-      const poolsId = activeQuiz.quizPool?.poolsId;
-
-      if (poolsId) {
-        poolsSubscriptionManager.addQuizTopicPool(
-          {
-            poolsId: poolsId,
-            poolsSubscriptionType: 'active'
-          }
-        );
-
-      }
+    }
   }, [activeQuiz]);
 
 
@@ -166,10 +166,10 @@ export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) 
         console.error("[UserDisplayQuizTopicModel] error:", error);
         return null;
       }
-      if(data){
-          return new UserDisplayQuizTopicModel(data);
-      }else{
-          return null;
+      if (data) {
+        return new UserDisplayQuizTopicModel(data);
+      } else {
+        return null;
       }
     } catch (err) {
       console.error("[UserDisplayQuizTopicModel] error:", err);
@@ -181,7 +181,7 @@ export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) 
 
 
   useEffect(() => {
-      if (!userData) return;
+    if (!userData) return;
     demandActiveQuizTopicModel(async ({ get, set }) => {
       setFirstLoaded(true);
       const active = await fetchActiveQuizTopicModel(userData);
@@ -197,17 +197,17 @@ export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) 
   const refreshData = async () => {
     if (!userData) return;
     if (isRefreshingRef.current) return; // 🚫 already running
-      isRefreshingRef.current = true;
+    isRefreshingRef.current = true;
     try {
-        const active = await fetchActiveQuizTopicModel(userData);
-        if(active?.quizPool)poolsSubscriptionManager.handleQuizTopicData('UPDATE', active.quizPool ?? null, undefined , active.quizPool?.poolsId );
-        if(!active && activeQuiz)poolsSubscriptionManager.handleQuizTopicData('DELETE', null, activeQuiz.quizPool?.poolsId , activeQuiz.quizPool?.poolsId );
-        if(activeQuiz?.quizPool?.poolsId && !active)poolsSubscriptionManager.removeQuizTopicPool(activeQuiz.quizPool.poolsId);
-        setActiveQuizTopicModel(active);
+      const active = await fetchActiveQuizTopicModel(userData);
+      if (active?.quizPool) poolsSubscriptionManager.handleQuizTopicData('UPDATE', active.quizPool ?? null, undefined, active.quizPool?.poolsId);
+      if (!active && activeQuiz) poolsSubscriptionManager.handleQuizTopicData('DELETE', null, activeQuiz.quizPool?.poolsId, activeQuiz.quizPool?.poolsId);
+      if (activeQuiz?.quizPool?.poolsId && !active) poolsSubscriptionManager.removeQuizTopicPool(activeQuiz.quizPool.poolsId);
+      setActiveQuizTopicModel(active);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
-        isRefreshingRef.current = false; // ✅ unlock
+      isRefreshingRef.current = false; // ✅ unlock
       // Schedule next call only if component is still mounted
       if (isMountedRef.current) {
         timeoutRef.current = setTimeout(() => {
@@ -219,7 +219,7 @@ export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) 
   };
 
   useEffect(() => {
-    if(!__meta.isHydrated)return;
+    if (!__meta.isHydrated) return;
     isMountedRef.current = true;
     refreshData();
     // Cleanup function
@@ -232,40 +232,40 @@ export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) 
   }, [__meta.isHydrated]);
 
 
-   const getInitials = (text: string): string => {
-     if (!text) return '?';
-     return text.split(' ')
-       .map(word => word.charAt(0).toUpperCase())
-       .slice(0, 2)
-       .join('');
-   };
+  const getInitials = (text: string): string => {
+    if (!text) return '?';
+    return text.split(' ')
+      .map(word => word.charAt(0).toUpperCase())
+      .slice(0, 2)
+      .join('');
+  };
 
-   const formatDate = (dateString: string): string => {
-       const date = new Date(dateString);
-       const options: Intl.DateTimeFormatOptions = {
-         month: 'short',
-         day: 'numeric',
-       };
+  const formatDate = (dateString: string): string => {
+    const date = new Date(dateString);
+    const options: Intl.DateTimeFormatOptions = {
+      month: 'short',
+      day: 'numeric',
+    };
 
-       const timeOptions: Intl.DateTimeFormatOptions = {
-         hour: 'numeric',
-         minute: '2-digit',
-         hour12: true
-       };
+    const timeOptions: Intl.DateTimeFormatOptions = {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    };
 
-       const formattedDate = date.toLocaleDateString('en-US', options);
-       const formattedTime = date.toLocaleTimeString('en-US', timeOptions)
-         .toLowerCase()
-         .replace(' ', '');
+    const formattedDate = date.toLocaleDateString('en-US', options);
+    const formattedTime = date.toLocaleTimeString('en-US', timeOptions)
+      .toLowerCase()
+      .replace(' ', '');
 
-       return `${formattedDate} at ${formattedTime}`;
-     };
+    return `${formattedDate} at ${formattedTime}`;
+  };
 
-  if(!activeQuiz) return null;
+  if (!activeQuiz) return null;
 
 
   const handleTopicClick = (topic: UserDisplayQuizTopicModel) => {
-    nav.push('quiz_commitment',{poolsId: activeQuiz?.quizPool?.poolsId, action: 'active'});
+    nav.push('quiz_commitment', { poolsId: activeQuiz?.quizPool?.poolsId, action: 'active' });
   };
 
 
@@ -328,21 +328,21 @@ export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) 
       console.log(leave);
 
       if (status === 'PoolActive.success') {
-         if(activeQuiz?.quizPool?.poolsId)poolsSubscriptionManager.removeQuizTopicPool(activeQuiz.quizPool.poolsId);
-         setActiveQuizTopicModel(null);
-         const updatedModels = transactionModels.filter(
-             (m) => m.poolsId !== leave.pools_id
-         );
-         console.log('Updated Transaction Models after leaving quiz:', updatedModels);
-         setTransactionModels(updatedModels);
-      }else if(status === 'PoolActive.no_active' && activeQuiz){
-         if(activeQuiz?.quizPool?.poolsId)poolsSubscriptionManager.removeQuizTopicPool(activeQuiz.quizPool.poolsId);
-         setActiveQuizTopicModel(null);
-         const updatedModels = transactionModels.filter(
-             (m) => m.poolsId !== leave.pools_id
-         );
-         console.log('Updated Transaction Models after leaving quiz:', updatedModels);
-         setTransactionModels(updatedModels);
+        if (activeQuiz?.quizPool?.poolsId) poolsSubscriptionManager.removeQuizTopicPool(activeQuiz.quizPool.poolsId);
+        setActiveQuizTopicModel(null);
+        const updatedModels = transactionModels.filter(
+          (m) => m.poolsId !== leave.pools_id
+        );
+        console.log('Updated Transaction Models after leaving quiz:', updatedModels);
+        setTransactionModels(updatedModels);
+      } else if (status === 'PoolActive.no_active' && activeQuiz) {
+        if (activeQuiz?.quizPool?.poolsId) poolsSubscriptionManager.removeQuizTopicPool(activeQuiz.quizPool.poolsId);
+        setActiveQuizTopicModel(null);
+        const updatedModels = transactionModels.filter(
+          (m) => m.poolsId !== leave.pools_id
+        );
+        console.log('Updated Transaction Models after leaving quiz:', updatedModels);
+        setTransactionModels(updatedModels);
       }
     } catch (error: any) {
       console.error("Top up error:", error);
@@ -367,14 +367,14 @@ export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) 
 
   return (
     <div className={styles.container}>
-            {activeQuiz &&
-                  <CurrentQuizCard
-                    topic={activeQuiz}
-                    getInitials={getInitials}
-                    onClick={()=> handleTopicClick(activeQuiz)}
-                    onLeave={handleLeave}
-                    showContinue={getIsContinueEnabled(activeQuiz)}
-                  /> }
+      {activeQuiz &&
+        <CurrentQuizCard
+          topic={activeQuiz}
+          getInitials={getInitials}
+          onClick={() => handleTopicClick(activeQuiz)}
+          onLeave={handleLeave}
+          showContinue={getIsContinueEnabled(activeQuiz)}
+        />}
     </div>
   );
 }
@@ -419,13 +419,13 @@ function CurrentQuizCard({ topic, getInitials, onClick, onLeave, showContinue }:
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
 
-   if(secs <= 0)return t('open_quiz');
+    if (secs <= 0) return t('open_quiz');
 
     const timeString = hours > 0
       ? `${hours}h ${minutes}m`
       : minutes > 0
-      ? `${minutes}m ${secs}s`
-      : `${secs}s`;
+        ? `${minutes}m ${secs}s`
+        : `${secs}s`;
 
     switch (status) {
       case 'PoolJob.waiting':
@@ -444,7 +444,7 @@ function CurrentQuizCard({ topic, getInitials, onClick, onLeave, showContinue }:
   }, []);
 
   const handleTimeUpdate = (remaining: number) => {
-     setRemainingTime(Math.floor(remaining / 1000)); // Convert to seconds
+    setRemainingTime(Math.floor(remaining / 1000)); // Convert to seconds
   };
 
   useEffect(() => {
@@ -479,19 +479,19 @@ function CurrentQuizCard({ topic, getInitials, onClick, onLeave, showContinue }:
     }
   }, [topic.quizPool?.poolsJobEndAt, topic.quizPool?.poolsJob]);
 
-    // ✅ Clean lifecycle management with embedded hook
-    usePageLifecycle(nav, {
-      onResume: ({ stack, current }) => {
-         if (topic.quizPool?.poolsJob && topic.quizPool?.poolsJobEndAt) {
-               controlDisplayMessage(topic.quizPool.poolsJob, topic.quizPool.poolsJobEndAt);
-         }
-      },
-      onPause: ({ stack, current }) => {
-         if (topic.quizPool?.poolsJob && topic.quizPool?.poolsJobEndAt) {
-               controlDisplayMessage(topic.quizPool.poolsJob, topic.quizPool.poolsJobEndAt);
-         }
-      },
-    }, [topic]);
+  // ✅ Clean lifecycle management with embedded hook
+  usePageLifecycle(nav, {
+    onResume: ({ stack, current }) => {
+      if (topic.quizPool?.poolsJob && topic.quizPool?.poolsJobEndAt) {
+        controlDisplayMessage(topic.quizPool.poolsJob, topic.quizPool.poolsJobEndAt);
+      }
+    },
+    onPause: ({ stack, current }) => {
+      if (topic.quizPool?.poolsJob && topic.quizPool?.poolsJobEndAt) {
+        controlDisplayMessage(topic.quizPool.poolsJob, topic.quizPool.poolsJobEndAt);
+      }
+    },
+  }, [topic]);
 
   const handleCopyCode = async () => {
     if (!topic.quizPool?.poolsCode) return;
@@ -507,54 +507,54 @@ function CurrentQuizCard({ topic, getInitials, onClick, onLeave, showContinue }:
   };
 
   const handleLeaveClick = async (e: React.MouseEvent) => {
-      e.stopPropagation();
-      leaveDialog.open(
-        <div style={{ textAlign: 'center' }}>
-          <p>{t('confirm_leave_quiz')}</p>
-        </div>
-      );
-    };
+    e.stopPropagation();
+    leaveDialog.open(
+      <div style={{ textAlign: 'center' }}>
+        <p>{t('confirm_leave_quiz')}</p>
+      </div>
+    );
+  };
 
   const confirmLeave = async () => {
-      setLeaving(true);
-      try {
-        await onLeave();
-      } finally {
-        setLeaving(false);
-        leaveDialog.close();
-      }
-    };
+    setLeaving(true);
+    try {
+      await onLeave();
+    } finally {
+      setLeaving(false);
+      leaveDialog.close();
+    }
+  };
 
   const onContinueClick = async () => {
-    if(!userData || !topic.quizPool?.poolsId)return;
-    
+    if (!userData || !topic.quizPool?.poolsId) return;
+
     await refreshSessionIfNeeded();
-    
+
     await nav.popToRoot();
     handleQuizDisplayClose();
     await replaceAndWait(`/quiz/${topic.quizPool?.poolsId}`);
   };
 
-   useEffect(() => {
-       if (lastEvent?.isOpen) {
-         // Show your quiz starter component
-         quizStarterBottomController.close();
-         quizStarterBottomController.open();
-       } else {
-         // Hide your quiz starter component
-         quizStarterBottomController.close();
-       }
-   }, [lastEvent]);
-
-   const handleQuizDisplayClose =  () => {
+  useEffect(() => {
+    if (lastEvent?.isOpen) {
+      // Show your quiz starter component
       quizStarterBottomController.close();
-      closeDisplay();
-   };
-   const handleContinue =  async () => {
-      setToQuizLoading(true);
-      await onContinueClick();
-      setToQuizLoading(false);
-   };
+      quizStarterBottomController.open();
+    } else {
+      // Hide your quiz starter component
+      quizStarterBottomController.close();
+    }
+  }, [lastEvent]);
+
+  const handleQuizDisplayClose = () => {
+    quizStarterBottomController.close();
+    closeDisplay();
+  };
+  const handleContinue = async () => {
+    setToQuizLoading(true);
+    await onContinueClick();
+    setToQuizLoading(false);
+  };
 
   const status = topic.quizPool?.poolsJob || '';
   const displayTime = formatQuizPoolStatusTime(status, remainingTime);
@@ -593,7 +593,7 @@ function CurrentQuizCard({ topic, getInitials, onClick, onLeave, showContinue }:
 
             {/* Text Content */}
             <div className={styles.textContent}>
-             <div className={styles.pendingQuiz}>
+              <div className={styles.pendingQuiz}>
                 {t('pending_quiz')}
               </div>
               <h3 className={styles.topicTitle}>
@@ -626,13 +626,13 @@ function CurrentQuizCard({ topic, getInitials, onClick, onLeave, showContinue }:
           <div
             className={styles.codeContainer}
             onClick={(e: React.MouseEvent) => {
-               e.stopPropagation();
-               codeBottomController.open();
+              e.stopPropagation();
+              codeBottomController.open();
             }}
           >
             <div className={styles.codeIcon}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V8l8 5 8-5v10zm-8-7L4 6h16l-8 5z"/>
+                <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V8l8 5 8-5v10zm-8-7L4 6h16l-8 5z" />
               </svg>
             </div>
             <span className={styles.codeText}>
@@ -648,20 +648,20 @@ function CurrentQuizCard({ topic, getInitials, onClick, onLeave, showContinue }:
             disabled={leaving || topic.quizPool?.poolsStatus != 'Pools.open'}
           >
             {leaving ? (
-                          <div className={styles.spinner}></div>
-                        ) : (
-                          t('leave_text')
-                        )}
+              <div className={styles.spinner}></div>
+            ) : (
+              t('leave_text')
+            )}
           </button>}
           {/* Continue Button */}
-          {(topic.quizPool?.poolsStatus != 'Pools.open')  && <button
+          {(topic.quizPool?.poolsStatus != 'Pools.open') && <button
             role="button"
             className={styles.continueButton}
             disabled={!showContinue}
             onClick={(e: React.MouseEvent) => {
-                  e.stopPropagation();
-                  handleContinue();
-                }}
+              e.stopPropagation();
+              handleContinue();
+            }}
           >
             {toQuizLoading ? <div className={styles.spinner}></div> : t('continue')}
           </button>}
@@ -738,7 +738,7 @@ function CurrentQuizCard({ topic, getInitials, onClick, onLeave, showContinue }:
           >
             <div className={styles.codeCopyIcon}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V8l8 5 8-5v10zm-8-7L4 6h16l-8 5z"/>
+                <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V8l8 5 8-5v10zm-8-7L4 6h16l-8 5z" />
               </svg>
             </div>
             <span className={styles.codeCopyText}>
@@ -746,9 +746,9 @@ function CurrentQuizCard({ topic, getInitials, onClick, onLeave, showContinue }:
             </span>
             <div className={styles.copyContainer}>
               <div className={styles.copyIcon}>
-               <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                 <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
-               </svg>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
+                </svg>
               </div>
             </div>
           </div>
