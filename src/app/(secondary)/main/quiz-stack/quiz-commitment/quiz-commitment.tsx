@@ -151,11 +151,10 @@ export default function QuizCommitment(props: QuizChallengeProps) {
   };
 
   useEffect(() => {
-    if (!getQuizByPoolsIdObj.isProvided || !getActiveQuizObj.isProvided || !getCodeQuizObj.isProvided) return;
 
-    const activeQuiz = getActiveQuizObj.getter();
-    const codeQuiz = getCodeQuizObj.getter();
-    const getQuiz = action === 'active' ? activeQuiz : action === 'code' ? codeQuiz : getQuizByPoolsIdObj.getter()?.(poolsId);
+    const activeQuiz = getActiveQuizObj.isProvided ? getActiveQuizObj.getter() : null;
+    const codeQuiz = getCodeQuizObj.isProvided ? getCodeQuizObj.getter() : null;
+    const getQuiz = action === 'active' ? activeQuiz : action === 'code' ? codeQuiz : (getQuizByPoolsIdObj.isProvided ? getQuizByPoolsIdObj.getter()?.(poolsId) : null );
 
     if (getQuiz && !currentQuiz) {
       fetchPoolMembers(getQuiz);
