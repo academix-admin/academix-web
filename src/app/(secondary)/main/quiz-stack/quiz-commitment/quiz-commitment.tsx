@@ -157,13 +157,13 @@ export default function QuizCommitment(props: QuizChallengeProps) {
     const getQuiz = action === 'active' ? activeQuiz : action === 'code' ? codeQuiz : (getQuizByPoolsIdObj.isProvided ? getQuizByPoolsIdObj.getter()?.(poolsId) : null );
     const isProvided = action === 'active' ? getActiveQuizObj.isProvided : action === 'code' ? getCodeQuizObj.isProvided : getQuizByPoolsIdObj.isProvided;
     
-    if (isProvided && getQuiz && !currentQuiz) {
+    if (getQuiz && !currentQuiz) {
       fetchPoolMembers(getQuiz);
       setCurrentQuiz(getQuiz);
       if (getQuiz.quizPool?.poolsJob && getQuiz.quizPool?.poolsJobEndAt) {
         controlDisplayMessage(getQuiz.quizPool.poolsJob, getQuiz.quizPool.poolsJobEndAt);
       }
-    } else if (isTop && !currentQuiz) {
+    } else if (isProvided && isTop && !currentQuiz) {
       nav.popToRoot();
     }
   }, [poolsId, isTop, action, controlDisplayMessage, getQuizByPoolsIdObj.isProvided, getActiveQuizObj.isProvided, getCodeQuizObj.isProvided]);
