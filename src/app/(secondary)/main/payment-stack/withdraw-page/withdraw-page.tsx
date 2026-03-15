@@ -93,8 +93,8 @@ export default function WithdrawPage() {
     setAmount(newAmount);
     if (
       (!selectedWalletData ||
-      newAmount <= 0 ||
-      newAmount < selectedWalletData.paymentWalletMin)
+        newAmount <= 0 ||
+        newAmount < selectedWalletData.paymentWalletMin)
       && isTop
     ) {
       // reset if amount is invalid for current wallet
@@ -141,8 +141,8 @@ export default function WithdrawPage() {
 
   /** New profile */
   const createProfile = async () => {
-    if(!selectedWalletData || !selectedMethodData)return;
-    nav.push('new_profile', {  walletId: selectedWalletData.paymentWalletId, methodId: selectedMethodData.paymentMethodId, profileType: 'ProfileType.sell'});
+    if (!selectedWalletData || !selectedMethodData) return;
+    nav.push('new_profile', { walletId: selectedWalletData.paymentWalletId, methodId: selectedMethodData.paymentMethodId, profileType: 'ProfileType.sell' });
   };
 
   const [continueState, setContinueState] = useState('initial');
@@ -348,7 +348,7 @@ export default function WithdrawPage() {
       if (status === 'TransactionStatus.pinError') {
         withdrawBottomController.close();
         setWithdrawLoading(false);
-        
+
         if (payment.not_set) {
           setPinErrorType('not_set');
           pinErrorDialog.open(
@@ -385,19 +385,22 @@ export default function WithdrawPage() {
       const completionData = new PaymentCompletionData(payment.payment_completion_data);
 
       if (payment.transaction_details) {
-        setTransactionModels([transaction,...transactionModels]);
+        setTransactionModels([transaction, ...transactionModels]);
 
         if (completionMode) {
+          setWithdrawLoading(false);
+          withdrawBottomController.close();
           const shouldWaitForDialog = await handlePaymentCompletion(completionMode, completionData, transaction);
           if (!shouldWaitForDialog) {
-            await nav.pushAndPopUntil('view_transaction',(entry) => entry.key === 'payment_page', {transactionId: transaction.transactionId});
+            await nav.pushAndPopUntil('view_transaction', (entry) => entry.key === 'payment_page', { transactionId: transaction.transactionId });
           }
         } else {
-          await nav.pushAndPopUntil('view_transaction',(entry) => entry.key === 'payment_page', {transactionId: transaction.transactionId});
+          setWithdrawLoading(false);
+          withdrawBottomController.close();
+          await nav.pushAndPopUntil('view_transaction', (entry) => entry.key === 'payment_page', { transactionId: transaction.transactionId });
         }
       }
-     setWithdrawLoading(false);
-     withdrawBottomController.close();
+
     } catch (error: any) {
       console.error("Withdraw error:", error);
       setWithdrawLoading(false);
@@ -434,13 +437,13 @@ export default function WithdrawPage() {
         return (
           <span className={styles.infoValue}>
             <div>
-            {selectedWalletProfileData?.paymentDetails?.fullname || t('error_text')}
+              {selectedWalletProfileData?.paymentDetails?.fullname || t('error_text')}
             </div>
             <div>
-                        {selectedWalletProfileData?.paymentDetails?.accountNumber || t('error_text')}
+              {selectedWalletProfileData?.paymentDetails?.accountNumber || t('error_text')}
             </div>
             <div>
-                        {selectedWalletProfileData?.paymentDetails?.bankName || t('error_text')}
+              {selectedWalletProfileData?.paymentDetails?.bankName || t('error_text')}
             </div>
           </span>
         );
@@ -483,7 +486,7 @@ export default function WithdrawPage() {
       default:
         return (
           <span className={styles.infoValue}>
-                      {t('error_text')}
+            {t('error_text')}
           </span>
         );
     }
@@ -498,7 +501,7 @@ export default function WithdrawPage() {
 
   const currency = selectedWalletData?.paymentWalletCurrency ?? "!";
   const balance = userBalance?.usersBalanceAmount ?? 0;
-  const balanceCheck = balance >= (amount  * rate) + fee;
+  const balanceCheck = balance >= (amount * rate) + fee;
 
   return (
     <main className={`${styles.container} ${styles[`container_${theme}`]}`}>
@@ -684,7 +687,7 @@ export default function WithdrawPage() {
                 disabled={withdrawLoading || !balanceCheck}
                 aria-disabled={withdrawLoading}
               >
-                { withdrawLoading ?  <span className={styles.spinner}></span> : t('pay_text')}
+                {withdrawLoading ? <span className={styles.spinner}></span> : t('pay_text')}
               </button>
             </div>
           )}
@@ -715,7 +718,8 @@ export default function WithdrawPage() {
         closeOnBackdrop={false}
         layoutProp={{
           backgroundColor: theme === 'light' ? '#fff' : '#121212',
-          margin: '16px 16px'
+          margin: '16px 16px',
+          titleColor: theme === 'light' ? '#1a1a1a' : '#fff'
         }}
       />
 
@@ -728,7 +732,7 @@ export default function WithdrawPage() {
             onClick: async () => {
               ussdDialog.close();
               if (currentTransactionId) {
-                await nav.pushAndPopUntil('view_transaction',(entry) => entry.key === 'payment_page', {transactionId: currentTransactionId});
+                await nav.pushAndPopUntil('view_transaction', (entry) => entry.key === 'payment_page', { transactionId: currentTransactionId });
               }
             }
           }
@@ -737,7 +741,8 @@ export default function WithdrawPage() {
         closeOnBackdrop={true}
         layoutProp={{
           backgroundColor: theme === 'light' ? '#fff' : '#121212',
-          margin: '16px 16px'
+          margin: '16px 16px',
+          titleColor: theme === 'light' ? '#1a1a1a' : '#fff'
         }}
       />
 
@@ -750,7 +755,7 @@ export default function WithdrawPage() {
             onClick: async () => {
               bankTransferDialog.close();
               if (currentTransactionId) {
-                await nav.pushAndPopUntil('view_transaction',(entry) => entry.key === 'payment_page', {transactionId: currentTransactionId});
+                await nav.pushAndPopUntil('view_transaction', (entry) => entry.key === 'payment_page', { transactionId: currentTransactionId });
               }
             }
           }
@@ -759,7 +764,8 @@ export default function WithdrawPage() {
         closeOnBackdrop={true}
         layoutProp={{
           backgroundColor: theme === 'light' ? '#fff' : '#121212',
-          margin: '16px 16px'
+          margin: '16px 16px',
+          titleColor: theme === 'light' ? '#1a1a1a' : '#fff'
         }}
       />
 
@@ -776,7 +782,8 @@ export default function WithdrawPage() {
         closeOnBackdrop={true}
         layoutProp={{
           backgroundColor: theme === 'light' ? '#fff' : '#121212',
-          margin: '16px 16px'
+          margin: '16px 16px',
+          titleColor: theme === 'light' ? '#1a1a1a' : '#fff'
         }}
       />
     </main>

@@ -138,6 +138,7 @@
   "password_match": "Password matches",
   "same_password": "Enter a different password",
   "reward_text": "Reward",
+  "rewards_text": "Rewards",
   "quiz_text": "Quiz",
   "payment_text": "Payment",
   "profile_text": "Profile",
@@ -574,5 +575,10 @@
   "code_placeholder": "CODE",
   "submit": "Submit",
   "camera_view_placeholder": "Camera view would appear here",
-  "no_result_text": "No result found"
+  "no_result_text": "No result found",
+  "account_not_found": "Account not found",
+  "error_verifying_account": "Error verifying account",
+  "profile_creation_failed": "Profile creation failed",
+  "success_text": "Success",
+  "users_created_at": "Account created at"
 }

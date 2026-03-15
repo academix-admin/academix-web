@@ -212,7 +212,16 @@ export default function ProfileOverview({ onStateChange }: ComponentStateProps) 
           </div>
         </div>
       </div>
-      <DialogViewer title="QR Code" showCancel={false} buttons={[{ text: 'Close', variant: 'secondary', onClick: close }]} />
+      <DialogViewer 
+        title="QR Code" 
+        showCancel={false} 
+        buttons={[{ text: 'Close', variant: 'secondary', onClick: close }]} 
+        layoutProp={{
+          backgroundColor: theme === 'light' ? '#fff' : '#121212',
+          margin: '16px 16px',
+          titleColor: theme === 'light' ? '#1a1a1a' : '#fff'
+        }}
+      />
     </div>
   );
 }

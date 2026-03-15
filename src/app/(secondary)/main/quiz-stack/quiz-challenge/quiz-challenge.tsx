@@ -547,7 +547,8 @@ export default function QuizChallenge(props: QuizChallengeProps) {
                 closeOnBackdrop={false}
                 layoutProp={{
                     backgroundColor: theme === 'light' ? '#fff' : '#121212',
-                    margin: '16px 16px'
+                    margin: '16px 16px',
+                    titleColor: theme === 'light' ? '#1a1a1a' : '#fff'
                 }}
             />
 
@@ -564,7 +565,8 @@ export default function QuizChallenge(props: QuizChallengeProps) {
                 closeOnBackdrop={true}
                 layoutProp={{
                     backgroundColor: theme === 'light' ? '#fff' : '#121212',
-                    margin: '16px 16px'
+                    margin: '16px 16px',
+                    titleColor: theme === 'light' ? '#1a1a1a' : '#fff'
                 }}
             />
         </main>

@@ -31,6 +31,7 @@ import ErrorView from '@/components/ErrorView/ErrorView';
 import NoResultsView from '@/components/NoResultsView/NoResultsView';
 import { SelectionViewer, useSelectionController } from "@/lib/SelectionViewer";
 import { useDemandState } from '@/lib/state-stack';
+import { useDialog } from '@/lib/DialogViewer';
 
 
 interface BankModel {
@@ -85,9 +86,10 @@ interface BankItemProps {
 interface BankTransferProps {
   onSubmit: (bank: BankModel | null, account: Account | null) => void;
   methodId: string;
+  errorDialog: ReturnType<typeof useDialog>;
 }
 
-const BankTransfer = ({ onSubmit, methodId }: BankTransferProps) => {
+const BankTransfer = ({ onSubmit, methodId, errorDialog }: BankTransferProps) => {
   const { theme } = useTheme();
   const { t, lang } = useLanguage();
 
@@ -158,7 +160,11 @@ const BankTransfer = ({ onSubmit, methodId }: BankTransferProps) => {
       if (!jwt) {
         console.log('no JWT token');
         setSearchingLoading(false);
-        setError(t('error_occurred') );
+        errorDialog.open(
+          <div style={{ textAlign: 'center' }}>
+            <p>{t('authentication_error')}</p>
+          </div>
+        );
         return;
       }
 
@@ -174,14 +180,24 @@ const BankTransfer = ({ onSubmit, methodId }: BankTransferProps) => {
 
       if (account && status === 'AccountStatus.success') {
         setAccountData(account);
+        setSearchingLoading(false);
+      } else {
+        setSearchingLoading(false);
+        errorDialog.open(
+          <div style={{ textAlign: 'center' }}>
+            <p>{t('account_not_found')}</p>
+          </div>
+        );
       }
-  
-     setSearchingLoading(false);
 
     } catch (error: any) {
       console.error("Account Search error:", error);
       setSearchingLoading(false);
-      setError(t('error_occurred'));
+      errorDialog.open(
+        <div style={{ textAlign: 'center' }}>
+          <p>{t('error_verifying_account')}</p>
+        </div>
+      );
     }
   };  
 
@@ -600,6 +616,8 @@ export default function NewProfilePage(props: NewProfileProps) {
 
   const [error, setError] = useState('');
   const [continueState, setContinueState] = useState('initial');
+  const errorDialog = useDialog();
+  const successDialog = useDialog();
 
   useEffect(() => {
     setWalletModify(selectedWalletData === null);
@@ -660,8 +678,12 @@ export default function NewProfilePage(props: NewProfileProps) {
       );
 
       if (!paramatical) {
-        setError(t('error_occurred'));
-        setContinueState('error');
+        setContinueState('initial');
+        errorDialog.open(
+          <div style={{ textAlign: 'center' }}>
+            <p>{t('error_occurred')}</p>
+          </div>
+        );
         return;
       }
 
@@ -681,8 +703,18 @@ export default function NewProfilePage(props: NewProfileProps) {
 
       if (error) {
         console.error("[NewProfile] error:", error);
-        setError(t('error_saving_profile'));
-        setContinueState('error');
+        setContinueState('initial');
+        const errorMessage = error.message || t('error_saving_profile');
+        errorDialog.open(
+          <div style={{ textAlign: 'center' }}>
+            <p>{t('error_saving_profile')}</p>
+            {error.message && (
+              <p style={{ fontSize: '14px', marginTop: '8px', opacity: 0.8 }}>
+                {error.message}
+              </p>
+            )}
+          </div>
+        );
         return;
       }
 
@@ -697,16 +729,38 @@ export default function NewProfilePage(props: NewProfileProps) {
           setPaymentProfileModel([paymentProfile, ...profilesModel]);
         }
 
-        await nav.pop();
+        setContinueState('initial');
+        successDialog.open(
+          <div style={{ textAlign: 'center' }}>
+            <p>{t('create_profile')} {t('success_verification')}</p>
+          </div>
+        );
       } else {
-        setError(t('error_saving_profile'));
-        setContinueState('error');
+        setContinueState('initial');
+        const statusMessage = data?.message || t('profile_creation_failed');
+        errorDialog.open(
+          <div style={{ textAlign: 'center' }}>
+            <p>{t('error_saving_profile')}</p>
+            <p style={{ fontSize: '14px', marginTop: '8px', opacity: 0.8 }}>
+              {statusMessage}
+            </p>
+          </div>
+        );
       }
 
-    } catch (err) {
+    } catch (err: any) {
       console.error("[NewProfile] error:", err);
-      setError(t('error_saving_profile'));
-      setContinueState('error');
+      setContinueState('initial');
+      errorDialog.open(
+        <div style={{ textAlign: 'center' }}>
+          <p>{t('error_saving_profile')}</p>
+          {err?.message && (
+            <p style={{ fontSize: '14px', marginTop: '8px', opacity: 0.8 }}>
+              {err.message}
+            </p>
+          )}
+        </div>
+      );
     }
   };
 
@@ -763,7 +817,7 @@ export default function NewProfilePage(props: NewProfileProps) {
       case 'PaymentMethod.direct_debit':
         return (<AccountActivate onSubmit={(value)=> setSelectedPaymentData(selectedPaymentData.copyWith({phone: userData.usersPhone, directDebit: value}))} purpose={t('direct_debit_text')} />);
       case 'PaymentMethod.bank_transfer':
-        return (<BankTransfer onSubmit={(bank, account) => setSelectedPaymentData(selectedPaymentData.copyWith({phone: userData.usersPhone, bankCode: bank?.code, bankName: bank?.name, accountNumber: account?.account_number, fullname: account?.account_name}))} methodId={paymentMethod.paymentMethodId}/>);
+        return (<BankTransfer onSubmit={(bank, account) => setSelectedPaymentData(selectedPaymentData.copyWith({phone: userData.usersPhone, bankCode: bank?.code, bankName: bank?.name, accountNumber: account?.account_number, fullname: account?.account_name}))} methodId={paymentMethod.paymentMethodId} errorDialog={errorDialog}/>);
       case 'PaymentMethod.ussd':
         return (<BankView onSubmit={(bank)=> setSelectedPaymentData(selectedPaymentData.copyWith({phone: userData.usersPhone, bankCode: bank.code, bankName: bank.name}))} methodId={paymentMethod.paymentMethodId}/>);
       default:
@@ -870,6 +924,45 @@ export default function NewProfilePage(props: NewProfileProps) {
           </button>}
 
       </div>
+
+      <errorDialog.DialogViewer
+        title={t('error_text')}
+        buttons={[
+          {
+            text: t('ok_text'),
+            variant: 'primary',
+            onClick: () => errorDialog.close()
+          }
+        ]}
+        showCancel={false}
+        closeOnBackdrop={true}
+        layoutProp={{
+          backgroundColor: theme === 'light' ? '#fff' : '#121212',
+          margin: '16px 16px',
+          titleColor: theme === 'light' ? '#1a1a1a' : '#fff'
+        }}
+      />
+
+      <successDialog.DialogViewer
+        title={t('success_text')}
+        buttons={[
+          {
+            text: t('ok_text'),
+            variant: 'primary',
+            onClick: async () => {
+              successDialog.close();
+              await nav.pop();
+            }
+          }
+        ]}
+        showCancel={false}
+        closeOnBackdrop={false}
+        layoutProp={{
+          backgroundColor: theme === 'light' ? '#fff' : '#121212',
+          margin: '16px 16px',
+          titleColor: theme === 'light' ? '#1a1a1a' : '#fff'
+        }}
+      />
     </main>
   );
 }

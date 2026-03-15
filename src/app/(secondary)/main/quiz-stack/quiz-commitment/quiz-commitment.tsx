@@ -157,11 +157,6 @@ export default function QuizCommitment(props: QuizChallengeProps) {
     const getQuiz = action === 'active' ? activeQuiz : action === 'code' ? codeQuiz : (getQuizByPoolsIdObj.isProvided ? getQuizByPoolsIdObj.getter()?.(poolsId) : null );
     const isProvided = action === 'active' ? getActiveQuizObj.isProvided : action === 'code' ? getCodeQuizObj.isProvided : getQuizByPoolsIdObj.isProvided;
     
-
-    console.log("QuizCommitment: useEffect triggered with poolsId:", poolsId, "action:", action);
-    console.log("QuizCommitment: getActiveQuizObj.isProvided:", getActiveQuizObj.isProvided, "getCodeQuizObj.isProvided:", getCodeQuizObj.isProvided, "getQuizByPoolsIdObj.isProvided:", getQuizByPoolsIdObj.isProvided); 
-    console.log("QuizCommitment: activeQuiz:", activeQuiz, "codeQuiz:", codeQuiz, "getQuiz:", getQuiz);
-
     if (getQuiz && !currentQuiz) {
       fetchPoolMembers(getQuiz);
       setCurrentQuiz(getQuiz);
@@ -639,7 +634,8 @@ export default function QuizCommitment(props: QuizChallengeProps) {
         closeOnBackdrop={!quizLoading}
         layoutProp={{
           backgroundColor: theme === 'light' ? '#fff' : '#121212',
-          margin: '16px 16px'
+          margin: '16px 16px',
+          titleColor: theme === 'light' ? '#1a1a1a' : '#fff'
         }}
       />
 

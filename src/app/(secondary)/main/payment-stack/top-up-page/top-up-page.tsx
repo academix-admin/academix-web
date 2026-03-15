@@ -95,8 +95,8 @@ export default function TopUpPage() {
     setAmount(newAmount);
     if (
       (!selectedWalletData ||
-      newAmount <= 0 ||
-      newAmount < selectedWalletData.paymentWalletMin)
+        newAmount <= 0 ||
+        newAmount < selectedWalletData.paymentWalletMin)
       && isTop
     ) {
       // reset if amount is invalid for current wallet
@@ -143,8 +143,8 @@ export default function TopUpPage() {
 
   /** New profile */
   const createProfile = async () => {
-    if(!selectedWalletData || !selectedMethodData)return;
-    nav.push('new_profile', {  walletId: selectedWalletData.paymentWalletId, methodId: selectedMethodData.paymentMethodId, profileType: 'ProfileType.buy'});
+    if (!selectedWalletData || !selectedMethodData) return;
+    nav.push('new_profile', { walletId: selectedWalletData.paymentWalletId, methodId: selectedMethodData.paymentMethodId, profileType: 'ProfileType.buy' });
   };
 
   const [continueState, setContinueState] = useState('initial');
@@ -350,7 +350,7 @@ export default function TopUpPage() {
       if (status === 'TransactionStatus.pinError') {
         topUpBottomController.close();
         setTopUpLoading(false);
-        
+
         if (payment.not_set) {
           setPinErrorType('not_set');
           pinErrorDialog.open(
@@ -387,19 +387,22 @@ export default function TopUpPage() {
       const completionData = new PaymentCompletionData(payment.payment_completion_data);
 
       if (payment.transaction_details) {
-        setTransactionModels([transaction,...transactionModels]);
+        setTransactionModels([transaction, ...transactionModels]);
 
         if (completionMode) {
+          topUpBottomController.close();
+          setTopUpLoading(false);
           const shouldWaitForDialog = await handlePaymentCompletion(completionMode, completionData, transaction);
           if (!shouldWaitForDialog) {
-            await nav.pushAndPopUntil('view_transaction',(entry) => entry.key === 'payment_page', {transactionId: transaction.transactionId});
+            await nav.pushAndPopUntil('view_transaction', (entry) => entry.key === 'payment_page', { transactionId: transaction.transactionId });
           }
         } else {
-          await nav.pushAndPopUntil('view_transaction',(entry) => entry.key === 'payment_page', {transactionId: transaction.transactionId});
+          setTopUpLoading(false);
+          topUpBottomController.close();
+          await nav.pushAndPopUntil('view_transaction', (entry) => entry.key === 'payment_page', { transactionId: transaction.transactionId });
         }
       }
-     setTopUpLoading(false);
-     topUpBottomController.close();
+
     } catch (error: any) {
       console.error("Top up error:", error);
       setTopUpLoading(false);
@@ -477,7 +480,7 @@ export default function TopUpPage() {
       default:
         return (
           <span className={styles.infoValue}>
-                      {t('error_text')}
+            {t('error_text')}
           </span>
         );
     }
@@ -676,7 +679,7 @@ export default function TopUpPage() {
                 disabled={topUpLoading}
                 aria-disabled={topUpLoading}
               >
-                { topUpLoading ?  <span className={styles.spinner}></span> : t('pay_text')}
+                {topUpLoading ? <span className={styles.spinner}></span> : t('pay_text')}
               </button>
             </div>
           )}
@@ -711,7 +714,8 @@ export default function TopUpPage() {
         closeOnBackdrop={false}
         layoutProp={{
           backgroundColor: theme === 'light' ? '#fff' : '#121212',
-          margin: '16px 16px'
+          margin: '16px 16px',
+          titleColor: theme === 'light' ? '#1a1a1a' : '#fff'
         }}
       />
 
@@ -724,7 +728,7 @@ export default function TopUpPage() {
             onClick: async () => {
               ussdDialog.close();
               if (currentTransactionId) {
-                await nav.pushAndPopUntil('view_transaction',(entry) => entry.key === 'payment_page', {transactionId: currentTransactionId});
+                await nav.pushAndPopUntil('view_transaction', (entry) => entry.key === 'payment_page', { transactionId: currentTransactionId });
               }
             }
           }
@@ -733,7 +737,8 @@ export default function TopUpPage() {
         closeOnBackdrop={true}
         layoutProp={{
           backgroundColor: theme === 'light' ? '#fff' : '#121212',
-          margin: '16px 16px'
+          margin: '16px 16px',
+          titleColor: theme === 'light' ? '#1a1a1a' : '#fff'
         }}
       />
 
@@ -746,7 +751,7 @@ export default function TopUpPage() {
             onClick: async () => {
               bankTransferDialog.close();
               if (currentTransactionId) {
-                await nav.pushAndPopUntil('view_transaction',(entry) => entry.key === 'payment_page', {transactionId: currentTransactionId});
+                await nav.pushAndPopUntil('view_transaction', (entry) => entry.key === 'payment_page', { transactionId: currentTransactionId });
               }
             }
           }
@@ -755,7 +760,8 @@ export default function TopUpPage() {
         closeOnBackdrop={true}
         layoutProp={{
           backgroundColor: theme === 'light' ? '#fff' : '#121212',
-          margin: '16px 16px'
+          margin: '16px 16px',
+          titleColor: theme === 'light' ? '#1a1a1a' : '#fff'
         }}
       />
 
@@ -772,7 +778,8 @@ export default function TopUpPage() {
         closeOnBackdrop={true}
         layoutProp={{
           backgroundColor: theme === 'light' ? '#fff' : '#121212',
-          margin: '16px 16px'
+          margin: '16px 16px',
+          titleColor: theme === 'light' ? '#1a1a1a' : '#fff'
         }}
       />
     </main>

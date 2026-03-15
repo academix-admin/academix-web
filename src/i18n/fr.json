@@ -575,5 +575,10 @@
   "code_placeholder": "CODE",
   "submit": "Soumettre",
   "camera_view_placeholder": "La vue de la caméra apparaîtrait ici",
-  "no_result_text": "Aucun résultat trouvé"
+  "no_result_text": "Aucun résultat trouvé",
+  "account_not_found": "Compte introuvable",
+  "error_verifying_account": "Erreur lors de la vérification du compte",
+  "profile_creation_failed": "Échec de la création du profil",
+  "success_text": "Succès",
+  "users_created_at": "Compte créé le"
 }
