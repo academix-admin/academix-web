@@ -155,8 +155,9 @@ export default function QuizCommitment(props: QuizChallengeProps) {
     const activeQuiz = getActiveQuizObj.isProvided ? getActiveQuizObj.getter() : null;
     const codeQuiz = getCodeQuizObj.isProvided ? getCodeQuizObj.getter() : null;
     const getQuiz = action === 'active' ? activeQuiz : action === 'code' ? codeQuiz : (getQuizByPoolsIdObj.isProvided ? getQuizByPoolsIdObj.getter()?.(poolsId) : null );
-
-    if (getQuiz && !currentQuiz) {
+    const isProvided = action === 'active' ? getActiveQuizObj.isProvided : action === 'code' ? getCodeQuizObj.isProvided : getQuizByPoolsIdObj.isProvided;
+    
+    if (isProvided && getQuiz && !currentQuiz) {
       fetchPoolMembers(getQuiz);
       setCurrentQuiz(getQuiz);
       if (getQuiz.quizPool?.poolsJob && getQuiz.quizPool?.poolsJobEndAt) {
