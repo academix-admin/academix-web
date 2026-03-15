@@ -21,6 +21,19 @@ export default function QuizPageTitle({ onStateChange }: ComponentStateProps) {
   const { theme } = useTheme();
   const { t } = useLanguage();
   const [bottomViewerId, bottomController, bottomIsOpen] = useBottomController();
+  const [scannedQuizPool, setScannedQuizPool] = useState<UserDisplayQuizTopicModel | null>(null);
+
+  useProvideObject(
+    'getActiveQuiz',
+    () => scannedQuizPool,
+    { global: true, scope: 'quiz-topics', dependencies: [scannedQuizPool] }
+  );
+
+  useProvideObject(
+    'getCodeQuiz',
+    () => scannedQuizPool,
+    { global: true, scope: 'quiz-topics', dependencies: [scannedQuizPool] }
+  );
 
   const handleDisplayClose = () => {
     bottomController.close();
@@ -93,13 +106,19 @@ export default function QuizPageTitle({ onStateChange }: ComponentStateProps) {
         closeThreshold={0.2}
         zIndex={1000}
       >
-        <QuizJoinContent theme={theme} t={t} onClose={handleDisplayClose} />
+        <QuizJoinContent theme={theme} t={t} onClose={handleDisplayClose} scannedQuizPool={scannedQuizPool} setScannedQuizPool={setScannedQuizPool} />
       </BottomViewer>
     </div>
   );
 }
 
-function QuizJoinContent({ theme, t, onClose }: { theme: string; t: any; onClose: () => void }) {
+function QuizJoinContent({ theme, t, onClose, scannedQuizPool, setScannedQuizPool }: { 
+  theme: string; 
+  t: any; 
+  onClose: () => void;
+  scannedQuizPool: UserDisplayQuizTopicModel | null;
+  setScannedQuizPool: (quiz: UserDisplayQuizTopicModel | null) => void;
+}) {
   const [activeTab, setActiveTab] = useState(0);
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
@@ -107,19 +126,6 @@ function QuizJoinContent({ theme, t, onClose }: { theme: string; t: any; onClose
   const { userData } = useUserData();
   const { lang } = useLanguage();
   const nav = useNav();
-  const [scannedQuizPool, setScannedQuizPool] = useState<UserDisplayQuizTopicModel | null>(null);
-
-  useProvideObject(
-    'getActiveQuiz',
-    () => scannedQuizPool,
-    { global: true, scope: 'quiz-topics', dependencies: [scannedQuizPool] }
-  );
-
-  useProvideObject(
-    'getCodeQuiz',
-    () => scannedQuizPool,
-    { global: true, scope: 'quiz-topics', dependencies: [scannedQuizPool] }
-  );
 
   const handleCodeSubmit = async (submittedCode: string) => {
     if (!userData || !submittedCode || submittedCode.length === 0) return;
