@@ -105,6 +105,7 @@ export default function PaymentWallet({ profileType, onWalletData, onWalletAmoun
       payment_wallet_identity: "Academix Coin",
       payment_wallet_buy_rate_type: "",
       payment_wallet_buy_fee: 0,
+      payment_wallet_buy_fee_flat: 0,
       payment_wallet_image: "",
     }
   );
