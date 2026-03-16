@@ -4,6 +4,7 @@ export interface BackendBuyPaymentWalletModel {
   payment_wallet_id: string;
   payment_wallet_image?: string | null;
   payment_wallet_buy_fee: number;
+  payment_wallet_buy_fee_flat: number;
   payment_wallet_buy_min: number;
   payment_wallet_buy_rate: number;
   payment_wallet_currency: string;
@@ -16,6 +17,7 @@ export interface BackendSellPaymentWalletModel {
   payment_wallet_id: string;
   payment_wallet_image?: string | null;
   payment_wallet_sell_fee: number;
+  payment_wallet_sell_fee_flat: number;
   payment_wallet_sell_min: number;
   payment_wallet_sell_rate: number;
   payment_wallet_currency: string;
@@ -44,6 +46,7 @@ export class PaymentWalletModel {
   paymentWalletType: string;
   paymentWalletRateType: string;
   paymentWalletFee: number;
+  paymentWalletFeeFlat: number;
 
   constructor(
     paymentWalletType: string,
@@ -58,17 +61,20 @@ export class PaymentWalletModel {
       this.paymentWalletRate = data?.payment_wallet_buy_rate ?? 0;
       this.paymentWalletRateType = data?.payment_wallet_buy_rate_type ?? "";
       this.paymentWalletFee = data?.payment_wallet_buy_fee ?? 0;
+      this.paymentWalletFeeFlat = data?.payment_wallet_buy_fee_flat ?? 0;
     } else if (isSellPaymentWalletModel(data)) {
       this.paymentWalletMin = data?.payment_wallet_sell_min ?? 0;
       this.paymentWalletRate = data?.payment_wallet_sell_rate ?? 0;
       this.paymentWalletRateType = data?.payment_wallet_sell_rate_type ?? "";
       this.paymentWalletFee = data?.payment_wallet_sell_fee ?? 0;
+      this.paymentWalletFeeFlat = data?.payment_wallet_sell_fee_flat ?? 0;
     } else {
       // Default values if data is null or undefined
       this.paymentWalletMin = 0;
       this.paymentWalletRate = 0;
       this.paymentWalletRateType = "";
       this.paymentWalletFee = 0;
+      this.paymentWalletFeeFlat = 0;
     }
 
     this.paymentWalletCurrency = data?.payment_wallet_currency ?? "";
@@ -87,6 +93,7 @@ export class PaymentWalletModel {
         payment_wallet_id: data.paymentWalletId,
         payment_wallet_image: data.paymentWalletImage,
         payment_wallet_buy_fee: data.paymentWalletFee,
+        payment_wallet_buy_fee_flat: data.paymentWalletFeeFlat,
         payment_wallet_buy_min: data.paymentWalletMin,
         payment_wallet_buy_rate: data.paymentWalletRate,
         payment_wallet_currency: data.paymentWalletCurrency,
@@ -103,6 +110,7 @@ export class PaymentWalletModel {
       payment_wallet_id: this.paymentWalletId,
       payment_wallet_image: this.paymentWalletImage ?? null,
       payment_wallet_buy_fee: this.paymentWalletFee,
+      payment_wallet_buy_fee_flat: this.paymentWalletFeeFlat,
       payment_wallet_buy_min: this.paymentWalletMin,
       payment_wallet_buy_rate: this.paymentWalletRate,
       payment_wallet_currency: this.paymentWalletCurrency,
@@ -117,6 +125,7 @@ export class PaymentWalletModel {
       payment_wallet_id: this.paymentWalletId,
       payment_wallet_image: this.paymentWalletImage ?? null,
       payment_wallet_sell_fee: this.paymentWalletFee,
+      payment_wallet_sell_fee_flat: this.paymentWalletFeeFlat,
       payment_wallet_sell_min: this.paymentWalletMin,
       payment_wallet_sell_rate: this.paymentWalletRate,
       payment_wallet_currency: this.paymentWalletCurrency,

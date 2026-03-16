@@ -269,11 +269,17 @@ export default function Rates({ searchParams }: RatesPageProps) {
       payment_wallet_id: "academix-coin",
       sort_created_id: "",
       payment_wallet_buy_min: 0,
+      payment_wallet_buy_fee_flat: 0,
+      payment_wallet_sell_fee_flat: 0,
       payment_wallet_buy_rate: 1,
+      payment_wallet_sell_rate: 1,
       payment_wallet_currency: "ADC",
       payment_wallet_identity: "Academix Coin",
       payment_wallet_buy_rate_type: "fixed",
+      payment_wallet_sell_rate_type: "fixed",
       payment_wallet_buy_fee: 0,
+      payment_wallet_sell_fee: 0,
+      payment_wallet_sell_min: 0,
       payment_wallet_image: "",
     }
   );
@@ -614,6 +620,8 @@ export default function Rates({ searchParams }: RatesPageProps) {
         feeValue = (walletData.paymentWalletFee / 100) * value;
       } else if (walletData.paymentWalletRateType === 'RateType.FEE') {
         feeValue = walletData.paymentWalletFee;
+      } else if (walletData.paymentWalletRateType === 'RateType.FUNCTION') {
+        feeValue = Math.max(walletData.paymentWalletFeeFlat, (value * walletData.paymentWalletFee) / 100);
       }
     } else {
       // SELL MODE: User pays ADC, receives wallet currency
@@ -623,6 +631,10 @@ export default function Rates({ searchParams }: RatesPageProps) {
       } else if (walletData.paymentWalletRateType === 'RateType.FEE') {
         // Fixed fee in wallet currency, convert to ADC
         feeValue = walletData.paymentWalletFee * walletData.paymentWalletRate;
+      } else if (walletData.paymentWalletRateType === 'RateType.FUNCTION') {
+        const flatFeeInADC = walletData.paymentWalletFeeFlat * walletData.paymentWalletRate;
+        const percentFee = (value * walletData.paymentWalletFee) / 100;
+        feeValue = Math.max(flatFeeInADC, percentFee);
       }
     }
 

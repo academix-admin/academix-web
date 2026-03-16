@@ -496,7 +496,11 @@ export default function WithdrawPage() {
   const fee = selectedWalletData ?
     (selectedWalletData.paymentWalletRateType === 'RateType.PERCENT'
       ? (amount * rate) * (selectedWalletData.paymentWalletFee ?? 0) / 100
-      : (selectedWalletData.paymentWalletFee ?? 0) * rate
+      : selectedWalletData.paymentWalletRateType === 'RateType.FEE'
+      ? (selectedWalletData.paymentWalletFee ?? 0) * rate
+      : selectedWalletData.paymentWalletRateType === 'RateType.FUNCTION'
+      ? Math.max((selectedWalletData.paymentWalletFeeFlat ?? 0) * rate, ((amount * rate) * (selectedWalletData.paymentWalletFee ?? 0)) / 100)
+      : 0
     ) : 0;
 
   const currency = selectedWalletData?.paymentWalletCurrency ?? "!";

@@ -305,6 +305,8 @@ export default function PaymentWallet({ profileType, onWalletData, onWalletAmoun
         feeValue = (walletData.paymentWalletFee / 100) * value;
       } else if (walletData.paymentWalletRateType === 'RateType.FEE') {
         feeValue = walletData.paymentWalletFee;
+      } else if (walletData.paymentWalletRateType === 'RateType.FUNCTION') {
+        feeValue = Math.max(walletData.paymentWalletFeeFlat, (value * walletData.paymentWalletFee) / 100);
       }
     } else {
       // SELL MODE: User receives wallet currency, pays ADC
@@ -315,6 +317,10 @@ export default function PaymentWallet({ profileType, onWalletData, onWalletAmoun
       } else if (walletData.paymentWalletRateType === 'RateType.FEE') {
         // Fixed fee in wallet currency, convert to ADC
         feeValue = walletData.paymentWalletFee * (walletData.paymentWalletRate || 0);
+      } else if (walletData.paymentWalletRateType === 'RateType.FUNCTION') {
+        const flatFeeInADC = walletData.paymentWalletFeeFlat * (walletData.paymentWalletRate || 0);
+        const percentFee = (adcAmount * walletData.paymentWalletFee) / 100;
+        feeValue = Math.max(flatFeeInADC, percentFee);
       }
     }
 

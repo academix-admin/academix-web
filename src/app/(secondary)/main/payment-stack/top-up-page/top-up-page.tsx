@@ -490,7 +490,11 @@ export default function TopUpPage() {
   const fee = selectedWalletData ?
     (selectedWalletData.paymentWalletRateType === 'RateType.PERCENT'
       ? amount * (selectedWalletData.paymentWalletFee ?? 0) / 100
-      : selectedWalletData.paymentWalletFee ?? 0
+      : selectedWalletData.paymentWalletRateType === 'RateType.FEE'
+      ? selectedWalletData.paymentWalletFee ?? 0
+      : selectedWalletData.paymentWalletRateType === 'RateType.FUNCTION'
+      ? Math.max(selectedWalletData.paymentWalletFeeFlat ?? 0, (amount * (selectedWalletData.paymentWalletFee ?? 0)) / 100)
+      : 0
     ) : 0;
 
   const currency = selectedWalletData?.paymentWalletCurrency ?? "!";
