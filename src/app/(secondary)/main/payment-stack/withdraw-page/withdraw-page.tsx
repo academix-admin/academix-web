@@ -493,11 +493,11 @@ export default function WithdrawPage() {
   };
 
   const rate = selectedWalletData?.paymentWalletRate ?? 0;
-  const fee = (selectedWalletData ?
+  const fee = selectedWalletData ?
     (selectedWalletData.paymentWalletRateType === 'RateType.PERCENT'
-      ? amount * (selectedWalletData.paymentWalletFee ?? 0) / 100
-      : selectedWalletData.paymentWalletFee ?? 0
-    ) : 0) * (selectedWalletData?.paymentWalletRate || 0);
+      ? (amount * rate) * (selectedWalletData.paymentWalletFee ?? 0) / 100
+      : (selectedWalletData.paymentWalletFee ?? 0) * rate
+    ) : 0;
 
   const currency = selectedWalletData?.paymentWalletCurrency ?? "!";
   const balance = userBalance?.usersBalanceAmount ?? 0;

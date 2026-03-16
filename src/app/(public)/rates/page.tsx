@@ -603,29 +603,38 @@ export default function Rates({ searchParams }: RatesPageProps) {
   }, []);
 
   const calculateFee = useCallback((value: number) => {
-    if (!walletData) return '0';
-
+    if (!walletData) return 0;
+    
     let feeValue = 0;
-    if (walletData.paymentWalletRateType === 'RateType.PERCENT') {
-      feeValue = (walletData.paymentWalletFee / 100) * value;
-    } else if (walletData.paymentWalletRateType === 'RateType.FEE') {
-      feeValue = walletData.paymentWalletFee;
+    
+    if (isBuyMode) {
+      // BUY MODE: User pays wallet currency, receives ADC
+      // Fee is calculated on wallet currency amount
+      if (walletData.paymentWalletRateType === 'RateType.PERCENT') {
+        feeValue = (walletData.paymentWalletFee / 100) * value;
+      } else if (walletData.paymentWalletRateType === 'RateType.FEE') {
+        feeValue = walletData.paymentWalletFee;
+      }
+    } else {
+      // SELL MODE: User pays ADC, receives wallet currency
+      // Fee is calculated on ADC amount
+      if (walletData.paymentWalletRateType === 'RateType.PERCENT') {
+        feeValue = (walletData.paymentWalletFee / 100) * value;
+      } else if (walletData.paymentWalletRateType === 'RateType.FEE') {
+        // Fixed fee in wallet currency, convert to ADC
+        feeValue = walletData.paymentWalletFee * walletData.paymentWalletRate;
+      }
     }
 
-    // For sell operations, convert fee to Academix coins
-    if (!isBuyMode) {
-      feeValue = feeValue * walletData.paymentWalletRate;
-    }
-
-    return parseFloat(feeValue.toFixed(2)).toString();
+    return parseFloat(feeValue.toFixed(2));
   }, [walletData, isBuyMode]);
 
   const calculateTotal = useCallback((value: number) => {
-    if (!walletData) return '0';
+    if (!walletData) return 0;
 
-    const fee = parseFloat(calculateFee(value));
-    return parseFloat((value + fee).toFixed(2)).toString();
-  }, [walletData, isBuyMode, calculateFee]);
+    const fee = calculateFee(value);
+    return parseFloat((value + fee).toFixed(2));
+  }, [walletData, calculateFee]);
 
   // Filtered data
   const filteredWallets = useMemo(() => {
@@ -843,7 +852,7 @@ export default function Rates({ searchParams }: RatesPageProps) {
                   </div>
                   <div className={styles.feeRow}>
                     <span>{t('fee_text')}:</span>
-                    <span>{calculateFee(parseFloat(walletAmount) || 0)} {isBuyMode ? walletData.paymentWalletCurrency : 'ADC'}</span>
+                    <span>{calculateFee(parseFloat(isBuyMode ? walletAmount : academixAmount) || 0)} {isBuyMode ? walletData.paymentWalletCurrency : 'ADC'}</span>
                   </div>
                   <div className={styles.feeRow}>
                     <span>{t('charged_text')}:</span>

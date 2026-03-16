@@ -293,21 +293,33 @@ export default function PaymentWallet({ profileType, onWalletData, onWalletAmoun
   }, []);
 
   // Calculate fee
-  const calculateFee = useCallback((type:string, value: number) => {
-      let feeValue = 0;
-      if(walletData?.paymentWalletRateType === 'RateType.PERCENT'){
-          feeValue = (walletData.paymentWalletFee / 100) * value;
+  const calculateFee = useCallback((type: string, value: number) => {
+    if (!walletData) return 0;
+    
+    let feeValue = 0;
+    
+    if (type === 'PaymentType.buy') {
+      // BUY MODE: User pays wallet currency, receives ADC
+      // Fee is calculated on wallet currency amount and displayed in wallet currency
+      if (walletData.paymentWalletRateType === 'RateType.PERCENT') {
+        feeValue = (walletData.paymentWalletFee / 100) * value;
+      } else if (walletData.paymentWalletRateType === 'RateType.FEE') {
+        feeValue = walletData.paymentWalletFee;
       }
-      if(walletData?.paymentWalletRateType === 'RateType.FEE'){
-          feeValue = walletData.paymentWalletFee;
+    } else {
+      // SELL MODE: User receives wallet currency, pays ADC
+      // Fee is calculated on ADC amount and displayed in ADC
+      const adcAmount = value * (walletData.paymentWalletRate || 0);
+      if (walletData.paymentWalletRateType === 'RateType.PERCENT') {
+        feeValue = (walletData.paymentWalletFee / 100) * adcAmount;
+      } else if (walletData.paymentWalletRateType === 'RateType.FEE') {
+        // Fixed fee in wallet currency, convert to ADC
+        feeValue = walletData.paymentWalletFee * (walletData.paymentWalletRate || 0);
       }
+    }
 
-     if(type === 'PaymentType.sell'){
-         feeValue = ((walletData?.paymentWalletRate || 0) * feeValue);
-     }
-
-    return parseFloat(feeValue.toFixed(2)).toString();
-  }, [walletData?.paymentWalletRateType, walletData?.paymentWalletFee, walletData?.paymentWalletRate]);
+    return parseFloat(feeValue.toFixed(2));
+  }, [walletData]);
 
   // Format number with commas
   const formatNumber = useCallback((num: number) => {
