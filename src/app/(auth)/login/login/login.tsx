@@ -87,8 +87,8 @@ export default function LoginUser() {
   }, []);
 
   useEffect(() => {
-    setIsFormValid(loginState !== 'error' && loginState !== 'initial' && !!login.password);
-  }, [login.login, login.password, loginState]);
+    setIsFormValid(loginState !== 'error' && loginState !== 'initial' && !!login.password && passwordChecks.valid);
+  }, [login.login, login.password, loginState, passwordChecks.valid]);
 
 
   useEffect(() => {
@@ -388,12 +388,13 @@ const handleCreatedUser = async (type: string, value: string, userObj: UserData)
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = e.target;
     setPasswordInputValue(value);
-                                    setError('');
+    setError('');
 
     const result = validatePassword(value);
     setPasswordChecks(result);
 
-    login$.setField({ field: 'password', value: result.valid ? value : '' });
+    // Always store the actual password value, validation is checked separately
+    login$.setField({ field: 'password', value: value });
   };
 
   const togglePasswordVisibility = () => {

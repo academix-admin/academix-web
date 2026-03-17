@@ -6,6 +6,10 @@ import { useLanguage } from '@/context/LanguageContext';
 import styles from './view-transaction-page.module.css';
 import { useNav, usePageLifecycle, useObject } from "@/lib/NavigationStack";
 import { TransactionModel } from '@/models/transaction-model';
+import { transactionSubscriptionManager } from '@/lib/managers/TransactionSubscriptionManager';
+import { TransactionChangeEvent } from '@/lib/managers/TransactionSubscriptionManager';
+import { poolsSubscriptionManager } from '@/lib/managers/PoolsQuizTopicSubscriptionManager';
+import { PoolChangeEvent } from '@/lib/managers/PoolsQuizTopicSubscriptionManager';
 
 import { PaymentDetails } from '@/models/payment-details';
 
@@ -22,6 +26,46 @@ export default function ViewTransactionPage(props: ViewTransactionProps) {
   const getTransactionByIdObj = useObject<(id: string) => TransactionModel | undefined>('getTransactionById', { global: true, scope: 'payment-transactions' });
 
   const [currentTransaction, setCurrentTransaction] = useState<TransactionModel | null>(null);
+
+  // Handle pool changes - if pool is removed, pop the page
+  const handlePoolChange = (event: PoolChangeEvent) => {
+    const { eventType, oldRecordId: poolsId } = event;
+    if (eventType === 'DELETE' && poolsId && currentTransaction?.poolsId === poolsId) {
+      nav.pop();
+    }
+  };
+
+  // Handle transaction changes - update current transaction or pop if deleted
+  const handleTransactionChange = (event: TransactionChangeEvent) => {
+    const { eventType, newRecord: transaction, oldRecordId: transactionId } = event;
+
+    if (eventType === 'DELETE' && transactionId === currentTransaction?.transactionId) {
+      // Transaction was deleted, pop the page
+      nav.pop();
+    } else if (transaction && transaction.transactionId === currentTransaction?.transactionId) {
+      // Transaction was updated, update current transaction
+      const updatedTransaction = TransactionModel.from(currentTransaction);
+      const newTransaction = updatedTransaction.copyWith({ 
+        transactionReceiverStatus: transaction.transactionReceiverStatus, 
+        transactionSenderStatus: transaction.transactionSenderStatus  
+      });
+      setCurrentTransaction(newTransaction);
+
+      // Remove subscription if transaction is no longer pending
+      if (shouldRemoveTransactionSubscription(newTransaction)) {
+        transactionSubscriptionManager.removeTransactionId(transaction.transactionId);
+      }
+    }
+  };
+
+  function shouldRemoveTransactionSubscription(updatedTransaction?: TransactionModel | null): boolean {
+    if (!updatedTransaction) return false;
+
+    const senderStatus = updatedTransaction.transactionSenderStatus;
+    const receiverStatus = updatedTransaction.transactionReceiverStatus;
+
+    return senderStatus != 'TransactionStatus.pending' && receiverStatus != 'TransactionStatus.pending';
+  }
 
   usePageLifecycle(nav, {
       onEnter: ({ current, previous }) => {
@@ -53,6 +97,24 @@ export default function ViewTransactionPage(props: ViewTransactionProps) {
       }
     }, [transactionId]);
 
+  // Subscribe to transaction changes
+  useEffect(() => {
+    transactionSubscriptionManager.attachListener(handleTransactionChange);
+
+    return () => {
+      transactionSubscriptionManager.removeListener(handleTransactionChange);
+    };
+  }, [handleTransactionChange]);
+
+  // Subscribe to pool changes
+  useEffect(() => {
+    poolsSubscriptionManager.attachListener(handlePoolChange);
+
+    return () => {
+      poolsSubscriptionManager.removeListener(handlePoolChange);
+    };
+  }, [handlePoolChange]);
+
   useEffect(() => {
     if (!getTransactionByIdObj.isProvided) return;
     
@@ -61,6 +123,23 @@ export default function ViewTransactionPage(props: ViewTransactionProps) {
 
     if (transaction) {
       setCurrentTransaction(transaction);
+      
+      // Subscribe to transaction updates if it's pending
+      const senderStatus = transaction.transactionSenderStatus;
+      const receiverStatus = transaction.transactionReceiverStatus;
+      
+      if (senderStatus === 'TransactionStatus.pending' || receiverStatus === 'TransactionStatus.pending') {
+        const added = transactionSubscriptionManager.addTransactionId(
+          transaction.transactionId,
+          {
+            override: false,
+            update: true
+          }
+        );
+        if (added) {
+          transactionSubscriptionManager.updateSubscription();
+        }
+      }
     } else if (isTop) {
       nav.popToRoot();
     }
