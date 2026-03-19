@@ -139,7 +139,7 @@ interface SimpleReward {
   amount: number;
 }
 
-const allRoles = ['Roles.creator', 'Roles.reviewer', 'Roles.organization', 'Roles.teacher', 'Roles.celebrity', 'Roles.parent', 'Roles.institution'];
+const allRoles = ['Roles.creator', 'Roles.reviewer', 'Roles.organization', 'Roles.teacher', 'Roles.celebrity', 'Roles.parent', 'Roles.academic_institution'];
 
 // Utility Functions
 const calculateMoreRewards = (
@@ -377,6 +377,10 @@ const OneVsOneView = ({ data, roles }: { data: ChallengeConfig; roles: string[] 
           <span>{t('loser')}:</span>
           <span className={styles.payout_value}>{selectedQuestion.challengeMidShare}</span>
         </div>
+        {/* <div className={styles.payout_row}>
+          <span><strong>{t('total')}:</strong></span>
+          <span className={styles.payout_value}><strong>{selectedQuestion.challengeTopShare + selectedQuestion.challengeMidShare}</strong></span>
+        </div> */}
         {selectedRole !== 'Roles.reviewer' && (
           <div className={styles.payout_row}>
             <span>{t(selectedRole)}:</span>
@@ -639,7 +643,7 @@ const MultiplayerView = ({ data, roles }: { data: ChallengeConfig; roles: string
         </div>
         {positionAmount !== null && (
           <div className={`${styles.position_result} ${styles[`position_result_${theme}`]}`}>
-            {t('amount_for_position')} {positionInput}: <strong>{positionAmount}</strong>
+            <strong>{positionAmount}</strong>
           </div>
         )}
         {positionInput && positionAmount === null && (
@@ -668,6 +672,14 @@ const MultiplayerView = ({ data, roles }: { data: ChallengeConfig; roles: string
           </div>
         ))}
       </div>
+
+      {/* Total Payout Indicator */}
+      {/* <div className={`${styles.payout_breakdown} ${styles[`payout_breakdown_${theme}`]}`}>
+        <div className={styles.payout_row}>
+          <span><strong>{t('total')}:</strong></span>
+          <span className={styles.payout_value}><strong>{moreRewards.rewards.reduce((sum, reward) => sum + reward.amount, 0).toFixed(2)}</strong></span>
+        </div>
+      </div> */}
 
       {totalPages > 1 && (
         <div className={styles.pagination}>
