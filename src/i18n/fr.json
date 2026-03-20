@@ -193,6 +193,7 @@
   "friends_text": "Amis",
   "active_text": "ACTIF",
   "completed_text": "TERMINÉ",
+  "correct_text": "CORRECT",
   "failed_text": "ÉCHOUÉ",
   "today_text": "Aujourd'hui",
   "payment_details": "Détails de paiement",
@@ -580,5 +581,6 @@
   "error_verifying_account": "Erreur lors de la vérification du compte",
   "profile_creation_failed": "Échec de la création du profil",
   "success_text": "Succès",
-  "users_created_at": "Compte créé le"
+  "users_created_at": "Compte créé le",
+  "total": "Total"
 }

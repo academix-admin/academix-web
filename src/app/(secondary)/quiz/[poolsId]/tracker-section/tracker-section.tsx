@@ -37,12 +37,13 @@ const showQuestion = (question: string, status: string) => {
 };
 
 // Status badge component
-const StatusBadge = ({ status, time, onRetry, canResubmit, questionId }: {
+const StatusBadge = ({ status, time, onRetry, canResubmit, questionId, questionStatus }: {
   status: string;
   time: number | null | undefined;
   onRetry: (questionId: string) => void;
   canResubmit: boolean;
   questionId: string;
+  questionStatus?: string;
 }) => {
   const { theme } = useTheme();
   const { t } = useLanguage();
@@ -73,7 +74,31 @@ const StatusBadge = ({ status, time, onRetry, canResubmit, questionId }: {
   if (status === 'data') {
     return (
       <div className={`${styles.statusCompleted} ${styles[`statusCompleted_${theme}`]}`}>
-        <span>{capitalize(t('completed_text'))}</span>
+        <div className={styles.completedContent}>
+          {questionStatus === 'Question.success' && (
+            <>
+              <span style={{color: 'green'}}>{capitalize(t('correct_text'))}</span>
+              <div className={`${styles.statusIndicator} ${styles.statusCorrect}`}>
+                <svg className={styles.statusIcon} viewBox="0 0 24 24" fill="white">
+                  <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                </svg>
+              </div>
+            </>
+          )}
+          {questionStatus === 'Question.failed' && (
+            <>
+              <span style={{color: 'red'}}>{capitalize(t('failed_text'))}</span>
+              <div className={`${styles.statusIndicator} ${styles.statusWrong}`}>
+                <svg className={styles.statusIcon} viewBox="0 0 24 24" fill="white">
+                  <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                </svg>
+              </div>
+            </>
+          )}
+          {!questionStatus && (
+            <span>{capitalize(t('completed_text'))}</span>
+          )}
+        </div>
         {time && (
           <div className={`${styles.timeBadge} ${styles[`timeBadge_${theme}`]}`}>
             <svg className={styles.timeIcon} viewBox="0 0 24 24" fill="currentColor">
@@ -97,7 +122,8 @@ const QuestionCard = ({
   time,
   onRetry,
   canResubmit,
-  questionId
+  questionId,
+  questionStatus
 }: {
   question: string;
   index: number;
@@ -106,6 +132,7 @@ const QuestionCard = ({
   onRetry: (questionId: string) => void;
   canResubmit: boolean;
   questionId: string;
+  questionStatus?: string;
 }) => {
   const { theme } = useTheme();
   const { t } = useLanguage();
@@ -128,6 +155,7 @@ const QuestionCard = ({
           onRetry={onRetry}
           canResubmit={canResubmit}
           questionId={questionId}
+          questionStatus={questionStatus}
         />
       </div>
     </div>
@@ -165,6 +193,7 @@ export default function TrackerSection ({
           onRetry={onRetry}
           canResubmit={item.canResubmit}
           questionId={item.questionId}
+          questionStatus={item.questionStatus}
         />
       ))}
     </div>

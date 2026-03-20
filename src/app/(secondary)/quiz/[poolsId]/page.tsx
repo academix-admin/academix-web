@@ -26,7 +26,7 @@ import SideDrawer from '@/lib/SideDrawer';
 import SideTracker from './side-tracker/side-tracker'
 import QuizResults from './quiz-results/quiz-results'
 import { useAwaitableRouter } from "@/hooks/useAwaitableRouter";
-import { FraudDetectionService } from '@/utils/fraudDetection';
+import { useDialog, createConfirmDialog } from '@/lib/DialogViewer';
 
 // Quiz state types
 type QuizState =
@@ -45,11 +45,13 @@ interface SubmissionState {
   status: SubmissionStatus;
   questionId: string;
   time?: number | null;
+  questionStatus?: string; // 'success', 'failed', etc.
 }
 
 export type QuestionTrackerState = SubmissionState & {
   question: string;
   canResubmit: boolean;
+  questionStatus?: string; 
 };
 
 interface QuizSession {
@@ -74,6 +76,11 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
   const { userData } = useUserData();
   const isMountedRef = useRef(true);
   const { replaceAndWait } = useAwaitableRouter();
+
+  // Dialog for confirmations
+  const { isOpen: isDialogOpen, open: openDialog, close: closeDialog, DialogViewer } = useDialog();
+  const [dialogType, setDialogType] = useState<'exit' | 'back'>('exit');
+  const [allowNavigation, setAllowNavigation] = useState(false);
 
   // Main quiz state
   const [quizState, setQuizState] = useState<QuizState>('loading');
@@ -152,7 +159,8 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
       questions.map(q => [q.poolsQuestionId, {
         status: q.questionTime != null ? 'data' as SubmissionStatus : 'initial',
         questionId: q.poolsQuestionId,
-        time: q.questionTime
+        time: q.questionTime,
+        questionStatus: undefined // Will be populated when backend responds
       }])
     );
 
@@ -253,27 +261,6 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
           return;
     }
 
-    // Fraud check before submission
-    const fraudCheck = await FraudDetectionService.checkAction(
-      userData.usersId,
-      poolsId,
-      'submit_question'
-    );
-
-    if (!fraudCheck.allowed) {
-      console.warn('Submission blocked by fraud detection:', fraudCheck.reasons);
-      setQuizSession(prev => {
-        const newSubmissions = new Map(prev.submissions);
-        newSubmissions.set(question.poolsQuestionId, {
-          status: 'error',
-          questionId: question.poolsQuestionId,
-          time: timeTaken
-        });
-        return { ...prev, submissions: newSubmissions };
-      });
-      return;
-    }
-
     // Get user paramatical data for submission
     const paramatical = await getParamatical(
       userData.usersId,
@@ -288,7 +275,8 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
         newSubmissions.set(question.poolsQuestionId, {
           status: 'error',
           questionId: question.poolsQuestionId,
-          time: timeTaken
+          time: timeTaken,
+          questionStatus: undefined
         });
         return { ...prev, submissions: newSubmissions };
       });
@@ -301,7 +289,8 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
       newSubmissions.set(question.poolsQuestionId, {
         status: 'loading',
         questionId: question.poolsQuestionId,
-        time: timeTaken
+        time: timeTaken,
+        questionStatus: undefined
       });
       return { ...prev, submissions: newSubmissions };
     });
@@ -320,6 +309,9 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
       if (error) throw error;
 
       if (data.status === 'Submission.success' || data.status === 'Submission.duplicate') {
+        // Keep original questionStatus format from backend
+        const questionStatus = data.question_status || data.questionStatus;
+        
         // Update submission status to successful
       setQuizSession(prev => {
         // Map through completedQuestions and update the specific question with questionTime
@@ -337,7 +329,8 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
         newSubmissions.set(question.poolsQuestionId, {
           status: 'data',
           questionId: question.poolsQuestionId,
-          time: timeTaken
+          time: timeTaken,
+          questionStatus: questionStatus
         });
 
         return {
@@ -354,34 +347,35 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
           newSubmissions.set(question.poolsQuestionId, {
             status: 'error',
             questionId: question.poolsQuestionId,
-            time: timeTaken
+            time: timeTaken,
+            questionStatus: undefined
           });
           return { ...prev, submissions: newSubmissions };
         });
         setClosed(true);
         determineState();
       }else{
-
       setQuizSession(prev => {
         const newSubmissions = new Map(prev.submissions);
         newSubmissions.set(question.poolsQuestionId, {
           status: 'error',
           questionId: question.poolsQuestionId,
-          time: timeTaken
+          time: timeTaken,
+          questionStatus: undefined
         });
         return { ...prev, submissions: newSubmissions };
       });
 
       }
     } catch (error) {
-      console.error('Error submitting question:', error);
       // Update submission status to error on exception
       setQuizSession(prev => {
         const newSubmissions = new Map(prev.submissions);
         newSubmissions.set(question.poolsQuestionId, {
           status: 'error',
           questionId: question.poolsQuestionId,
-          time: timeTaken
+          time: timeTaken,
+          questionStatus: undefined
         });
         return { ...prev, submissions: newSubmissions };
       });
@@ -409,7 +403,8 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
         newSubmissions.set(currentQuestion.poolsQuestionId, {
            status: 'loading',
            questionId: currentQuestion.poolsQuestionId,
-           time: timeTaken
+           time: timeTaken,
+           questionStatus: undefined
         });
 
          // ✅ Mark for backend submission later
@@ -547,7 +542,6 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
         }
         return true;
       } catch (error) {
-        console.error('Error setting up quiz timer:', error);
         cleanUpQuizTimer();
         return false;
       }
@@ -639,7 +633,6 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
         });
 
         if (error) {
-          console.error("[QuizModel] error:", error);
           setQuizState('error');
           return;
         }
@@ -668,7 +661,6 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
         }
 
       } catch (err) {
-        console.error("[QuizModel] error:", err);
         setQuizState('error');
       }
     });
@@ -701,18 +693,22 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
       // Determine status based on both submission record AND question state
       let status: SubmissionStatus = 'initial';
       let time = 0;
+      let questionStatus: string | undefined = undefined;
 
       if (submission) {
         status = submission.status;
         time = submission.time || 0;
+        questionStatus = submission.questionStatus;
       } else if (question.questionTime != null) {
         // Question has been timed/submitted but no submission record
         status = 'data';
         time = question.questionTime;
+        // questionStatus remains undefined since we don't have the result
       } else if (question.optionData.some(option => option.optionSelected)) {
         // Question has selected answers but no submission attempt
         status = 'initial';
         time = 0;
+        questionStatus = undefined;
       }
 
       return {
@@ -720,7 +716,8 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
         questionId: question.poolsQuestionId,
         time,
         question: question.questionData.questionsText,
-        canResubmit: validForNotSubmitted(question)
+        canResubmit: validForNotSubmitted(question),
+        questionStatus
       };
     }).sort((a, b) => {
       // Sort: completed first, then in-progress, then initial
@@ -731,6 +728,7 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
     quizSession.pendingQuestions,
     quizSession.completedQuestions,
     quizSession.submissions,
+    validForNotSubmitted
   ]);
 
 
@@ -772,7 +770,6 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
       });
 
       if (error) {
-        console.error("[QuizModel] RPC error:", error);
         setRefreshLoading(false);
         return;
       }
@@ -789,7 +786,6 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
 
       setRefreshLoading(false);
     } catch (err) {
-      console.error("[QuizModel] error:", err);
       setRefreshLoading(false);
     }
   };
@@ -821,10 +817,61 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
     };
   }, []);
 
-  const returnToMain = useCallback( async () => {
-    // window.location.replace('/main');
+  // Prevent browser back button and page refresh
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      // Only show warning if quiz is in progress (not loading, error, or completed states)
+      if (['quizPlay', 'questionTrack', 'quizTime'].includes(quizState) && !allowNavigation) {
+        e.preventDefault();
+        e.returnValue = t('confirm_leave_quiz');
+        return t('confirm_leave_quiz');
+      }
+    };
+
+    const handlePopState = (e: PopStateEvent) => {
+      // Only prevent back navigation if quiz is in progress and navigation is not allowed
+      if (['quizPlay', 'questionTrack', 'quizTime'].includes(quizState) && !allowNavigation) {
+        // Push current state back to prevent navigation
+        window.history.pushState(null, '', window.location.href);
+        
+        // Show confirmation dialog
+        setDialogType('back');
+        openDialog();
+      }
+    };
+
+    // Add event listeners
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('popstate', handlePopState);
+
+    // Push initial state to enable popstate detection
+    if (!allowNavigation) {
+      window.history.pushState(null, '', window.location.href);
+    }
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [quizState, openDialog, t, allowNavigation]);
+
+  const returnToMain = useCallback(async () => {
     await replaceAndWait('/main');
-  }, []);
+  }, [replaceAndWait]);
+
+  const handleConfirmLeave = useCallback(async () => {
+    closeDialog();
+    await replaceAndWait('/main');
+  }, [closeDialog, replaceAndWait]);
+
+  const handleConfirmBack = useCallback(async () => {
+    closeDialog();
+    await replaceAndWait('/main');
+  }, [closeDialog, replaceAndWait]);
+
+  const handleCancelLeave = useCallback(() => {
+    closeDialog();
+  }, [closeDialog]);
 
   // Render quiz content based on current state
   const renderQuizContent = () => {
@@ -840,20 +887,20 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
         return (<ErrorView text="Something went wrong while loading the quiz." buttonText="Try Again" onButtonClick={()=> window.location.reload()} />);
 
       case 'quizTime':
-        return <QuizTimer quizTimerValue={quizTimerValue} onSkip={() => {setEndTimeFrom('timer');}} clickMenu={()=> setDrawerIsOpen(!isDrawerOpen)} clickExit={returnToMain}/>;
+        return <QuizTimer quizTimerValue={quizTimerValue} onSkip={() => {setEndTimeFrom('timer');}} clickMenu={()=> setDrawerIsOpen(!isDrawerOpen)} clickExit={()=> {setDialogType('exit'); openDialog();}}/>;
 
       case 'questionTrack':
         return <QuizTracker trackerState={getQuestionTrackers()} onRetry={handleRetry} onEndClick={()=> {setEndTimeFrom('tracker');}} />;
 
       case 'quizReward':
-        return <QuizResults poolsId={quizModel?.poolsId || null} clickMenu={()=> setDrawerIsOpen(!isDrawerOpen)} clickExit={returnToMain}/>;
+        return <QuizResults poolsId={quizModel?.poolsId || null} clickMenu={()=> setDrawerIsOpen(!isDrawerOpen)} clickExit={()=> {setDialogType('exit'); openDialog();}}/>;
 
       case 'quizPlay':
         const currentQuestion = getCurrentQuestion(quizSession.currentQuestionId);
-        return <QuestionDisplay question={currentQuestion} onAnswer={handleAnswer} onSubmit={handleSubmitQuestion} getQuestionNumber={()=> quizSession.totalQuestions - quizSession.pendingQuestions.length + 1} totalNumber={quizSession.totalQuestions} clickMenu={()=> setDrawerIsOpen(!isDrawerOpen)} clickExit={returnToMain} />;
+        return <QuestionDisplay question={currentQuestion} onAnswer={handleAnswer} onSubmit={handleSubmitQuestion} getQuestionNumber={()=> quizSession.totalQuestions - quizSession.pendingQuestions.length + 1} totalNumber={quizSession.totalQuestions} clickMenu={()=> setDrawerIsOpen(!isDrawerOpen)} clickExit={()=> {setDialogType('exit'); openDialog();}} />;
 
       case 'quizEnd':
-        return <QuizCompletion quizPool={quizModel} clickMenu={()=> setDrawerIsOpen(!isDrawerOpen)} clickExit={returnToMain} refreshLoading={refreshLoading} clickContinueRefresh={checkToRefreshOrResult}/>;
+        return <QuizCompletion quizPool={quizModel} clickMenu={()=> setDrawerIsOpen(!isDrawerOpen)} clickExit={()=> {setDialogType('exit'); openDialog();}} refreshLoading={refreshLoading} clickContinueRefresh={checkToRefreshOrResult}/>;
 
       default:
         return null;
@@ -877,6 +924,21 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
       >
         <SideTracker trackerState={getQuestionTrackers()} onRetry={handleRetry} onExitClick={()=> setDrawerIsOpen(false)} />
       </SideDrawer>}
+      
+      {/* Confirmation Dialog */}
+      <DialogViewer 
+        title={t('leave_quiz')}
+        message={t('confirm_leave_quiz')}
+        buttons={[
+          { 
+            text: t('yes_text'), 
+            variant: 'danger' as const, 
+            onClick: dialogType === 'exit' ? handleConfirmLeave : handleConfirmBack
+          }
+        ]}
+        showCancel={true}
+        cancelText={t('no_text')}
+      />
     </>
   );
 }
