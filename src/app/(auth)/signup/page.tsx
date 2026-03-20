@@ -23,12 +23,16 @@ export default function SignUp() {
     verification: Verification,
     otp: Otp
   };
-  return <NavigationStack
-          id="signup"
-          navLink={routes}
-          entry="step1"
-          transition = "slide"
-          persist={true}
-          syncHistory={true}
-        />;
+  return (
+    <div style={{ height: '100dvh', overflow: 'hidden' }}>
+      <NavigationStack
+        id="signup"
+        navLink={routes}
+        entry="step1"
+        transition="slide"
+        persist={true}
+        syncHistory={true}
+      />
+    </div>
+  );
 }

@@ -1444,23 +1444,26 @@ interface ContainerData {
   score: number;
 }
 
-export function useGroupScopedScrollRestoration(
+// ==================== Unified Scroll Restoration ====================
+// Works for both standalone and group NavigationStacks with the same sophisticated logic
+
+export function useUnifiedScrollRestoration(
   api: NavStackAPI,
   renders: RenderRecord[],
   stackSnapshot: StackEntry[],
   groupContext: GroupNavigationContextType | null,
   groupStackId: string | null
 ) {
-  // Composite key: groupId:stackId
+  // Composite key: groupId:stackId for groups, or 'standalone:stackId' for standalone
   const groupStackKey = groupContext
     ? `${groupContext.getGroupId()}:${groupStackId}`
-    : 'root:root';
+    : `standalone:${api.id}`;
 
   const scrollData = useRef<{
     scrollContainers: Map<string, ContainerData>;
     wasActiveGroup: boolean;
-    activeListeners: Map<string, () => void>; // ✅ Track listeners by UID - persist across page visibility changes
-    pendingListeners: Set<string>; // ✅ Track UIDs that are currently being watched via MutationObserver
+    activeListeners: Map<string, () => void>;
+    pendingListeners: Set<string>;
     pendingCleanups?: Map<string, { observer: MutationObserver; timeoutId: NodeJS.Timeout }>;
   }>({
     scrollContainers: new Map(),
@@ -1469,16 +1472,8 @@ export function useGroupScopedScrollRestoration(
     pendingListeners: new Set()
   }).current;
 
+  // For standalone: always active. For groups: check if active in group
   const isActiveGroup = groupContext ? groupContext.isActiveStack(groupStackId || '') : true;
-
-  // ✅ COMPREHENSIVE DEBUG
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      (window as any).__debugScrollState = () => {
-        // Debug function available in console
-      };
-    }
-  }, [stackSnapshot, isActiveGroup, groupStackKey]);
 
   useEffect(() => {
     if (typeof window !== "undefined" && "scrollRestoration" in window.history) {
@@ -1486,11 +1481,8 @@ export function useGroupScopedScrollRestoration(
     }
   }, []);
 
-  // Scrollable container detection with cache invalidation
+  // Same scrollable container detection as group version
   const findScrollableContainer = (uid: string): ContainerData | null => {
-    // The navstack-page div is the actual scrollable container
-    // It's set with overflow-y: auto for top pages, overflow-y: hidden for others
-    // It's unique across all groups and pages
     const pageElement = document.querySelector(`[data-nav-uid="${uid}"]`) as HTMLElement;
 
     if (!pageElement) {
@@ -1510,18 +1502,15 @@ export function useGroupScopedScrollRestoration(
       clientWidth: pageElement.clientWidth,
       scrollHeight: pageElement.scrollHeight,
       scrollWidth: pageElement.scrollWidth,
-      score: 100 // This is the container
+      score: 100
     };
   };
 
-  // Get scrollable container with cache management
   const getScrollableContainer = (uid: string): HTMLElement | null => {
     if (typeof document === 'undefined') return null;
 
-    // Check cache first
     const cached = scrollData.scrollContainers.get(uid);
     if (cached) {
-      // Verify cached element is still in DOM
       if (document.contains(cached.element)) {
         return cached.element;
       } else {
@@ -1530,36 +1519,26 @@ export function useGroupScopedScrollRestoration(
     }
 
     const container = findScrollableContainer(uid);
-
-    // Store the container
     if (container?.element) scrollData.scrollContainers.set(uid, container);
     return container?.element ?? null;
   };
 
-  // Get current scroll position
   const getCurrentScrollPosition = (container: HTMLElement): number => {
     return container.scrollTop;
   };
 
-  // Set scroll position
   const setScrollPosition = (position: number, container: HTMLElement) => {
-      container.scrollTop = position;
+    container.scrollTop = position;
   };
 
-  // Add scroll listener to the appropriate element
   const addScrollListener = (container: HTMLElement, handler: () => void) => {
     container.addEventListener('scroll', handler, { passive: true });
     return () => container.removeEventListener('scroll', handler);
   };
 
-  // ✅ CRITICAL: Track scroll position for ALL pages in stack, not just top
-  //    Hidden pages should still track scrolling if user manually scrolls them
-  //    Only remove listeners when pages are completely REMOVED from the stack
+  // Set up listeners for ALL pages in the stack (same as group version)
   useEffect(() => {
-    // ✅ Set up listeners for ALL pages in the stack, regardless of group status
-    // The listeners will remain active even when the group is inactive
-    
-    // Get ALL current UIDs from this stack (including nested) using recursive collection
+    // Get ALL current UIDs from this stack
     const currentUids = new Set<string>();
     const collected = new Set<string>();
 
@@ -1570,14 +1549,12 @@ export function useGroupScopedScrollRestoration(
       const regEntry = globalRegistry.get(stackId);
       if (!regEntry) return;
 
-      // Add UIDs from this stack
       if (regEntry.stack && Array.isArray(regEntry.stack)) {
         regEntry.stack.forEach((entry: StackEntry) => {
           currentUids.add(entry.uid);
         });
       }
 
-      // Recursively add UIDs from child stacks
       if (regEntry.childIds && regEntry.childIds.size > 0) {
         regEntry.childIds.forEach((childId: string) => {
           collectUidsFromStack(childId);
@@ -1585,22 +1562,25 @@ export function useGroupScopedScrollRestoration(
       }
     };
 
-    // Start collection from ALL root stacks to cover entire tree across all groups
+    // For standalone: only collect from current stack. For groups: collect from entire tree
     if (typeof window !== 'undefined' && globalRegistry) {
-      globalRegistry.forEach((regEntry, stackId) => {
-        // Only start from root stacks (no parent) to traverse entire tree
-        if (!regEntry.parentId) {
-          collectUidsFromStack(stackId);
-        }
-      });
+      if (groupContext) {
+        // Group mode: collect from entire tree
+        globalRegistry.forEach((regEntry, stackId) => {
+          if (!regEntry.parentId) {
+            collectUidsFromStack(stackId);
+          }
+        });
+      } else {
+        // Standalone mode: only collect from current stack
+        collectUidsFromStack(api.id);
+      }
     }
     
-    // Get already-tracked UIDs
     const trackedUids = new Set(scrollData.activeListeners.keys());
 
-    // ✅ Add listeners for NEW pages that aren't already tracked
+    // Add listeners for NEW pages that aren't already tracked
     currentUids.forEach(uid => {
-      // Skip if already tracking or pending
       if (trackedUids.has(uid) || scrollData.pendingListeners.has(uid)) {
         return;
       }
@@ -1608,10 +1588,8 @@ export function useGroupScopedScrollRestoration(
       const entry = stackSnapshot.find(e => e.uid === uid);
       if (!entry) return;
       
-      // Mark as pending to prevent duplicate retry chains
       scrollData.pendingListeners.add(uid);
 
-      // Try immediate attachment first
       const container = getScrollableContainer(uid);
       if (container) {
         attachScrollListener(uid, container, entry);
@@ -1619,7 +1597,7 @@ export function useGroupScopedScrollRestoration(
         return;
       }
 
-      // If not found, use MutationObserver to watch for DOM insertion
+      // Use MutationObserver to watch for DOM insertion
       const observer = new MutationObserver(() => {
         const container = getScrollableContainer(uid);
         if (container) {
@@ -1629,7 +1607,6 @@ export function useGroupScopedScrollRestoration(
         }
       });
 
-      // Start observing the document for changes
       observer.observe(document.body, {
         childList: true,
         subtree: true,
@@ -1637,33 +1614,27 @@ export function useGroupScopedScrollRestoration(
         characterData: false,
       });
 
-      // Timeout fallback: stop watching after 5 seconds
       const timeoutId = setTimeout(() => {
         observer.disconnect();
         scrollData.pendingListeners.delete(uid);
-        console.warn(`[ScrollRestore] Gave up watching for container ${uid} after 5 seconds`);
       }, 5000);
 
-      // Store both observer and timeout for potential cleanup
       if (!scrollData.pendingCleanups) {
         scrollData.pendingCleanups = new Map();
       }
       scrollData.pendingCleanups.set(uid, { observer, timeoutId });
     });
 
-    // Helper function to attach scroll listener
     const attachScrollListener = (uid: string, container: HTMLElement, entry: StackEntry) => {
       const handleScroll = () => {
         const scrollPosition = getCurrentScrollPosition(container);
         globalScrollData.scrollPositions.set(uid, scrollPosition);
 
-        // Calculate scroll percentage
         const scrollHeight = container?.scrollHeight ?? 0;
         const clientHeight = container?.clientHeight ?? 0;
         const maxScroll = Math.max(scrollHeight - clientHeight, 0);
         const scrollPercentage = maxScroll > 0 ? (scrollPosition / maxScroll) * 100 : 0;
 
-        // Broadcast scroll event globally
         scrollBroadcaster.broadcast({
           uid,
           pageKey: entry.key,
@@ -1677,20 +1648,16 @@ export function useGroupScopedScrollRestoration(
         });
       };
 
-      // Add listener and store cleanup function
       const removeListener = addScrollListener(container, handleScroll);
       scrollData.activeListeners.set(uid, removeListener);
     };
 
-    // ✅ DON'T remove listeners here - they persist even if group becomes inactive
-    // Listeners are only removed in the cleanup effect when pages are COMPLETELY deleted from registry
-
     return () => {
       // Empty return - listeners stay active even when stack changes
-      // This let's us track scroll on hidden pages
     };
-  }, [stackSnapshot, groupStackKey]);
+  }, [stackSnapshot, groupStackKey, api.id, groupContext]);
 
+  // Restore scroll position when page becomes active
   useEffect(() => {
     const topEntry = stackSnapshot.at(-1);
     if (!topEntry) {
@@ -1704,27 +1671,24 @@ export function useGroupScopedScrollRestoration(
     const uidChanged = uid !== lastUid;
     const becameActive = !scrollData.wasActiveGroup && isActiveGroup;
 
-    // Update for next check
     scrollData.wasActiveGroup = isActiveGroup;
 
     // Restore position when becoming active
     if (isActiveGroup && (groupStackKeyChanged || uidChanged || becameActive)) {
-
       const restoreScroll = () => {
         const scrollKey = uid;
         const container = getScrollableContainer(uid);
         if (!container) {
-          console.warn('[ScrollRestore] Container not found for restoration:', uid);
           return;
         }
         const savedPosition = globalScrollData.scrollPositions.get(scrollKey) ?? 0;
         setScrollPosition(savedPosition, container);
       };
 
-      // --- IMMEDIATE RESTORE ---
+      // Immediate restore
       restoreScroll();
 
-      // --- DOM-settled fallback ---
+      // Fallback restores
       requestAnimationFrame(() => {
         restoreScroll();
       });
@@ -1738,14 +1702,11 @@ export function useGroupScopedScrollRestoration(
     globalScrollData.lastGroupStackKey = groupStackKey;
   }, [stackSnapshot, isActiveGroup, groupStackKey]);
 
-
-  // Clean up scroll for pages no longer in entire navigation system
+  // Clean up scroll for pages no longer in navigation system
   useEffect(() => {
-    // Build set of ALL valid UIDs across entire navigation tree (including nested/parent stacks)
     const validUids = new Set<string>();
     const visited = new Set<string>();
 
-    // Recursively collect UIDs from a stack and its children
     const collectUidsRecursive = (stackId: string) => {
       if (visited.has(stackId)) return;
       visited.add(stackId);
@@ -1753,14 +1714,12 @@ export function useGroupScopedScrollRestoration(
       const regEntry = globalRegistry.get(stackId);
       if (!regEntry) return;
 
-      // Add UIDs from this stack
       if (regEntry.stack && Array.isArray(regEntry.stack)) {
         regEntry.stack.forEach((entry: StackEntry) => {
           validUids.add(entry.uid);
         });
       }
 
-      // Recursively add UIDs from child stacks
       if (regEntry.childIds && regEntry.childIds.size > 0) {
         regEntry.childIds.forEach((childId: string) => {
           collectUidsRecursive(childId);
@@ -1768,17 +1727,21 @@ export function useGroupScopedScrollRestoration(
       }
     };
 
-    // Traverse entire registry to collect all UIDs from all stacks (including nested)
     if (typeof window !== 'undefined' && globalRegistry) {
-      globalRegistry.forEach((regEntry, stackId) => {
-        // Only start from root stacks (no parent)
-        if (!regEntry.parentId) {
-          collectUidsRecursive(stackId);
-        }
-      });
+      if (groupContext) {
+        // Group mode: traverse entire registry
+        globalRegistry.forEach((regEntry, stackId) => {
+          if (!regEntry.parentId) {
+            collectUidsRecursive(stackId);
+          }
+        });
+      } else {
+        // Standalone mode: only traverse current stack
+        collectUidsRecursive(api.id);
+      }
     }
 
-    // Delete scroll entries that don't exist in ANY stack in the entire navigation
+    // Delete scroll entries that don't exist in the navigation
     const keysToDelete: string[] = [];
     globalScrollData.scrollPositions.forEach((_, key) => {
       if (!validUids.has(key)) {
@@ -1787,16 +1750,13 @@ export function useGroupScopedScrollRestoration(
     });
 
     if (keysToDelete.length > 0) {
-      // Also remove listeners for deleted pages
       keysToDelete.forEach(key => {
-        // Remove active listener
         const removeListener = scrollData.activeListeners.get(key);
         if (removeListener) {
           removeListener();
           scrollData.activeListeners.delete(key);
         }
 
-        // Clean up pending MutationObserver if still watching
         if (scrollData.pendingCleanups) {
           const cleanup = scrollData.pendingCleanups.get(key);
           if (cleanup) {
@@ -1810,7 +1770,7 @@ export function useGroupScopedScrollRestoration(
         scrollData.pendingListeners.delete(key);
       });
     }
-  }, [stackSnapshot, api]);
+  }, [stackSnapshot, api, groupContext]);
 }
 
 
@@ -5172,7 +5132,7 @@ export default function NavigationStack(props: {
   const memoryManager = useRef<PageMemoryManager>(new PageMemoryManager()).current;
 
   if (enableScrollRestoration) {
-    useGroupScopedScrollRestoration(api, renders, stackSnapshot, groupContext, groupStackId);
+    useUnifiedScrollRestoration(api, renders, stackSnapshot, groupContext, groupStackId);
   }
 
 

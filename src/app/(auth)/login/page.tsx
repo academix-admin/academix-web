@@ -15,11 +15,15 @@ export default function Login() {
     otp: Otp,
     reset_password: ResetPassword
   };
-  return <NavigationStack
-          id="login"
-          navLink={routes}
-          entry="login"
-          transition = "slide"
-          persist={false}
-        />;
+  return (
+    <div style={{ height: '100dvh', overflow: 'hidden' }}>
+      <NavigationStack
+        id="login"
+        navLink={routes}
+        entry="login"
+        transition="slide"
+        persist={false}
+      />
+    </div>
+  );
 }
