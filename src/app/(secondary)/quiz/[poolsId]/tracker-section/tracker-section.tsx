@@ -75,7 +75,7 @@ const StatusBadge = ({ status, time, onRetry, canResubmit, questionId, questionS
     return (
       <div className={`${styles.statusCompleted} ${styles[`statusCompleted_${theme}`]}`}>
         <div className={styles.completedContent}>
-          {questionStatus === 'Question.success' && (
+          {questionStatus === 'Question.completed' && (
             <>
               <span style={{color: 'green'}}>{capitalize(t('correct_text'))}</span>
               <div className={`${styles.statusIndicator} ${styles.statusCorrect}`}>
