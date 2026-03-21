@@ -553,25 +553,19 @@ const TabSwitcher = ({ viewType, setViewType, maxWidth }: TabSwitcherProps) => {
   const { t } = useLanguage();
 
   return (
-    <div className={styles.tabSwitcherContainer}>
-
-      <div
-        className={`${styles.tabSwitcher} ${styles[`tabSwitcher_${theme}`]}`}
-        style={maxWidth ? { maxWidth: `${maxWidth}px`, margin: '16px auto' } : { margin: '16px' }}
+    <div className={`${styles.tabSwitcher} ${styles[`tabSwitcher_${theme}`]}`}>
+      <button
+        className={`${styles.tab} ${viewType === 'rank' ? styles.tabActive : ''} ${styles[`tab_${theme}`]}`}
+        onClick={() => setViewType('rank')}
       >
-        <button
-          className={`${styles.tab} ${viewType === 'rank' ? styles.tabActive : ''} ${styles[`tab_${theme}`]}`}
-          onClick={() => setViewType('rank')}
-        >
-          {t('rank_text')}
-        </button>
-        <button
-          className={`${styles.tab} ${viewType === 'reward' ? styles.tabActive : ''} ${styles[`tab_${theme}`]}`}
-          onClick={() => setViewType('reward')}
-        >
-          {t('reward_text')}
-        </button>
-      </div>
+        {t('rank_text')}
+      </button>
+      <button
+        className={`${styles.tab} ${viewType === 'reward' ? styles.tabActive : ''} ${styles[`tab_${theme}`]}`}
+        onClick={() => setViewType('reward')}
+      >
+        {t('reward_text')}
+      </button>
     </div>
   );
 }
@@ -600,7 +594,6 @@ const WebView = ({
       <TabSwitcher
         viewType={resultViewType}
         setViewType={setResultViewType}
-        maxWidth={400}
       />
 
       {resultsLoading ? (
@@ -657,7 +650,6 @@ const TabletView = ({
       <TabSwitcher
         viewType={resultViewType}
         setViewType={setResultViewType}
-        maxWidth={350}
       />
 
       {resultsLoading ? (

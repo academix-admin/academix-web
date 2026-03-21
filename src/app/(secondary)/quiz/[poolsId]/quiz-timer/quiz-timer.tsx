@@ -9,6 +9,9 @@ interface QuizTimerProps {
   onSkip: () => void;
   clickMenu: () => void;
   clickExit: () => void;
+  timerExpired?: boolean;
+  actualEndTime?: string | null;
+  poolsJobEndAt?: string | null;
 }
 
 const formatPlainTime = (time: number | null): string => {
@@ -30,11 +33,17 @@ const formatPlainTime = (time: number | null): string => {
 const TimerSection = ({
   quizTimerValue,
   onSkip,
-  size = 'mobile'
+  size = 'mobile',
+  timerExpired = false,
+  actualEndTime = null,
+  poolsJobEndAt = null
 }: {
   quizTimerValue: number;
   onSkip: () => void;
   size?: 'mobile' | 'tablet' | 'web';
+  timerExpired?: boolean;
+  actualEndTime?: string | null;
+  poolsJobEndAt?: string | null;
 }) => {
   const { theme } = useTheme();
   const { t } = useLanguage();
@@ -51,6 +60,25 @@ const TimerSection = ({
     web: styles.webTimerValue
   };
 
+  // Format end time for display
+  const formatEndTime = (timeString: string | null): string => {
+    if (!timeString) return "-";
+    try {
+      const date = new Date(timeString);
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } catch {
+      return "-";
+    }
+  };
+
+  // Determine what to display
+  const displayTime = timerExpired 
+    ? formatEndTime(actualEndTime || poolsJobEndAt)
+    : formatPlainTime(quizTimerValue);
+  
+  const statusText = timerExpired ? t('finished_quiz') : t('ongoing_quiz');
+  const labelText = timerExpired ? t('ended_at') : t('remaining_time');
+
   return (
     <div className={`${styles.timerSection} ${styles[`${size}TimerSection`]}`}>
       <div className={containerClasses[size]}>
@@ -58,17 +86,17 @@ const TimerSection = ({
           {/* Status Row */}
           <div className={styles.statusRow}>
             <span className={`${styles.status} ${styles[`status_${theme}`]}`}>
-              {t('ongoing_quiz')}
+              {statusText}
             </span>
           </div>
 
           {/* Timer Display */}
           <div className={styles.timerDisplay}>
             <div className={`${styles.timerValue} ${timerValueClasses[size]} ${styles[`timerValue_${theme}`]}`}>
-              {formatPlainTime(quizTimerValue)}
+              {displayTime}
             </div>
             <div className={`${styles.remainingLabel} ${styles[`remainingLabel_${theme}`]}`}>
-              {t('remaining_time')}
+              {labelText}
             </div>
           </div>
         </div>
@@ -77,7 +105,7 @@ const TimerSection = ({
       {/* Skip Button */}
       <div className={styles.skipButtonContainer}>
         <button onClick={onSkip} className={styles.skipButton}>
-          {t('skip_text')}
+          {timerExpired ? t('continue_text') : t('skip_text')}
         </button>
       </div>
     </div>

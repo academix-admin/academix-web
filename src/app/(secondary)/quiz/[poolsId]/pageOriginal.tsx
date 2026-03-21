@@ -75,13 +75,12 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
   const { t, lang } = useLanguage();
   const { userData } = useUserData();
   const isMountedRef = useRef(true);
-  const { replaceAndWait, pushAndWait } = useAwaitableRouter();
+  const { replaceAndWait } = useAwaitableRouter();
 
   // Dialog for confirmations
   const { isOpen: isDialogOpen, open: openDialog, close: closeDialog, DialogViewer } = useDialog();
   const [dialogType, setDialogType] = useState<'exit' | 'back'>('exit');
   const [allowNavigation, setAllowNavigation] = useState(false);
-  const [isNavigating, setIsNavigating] = useState(false);
 
   // Main quiz state
   const [quizState, setQuizState] = useState<QuizState>('loading');
@@ -93,8 +92,6 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
   const [isDrawerOpen, setDrawerIsOpen] = useState<boolean>(false);
   const [pendingSubmission, setPendingSubmission] = useState<PendingSubmission>(null);
   const [refreshLoading, setRefreshLoading] = useState<boolean>(false);
-  const [timerExpired, setTimerExpired] = useState<boolean>(false);
-  const [actualEndTime, setActualEndTime] = useState<string | null>(null);
 
   // Quiz session state
   const [quizSession, setQuizSession] = useState<QuizSession>({
@@ -531,10 +528,8 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
 
               if (newValue <= 0 || closed) {
                 cleanUpQuizTimer();
-                // When timer reaches zero, mark as expired and capture end time
-                if (newValue <= 0 && !closed) {
-                  setTimerExpired(true);
-                  setActualEndTime(new Date().toISOString());
+                if (status === 'PoolJob.pool_period') {
+                  setEndTimeFrom('timer');
                 }
                 return 0;
               }
@@ -554,46 +549,41 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
     return false;
   }, [isTimerActive, cleanUpQuizTimer, checkEnd]);
 
-  // Handle end quiz functionality
-  const handleEndQuiz = useCallback(() => {
-    // Check if there's still time remaining
-    if (setupTimeLapse(quizModel)) {
-      setEndTimeFrom('tracker');
-      setQuizState('quizTime');
-    } else {
-      setQuizState('quizEnd');
-    }
-  }, [quizModel, setupTimeLapse]);
-
   // Determine state transitions
   const determineState = useCallback(() => {
     if(!quizModel)return;
 
     const completedQuestions = quizSession.completedQuestions;
     const pendingQuestions = quizSession.pendingQuestions;
-    const allQuestionsAttempted = completedQuestions.length === quizSession.totalQuestions;
 
-    // Check if quiz has ended (only from external factors, not user actions)
-    if (checkEnd()) {
+    // Check if quiz has ended
+    if (checkEnd() || endTimeFrom === 'timer') {
       if (quizState !== 'quizEnd') {
         setQuizState('quizEnd');
       }
       return;
     }
 
-    // If all questions are attempted, stay in questionTrack and wait for user action
-    if (allQuestionsAttempted) {
-      // Check if there are questions that need automatic submission
-      const hasUnsubmittedValidQuestions = completedQuestions.some(validForNotSubmitted);
-      
-      if (hasUnsubmittedValidQuestions) {
-        automateSubmit();
-      }
-      
-      // Stay in questionTrack regardless of submission status - wait for user to click "End Quiz"
-      if (quizState !== 'questionTrack') {
+    // Check if there are questions that need automatic submission
+    const hasUnsubmittedValidQuestions = completedQuestions.some(validForNotSubmitted);
+
+    if (hasUnsubmittedValidQuestions && completedQuestions.length === quizSession.totalQuestions) {
+      setQuizState('questionTrack');
+      automateSubmit();
+      return;
+    }
+
+    // Check if all questions are completed and submitted
+    const allSubmitted = completedQuestions.filter(validForNotSubmitted).length === 0 &&
+                       completedQuestions.length === quizSession.totalQuestions;
+
+    if ((pendingQuestions.length === 0) || endTimeFrom === 'tracker') {
+      if(setupTimeLapse(quizModel) || endTimeFrom === 'tracker'){
+        setQuizState('quizTime');
+      }else{
         setQuizState('questionTrack');
-      }
+      } 
+      
       return;
     }
 
@@ -603,7 +593,7 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
       return;
     }
 
-  }, [quizSession, quizModel, checkEnd, validForNotSubmitted, automateSubmit, quizState]);
+  }, [quizSession, quizModel, checkEnd, validForNotSubmitted, automateSubmit, quizState, endTimeFrom]);
 
 
 
@@ -611,7 +601,7 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
   useEffect(() => {
     if(!quizModel)return;
     determineState();
-  }, [quizSession, quizModel]);
+  }, [quizSession, quizModel, endTimeFrom]);
 
 
   // Fetch initial quiz data
@@ -801,14 +791,6 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
   };
 
 
-  // Reset timer expired state when quiz model changes or component mounts
-  useEffect(() => {
-    if (quizModel?.poolsJob !== 'PoolJob.pool_period') {
-      setTimerExpired(false);
-      setActualEndTime(null);
-    }
-  }, [quizModel]);
-
   // Cleanup on component unmount
   useEffect(() => {
     return () => {
@@ -841,7 +823,7 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
       // Only show warning if quiz is in progress (not loading, error, or completed states)
       if (['quizPlay', 'questionTrack', 'quizTime'].includes(quizState) && !allowNavigation) {
         e.preventDefault();
-        // Don't use deprecated returnValue
+        e.returnValue = t('confirm_leave_quiz');
         return t('confirm_leave_quiz');
       }
     };
@@ -874,59 +856,17 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
   }, [quizState, openDialog, t, allowNavigation]);
 
   const returnToMain = useCallback(async () => {
-    setAllowNavigation(true);
-    setIsNavigating(true);
-    try {
-      const result = await replaceAndWait('/main');
-      if (!result.success) {
-        console.error('Navigation failed:', result.error);
-        // Fallback to window.location if router fails
-        window.location.href = '/main';
-      }
-    } catch (error) {
-      console.error('Navigation error:', error);
-      window.location.href = '/main';
-    } finally {
-      setIsNavigating(false);
-    }
+    await replaceAndWait('/main');
   }, [replaceAndWait]);
 
   const handleConfirmLeave = useCallback(async () => {
-    setIsNavigating(true);
-    try {
-      setAllowNavigation(true);
-      const result = await replaceAndWait('/main');
-      if (!result.success) {
-        console.error('Navigation failed:', result.error);
-        // Fallback to window.location if router fails
-        window.location.href = '/main';
-      }
-    } catch (error) {
-      console.error('Navigation error:', error);
-      window.location.href = '/main';
-    } finally {
-      closeDialog();
-      setIsNavigating(false);
-    }
+    closeDialog();
+    await replaceAndWait('/main');
   }, [closeDialog, replaceAndWait]);
 
   const handleConfirmBack = useCallback(async () => {
-    setIsNavigating(true);
-    try {
-      setAllowNavigation(true);
-      const result = await replaceAndWait('/main');
-      if (!result.success) {
-        console.error('Navigation failed:', result.error);
-        // Fallback to window.location if router fails
-        window.location.href = '/main';
-      }
-    } catch (error) {
-      console.error('Navigation error:', error);
-      window.location.href = '/main';
-    } finally {
-      closeDialog();
-      setIsNavigating(false);
-    }
+    closeDialog();
+    await replaceAndWait('/main');
   }, [closeDialog, replaceAndWait]);
 
   const handleCancelLeave = useCallback(() => {
@@ -947,18 +887,10 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
         return (<ErrorView text="Something went wrong while loading the quiz." buttonText="Try Again" onButtonClick={()=> window.location.reload()} />);
 
       case 'quizTime':
-        return <QuizTimer 
-          quizTimerValue={quizTimerValue} 
-          onSkip={() => {setQuizState('quizEnd');}} 
-          clickMenu={()=> setDrawerIsOpen(!isDrawerOpen)} 
-          clickExit={()=> {setDialogType('exit'); openDialog();}}
-          timerExpired={timerExpired}
-          actualEndTime={actualEndTime}
-          poolsJobEndAt={quizModel?.poolsJobEndAt}
-        />;
+        return <QuizTimer quizTimerValue={quizTimerValue} onSkip={() => {setEndTimeFrom('timer');}} clickMenu={()=> setDrawerIsOpen(!isDrawerOpen)} clickExit={()=> {setDialogType('exit'); openDialog();}}/>;
 
       case 'questionTrack':
-        return <QuizTracker trackerState={getQuestionTrackers()} onRetry={handleRetry} onEndClick={handleEndQuiz} />;
+        return <QuizTracker trackerState={getQuestionTrackers()} onRetry={handleRetry} onEndClick={()=> {setEndTimeFrom('tracker');}} />;
 
       case 'quizReward':
         return <QuizResults poolsId={quizModel?.poolsId || null} clickMenu={()=> setDrawerIsOpen(!isDrawerOpen)} clickExit={()=> {setDialogType('exit'); openDialog();}}/>;
@@ -999,15 +931,13 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
         message={t('confirm_leave_quiz')}
         buttons={[
           { 
-            text: isNavigating ? '' : t('yes_text'), 
-            variant: 'danger' as const,
-            loading: isNavigating,
+            text: t('yes_text'), 
+            variant: 'danger' as const, 
             onClick: dialogType === 'exit' ? handleConfirmLeave : handleConfirmBack
           }
         ]}
         showCancel={true}
         cancelText={t('no_text')}
-        closeOnBackdrop={!isNavigating}
       />
     </>
   );

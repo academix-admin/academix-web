@@ -210,14 +210,14 @@ const calculateCharge = (
 
   const baseSharesTotal = questionCount * (creatorShare + reviewerShare);
   const rolePool = Math.max(devChargeAmount - baseSharesTotal, 0);
-
   const roleExtra =
     totalWeights > 0 && rolePool > 0
       ? (memberWeight / totalWeights) * rolePool
       : 0;
 
   const baseShare = isCreator ? creatorShare : reviewerShare;
-  return (baseShare + roleExtra).toFixed(2);
+  const roleShare = roleExtra / questionCount; // Distribute role_extra across questions for per-question charge
+  return (baseShare + roleShare).toFixed(2);
 };
 
 // ---------------------------------------------------------------------------
