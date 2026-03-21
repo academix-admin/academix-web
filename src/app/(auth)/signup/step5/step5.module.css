@@ -292,22 +292,39 @@
   flex-direction: column;
   flex-grow: 1; /* makes sure content stretches */
   width: 100%;
+  justify-content: space-between;
 }
 
 .roleTitle {
   font-weight: 600;
   font-size: 1rem;
-  margin-bottom: 16px;
+  margin-bottom: 8px;
   text-align: left;
   word-break: break-word;   /* break long words */
   white-space: normal;      /* allow wrapping */
 }
 
+.buyInContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: auto;   /* pushes it to the bottom */
+}
+
+.buyInLabel {
+  font-size: 0.7rem;
+  font-weight: 600;
+  opacity: 0.7;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  text-align: left;
+}
+
 .roleTier {
   font-size: 0.85rem;
-  opacity: 0.8;
-  margin-top: auto;   /* pushes it to the bottom */
-  align-self: flex-start;
+  font-weight: 600;
+  opacity: 0.9;
+  text-align: left;
 }
 
 

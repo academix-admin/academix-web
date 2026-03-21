@@ -30,11 +30,13 @@ export type Language = {
 };
 
 export type Role = {
-  roles_id: string;
-  roles_identity: string;
-  roles_level: number;
-  roles_type: string;
-  roles_created_at: string
+  roles_id:         string;
+  roles_checker:    string;
+  roles_level:      number;
+  roles_created_at: string;
+  roles_buy_in:     number | null;  // null = free (student) or platform-only
+  roles_identity:   string;
+  roles_perks:      string[];       // already localised array from DB
 };
 
 export type Referral = {

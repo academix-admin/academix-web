@@ -582,5 +582,7 @@
   "profile_creation_failed": "Profile creation failed",
   "success_text": "Success",
   "users_created_at": "Account created at",
-  "total": "Total"
+  "total": "Total",
+  "free_text": "Free",
+  "buy_in": "Buy In:"
 }

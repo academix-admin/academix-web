@@ -582,5 +582,7 @@
   "profile_creation_failed": "Échec de la création du profil",
   "success_text": "Succès",
   "users_created_at": "Compte créé le",
-  "total": "Total"
+  "total": "Total",
+  "free_text": "Gratuit",
+  "buy_in": "Mise d'entrée :"
 }

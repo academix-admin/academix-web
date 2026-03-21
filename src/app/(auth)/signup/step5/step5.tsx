@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback, useMemo,} from 'react';
+import { useEffect, useState, useCallback, useMemo, } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import Image from 'next/image';
@@ -9,7 +9,7 @@ import Link from 'next/link';
 import CachedLottie from '@/components/CachedLottie';
 import { getLastNameOrSingle, capitalize } from '@/utils/textUtils';
 import { supabaseBrowser } from '@/lib/supabase/client';
-import { useSignup, Role} from '@/lib/stacks/signup-stack';
+import { useSignup, Role } from '@/lib/stacks/signup-stack';
 import { useDemandState } from '@/lib/state-stack';
 import { useNav } from "@/lib/NavigationStack";
 import LoadingView from '@/components/LoadingView/LoadingView';
@@ -25,6 +25,7 @@ interface RoleItemProps {
 
 const RoleItem = ({ onClick, role, selected }: RoleItemProps) => {
   const { theme } = useTheme();
+  const { t } = useLanguage();
 
   return (
     <div
@@ -42,8 +43,11 @@ const RoleItem = ({ onClick, role, selected }: RoleItemProps) => {
         {selected && <div className={styles.radioDot} />}
       </div>
       <div className={styles.roleInfo}>
-        <span className={styles.roleTitle}>{role.roles_identity }</span>
-        <span className={styles.roleTier}>Tier {role.roles_level}</span>
+        <span className={styles.roleTitle}>{role.roles_identity}</span>
+        <div className={styles.buyInContainer}>
+          <span className={styles.buyInLabel}>{t('buy_in')}</span>
+          <span className={styles.roleTier}>{role.roles_buy_in && role.roles_buy_in > 0 ? role.roles_buy_in.toLocaleString() : t('free_text')} {role.roles_buy_in ? "ADC" : ""}</span>
+        </div>
       </div>
     </div>
   );
@@ -53,17 +57,17 @@ const RoleItem = ({ onClick, role, selected }: RoleItemProps) => {
 export default function SignUpStep5() {
   const { theme } = useTheme();
   const { t, lang } = useLanguage();
-  const { signup, signup$, __meta  } = useSignup();
+  const { signup, signup$, __meta } = useSignup();
   const nav = useNav();
   const isTop = nav.isTop();
 
   const [roles, demandRoles, setRoles] = useDemandState<Role[]>([], {
-      key: 'roles',
-      scope: 'signup_flow',
-      persist: true,
-      ttl: 3600,
-      deps: [lang],
-    });
+    key: 'roles',
+    scope: 'signup_flow',
+    persist: true,
+    ttl: 3600,
+    deps: [lang],
+  });
 
   const [firstname, setFirstname] = useState('');
   const [canGoBack, setCanGoBack] = useState(false);
@@ -73,9 +77,9 @@ export default function SignUpStep5() {
   const [roleState, setRoleState] = useState('initial');
 
   useEffect(() => {
-    if(!signup.fullName && __meta.isHydrated && isTop){nav.go('step1');}
+    if (!signup.fullName && __meta.isHydrated && isTop) { nav.go('step1'); }
     setFirstname(capitalize(getLastNameOrSingle(signup.fullName)));
-  }, [signup.fullName,__meta.isHydrated, isTop]);
+  }, [signup.fullName, __meta.isHydrated, isTop]);
 
   useEffect(() => {
     setCanGoBack(window.history.length > 1);
@@ -88,34 +92,34 @@ export default function SignUpStep5() {
   }, [signup.role]);
 
   useEffect(() => {
-    if(roles.length <= 0 && roleState === 'data')setRoleState("empty");
+    if (roles.length <= 0 && roleState === 'data') setRoleState("empty");
   }, [roles]);
 
-    const loadRoles = useCallback(() => {
-  demandRoles(async ({ set, get }) => {
-        const check = get().length;
-              if(!check || check === 0)setRoleState("loading");
-        try {
-          const { data, error } = await supabaseBrowser.rpc('fetch_roles', { p_locale: lang });
-          if (error) throw error;
-          if(data.length > 0){
-                      set(data || []);
-                      setRoleState("data");
-                  }else{
-                      setRoleState("empty");
-                  }
-        } catch (err) {
-                    setRoleState("error");
-
-          console.error('Failed to fetch roles:', err);
+  const loadRoles = useCallback(() => {
+    demandRoles(async ({ set, get }) => {
+      const check = get().length;
+      if (!check || check === 0) setRoleState("loading");
+      try {
+        const { data, error } = await supabaseBrowser.rpc('fetch_roles', { p_locale: lang });
+        if (error) throw error;
+        if (data.length > 0) {
+          set(data || []);
+          setRoleState("data");
+        } else {
+          setRoleState("empty");
         }
-      });
-    }, [lang]);
+      } catch (err) {
+        setRoleState("error");
+
+        console.error('Failed to fetch roles:', err);
+      }
+    });
+  }, [lang]);
 
 
- const handleRole = (role: Role) => {
-   signup$.setField({ field: 'role', value: role });
- };
+  const handleRole = (role: Role) => {
+    signup$.setField({ field: 'role', value: role });
+  };
 
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -177,28 +181,28 @@ export default function SignUpStep5() {
         <h2 className={styles.stepTitle}>{t('hi_name', { name: firstname })}</h2>
         <p className={styles.stepSubtitle}>{t('step_x_of_y', { current: 5, total: 7 })}</p>
 
-        <div  className={styles.form}>
-          <div  className={styles.formGroup}>
-           <label htmlFor="role" className={styles.label}>
-                        {t('choose_role')}
+        <div className={styles.form}>
+          <div className={styles.formGroup}>
+            <label htmlFor="role" className={styles.label}>
+              {t('choose_role')}
             </label>
             <div className={styles.roleState}>
-             {roleState === 'loading' && roles.length <= 0 && (<LoadingView text={t('loading')}/>)}
-             {roleState === 'empty' && roles.length <= 0  && (<NoResultsView text="No results found." buttonText="Try Again" onButtonClick={loadRoles} />)}
-             {roleState === 'error' && roles.length <= 0 && (<ErrorView text="Error occurred." buttonText="Try Again" onButtonClick={loadRoles} />)}
+              {roleState === 'loading' && roles.length <= 0 && (<LoadingView text={t('loading')} />)}
+              {roleState === 'empty' && roles.length <= 0 && (<NoResultsView text="No results found." buttonText="Try Again" onButtonClick={loadRoles} />)}
+              {roleState === 'error' && roles.length <= 0 && (<ErrorView text="Error occurred." buttonText="Try Again" onButtonClick={loadRoles} />)}
             </div>
             {roles.length > 0 && (
-                <div className={styles.rolesGrid}>
-                  {[...roles].reverse().map((role) => (
-                    <RoleItem
-                      key={role.roles_id}
-                      onClick={() => handleRole(role)}
-                      role={role}
-                      selected={signup.role?.roles_id === role.roles_id}
-                    />
-                  ))}
-                </div>
-                )}
+              <div className={styles.rolesGrid}>
+                {[...roles].reverse().map((role) => (
+                  <RoleItem
+                    key={role.roles_id}
+                    onClick={() => handleRole(role)}
+                    role={role}
+                    selected={signup.role?.roles_id === role.roles_id}
+                  />
+                ))}
+              </div>
+            )}
           </div>
 
           <button
@@ -208,7 +212,7 @@ export default function SignUpStep5() {
             aria-disabled={!isFormValid || continueLoading}
             onClick={handleSubmit}
           >
-                {continueLoading ? <span className={styles.spinner}></span> : t('continue')}
+            {continueLoading ? <span className={styles.spinner}></span> : t('continue')}
           </button>
         </div>
       </div>
