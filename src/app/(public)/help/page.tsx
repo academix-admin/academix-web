@@ -46,12 +46,13 @@ export default function Help({ searchParams }: HelpPageProps) {
   const resolvedSearchParams = use(searchParams);
   const { col, lan, req } = useAppParams(resolvedSearchParams);
   const { theme } = useTheme();
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const { initialized, hasValidSession } = useAuthContext();
   const router = useRouter();
   const [canGoBack, setCanGoBack] = useState(false);
 
   const config = getConfig(req);
+  const resolvedTheme = col || theme;
   const resolvedLang = getSupportedLang(lan) || lang;
 
   useEffect(() => { setCanGoBack(window.history.length > 1); }, []);
