@@ -20,6 +20,7 @@ import PayoutPage from "../shared/payout-page/payout-page";
 import InstructionsPage from "../shared/instructions-page/instructions-page";
 import TermsPage from "../shared/terms-page/terms-page";
 import PrivacyPage from "../shared/privacy-page/privacy-page";
+import RolesPage from "./roles-page/roles-page";
 
 
 const profileStackNavLink = {
@@ -40,6 +41,7 @@ const profileStackNavLink = {
   password_management: PasswordManagement,
   privacy_page: PrivacyPage,
   terms_page: TermsPage,
+  roles_page: RolesPage,
 };
 
 export const ProfileStack = () => (

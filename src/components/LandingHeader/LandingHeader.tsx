@@ -1,16 +1,16 @@
 'use client';
 import styles from './LandingHeader.module.css';
 import { useTheme } from '@/context/ThemeContext';
-import { useLanguage } from '@/context/LanguageContext';
+import { useLanguage, SUPPORTED_LANGUAGES, LANGUAGE_NAMES, SupportedLang } from '@/context/LanguageContext';
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link'
 
-// Language options configuration
-const LANGUAGE_OPTIONS = [
-  { value: 'en', label: '🇺🇸 EN' },
-  { value: 'fr', label: '🇫🇷 FR' },
-];
+// Language options configuration using LANGUAGE_NAMES from context
+const LANGUAGE_OPTIONS = SUPPORTED_LANGUAGES.map(code => ({
+  value: code,
+  label: `${code === 'en' ? '🇺🇸' : '🇫🇷'} ${code.toUpperCase()}`
+}));
 
 // Navigation links configuration
 const NAV_LINKS = [
@@ -70,8 +70,8 @@ export default function LandingHeader() {
     <select
       className={`${styles.lanSwitch} ${styles[`lanSwitch_${theme}`]}`}
       onChange={(e) => {
-          const newLang = e.target.value;
-          if (newLang === 'en' || newLang === 'fr') {
+          const newLang = e.target.value as SupportedLang;
+          if (SUPPORTED_LANGUAGES.includes(newLang)) {
             setLang(newLang);
           }
         }}

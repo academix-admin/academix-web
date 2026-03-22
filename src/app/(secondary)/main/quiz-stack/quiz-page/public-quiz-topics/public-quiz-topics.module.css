@@ -25,6 +25,54 @@
    margin: 0 28px;
 }
 
+.scrollWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.scrollArrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.scrollArrow_light {
+  background: rgba(255, 255, 255, 0.95);
+  color: #333;
+}
+
+.scrollArrow_dark {
+  background: rgba(40, 40, 40, 0.95);
+  color: #fff;
+}
+
+.scrollArrow:hover {
+  transform: translateY(-50%) scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.scrollArrowLeft {
+  left: 8px;
+}
+
+.scrollArrowRight {
+  right: 8px;
+}
+
 .scrollContainer::-webkit-scrollbar {
   display: none; /* Chrome, Safari and Opera */
 }
@@ -361,6 +409,10 @@
      padding: 0 24px;
   }
 
+  .scrollArrow {
+    display: none;
+  }
+
   .topicCard {
     width: 500px;
   }
@@ -385,6 +437,10 @@
        margin: 0px;
        padding: 0 16px;
     }
+
+  .scrollArrow {
+    display: none;
+  }
 
   .topicCard {
     width: 85vw;

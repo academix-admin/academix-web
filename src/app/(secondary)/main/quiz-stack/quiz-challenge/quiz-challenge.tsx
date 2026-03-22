@@ -72,8 +72,6 @@ export default function QuizChallenge(props: QuizChallengeProps) {
     const getQuizByTopicsIdObj = useObject<(id: string) => UserDisplayQuizTopicModel | undefined>('getQuizByTopicsId', { global: true, scope: 'quiz-topics' });
     const [selectedGameModeModel, setSelectedGameModeModel] = useState<GameModeModel | null>(null);
     const [selectedChallengeModel, setSelectedChallengeModel] = useState<ChallengeModel | null>(null);
-    const [selectedRule, setSelectedRule] = useState(false);
-    const [selectedPayout, setSelectedPayout] = useState(false);
     const [selectedRedeemCodeModel, setSelectedRedeemCodeModel] = useState<RedeemCodeModel | null>(null);
     const [selectedSkip, setSelectedSkip] = useState(false);
     const [quizLoading, setQuizLoading] = useState(false);
@@ -89,17 +87,17 @@ export default function QuizChallenge(props: QuizChallengeProps) {
 
     useProvideObject<PinData>('pin_controller', () => {
         return {
-            inUse: selectedPayout && selectedRule,
+            inUse: selectedChallengeModel !== null,
             action: async (pin: string) => {
                 withdrawBottomController.open();
                 await handleEngage(pin);
             }
         };
-    }, { scope: 'pin_scope', dependencies: [selectedRule, selectedPayout, selectedRedeemCodeModel] });
+    }, { scope: 'pin_scope', dependencies: [selectedChallengeModel, selectedRedeemCodeModel] });
 
     useEffect(() => {
         if (!getQuizByTopicsIdObj.isProvided) return;
-        
+
         const getQuiz = getQuizByTopicsIdObj.getter()?.(topicsId);
 
         if (getQuiz) {
@@ -112,23 +110,11 @@ export default function QuizChallenge(props: QuizChallengeProps) {
 
     useEffect(() => {
         setSelectedChallengeModel(null);
-        setSelectedRule(false);
-        setSelectedPayout(false);
         setSelectedRedeemCodeModel(null);
         setSelectedSkip(false);
     }, [selectedGameModeModel]);
 
-    useEffect(() => {
-        if (selectedRule) return;
-        setSelectedRedeemCodeModel(null);
-        setSelectedSkip(false);
-    }, [selectedRule]);
 
-    useEffect(() => {
-        if (selectedPayout) return;
-        setSelectedRedeemCodeModel(null);
-        setSelectedSkip(false);
-    }, [selectedPayout]);
 
     // Function to engage quiz API call
     const engageQuiz = async (jwt: string, data: any): Promise<EngageQuizResponse> => {
@@ -156,7 +142,7 @@ export default function QuizChallenge(props: QuizChallengeProps) {
     }
 
     const handleEngage = async (userPin: string) => {
-        if (!userData || !selectedGameModeModel || !selectedChallengeModel || !selectedRule || !selectedPayout) return;
+        if (!userData || !selectedGameModeModel || !selectedChallengeModel) return;
 
         try {
             setQuizLoading(true);
@@ -256,38 +242,38 @@ export default function QuizChallenge(props: QuizChallengeProps) {
                 if (engagement.not_set) {
                     setPinErrorType('not_set');
                     // if (!pinErrorDialog.isOpen) {
-                        pinErrorDialog.open(
-                            <div style={{ textAlign: 'center' }}>
-                                <p>{t('pin_not_set_message')}</p>
-                            </div>
-                        );
+                    pinErrorDialog.open(
+                        <div style={{ textAlign: 'center' }}>
+                            <p>{t('pin_not_set_message')}</p>
+                        </div>
+                    );
                     // }
                 } else if ((engagement.attempts_left ?? 0) > 0) {
                     setPinErrorType('incorrect');
                     // if (!pinErrorDialog.isOpen) {
-                        pinErrorDialog.open(
-                            <div style={{ textAlign: 'center' }}>
-                                <p>{t('incorrect_pin_message')}</p>
-                                <p style={{ color: '#FF3B30', fontWeight: 600, marginTop: '8px' }}>
-                                    {engagement.attempts_left} {t('attempts_remaining')}
-                                </p>
-                            </div>
-                        );
+                    pinErrorDialog.open(
+                        <div style={{ textAlign: 'center' }}>
+                            <p>{t('incorrect_pin_message')}</p>
+                            <p style={{ color: '#FF3B30', fontWeight: 600, marginTop: '8px' }}>
+                                {engagement.attempts_left} {t('attempts_remaining')}
+                            </p>
+                        </div>
+                    );
                     // }
                 } else if (engagement.locked_until) {
                     setPinErrorType('locked');
                     // if (!pinErrorDialog.isOpen) {
-                        pinErrorDialog.open(
-                            <div style={{ textAlign: 'center' }}>
-                                <p style={{ color: '#FF3B30' }}>{t('pin_locked_message')}</p>
-                                <p style={{ marginTop: '8px' }}>
-                                    {t('locked_until')}: {new Date(engagement.locked_until).toLocaleString()}
-                                </p>
-                            </div>
-                        );
+                    pinErrorDialog.open(
+                        <div style={{ textAlign: 'center' }}>
+                            <p style={{ color: '#FF3B30' }}>{t('pin_locked_message')}</p>
+                            <p style={{ marginTop: '8px' }}>
+                                {t('locked_until')}: {new Date(engagement.locked_until).toLocaleString()}
+                            </p>
+                        </div>
+                    );
                     // }
-                }else{
-                    
+                } else {
+
                 }
             } else {
                 withdrawBottomController.close();
@@ -333,7 +319,7 @@ export default function QuizChallenge(props: QuizChallengeProps) {
     const balanceCheck = codeSufficient ? false : (balanceSufficient || bothSufficient);
     const bothCheck = codeCheck || balanceCheck;
 
-    const showBottom = currentQuiz && selectedChallengeModel && (selectedSkip || selectedRedeemCodeModel) && selectedRule && selectedPayout;
+    const showBottom = currentQuiz && selectedChallengeModel && (selectedSkip || selectedRedeemCodeModel);
 
     return (
         <main className={`${styles.container} ${styles[`container_${theme}`]}`}>
@@ -367,9 +353,9 @@ export default function QuizChallenge(props: QuizChallengeProps) {
                         gameModeId={selectedGameModeModel.gameModeId}
                     />
                 )}
-                {currentQuiz && selectedChallengeModel && <QuizRuleAcceptance onAcceptanceChange={setSelectedRule} />}
-                {currentQuiz && selectedChallengeModel && <QuizPayoutAcceptance onAcceptanceChange={setSelectedPayout} challengeId={selectedChallengeModel.challengeId} />}
-                {currentQuiz && selectedChallengeModel && selectedRule && selectedPayout && (
+                {currentQuiz && selectedChallengeModel && <QuizRuleAcceptance />}
+                {currentQuiz && selectedChallengeModel && <QuizPayoutAcceptance challengeId={selectedChallengeModel.challengeId} />}
+                {currentQuiz && selectedChallengeModel && (
                     <QuizRedeemCode
                         onRedeemCodeSelect={setSelectedRedeemCodeModel}
                         onSkip={setSelectedSkip}

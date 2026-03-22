@@ -119,7 +119,7 @@ export default function Privacy({ searchParams }: PrivacyPageProps) {
                 </svg>
               </button>
             )}
-            <h1 className={styles.title}>{t('privacy_policy')}</h1>
+            <h1 className={styles.title}>{t('privacy_policy', resolvedLang)}</h1>
             {!hasValidSession && (
               <Link className={styles.logoContainer} href="/">
                 <Image className={styles.logo} src="/assets/image/academix-logo.png" alt="Academix Logo" width={40} height={40} priority />
@@ -132,70 +132,70 @@ export default function Privacy({ searchParams }: PrivacyPageProps) {
       <div className={`${styles.innerBody} ${req ? styles[`innerBody_${req}`] : ''}`}>
         {config.showTitle && (
           <h1 className={`${styles.bigTitle} ${styles[`bigTitle_${resolvedTheme}`]}`}>
-            {t('privacy_policy')}
+            {t('privacy_policy', resolvedLang)}
           </h1>
         )}
         {config.showDescription && (
           <h4 className={`${styles.description} ${styles[`description_${resolvedTheme}`]}`}>
-            {t('privacy_description')}
+            {t('privacy_description', resolvedLang)}
           </h4>
         )}
         
         <div className={styles.contentContainer}>
           <div className={`${styles.section} ${styles[`section_${resolvedTheme}`]}`}>
-            <h2 className={styles.sectionTitle}>{t('privacy_intro_title')}</h2>
-            <p className={styles.sectionText}>{t('privacy_intro_text')}</p>
+            <h2 className={styles.sectionTitle}>{t('privacy_intro_title', resolvedLang)}</h2>
+            <p className={styles.sectionText}>{t('privacy_intro_text', resolvedLang)}</p>
           </div>
 
           <div className={`${styles.section} ${styles[`section_${resolvedTheme}`]}`}>
-            <h2 className={styles.sectionTitle}>{t('privacy_data_collection_title')}</h2>
-            <p className={styles.sectionText}>{t('privacy_data_collection_text')}</p>
+            <h2 className={styles.sectionTitle}>{t('privacy_data_collection_title', resolvedLang)}</h2>
+            <p className={styles.sectionText}>{t('privacy_data_collection_text', resolvedLang)}</p>
             <ul className={styles.list}>
-              <li>{t('privacy_data_personal')}</li>
-              <li>{t('privacy_data_usage')}</li>
-              <li>{t('privacy_data_device')}</li>
-              <li>{t('privacy_data_payment')}</li>
+              <li>{t('privacy_data_personal', resolvedLang)}</li>
+              <li>{t('privacy_data_usage', resolvedLang)}</li>
+              <li>{t('privacy_data_device', resolvedLang)}</li>
+              <li>{t('privacy_data_payment', resolvedLang)}</li>
             </ul>
           </div>
 
           <div className={`${styles.section} ${styles[`section_${resolvedTheme}`]}`}>
-            <h2 className={styles.sectionTitle}>{t('privacy_data_use_title')}</h2>
+            <h2 className={styles.sectionTitle}>{t('privacy_data_use_title', resolvedLang)}</h2>
             <ul className={styles.list}>
-              <li>{t('privacy_use_service')}</li>
-              <li>{t('privacy_use_improve')}</li>
-              <li>{t('privacy_use_communicate')}</li>
-              <li>{t('privacy_use_security')}</li>
+              <li>{t('privacy_use_service', resolvedLang)}</li>
+              <li>{t('privacy_use_improve', resolvedLang)}</li>
+              <li>{t('privacy_use_communicate', resolvedLang)}</li>
+              <li>{t('privacy_use_security', resolvedLang)}</li>
             </ul>
           </div>
 
           <div className={`${styles.section} ${styles[`section_${resolvedTheme}`]}`}>
-            <h2 className={styles.sectionTitle}>{t('privacy_data_sharing_title')}</h2>
-            <p className={styles.sectionText}>{t('privacy_data_sharing_text')}</p>
+            <h2 className={styles.sectionTitle}>{t('privacy_data_sharing_title', resolvedLang)}</h2>
+            <p className={styles.sectionText}>{t('privacy_data_sharing_text', resolvedLang)}</p>
           </div>
 
           <div className={`${styles.section} ${styles[`section_${resolvedTheme}`]}`}>
-            <h2 className={styles.sectionTitle}>{t('privacy_security_title')}</h2>
-            <p className={styles.sectionText}>{t('privacy_security_text')}</p>
+            <h2 className={styles.sectionTitle}>{t('privacy_security_title', resolvedLang)}</h2>
+            <p className={styles.sectionText}>{t('privacy_security_text', resolvedLang)}</p>
           </div>
 
           <div className={`${styles.section} ${styles[`section_${resolvedTheme}`]}`}>
-            <h2 className={styles.sectionTitle}>{t('privacy_rights_title')}</h2>
+            <h2 className={styles.sectionTitle}>{t('privacy_rights_title', resolvedLang)}</h2>
             <ul className={styles.list}>
-              <li>{t('privacy_right_access')}</li>
-              <li>{t('privacy_right_correct')}</li>
-              <li>{t('privacy_right_delete')}</li>
-              <li>{t('privacy_right_export')}</li>
+              <li>{t('privacy_right_access', resolvedLang)}</li>
+              <li>{t('privacy_right_correct', resolvedLang)}</li>
+              <li>{t('privacy_right_delete', resolvedLang)}</li>
+              <li>{t('privacy_right_export', resolvedLang)}</li>
             </ul>
           </div>
 
           <div className={`${styles.section} ${styles[`section_${resolvedTheme}`]}`}>
-            <h2 className={styles.sectionTitle}>{t('privacy_contact_title')}</h2>
-            <p className={styles.sectionText}>{t('privacy_contact_text')}</p>
+            <h2 className={styles.sectionTitle}>{t('privacy_contact_title', resolvedLang)}</h2>
+            <p className={styles.sectionText}>{t('privacy_contact_text', resolvedLang)}</p>
             <p className={styles.contactInfo}>support@academix.com</p>
           </div>
 
           <div className={`${styles.footer} ${styles[`footer_${resolvedTheme}`]}`}>
-            <p>{t('privacy_last_updated')}: January 2025</p>
+            <p>{t('privacy_last_updated', resolvedLang)}: January 2025</p>
             <p>© 2025 Jimstech Innovations Nigeria Limited</p>
           </div>
         </div>

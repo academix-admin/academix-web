@@ -30,6 +30,7 @@ export default function Redirect({
 
   const { theme } = useTheme();
   const { t } = useLanguage();
+  const resolvedLang = 'en'; // Default for redirect page
 
   const [redirectState, setRedirectState] = useState<RedirectState>("initial");
   const [fallbackUrl, setFallbackUrl] = useState<string>("");
@@ -123,16 +124,16 @@ export default function Redirect({
   const renderContent = () => {
     switch (redirectState) {
       case "loading":
-        return <div className={styles.loading}>{t("processing_redirect")}</div>;
+        return <div className={styles.loading}>{t("processing_redirect", resolvedLang)}</div>;
 
       case "popup_blocked":
         return (
           <div className={styles.error}>
-            <h2>{t("popup_blocked_title")}</h2>
-            <p>{t("popup_blocked_message")}</p>
+            <h2>{t("popup_blocked_title", resolvedLang)}</h2>
+            <p>{t("popup_blocked_message", resolvedLang)}</p>
 
             <button className={styles.retryBtn} onClick={handleManualOpen}>
-              {t("open_window_manually")}
+              {t("open_window_manually", resolvedLang)}
             </button>
           </div>
         );
@@ -140,21 +141,21 @@ export default function Redirect({
       case "invalid":
         return (
           <div className={styles.error}>
-            <h2>{t("invalid_redirect_title")}</h2>
-            <p>{t("invalid_redirect_message")}</p>
+            <h2>{t("invalid_redirect_title", resolvedLang)}</h2>
+            <p>{t("invalid_redirect_message", resolvedLang)}</p>
           </div>
         );
 
       case "error":
         return (
           <div className={styles.error}>
-            <h2>{t("generic_error_title")}</h2>
-            <p>{t("generic_error_message")}</p>
+            <h2>{t("generic_error_title", resolvedLang)}</h2>
+            <p>{t("generic_error_message", resolvedLang)}</p>
           </div>
         );
 
       default:
-        return <div className={styles.loading}>{t("starting_redirect")}</div>;
+        return <div className={styles.loading}>{t("starting_redirect", resolvedLang)}</div>;
     }
   };
 

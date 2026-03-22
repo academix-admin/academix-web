@@ -8,6 +8,12 @@ import fr from '@/i18n/fr.json';
 export const SUPPORTED_LANGUAGES = ['en', 'fr'] as const;
 type SupportedLang = typeof SUPPORTED_LANGUAGES[number];
 
+// Language names mapping
+export const LANGUAGE_NAMES: Record<SupportedLang, string> = {
+  en: 'English',
+  fr: 'Français'
+};
+
 // Translation shape from en.json
 type Translations = typeof en;
 
@@ -153,10 +159,11 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-export const getSupportedLang = (lang: string | null): SupportedLang => {
-  return lang && SUPPORTED_LANGUAGES.includes(lang as SupportedLang)
-    ? (lang as SupportedLang)
-    : 'en';
+export const getSupportedLang = (tLang: string | null): SupportedLang => {
+  const { lang } = useContext(LanguageContext);
+  return tLang && SUPPORTED_LANGUAGES.includes(tLang as SupportedLang)
+    ? (tLang as SupportedLang)
+    : lang;
 };
 
 export type { SupportedLang };

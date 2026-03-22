@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback, useMemo, } from 'react';
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import Image from 'next/image';
@@ -15,6 +15,11 @@ import { useNav } from "@/lib/NavigationStack";
 import LoadingView from '@/components/LoadingView/LoadingView';
 import NoResultsView from '@/components/NoResultsView/NoResultsView';
 import ErrorView from '@/components/ErrorView/ErrorView';
+import { BackendBuyPaymentWalletModel } from '@/models/payment-wallet-model';
+import { PaymentWalletModel } from '@/models/payment-wallet-model';
+import { PaginateModel } from '@/models/paginate-model';
+import { SelectionViewer, useSelectionController } from "@/lib/SelectionViewer";
+import DialogCancel from '@/components/DialogCancel';
 
 
 interface RoleItemProps {
@@ -56,7 +61,7 @@ const RoleItem = ({ onClick, role, selected }: RoleItemProps) => {
 
 export default function SignUpStep5() {
   const { theme } = useTheme();
-  const { t, lang } = useLanguage();
+  const { t, lang, tNode } = useLanguage();
   const { signup, signup$, __meta } = useSignup();
   const nav = useNav();
   const isTop = nav.isTop();
@@ -73,6 +78,13 @@ export default function SignUpStep5() {
   const [canGoBack, setCanGoBack] = useState(false);
   const [continueLoading, setContinueLoading] = useState(false);
   const [isFormValid, setIsFormValid] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+
+  // Wallet selection state
+  const [walletData, setWalletData] = useState<PaymentWalletModel | null>(null);
+  const [walletsModel, setWalletsModel] = useState<PaymentWalletModel[]>([]);
+  const [walletSelectId, walletSelectController, walletSelectIsOpen, walletSelectionState] = useSelectionController();
+  const [searchWalletQuery, setWalletQuery] = useState('');
 
   const [roleState, setRoleState] = useState('initial');
 
@@ -88,8 +100,9 @@ export default function SignUpStep5() {
 
 
   useEffect(() => {
-    setIsFormValid(!!signup.role);
-  }, [signup.role]);
+    const needsAcceptance = signup.role && signup.role.roles_buy_in != null && signup.role.roles_buy_in > 0;
+    setIsFormValid(!!signup.role && (!needsAcceptance || (acceptedTerms && !!walletData)));
+  }, [signup.role, acceptedTerms, walletData]);
 
   useEffect(() => {
     if (roles.length <= 0 && roleState === 'data') setRoleState("empty");
@@ -119,7 +132,111 @@ export default function SignUpStep5() {
 
   const handleRole = (role: Role) => {
     signup$.setField({ field: 'role', value: role });
+    // Reset acceptance when role changes
+    setAcceptedTerms(false);
   };
+
+  const calculateConvertedAmount = useCallback((adcAmount: number): { amount: string; currency: string } => {
+    if (!walletData || !adcAmount) return { amount: '0', currency: 'ADC' };
+    
+    // Convert ADC to wallet currency (base amount)
+    const baseAmount = adcAmount / walletData.paymentWalletRate;
+    
+    // Calculate fee (in buy mode, fee is calculated on wallet currency amount)
+    let feeValue = 0;
+    
+    if (walletData.paymentWalletRateType === 'RateType.PERCENT') {
+      feeValue = (walletData.paymentWalletFee / 100) * baseAmount;
+    } else if (walletData.paymentWalletRateType === 'RateType.FEE') {
+      feeValue = walletData.paymentWalletFee;
+    } else if (walletData.paymentWalletRateType === 'RateType.FUNCTION') {
+      feeValue = Math.max(walletData.paymentWalletFeeFlat, (baseAmount * walletData.paymentWalletFee) / 100);
+    }
+    
+    // Total amount including fee
+    const totalAmount = baseAmount + feeValue;
+    
+    return {
+      amount: totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+      currency: walletData.paymentWalletCurrency
+    };
+  }, [walletData]);
+
+  // Fetch payment wallets
+  const fetchPaymentWallets = useCallback(async (): Promise<PaymentWalletModel[]> => {
+    try {
+      const { data, error } = await supabaseBrowser.rpc("fetch_top_up_wallets", {
+        p_limit_by: 100,
+        p_after_wallets: new PaginateModel().toJson(),
+      });
+
+      if (error) {
+        console.error("[PaymentWalletModel] error:", error);
+        return [];
+      }
+      return (data || []).map((row: BackendBuyPaymentWalletModel) =>
+        new PaymentWalletModel('PaymentType.buy', row)
+      );
+    } catch (err) {
+      console.error("[PaymentWalletModel] error:", err);
+      return [];
+    }
+  }, []);
+
+  const loadWallets = useCallback(async () => {
+    walletSelectController.setSelectionState("loading");
+    const wallets = await fetchPaymentWallets();
+
+    if (!wallets) {
+      walletSelectController.setSelectionState("error");
+      return;
+    }
+
+    if (wallets.length > 0) {
+      setWalletsModel(wallets);
+      walletSelectController.setSelectionState("data");
+    } else {
+      walletSelectController.setSelectionState("empty");
+    }
+  }, [fetchPaymentWallets, walletSelectController]);
+
+  const openWalletSelector = useCallback(() => {
+    walletSelectController.toggle();
+    if (walletsModel.length === 0) {
+      loadWallets();
+    }
+  }, [walletSelectController, walletsModel.length, loadWallets]);
+
+  const handleWalletSearch = useCallback((query: string) => {
+    setWalletQuery(query);
+  }, []);
+
+  const handleWalletSelect = useCallback((wallet: PaymentWalletModel) => {
+    setWalletData(wallet);
+    walletSelectController.close();
+  }, [walletSelectController]);
+
+  const getInitials = (text: string): string => {
+    const words = text.trim().split(' ');
+    if (words.length === 1) return words[0][0].toUpperCase();
+    return (words[0][0] + words[1][0]).toUpperCase();
+  };
+
+  // Filtered wallets
+  const filteredWallets = useMemo(() => {
+    if (!searchWalletQuery) return walletsModel;
+
+    const filters = walletsModel.filter(item =>
+      item.paymentWalletIdentity.toLowerCase().includes(searchWalletQuery.toLowerCase()) ||
+      item.paymentWalletCurrency.toLowerCase().includes(searchWalletQuery.toLowerCase())
+    );
+
+    if (filters.length <= 0 && walletsModel.length > 0) {
+      walletSelectController.setSelectionState("empty");
+    }
+
+    return filters;
+  }, [walletsModel, searchWalletQuery, walletSelectController]);
 
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -203,6 +320,78 @@ export default function SignUpStep5() {
                 ))}
               </div>
             )}
+
+            {signup.role && signup.role.roles_buy_in != null && signup.role.roles_buy_in > 0 && (
+              <>
+                {/* Wallet Selection */}
+                <div className={styles.walletSelectionCard}>
+                  <label className={styles.walletLabel}>{t('select_payment_wallet')}</label>
+                  <div
+                    className={`${styles.walletButton} ${styles[`walletButton_${theme}`]}`}
+                    onClick={openWalletSelector}
+                  >
+                    {walletData ? (
+                      <div className={styles.selectedWallet}>
+                        <div className={styles.walletImage}>
+                          {walletData.paymentWalletImage ? (
+                            <img src={walletData.paymentWalletImage} alt={walletData.paymentWalletIdentity} />
+                          ) : (
+                            <div className={styles.walletInitials}>
+                              {getInitials(walletData.paymentWalletIdentity)}
+                            </div>
+                          )}
+                        </div>
+                        <div className={styles.walletInfo}>
+                          <div className={styles.walletName}>{walletData.paymentWalletIdentity}</div>
+                          <div className={styles.walletCurrency}>{walletData.paymentWalletCurrency}</div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className={styles.walletPlaceholder}>
+                        {t('select_payment_wallet')}
+                      </div>
+                    )}
+                    <div className={styles.walletArrow}>
+                      <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M7 10l5 5 5-5z"/>
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Acceptance Notice */}
+                {walletData && (
+                  <div className={styles.acceptanceSection}>
+                    <label className={`${styles.checkboxLabel} ${styles[`checkboxLabel_${theme}`]}`}>
+                      <input
+                        type="checkbox"
+                        checked={acceptedTerms}
+                        onChange={(e) => setAcceptedTerms(e.target.checked)}
+                        className={styles.checkbox}
+                      />
+                      <div className={styles.checkboxCustom}>
+                        {acceptedTerms && (
+                          <svg className={styles.checkIcon} viewBox="0 0 16 16" fill="none">
+                            <path
+                              d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"
+                              fill="currentColor"
+                            />
+                          </svg>
+                        )}
+                      </div>
+                      <span className={styles.checkboxText}>
+                        {tNode('role_acceptance_notice', {
+                          amount: (() => {
+                            const converted = calculateConvertedAmount(signup.role.roles_buy_in || 0);
+                            return `${converted.amount} ${converted.currency}`;
+                          })()
+                        })}
+                      </span>
+                    </label>
+                  </div>
+                )}
+              </>
+            )}
           </div>
 
           <button
@@ -217,6 +406,108 @@ export default function SignUpStep5() {
         </div>
       </div>
 
+      {/* Wallet Selection Modal */}
+      <SelectionViewer
+        id={walletSelectId}
+        isOpen={walletSelectIsOpen}
+        onClose={walletSelectController.close}
+        titleProp={{
+          text: t('select_wallet'),
+          textColor: theme === 'light' ? "#000" : "#fff"
+        }}
+        cancelButton={{
+          position: "right",
+          onClick: walletSelectController.close,
+          view: <DialogCancel />
+        }}
+        searchProp={{
+          text: t('search'),
+          onChange: handleWalletSearch,
+          background: theme === 'light' ? "#f5f5f5" : "#272727",
+          textColor: theme === 'light' ? "#000" : "#fff",
+          padding: { l: "4px", r: "4px", t: "0px", b: "0px" },
+          autoFocus: false,
+        }}
+        loadingProp={{
+          view: <LoadingView text={t('loading')} />,
+        }}
+        noResultProp={{
+          view: <NoResultsView text="No results found." buttonText="Try Again" onButtonClick={loadWallets} />,
+        }}
+        errorProp={{
+          view: <ErrorView text="Error occurred." buttonText="Try Again" onButtonClick={loadWallets} />,
+        }}
+        layoutProp={{
+          gapBetweenHandleAndTitle: "16px",
+          gapBetweenTitleAndSearch: "8px",
+          gapBetweenSearchAndContent: "16px",
+          backgroundColor: theme === 'light' ? "#fff" : "#121212",
+          handleColor: "#888",
+          handleWidth: "48px",
+        }}
+        childrenDirection="vertical"
+        snapPoints={[0, 1]}
+        initialSnap={1}
+        minHeight="65vh"
+        maxHeight="90vh"
+        closeThreshold={0.2}
+        selectionState={walletSelectionState}
+        zIndex={1000}
+      >
+        {filteredWallets.map((item) => (
+          <WalletItem
+            key={item.paymentWalletId}
+            onClick={() => handleWalletSelect(item)}
+            wallet={item}
+            isSelected={item.paymentWalletId === walletData?.paymentWalletId}
+          />
+        ))}
+      </SelectionViewer>
+
     </main>
+  );
+}
+
+interface WalletItemProps {
+  onClick: () => void;
+  wallet: PaymentWalletModel;
+  isSelected?: boolean;
+}
+
+const WalletItem = ({ onClick, wallet, isSelected }: WalletItemProps) => {
+  const { theme } = useTheme();
+
+  const getInitials = (text: string): string => {
+    const words = text.trim().split(' ');
+    if (words.length === 1) return words[0][0].toUpperCase();
+    return (words[0][0] + words[1][0]).toUpperCase();
+  };
+
+  return (
+    <div
+      className={`${styles.walletItem} ${styles[`walletItem_${theme}`]} ${isSelected ? styles.walletItemSelected : ''}`}
+      onClick={onClick}
+      role="button"
+      tabIndex={0}
+    >
+      <div className={styles.walletItemImage}>
+        {wallet.paymentWalletImage ? (
+          <img src={wallet.paymentWalletImage} alt={wallet.paymentWalletIdentity} />
+        ) : (
+          <div className={styles.walletItemInitials}>{getInitials(wallet.paymentWalletIdentity)}</div>
+        )}
+      </div>
+      <div className={styles.walletItemInfo}>
+        <div className={styles.walletItemName}>{wallet.paymentWalletIdentity}</div>
+        <div className={styles.walletItemCurrency}>{wallet.paymentWalletCurrency}</div>
+      </div>
+      {isSelected && (
+        <div className={styles.walletItemCheckmark}>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+          </svg>
+        </div>
+      )}
+    </div>
   );
 }

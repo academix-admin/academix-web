@@ -246,10 +246,10 @@ export default function Rewards({ searchParams }: RewardsPageProps) {
   }, [to, calledFind]);
 
   const navigation = {
-        academix: t('academix_ratio'),
-        streaks:  t('streaks_text'),
-        milestones:  t('milestone_text'),
-        friends: t('friends_text')
+        academix: t('academix_ratio', resolvedLang),
+        streaks:  t('streaks_text', resolvedLang),
+        milestones:  t('milestone_text', resolvedLang),
+        friends: t('friends_text', resolvedLang)
       }
 
   return (
@@ -275,7 +275,7 @@ export default function Rewards({ searchParams }: RewardsPageProps) {
               </button>
             )}
 
-            <h1 className={styles.title}>{t('reward_text')}</h1>
+            <h1 className={styles.title}>{t('reward_text', resolvedLang)}</h1>
 
             {!hasValidSession && <Link className={styles.logoContainer} href="/">
               <Image

@@ -33,6 +33,8 @@ export default function AvailableQuizTopics({ onStateChange, pType }: AvailableQ
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isMountedRef = useRef(true);
+  const [showLeftArrow, setShowLeftArrow] = useState(false);
+  const [showRightArrow, setShowRightArrow] = useState(false);
 
 
   const [paginateModel, setPaginateModel] = useState<PaginateModel>(new PaginateModel());
@@ -196,6 +198,37 @@ export default function AvailableQuizTopics({ onStateChange, pType }: AvailableQ
     };
   }, []);
 
+  const checkScrollButtons = () => {
+    if (!scrollContainerRef.current) return;
+    const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
+    setShowLeftArrow(scrollLeft > 0);
+    setShowRightArrow(scrollLeft < scrollWidth - clientWidth - 1);
+  };
+
+  const scrollLeft = () => {
+    if (!scrollContainerRef.current) return;
+    scrollContainerRef.current.scrollBy({ left: -300, behavior: 'smooth' });
+  };
+
+  const scrollRight = () => {
+    if (!scrollContainerRef.current) return;
+    scrollContainerRef.current.scrollBy({ left: 300, behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    checkScrollButtons();
+    container.addEventListener('scroll', checkScrollButtons);
+    window.addEventListener('resize', checkScrollButtons);
+
+    return () => {
+      container.removeEventListener('scroll', checkScrollButtons);
+      window.removeEventListener('resize', checkScrollButtons);
+    };
+  }, [quizModels]);
+
   const getTitle = (type: string | null): string => {
       switch (type) {
         case 'creator':
@@ -253,7 +286,6 @@ export default function AvailableQuizTopics({ onStateChange, pType }: AvailableQ
   return result;
   }
 
-
   const handleTopicClick = (topic: UserDisplayQuizTopicModel) => {
       if(activeQuiz)return;
     nav.push('quiz_challenge',{topicsId: topic.topicsId, pType: pType});
@@ -266,25 +298,47 @@ export default function AvailableQuizTopics({ onStateChange, pType }: AvailableQ
         {getTitle(pType)}
       </h2>
 
-      <div ref={scrollContainerRef} className={styles.scrollContainer}>
-        <div className={styles.gridContainer}>
-          <div className={styles.row}>
-            {createSubgroups(quizModels, 2).map((topics, rowIndex) => (
-              <div className={styles.column} key={rowIndex}>
-                {topics.map((topic) => (
-                  <TopicCard
-                    key={topic.topicsId}
-                    topic={topic}
-                    theme={theme}
-                    getInitials={getInitials}
-                    formatDate={formatDate}
-                    onClick={()=> handleTopicClick(topic)}
-                  />
-                ))}
-              </div>
-            ))}
+      <div className={styles.scrollWrapper}>
+        {showLeftArrow && (
+          <button 
+            className={`${styles.scrollArrow} ${styles.scrollArrowLeft} ${styles[`scrollArrow_${theme}`]}`}
+            onClick={scrollLeft}
+            aria-label="Scroll left"
+          >
+            ←
+          </button>
+        )}
+        
+        <div ref={scrollContainerRef} className={styles.scrollContainer}>
+          <div className={styles.gridContainer}>
+            <div className={styles.row}>
+              {createSubgroups(quizModels, 2).map((topics, rowIndex) => (
+                <div className={styles.column} key={rowIndex}>
+                  {topics.map((topic) => (
+                    <TopicCard
+                      key={topic.topicsId}
+                      topic={topic}
+                      theme={theme}
+                      getInitials={getInitials}
+                      formatDate={formatDate}
+                      onClick={()=> handleTopicClick(topic)}
+                    />
+                  ))}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
+        
+        {showRightArrow && (
+          <button 
+            className={`${styles.scrollArrow} ${styles.scrollArrowRight} ${styles[`scrollArrow_${theme}`]}`}
+            onClick={scrollRight}
+            aria-label="Scroll right"
+          >
+            →
+          </button>
+        )}
       </div>
     </div>
   );

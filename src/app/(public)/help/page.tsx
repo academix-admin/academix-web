@@ -52,7 +52,7 @@ export default function Help({ searchParams }: HelpPageProps) {
   const [canGoBack, setCanGoBack] = useState(false);
 
   const config = getConfig(req);
-  const resolvedTheme = col || theme;
+  const resolvedLang = getSupportedLang(lan) || lang;
 
   useEffect(() => { setCanGoBack(window.history.length > 1); }, []);
 
@@ -86,7 +86,7 @@ export default function Help({ searchParams }: HelpPageProps) {
                 </svg>
               </button>
             )}
-            <h1 className={styles.title}>{t('help_text')}</h1>
+            <h1 className={styles.title}>{t('help_text', resolvedLang)}</h1>
             {!hasValidSession && (
               <Link className={styles.logoContainer} href="/">
                 <Image className={styles.logo} src="/assets/image/academix-logo.png" alt="Academix Logo" width={40} height={40} priority />
@@ -98,22 +98,22 @@ export default function Help({ searchParams }: HelpPageProps) {
 
       <div className={`${styles.innerBody} ${styles[`innerBody_${req}`]}`}>
         <div className={styles.content}>
-          <h2 className={styles.sectionTitle}>{t('help_center')}</h2>
+          <h2 className={styles.sectionTitle}>{t('help_center', resolvedLang)}</h2>
           <div className={styles.faqItem}>
-            <h3 className={styles.faqQuestion}>{t('faq_question_1')}</h3>
-            <p className={styles.paragraph}>{t('faq_answer_1')}</p>
+            <h3 className={styles.faqQuestion}>{t('faq_question_1', resolvedLang)}</h3>
+            <p className={styles.paragraph}>{t('faq_answer_1', resolvedLang)}</p>
           </div>
           <div className={styles.faqItem}>
-            <h3 className={styles.faqQuestion}>{t('faq_question_2')}</h3>
-            <p className={styles.paragraph}>{t('faq_answer_2')}</p>
+            <h3 className={styles.faqQuestion}>{t('faq_question_2', resolvedLang)}</h3>
+            <p className={styles.paragraph}>{t('faq_answer_2', resolvedLang)}</p>
           </div>
           <div className={styles.faqItem}>
-            <h3 className={styles.faqQuestion}>{t('faq_question_3')}</h3>
-            <p className={styles.paragraph}>{t('faq_answer_3')}</p>
+            <h3 className={styles.faqQuestion}>{t('faq_question_3', resolvedLang)}</h3>
+            <p className={styles.paragraph}>{t('faq_answer_3', resolvedLang)}</p>
           </div>
           <div className={styles.contactSection}>
-            <h3 className={styles.contactTitle}>{t('need_more_help')}</h3>
-            <p className={styles.paragraph}>{t('contact_support_desc')}</p>
+            <h3 className={styles.contactTitle}>{t('need_more_help', resolvedLang)}</h3>
+            <p className={styles.paragraph}>{t('contact_support_desc', resolvedLang)}</p>
           </div>
         </div>
       </div>

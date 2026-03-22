@@ -41,6 +41,8 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isMountedRef = useRef(true);
+  const [showLeftArrow, setShowLeftArrow] = useState(false);
+  const [showRightArrow, setShowRightArrow] = useState(false);
 
   const [paginateModel, setPaginateModel] = useState<PaginateModel>(new PaginateModel());
   const [firstLoaded, setFirstLoaded] = useState(false);
@@ -305,6 +307,37 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
     };
   }, []);
 
+  const checkScrollButtons = () => {
+    if (!scrollContainerRef.current) return;
+    const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
+    setShowLeftArrow(scrollLeft > 0);
+    setShowRightArrow(scrollLeft < scrollWidth - clientWidth - 1);
+  };
+
+  const scrollLeft = () => {
+    if (!scrollContainerRef.current) return;
+    scrollContainerRef.current.scrollBy({ left: -300, behavior: 'smooth' });
+  };
+
+  const scrollRight = () => {
+    if (!scrollContainerRef.current) return;
+    scrollContainerRef.current.scrollBy({ left: 300, behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    checkScrollButtons();
+    container.addEventListener('scroll', checkScrollButtons);
+    window.addEventListener('resize', checkScrollButtons);
+
+    return () => {
+      container.removeEventListener('scroll', checkScrollButtons);
+      window.removeEventListener('resize', checkScrollButtons);
+    };
+  }, [quizModels]);
+
   const getTitle = (type: string | null): string => {
       switch (type) {
         case 'creator':
@@ -349,7 +382,6 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
 
   if(quizModels.length <= 0) return null;
 
-
   const handleTopicClick = (topic: UserDisplayQuizTopicModel) => {
     if(activeQuiz)return;
     maybeActivePoolId.current = topic?.quizPool?.poolsId ?? null;
@@ -361,20 +393,42 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
       <h2 className={`${styles.title} ${styles[`title_${theme}`]}`}>
         {getTitle(pType)}
       </h2>
-      <div ref={scrollContainerRef} className={styles.scrollContainer}>
-        <div className={styles.gridContainer}>
-          <div className={styles.row}>
-            {quizModels.map((topic, rowIndex) => (
-                  <OpenQuizCard
-                    key={topic.topicsId}
-                    topic={topic}
-                    length={quizModels.length}
-                    getInitials={getInitials}
-                    onClick={()=> handleTopicClick(topic)}
-                  />
-            ))}
+      <div className={styles.scrollWrapper}>
+        {showLeftArrow && (
+          <button 
+            className={`${styles.scrollArrow} ${styles.scrollArrowLeft} ${styles[`scrollArrow_${theme}`]}`}
+            onClick={scrollLeft}
+            aria-label="Scroll left"
+          >
+            ←
+          </button>
+        )}
+        
+        <div ref={scrollContainerRef} className={styles.scrollContainer}>
+          <div className={styles.gridContainer}>
+            <div className={styles.row}>
+              {quizModels.map((topic, rowIndex) => (
+                    <OpenQuizCard
+                      key={topic.topicsId}
+                      topic={topic}
+                      length={quizModels.length}
+                      getInitials={getInitials}
+                      onClick={()=> handleTopicClick(topic)}
+                    />
+              ))}
+            </div>
           </div>
         </div>
+        
+        {showRightArrow && (
+          <button 
+            className={`${styles.scrollArrow} ${styles.scrollArrowRight} ${styles[`scrollArrow_${theme}`]}`}
+            onClick={scrollRight}
+            aria-label="Scroll right"
+          >
+            →
+          </button>
+        )}
       </div>
     </div>
   );

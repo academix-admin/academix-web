@@ -119,7 +119,7 @@ export default function About({ searchParams }: AboutPageProps) {
                 </svg>
               </button>
             )}
-            <h1 className={styles.title}>{t('about_text')}</h1>
+            <h1 className={styles.title}>{t('about_text', resolvedLang)}</h1>
             {!hasValidSession && (
               <Link className={styles.logoContainer} href="/">
                 <Image className={styles.logo} src="/assets/image/academix-logo.png" alt="Academix Logo" width={40} height={40} priority />
@@ -132,12 +132,12 @@ export default function About({ searchParams }: AboutPageProps) {
       <div className={`${styles.innerBody} ${req ? styles[`innerBody_${req}`] : ''}`}>
         {config.showTitle && (
           <h1 className={`${styles.bigTitle} ${styles[`bigTitle_${resolvedTheme}`]}`}>
-            {t('about_text')}
+            {t('about_text', resolvedLang)}
           </h1>
         )}
         {config.showDescription && (
           <h4 className={`${styles.description} ${styles[`description_${resolvedTheme}`]}`}>
-            {t('about_description')}
+            {t('about_description', resolvedLang)}
           </h4>
         )}
         
@@ -145,22 +145,22 @@ export default function About({ searchParams }: AboutPageProps) {
           {/* Project Card */}
           <div className={`${styles.card} ${styles[`card_${resolvedTheme}`]}`}>
             <div className={styles.cardIcon}>🎓</div>
-            <h3 className={styles.cardTitle}>{t('about_academix')}</h3>
-            <p className={styles.cardText}>{t('about_description')}</p>
+            <h3 className={styles.cardTitle}>{t('about_academix', resolvedLang)}</h3>
+            <p className={styles.cardText}>{t('about_description', resolvedLang)}</p>
           </div>
 
           {/* Mission Card */}
           <div className={`${styles.card} ${styles[`card_${resolvedTheme}`]}`}>
             <div className={styles.cardIcon}>🎯</div>
-            <h3 className={styles.cardTitle}>{t('our_mission')}</h3>
-            <p className={styles.cardText}>{t('mission_description')}</p>
+            <h3 className={styles.cardTitle}>{t('our_mission', resolvedLang)}</h3>
+            <p className={styles.cardText}>{t('mission_description', resolvedLang)}</p>
           </div>
 
           {/* Vision Card */}
           <div className={`${styles.card} ${styles[`card_${resolvedTheme}`]}`}>
             <div className={styles.cardIcon}>🚀</div>
-            <h3 className={styles.cardTitle}>{t('our_vision')}</h3>
-            <p className={styles.cardText}>{t('vision_description')}</p>
+            <h3 className={styles.cardTitle}>{t('our_vision', resolvedLang)}</h3>
+            <p className={styles.cardText}>{t('vision_description', resolvedLang)}</p>
           </div>
         </div>
 

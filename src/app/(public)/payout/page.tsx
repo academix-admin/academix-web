@@ -317,6 +317,7 @@ const RoleSelector = ({
 }) => {
   const { theme } = useTheme();
   const { t } = useLanguage();
+  const resolvedLang = 'en'; // Use default for components
   const roleSelectorRef = useRef<HTMLDivElement>(null);
 
   const scroll = (direction: 'left' | 'right') => {
@@ -347,7 +348,7 @@ const RoleSelector = ({
             onClick={() => onSelect(role)}
             aria-selected={selectedRole === role}
           >
-            {t(role)}
+            {t(role, resolvedLang)}
           </button>
         ))}
       </div>
@@ -370,6 +371,7 @@ const RoleSelector = ({
 const OneVsOneView = ({ data, roles }: { data: ChallengeConfig; roles: string[] }) => {
   const { theme } = useTheme();
   const { t } = useLanguage();
+  const resolvedLang = 'en'; // Use default for components
   const [selectedQuestion, setSelectedQuestion] = useState(data.challengeOptions[0]);
   const [selectedRole, setSelectedRole] = useState('Roles.creator');
 
@@ -542,6 +544,7 @@ const OneVsOneView = ({ data, roles }: { data: ChallengeConfig; roles: string[] 
 const MultiplayerView = ({ data, roles }: { data: ChallengeConfig; roles: string[] }) => {
   const { theme } = useTheme();
   const { t } = useLanguage();
+  const resolvedLang = 'en'; // Use default for components
   const [selectedChallenge, setSelectedChallenge] = useState(data.challengeOptions[0]);
   const [minPlayers, setMinPlayers] = useState(selectedChallenge.challengeMinParticipants);
   const [selectedRole, setSelectedRole] = useState('Roles.creator');
@@ -973,7 +976,7 @@ export default function Payout({ searchParams }: PayoutPageProps) {
               <button
                 className={styles.backButton}
                 onClick={goBack}
-                aria-label={t('go_back')}
+                aria-label={t('go_back', resolvedLang)}
               >
                 <svg
                   className={styles.backIcon}
@@ -988,7 +991,7 @@ export default function Payout({ searchParams }: PayoutPageProps) {
                 </svg>
               </button>
             )}
-            <h1 className={styles.title}>{t('payout_text')}</h1>
+            <h1 className={styles.title}>{t('payout_text', resolvedLang)}</h1>
             {!hasValidSession && (
               <Link className={styles.logoContainer} href="/">
                 <Image
@@ -1007,12 +1010,12 @@ export default function Payout({ searchParams }: PayoutPageProps) {
 
       {config.showTitle && (
         <h1 className={`${styles.bigTitle} ${styles[`bigTitle_${resolvedTheme}`]}`}>
-          {t('academix_calculator')}
+          {t('academix_calculator', resolvedLang)}
         </h1>
       )}
       {config.showDescription && (
         <h4 className={`${styles.description} ${styles[`description_${resolvedTheme}`]}`}>
-          {t('academix_description')}
+          {t('academix_description', resolvedLang)}
         </h4>
       )}
 
@@ -1021,7 +1024,7 @@ export default function Payout({ searchParams }: PayoutPageProps) {
           className={`${styles.innerBody} ${styles[`innerBody_${resolvedTheme}`]} ${styles[`innerBody_quiz`]}`}
         >
           <h4 className={`${styles.game_mode} ${styles[`game_mode_${resolvedTheme}`]}`}>
-            {t('game_mode')}
+            {t('game_mode', resolvedLang)}
           </h4>
           <div className={styles.tab_switcher}>
             {challengeData.map((challenge) => (
@@ -1040,18 +1043,18 @@ export default function Payout({ searchParams }: PayoutPageProps) {
         </div>
       )}
 
-      {payoutState === 'loading' && <LoadingView text={t('loading_text')} />}
+      {payoutState === 'loading' && <LoadingView text={t('loading_text', resolvedLang)} />}
       {payoutState === 'error' && (
         <ErrorView
-          text={t('error_text')}
-          buttonText={t('try_again')}
+          text={t('error_text', resolvedLang)}
+          buttonText={t('try_again', resolvedLang)}
           onButtonClick={fetchPayoutData}
         />
       )}
       {payoutState === 'empty' && (
         <NoResultsView
-          text={t('no_results')}
-          buttonText={t('try_again')}
+          text={t('no_results', resolvedLang)}
+          buttonText={t('try_again', resolvedLang)}
           onButtonClick={fetchPayoutData}
         />
       )}

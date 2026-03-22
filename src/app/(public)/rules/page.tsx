@@ -171,7 +171,7 @@ export default function Rules({ searchParams }: RulesPageProps) {
 
   const config = getConfig(req);
   const resolvedTheme = col || theme;
-  const resolvedLang = getSupportedLang(lan) || lang;
+  const resolvedLang = getSupportedLang(lan);
   const rules = rulesData[resolvedLang as keyof typeof rulesData] || rulesData.en;
 
   useEffect(() => {

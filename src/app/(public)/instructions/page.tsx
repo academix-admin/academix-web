@@ -4,6 +4,8 @@ import { use, useEffect, useState } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { getSupportedLang } from '@/context/LanguageContext';
+import { supabaseBrowser } from '@/lib/supabase/client';
+import { Role } from '@/lib/stacks/signup-stack';
 import Image from 'next/image';
 import Link from 'next/link';
 import styles from './page.module.css';
@@ -55,26 +57,69 @@ export default function Instructions({ searchParams }: InstructionsPageProps) {
   const resolvedSearchParams = use(searchParams);
   const { col, lan, req } = useAppParams(resolvedSearchParams);
   const { theme } = useTheme();
-  const { t } = useLanguage();
+  const { t, tNode } = useLanguage();
   const { initialized, hasValidSession } = useAuthContext();
   const router = useRouter();
   const [canGoBack, setCanGoBack] = useState(false);
+  const [roles, setRoles] = useState<Role[]>([]);
 
   const config = getConfig(req);
   const resolvedTheme = col || theme;
-
+  const resolvedLang = getSupportedLang(lan);
+  
   const stepsConfig: StepConfig[] = [
-    { title: 'Sign up', colors: { background: { light: '#E8F0FF', dark: '#0D1B2A' }, number: { light: '#1A73E8', dark: '#1A73E8' }, title: { light: '#1A73E8', dark: '#A5CCFF' }, text: { light: '#1A73E8', dark: '#A5CCFF' } }, items: ['Create your account', 'Choose account *type*'], typeBackground: { light: '#1A73E8', dark: '#1A73E8' }, types: ['Student', 'Reviewer', 'Creator', 'Organization'] },
-    { title: 'Complete Account', colors: { background: { light: '#EDFDF2', dark: '#0F1F17' }, number: { light: '#2F855A', dark: '#2F855A' }, title: { light: '#2F855A', dark: '#88E3B5' }, text: { light: '#2F855A', dark: '#88E3B5' } }, items: ['*Verify* your details', 'Obtain *KYC* verification'] },
-    { title: 'Setup Profile', colors: { background: { light: '#E6FAF8', dark: '#0D1F1E' }, number: { light: '#319795', dark: '#319795' }, title: { light: '#319795', dark: '#98D7D6' }, text: { light: '#319795', dark: '#98D7D6' } }, items: ['Set up your profile and manage your quiz topic *preferences*', '*Top up* wallet balance add add *withdrawal* profiles'] },
-    { title: 'Play a Quiz', colors: { background: { light: '#F5EAFE', dark: '#1A0D2A' }, number: { light: '#9F7AEA', dark: '#9F7AEA' }, title: { light: '#9F7AEA', dark: '#C1A5FA' }, text: { light: '#9F7AEA', dark: '#C1A5FA' } }, items: ['Join a quiz challenge in your topic *interest*', 'Answer the *best* ways you can'] },
-    { title: 'Get Rewarded', colors: { background: { light: '#FFF9E6', dark: '#2A210D' }, number: { light: '#D69E2E', dark: '#D69E2E' }, title: { light: '#D69E2E', dark: '#FFDA8F' }, text: { light: '#D69E2E', dark: '#FFDA8F' } }, items: ['Get *paid* even when you *lose*', 'Refer *friends* for *discounts*', 'Earn periodically daily *Streaks*', 'Redeem *Missions* & *Achievements*'] },
-    { title: 'Earn your value', colors: { background: { light: '#F7F7F7', dark: '#1A1A1A' }, number: { light: '#000000', dark: '#000000' }, title: { light: '#000000', dark: '#DCD5D5' }, text: { light: '#000000', dark: '#DCD5D5' } }, items: ['Exchange your tokens to *real value* into verified payment account', 'View statistics, player ratio and earnings'] }
+    { 
+      title: t('sign_up', resolvedLang), 
+      colors: { background: { light: '#E8F0FF', dark: '#0D1B2A' }, number: { light: '#1A73E8', dark: '#1A73E8' }, title: { light: '#1A73E8', dark: '#A5CCFF' }, text: { light: '#1A73E8', dark: '#A5CCFF' } }, 
+      items: [t('step_create_account', resolvedLang), t('step_choose_account_type', resolvedLang)], 
+      typeBackground: { light: '#1A73E8', dark: '#2563EB' }, 
+      types: roles.map(role => role.roles_identity)
+    },
+    { 
+      title: t('step_complete_account', resolvedLang), 
+      colors: { background: { light: '#EDFDF2', dark: '#0F1F17' }, number: { light: '#2F855A', dark: '#2F855A' }, title: { light: '#2F855A', dark: '#88E3B5' }, text: { light: '#2F855A', dark: '#88E3B5' } }, 
+      items: [t('step_verify_details', resolvedLang), t('step_obtain_kyc', resolvedLang)] 
+    },
+    { 
+      title: t('step_setup_profile', resolvedLang), 
+      colors: { background: { light: '#E6FAF8', dark: '#0D1F1E' }, number: { light: '#319795', dark: '#319795' }, title: { light: '#319795', dark: '#98D7D6' }, text: { light: '#319795', dark: '#98D7D6' } }, 
+      items: [t('step_setup_profile_preferences', resolvedLang), t('step_topup_wallet', resolvedLang)] 
+    },
+    { 
+      title: t('step_play_quiz', resolvedLang), 
+      colors: { background: { light: '#F5EAFE', dark: '#1A0D2A' }, number: { light: '#9F7AEA', dark: '#9F7AEA' }, title: { light: '#9F7AEA', dark: '#C1A5FA' }, text: { light: '#9F7AEA', dark: '#C1A5FA' } }, 
+      items: [t('step_join_quiz_challenge', resolvedLang), t('step_answer_best', resolvedLang)] 
+    },
+    { 
+      title: t('step_get_rewarded', resolvedLang), 
+      colors: { background: { light: '#FFF9E6', dark: '#2A210D' }, number: { light: '#D69E2E', dark: '#D69E2E' }, title: { light: '#D69E2E', dark: '#FFDA8F' }, text: { light: '#D69E2E', dark: '#FFDA8F' } }, 
+      items: [t('step_get_paid_lose', resolvedLang), t('step_refer_friends', resolvedLang), t('step_earn_streaks', resolvedLang), t('step_redeem_missions', resolvedLang)] 
+    },
+    { 
+      title: t('step_earn_value', resolvedLang), 
+      colors: { background: { light: '#F7F7F7', dark: '#1A1A1A' }, number: { light: '#000000', dark: '#000000' }, title: { light: '#000000', dark: '#DCD5D5' }, text: { light: '#000000', dark: '#DCD5D5' } }, 
+      items: [t('step_exchange_tokens', resolvedLang), t('step_view_statistics', resolvedLang)] 
+    }
   ];
 
   const getThemeColor = (colors: StepColors) => colors[resolvedTheme as keyof StepColors] || colors.light;
 
   useEffect(() => { setCanGoBack(window.history.length > 1); }, []);
+
+  useEffect(() => {
+    async function fetchRoles() {
+      try {
+        const { data, error } = await supabaseBrowser.rpc('fetch_roles', {
+          p_locale: resolvedLang,
+        });
+        if (error) throw error;
+        setRoles(data ?? []);
+      } catch (error) {
+        console.error('Error fetching roles:', error);
+      }
+    }
+    fetchRoles();
+  }, [resolvedLang]);
 
   const getBackgroundStyle = (): React.CSSProperties => {
     if (config.backgroundColor && config.backgroundColor[resolvedTheme]) {
@@ -106,7 +151,7 @@ export default function Instructions({ searchParams }: InstructionsPageProps) {
                 </svg>
               </button>
             )}
-            <h1 className={styles.title}>{t('instructions_text')}</h1>
+            <h1 className={styles.title}>{t('instructions_text', resolvedLang)}</h1>
             {!hasValidSession && (
               <Link className={styles.logoContainer} href="/">
                 <Image className={styles.logo} src="/assets/image/academix-logo.png" alt="Academix Logo" width={40} height={40} priority />
@@ -119,16 +164,14 @@ export default function Instructions({ searchParams }: InstructionsPageProps) {
       <div className={`${styles.innerBody} ${req ? styles[`innerBody_${req}`] : ''}`}>
         {config.showTitle && (
           <h1 className={`${styles.bigTitle} ${styles[`bigTitle_${resolvedTheme}`]}`}>
-            {t('what_academix_abt_part1')}{' '}
-            <span className={`${styles.academixText} ${styles[`academixText_${resolvedTheme}`]}`}>
-              {t('what_academix_abt_part2')}
-            </span>{' '}
-            {t('what_academix_abt_part3')}
+            {tNode('what_academix_title', {
+              academix: <span className={`${styles.academixText} ${styles[`academixText_${resolvedTheme}`]}`}>{t('what_academix_abt_part2', resolvedLang)}</span>
+            }, resolvedLang)}
           </h1>
         )}
         {config.showDescription && (
           <h4 className={`${styles.description} ${styles[`description_${resolvedTheme}`]}`}>
-            {t('what_academix_is_desc')}
+            {t('what_academix_is_desc', resolvedLang)}
           </h4>
         )}
         <div className={styles.stepsContainer}>

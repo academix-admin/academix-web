@@ -85,8 +85,6 @@ export default function QuizCommitment(props: QuizChallengeProps) {
   const getQuizByPoolsIdObj = useObject<(id: string) => UserDisplayQuizTopicModel | undefined>('getQuizByPoolsId', { global: true, scope: 'quiz-topics' });
   const getActiveQuizObj = useObject<UserDisplayQuizTopicModel | null>('getActiveQuiz', { global: true, scope: 'quiz-topics' });
   const getCodeQuizObj = useObject<UserDisplayQuizTopicModel | null>('getCodeQuiz', { global: true, scope: 'quiz-topics' });
-  const [selectedRule, setSelectedRule] = useState(false);
-  const [selectedPayout, setSelectedPayout] = useState(false);
   const [selectedRedeemCodeModel, setSelectedRedeemCodeModel] = useState<RedeemCodeModel | null>(null);
   const [selectedSkip, setSelectedSkip] = useState(false);
   const [quizLoading, setQuizLoading] = useState(false);
@@ -107,13 +105,13 @@ export default function QuizCommitment(props: QuizChallengeProps) {
 
   useProvideObject<PinData>('pin_controller', () => {
     return {
-      inUse: selectedPayout && selectedRule,
+      inUse: currentQuiz !== null,
       action: async (pin: string) => {
         withdrawBottomController.open();
         await handleEngage(pin);
       }
     };
-  }, { scope: 'pin_scope', dependencies: [selectedRule, selectedPayout, selectedRedeemCodeModel] });
+  }, { scope: 'pin_scope', dependencies: [currentQuiz, selectedRedeemCodeModel] });
 
   // Subscribe to changes
   const handlePoolChange = (event: PoolChangeEvent) => {
@@ -154,9 +152,9 @@ export default function QuizCommitment(props: QuizChallengeProps) {
 
     const activeQuiz = getActiveQuizObj.isProvided ? getActiveQuizObj.getter() : null;
     const codeQuiz = getCodeQuizObj.isProvided ? getCodeQuizObj.getter() : null;
-    const getQuiz = action === 'active' ? activeQuiz : action === 'code' ? codeQuiz : (getQuizByPoolsIdObj.isProvided ? getQuizByPoolsIdObj.getter()?.(poolsId) : null );
+    const getQuiz = action === 'active' ? activeQuiz : action === 'code' ? codeQuiz : (getQuizByPoolsIdObj.isProvided ? getQuizByPoolsIdObj.getter()?.(poolsId) : null);
     const isProvided = action === 'active' ? getActiveQuizObj.isProvided : action === 'code' ? getCodeQuizObj.isProvided : getQuizByPoolsIdObj.isProvided;
-    
+
     if (getQuiz && !currentQuiz) {
       fetchPoolMembers(getQuiz);
       setCurrentQuiz(getQuiz);
@@ -318,7 +316,7 @@ export default function QuizCommitment(props: QuizChallengeProps) {
   }
 
   const handleEngage = async (userPin: string) => {
-    if (!userData || !currentQuiz || !selectedRule || !selectedPayout) return;
+    if (!userData || !currentQuiz) return;
 
     try {
       setQuizLoading(true);
@@ -483,9 +481,9 @@ export default function QuizCommitment(props: QuizChallengeProps) {
   const onContinueClick = async () => {
     setToQuizLoading(true);
     if (!userData || !currentQuiz?.quizPool?.poolsId) return;
-    
+
     await refreshSessionIfNeeded();
-    
+
     await nav.popToRoot();
     quizInfoBottomController.close();
     await replaceAndWait(`/quiz/${currentQuiz.quizPool?.poolsId}`);
@@ -531,7 +529,7 @@ export default function QuizCommitment(props: QuizChallengeProps) {
   const balanceCheck = codeSufficient ? false : (balanceSufficient || bothSufficient);
   const bothCheck = codeCheck || balanceCheck;
 
-  const showBottom = currentQuiz && selectedChallengeModel && (selectedSkip || selectedRedeemCodeModel) && selectedRule && selectedPayout;
+  const showBottom = currentQuiz && selectedChallengeModel && (selectedSkip || selectedRedeemCodeModel);
 
   const getIsContinueEnabled = (quiz: UserDisplayQuizTopicModel | null): boolean => {
     if (!quiz?.quizPool) return false;
@@ -574,9 +572,9 @@ export default function QuizCommitment(props: QuizChallengeProps) {
         {currentQuiz && <QuizDetailsViewer topicsModel={currentQuiz} />}
         {currentQuiz && <QuizChallengeDetails poolsId={currentQuiz?.quizPool?.poolsId || ''} membersCount={membersCount || currentQuiz?.quizPool?.poolsMembersCount || 0} minimumMembers={currentQuiz?.quizPool?.challengeModel?.challengeMinParticipant || 0} maximumMembers={currentQuiz?.quizPool?.challengeModel?.challengeMaxParticipant || 0} fee={currentQuiz?.quizPool?.challengeModel?.challengePrice || 0} status={currentQuiz?.quizPool?.poolsJob || ''} jobEndAt={currentQuiz?.quizPool?.poolsJobEndAt || ''} />}
         {currentQuiz && <QuizStatusInfo status={formatStatus(currentQuiz?.quizPool?.poolsJob || '')} />}
-        {currentQuiz && <QuizRuleAcceptance onAcceptanceChange={setSelectedRule} canChange={action != 'active'} initialValue={action === 'active'} />}
-        {currentQuiz && <QuizPayoutAcceptance onAcceptanceChange={setSelectedPayout} canChange={action != 'active'} initialValue={action === 'active'} challengeId={currentQuiz?.quizPool?.challengeModel?.challengeId || ''} />}
-        {currentQuiz && action != 'active' && selectedRule && selectedPayout && (
+        {currentQuiz && <QuizRuleAcceptance />}
+        {currentQuiz && <QuizPayoutAcceptance challengeId={currentQuiz?.quizPool?.challengeModel?.challengeId || ''} />}
+        {currentQuiz && action != 'active' && (
           <QuizRedeemCode
             onRedeemCodeSelect={setSelectedRedeemCodeModel}
             onSkip={setSelectedSkip}

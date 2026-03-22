@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import styles from './profile-title.module.css';
-import { useLanguage, SUPPORTED_LANGUAGES, SupportedLang } from '@/context/LanguageContext';
+import { useLanguage, SUPPORTED_LANGUAGES, LANGUAGE_NAMES, SupportedLang } from '@/context/LanguageContext';
 import { getLastNameOrSingle, capitalize } from '@/utils/textUtils';
 import { ComponentStateProps } from '@/hooks/use-component-state';
 import { useUserData } from '@/lib/stacks/user-stack';
@@ -19,11 +19,6 @@ interface LanguageOption {
   code: SupportedLang;
   name: string;
 }
-
-const LANGUAGE_NAMES: Record<SupportedLang, string> = {
-  en: 'English',
-  fr: 'Français'
-};
 
 const LanguageItem = ({ onClick, text }: { onClick: () => void; text: string }) => {
   const { theme } = useTheme();

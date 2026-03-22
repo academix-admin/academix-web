@@ -49,14 +49,14 @@
   min-width: 0;
 }
 
-.innerBody{
+.innerBody {
   display: flex;
   flex-direction: column;
   align-items: center;
   padding: 2rem;
   padding-top: 6rem;
-        max-width: 400px;
-    width: 100%;
+  max-width: 400px;
+  width: 100%;
   box-sizing: border-box;
 }
 
@@ -67,8 +67,7 @@
   color: var(--text-color);
   border-radius: 50%;
   display: flex;
-    padding: 4px;
-
+  padding: 4px;
   align-items: center;
   justify-content: center;
   margin-left: -8px;
@@ -105,23 +104,25 @@
   height: 35px;
 }
 
-.welcome_wrapper{
+.welcome_wrapper {
   width: 65%;
 }
 
 .stepTitle {
   font-size: 1.5rem;
   font-weight: 600;
-    margin: 0;
-    margin-top: 2rem;
-    text-align: start;
-      align-self: flex-start;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    box-sizing: border-box;
-    word-break: break-word;   /* break long words */
-      white-space: normal;      /* allow wrapping */
+  margin: 0;
+  margin-top: 2rem;
+  text-align: start;
+  align-self: flex-start;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-sizing: border-box;
+  word-break: break-word;
+  /* break long words */
+  white-space: normal;
+  /* allow wrapping */
 }
 
 .stepSubtitle {
@@ -129,8 +130,10 @@
   color: #6B7280;
   margin-bottom: 2rem;
   align-self: flex-start;
-  word-break: break-word;   /* break long words */
-    white-space: normal;      /* allow wrapping */
+  word-break: break-word;
+  /* break long words */
+  white-space: normal;
+  /* allow wrapping */
 }
 
 .form {
@@ -152,8 +155,10 @@
   font-weight: 600;
   text-align: left;
   color: var(--text-color);
-  word-break: break-word;   /* break long words */
-    white-space: normal;      /* allow wrapping */
+  word-break: break-word;
+  /* break long words */
+  white-space: normal;
+  /* allow wrapping */
 }
 
 
@@ -209,7 +214,9 @@
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .loadingOverlay {
@@ -218,15 +225,16 @@
   z-index: 9999;
 }
 
-.emptyState{
- width: 100%;
- box-sizing: border-box;
- display: flex;
+.emptyState {
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
 }
 
 .rolesGrid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr); /* exactly 2 columns */
+  grid-template-columns: repeat(2, 1fr);
+  /* exactly 2 columns */
   gap: 1rem;
   width: 100%;
 }
@@ -234,14 +242,17 @@
 .roleCard {
   display: flex;
   flex-direction: column;
-  justify-content: space-between; /* pushes tier to bottom */
+  justify-content: space-between;
+  /* pushes tier to bottom */
   align-items: flex-start;
   padding: 16px;
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.2s ease;
-  min-height: 140px; /* ensures nice consistent height */
-  height: 100%;      /* let grid equalize row height */
+  min-height: 140px;
+  /* ensures nice consistent height */
+  height: 100%;
+  /* let grid equalize row height */
   box-sizing: border-box;
 }
 
@@ -290,7 +301,8 @@
 .roleInfo {
   display: flex;
   flex-direction: column;
-  flex-grow: 1; /* makes sure content stretches */
+  flex-grow: 1;
+  /* makes sure content stretches */
   width: 100%;
   justify-content: space-between;
 }
@@ -300,15 +312,18 @@
   font-size: 1rem;
   margin-bottom: 8px;
   text-align: left;
-  word-break: break-word;   /* break long words */
-  white-space: normal;      /* allow wrapping */
+  word-break: break-word;
+  /* break long words */
+  white-space: normal;
+  /* allow wrapping */
 }
 
 .buyInContainer {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  margin-top: auto;   /* pushes it to the bottom */
+  margin-top: auto;
+  /* pushes it to the bottom */
 }
 
 .buyInLabel {
@@ -327,39 +342,296 @@
   text-align: left;
 }
 
+.acceptanceSection {
+  margin-top: 1.5rem;
+  width: 100%;
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  text-align: left;
+}
+
+.checkboxLabel_light {
+  color: #374151;
+}
+
+.checkboxLabel_dark {
+  color: #d1d5db;
+}
+
+.checkbox {
+  display: none;
+}
+
+.checkboxCustom {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #6b7280;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.checkbox:checked+.checkboxCustom {
+  background-color: #1C6B1E;
+  border-color: #1C6B1E;
+}
+
+.checkIcon {
+  width: 12px;
+  height: 12px;
+  color: white;
+}
+
+.checkboxText {
+  flex: 1;
+  word-break: break-word;
+  white-space: normal;
+}
+
+.ratesLink {
+  color: #1C6B1E;
+  text-decoration: underline;
+  font-weight: 600;
+}
+
+.ratesLink:hover {
+  color: #1D3D1E;
+}
+
+.walletSelectionCard {
+  margin-top: 1rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.walletLabel {
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-align: left;
+  color: var(--text-color);
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.walletButton {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.walletButton_light {
+  border-color: #d1d5db;
+  background: #fff;
+}
+
+.walletButton_dark {
+  border-color: #333;
+  background: #1a1a1a;
+}
+
+.walletButton:hover {
+  border-color: #1C6B1E;
+}
+
+.selectedWallet {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.walletImage {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.walletImage img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.walletInitials {
+  width: 32px;
+  height: 32px;
+  background: #1C6B1E;
+  color: white;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.walletInfo {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.walletName {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.walletCurrency {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.walletPlaceholder {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.walletArrow {
+  width: 20px;
+  height: 20px;
+  color: #6b7280;
+}
+
+.walletItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 8px;
+}
+
+
+.walletItem:hover {
+  background: #f3f4f6;
+}
+
+.walletItem_dark:hover {
+  background: #374151;
+}
+
+.walletItemSelected {
+  border-color: #1C6B1E !important;
+  background: rgba(28, 107, 30, 0.1) !important;
+}
+
+.walletItemImage {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.walletItemImage img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.walletItemInitials {
+  width: 40px;
+  height: 40px;
+  background: #1C6B1E;
+  color: white;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.walletItemInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.walletItemName {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-color);
+  margin-bottom: 2px;
+}
+
+.walletItemCurrency {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.walletItemCheckmark {
+  width: 24px;
+  height: 24px;
+  color: #1C6B1E;
+}
+
 
 /* Responsive styles */
 @media screen and (max-width: 800px) {
-   .headerContent {
-     padding: 1rem 0rem;
-     margin: 0 1rem;
-   }
-    .logo {
-         width: 35px;
-         height: 35px;
-       }
-    .innerBody {
-      padding: 1.5rem;
-      padding-top: 4rem;
-    }
-       .welcome_wrapper{
-         width: 75%;
-       }
-       .rolesGrid {
-         gap: 0.7rem;
-       }
+  .headerContent {
+    padding: 1rem 0rem;
+    margin: 0 1rem;
+  }
+
+  .logo {
+    width: 35px;
+    height: 35px;
+  }
+
+  .innerBody {
+    padding: 1.5rem;
+    padding-top: 4rem;
+  }
+
+  .welcome_wrapper {
+    width: 75%;
+  }
+
+  .rolesGrid {
+    gap: 0.7rem;
+  }
 }
 
 @media screen and (max-width: 500px) {
   .headerContent {
-      margin: 0;
-     padding: 1rem 1rem;
-   }
+    margin: 0;
+    padding: 1rem 1rem;
+  }
 
   .innerBody {
-      padding: 1rem;
-      padding-top: 5rem;
-    }
+    padding: 1rem;
+    padding-top: 5rem;
+  }
 
   .stepTitle {
     font-size: 1.25rem;
@@ -378,12 +650,12 @@
     width: 28px;
     height: 28px;
   }
-  .welcome_wrapper{
-           width: 80%;
-         }
 
-.rolesGrid {
-  gap: 0.5rem;
-}
-}
+  .welcome_wrapper {
+    width: 80%;
+  }
 
+  .rolesGrid {
+    gap: 0.5rem;
+  }
+}

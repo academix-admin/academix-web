@@ -723,7 +723,7 @@ export default function Rates({ searchParams }: RatesPageProps) {
             )}
 
             <h1 className={styles.title}>
-              {t('rates_text')}
+              {t('rates_text', resolvedLang)}
             </h1>
 
             {!hasValidSession && <Link className={styles.logoContainer} href="/">
@@ -740,9 +740,9 @@ export default function Rates({ searchParams }: RatesPageProps) {
         </header>
       )}
 
-      {config.showTitle && (<h1 className={`${styles.bigTitle} ${styles[`bigTitle_${resolvedTheme}`]}`}>{t('academix_rates')}</h1>)}
+      {config.showTitle && (<h1 className={`${styles.bigTitle} ${styles[`bigTitle_${resolvedTheme}`]}`}>{t('academix_rates', resolvedLang)}</h1>)}
       {config.showDescription && (<h4 className={`${styles.description} ${styles[`description_${resolvedTheme}`]}`}>
-        {t('rates_description')}
+        {t('rates_description', resolvedLang)}
       </h4>)}
 
       <div className={`${styles.innerBody} ${styles[`innerBody_${req}`]}`}>
@@ -752,13 +752,13 @@ export default function Rates({ searchParams }: RatesPageProps) {
             className={`${styles.tabButton} ${activeTab === 'buy' ? styles.tabButtonActive : ''}`}
             onClick={() => handleTabChange('buy')}
           >
-            {t('top_up_text')}
+            {t('top_up_text', resolvedLang)}
           </button>
           <button
             className={`${styles.tabButton} ${activeTab === 'sell' ? styles.tabButtonActive : ''}`}
             onClick={() => handleTabChange('sell')}
           >
-            {t('withdraw_text')}
+            {t('withdraw_text', resolvedLang)}
           </button>
         </div>
 
@@ -766,7 +766,7 @@ export default function Rates({ searchParams }: RatesPageProps) {
         <div className={`${styles.conversionSection} ${styles[`conversionSection_${resolvedTheme}`]}`}>
           {/* Wallet Selection */}
           <div className={styles.selectionCard}>
-            <label className={styles.selectionLabel}>{t('payment_wallet_text')}</label>
+            <label className={styles.selectionLabel}>{t('payment_wallet_text', resolvedLang)}</label>
             <div
               className={`${styles.selectionButton} ${styles[`selectionButton_${resolvedTheme}`]}`}
               onClick={openWalletSelector}
@@ -789,7 +789,7 @@ export default function Rates({ searchParams }: RatesPageProps) {
                 </div>
               ) : (
                 <div className={styles.placeholderText}>
-                  {t('select_payment_wallet')}
+                  {t('select_payment_wallet', resolvedLang)}
                 </div>
               )}
               <div className={styles.dropdownArrow}>
@@ -808,7 +808,7 @@ export default function Rates({ searchParams }: RatesPageProps) {
               <div  className={`${styles.conversionInputs} ${flipped ? styles.conversionInputsFlipped : ''}`}>
                 <div className={styles.inputGroup}>
                   <div className={`${styles.conversionHeader} ${flipped ? styles.conversionRightHeader : styles.conversionLeftHeader}`}>
-                      <span>{isBuyMode ? t('you_pay') : t('you_receive')}</span>
+                      <span>{isBuyMode ? t('you_pay', resolvedLang) : t('you_receive', resolvedLang)}</span>
                   </div>
                   <div className={styles.inputWrapper}>
 
@@ -832,7 +832,7 @@ export default function Rates({ searchParams }: RatesPageProps) {
 
                 <div className={styles.inputGroup}>
                   <div className={`${styles.conversionHeader} ${ flipped ? styles.conversionLeftHeader : styles.conversionRightHeader}`}>
-                      <span>{isBuyMode ? t('you_receive') : t('you_pay')}</span>
+                      <span>{isBuyMode ? t('you_receive', resolvedLang) : t('you_pay', resolvedLang)}</span>
                   </div>
                   <div className={styles.inputWrapper}>
                     <input
@@ -859,15 +859,15 @@ export default function Rates({ searchParams }: RatesPageProps) {
               {(parseFloat(walletAmount) > 0 || parseFloat(academixAmount) > 0) && (
                 <div className={styles.feeBreakdown}>
                   <div className={styles.feeRow}>
-                    <span>{t('min_text')}:</span>
+                    <span>{t('min_text', resolvedLang)}:</span>
                     <span>{walletData.paymentWalletMin} {walletData.paymentWalletCurrency}</span>
                   </div>
                   <div className={styles.feeRow}>
-                    <span>{t('fee_text')}:</span>
+                    <span>{t('fee_text', resolvedLang)}:</span>
                     <span>{calculateFee(parseFloat(isBuyMode ? walletAmount : academixAmount) || 0)} {isBuyMode ? walletData.paymentWalletCurrency : 'ADC'}</span>
                   </div>
                   <div className={styles.feeRow}>
-                    <span>{t('charged_text')}:</span>
+                    <span>{t('charged_text', resolvedLang)}:</span>
                     <span>{calculateTotal(parseFloat(isBuyMode ? walletAmount : academixAmount) || 0)} {isBuyMode ? walletData.paymentWalletCurrency : 'ADC'}</span>
                   </div>
                 </div>
@@ -879,7 +879,7 @@ export default function Rates({ searchParams }: RatesPageProps) {
           {walletData && (
             <div className={styles.selectionCard}>
               <label className={styles.selectionLabel}>
-                {t('payment_method_text')}
+                {t('payment_method_text', resolvedLang)}
               </label>
               <div
                 className={`${styles.selectionButton} ${styles[`selectionButton_${resolvedTheme}`]} ${!walletData ? styles.disabled : ''}`}
@@ -904,8 +904,8 @@ export default function Rates({ searchParams }: RatesPageProps) {
                 ) : (
                   <div className={styles.placeholderText}>
                     {methodsModel.length > 0
-                      ? t('select_payment_method')
-                      : t('no_methods_available')
+                      ? t('select_payment_method', resolvedLang)
+                      : t('no_methods_available', resolvedLang)
                     }
                   </div>
                 )}
@@ -930,7 +930,7 @@ export default function Rates({ searchParams }: RatesPageProps) {
         onClose={walletSelectController.close}
         onPaginate={loadMoreWallets}
         titleProp={{
-          text: t('select_wallet'),
+          text: t('select_wallet', resolvedLang),
           textColor: theme === 'light' ?  "#000" : "#fff"
         }}
         cancelButton={{
@@ -939,7 +939,7 @@ export default function Rates({ searchParams }: RatesPageProps) {
           view: <DialogCancel />
         }}
         searchProp={{
-          text: t('search'),
+          text: t('search', resolvedLang),
           onChange: handleWalletSearch,
           background: theme === 'light' ?  "#f5f5f5" : "#272727",
           textColor: theme === 'light' ?  "#000" : "#fff",
@@ -947,7 +947,7 @@ export default function Rates({ searchParams }: RatesPageProps) {
           autoFocus: false,
         }}
         loadingProp={{
-          view: <LoadingView text={t('loading')}/>,
+          view: <LoadingView text={t('loading', resolvedLang)}/>,
         }}
         noResultProp={{
           view: <NoResultsView text="No results found." buttonText="Try Again" onButtonClick={loadWallets} />,
@@ -989,7 +989,7 @@ export default function Rates({ searchParams }: RatesPageProps) {
         onClose={methodSelectController.close}
         onPaginate={loadMoreMethods}
         titleProp={{
-          text: t('select_payment_method'),
+          text: t('select_payment_method', resolvedLang),
           textColor: theme === 'light' ? "#000" : "#fff"
         }}
         cancelButton={{
@@ -998,7 +998,7 @@ export default function Rates({ searchParams }: RatesPageProps) {
           view: <DialogCancel />
         }}
         searchProp={{
-          text: t('search'),
+          text: t('search', resolvedLang),
           onChange: handleMethodSearch,
           background: theme === 'light' ? "#f5f5f5" : "#272727",
           textColor: theme === 'light' ? "#000" : "#fff",
@@ -1006,13 +1006,13 @@ export default function Rates({ searchParams }: RatesPageProps) {
           autoFocus: false,
         }}
         loadingProp={{
-          view: <LoadingView text={t('loading')} />,
+          view: <LoadingView text={t('loading', resolvedLang)} />,
         }}
         noResultProp={{
-          view: <NoResultsView text={t('no_methods_found')} buttonText={t('try_again')} onButtonClick={loadMethods} />,
+          view: <NoResultsView text={t('no_methods_found', resolvedLang)} buttonText={t('try_again', resolvedLang)} onButtonClick={loadMethods} />,
         }}
         errorProp={{
-          view: <ErrorView text={t('error_occurred')} buttonText={t('try_again')} onButtonClick={loadMethods} />,
+          view: <ErrorView text={t('error_occurred', resolvedLang)} buttonText={t('try_again', resolvedLang)} onButtonClick={loadMethods} />,
         }}
         layoutProp={{
           gapBetweenHandleAndTitle: "16px",

@@ -119,7 +119,7 @@ export default function Terms({ searchParams }: TermsPageProps) {
                 </svg>
               </button>
             )}
-            <h1 className={styles.title}>{t('terms_of_service')}</h1>
+            <h1 className={styles.title}>{t('terms_of_service', resolvedLang)}</h1>
             {!hasValidSession && (
               <Link className={styles.logoContainer} href="/">
                 <Image className={styles.logo} src="/assets/image/academix-logo.png" alt="Academix Logo" width={40} height={40} priority />
@@ -132,84 +132,84 @@ export default function Terms({ searchParams }: TermsPageProps) {
       <div className={`${styles.innerBody} ${req ? styles[`innerBody_${req}`] : ''}`}>
         {config.showTitle && (
           <h1 className={`${styles.bigTitle} ${styles[`bigTitle_${resolvedTheme}`]}`}>
-            {t('terms_of_service')}
+            {t('terms_of_service', resolvedLang)}
           </h1>
         )}
         {config.showDescription && (
           <h4 className={`${styles.description} ${styles[`description_${resolvedTheme}`]}`}>
-            {t('terms_description')}
+            {t('terms_description', resolvedLang)}
           </h4>
         )}
         
         <div className={styles.contentContainer}>
           <div className={`${styles.section} ${styles[`section_${resolvedTheme}`]}`}>
-            <h2 className={styles.sectionTitle}>{t('terms_acceptance_title')}</h2>
-            <p className={styles.sectionText}>{t('terms_acceptance_text')}</p>
+            <h2 className={styles.sectionTitle}>{t('terms_acceptance_title', resolvedLang)}</h2>
+            <p className={styles.sectionText}>{t('terms_acceptance_text', resolvedLang)}</p>
           </div>
 
           <div className={`${styles.section} ${styles[`section_${resolvedTheme}`]}`}>
-            <h2 className={styles.sectionTitle}>{t('terms_eligibility_title')}</h2>
-            <p className={styles.sectionText}>{t('terms_eligibility_text')}</p>
+            <h2 className={styles.sectionTitle}>{t('terms_eligibility_title', resolvedLang)}</h2>
+            <p className={styles.sectionText}>{t('terms_eligibility_text', resolvedLang)}</p>
           </div>
 
           <div className={`${styles.section} ${styles[`section_${resolvedTheme}`]}`}>
-            <h2 className={styles.sectionTitle}>{t('terms_account_title')}</h2>
+            <h2 className={styles.sectionTitle}>{t('terms_account_title', resolvedLang)}</h2>
             <ul className={styles.list}>
-              <li>{t('terms_account_accurate')}</li>
-              <li>{t('terms_account_secure')}</li>
-              <li>{t('terms_account_responsible')}</li>
-              <li>{t('terms_account_notify')}</li>
+              <li>{t('terms_account_accurate', resolvedLang)}</li>
+              <li>{t('terms_account_secure', resolvedLang)}</li>
+              <li>{t('terms_account_responsible', resolvedLang)}</li>
+              <li>{t('terms_account_notify', resolvedLang)}</li>
             </ul>
           </div>
 
           <div className={`${styles.section} ${styles[`section_${resolvedTheme}`]}`}>
-            <h2 className={styles.sectionTitle}>{t('terms_adc_title')}</h2>
-            <p className={styles.sectionText}>{t('terms_adc_text')}</p>
+            <h2 className={styles.sectionTitle}>{t('terms_adc_title', resolvedLang)}</h2>
+            <p className={styles.sectionText}>{t('terms_adc_text', resolvedLang)}</p>
             <ul className={styles.list}>
-              <li>{t('terms_adc_rate')}</li>
-              <li>{t('terms_adc_non_refundable')}</li>
-              <li>{t('terms_adc_withdrawal')}</li>
+              <li>{t('terms_adc_rate', resolvedLang)}</li>
+              <li>{t('terms_adc_non_refundable', resolvedLang)}</li>
+              <li>{t('terms_adc_withdrawal', resolvedLang)}</li>
             </ul>
           </div>
 
           <div className={`${styles.section} ${styles[`section_${resolvedTheme}`]}`}>
-            <h2 className={styles.sectionTitle}>{t('terms_conduct_title')}</h2>
+            <h2 className={styles.sectionTitle}>{t('terms_conduct_title', resolvedLang)}</h2>
             <ul className={styles.list}>
-              <li>{t('terms_conduct_cheat')}</li>
-              <li>{t('terms_conduct_abuse')}</li>
-              <li>{t('terms_conduct_violate')}</li>
-              <li>{t('terms_conduct_impersonate')}</li>
+              <li>{t('terms_conduct_cheat', resolvedLang)}</li>
+              <li>{t('terms_conduct_abuse', resolvedLang)}</li>
+              <li>{t('terms_conduct_violate', resolvedLang)}</li>
+              <li>{t('terms_conduct_impersonate', resolvedLang)}</li>
             </ul>
           </div>
 
           <div className={`${styles.section} ${styles[`section_${resolvedTheme}`]}`}>
-            <h2 className={styles.sectionTitle}>{t('terms_ip_title')}</h2>
-            <p className={styles.sectionText}>{t('terms_ip_text')}</p>
+            <h2 className={styles.sectionTitle}>{t('terms_ip_title', resolvedLang)}</h2>
+            <p className={styles.sectionText}>{t('terms_ip_text', resolvedLang)}</p>
           </div>
 
           <div className={`${styles.section} ${styles[`section_${resolvedTheme}`]}`}>
-            <h2 className={styles.sectionTitle}>{t('terms_termination_title')}</h2>
-            <p className={styles.sectionText}>{t('terms_termination_text')}</p>
+            <h2 className={styles.sectionTitle}>{t('terms_termination_title', resolvedLang)}</h2>
+            <p className={styles.sectionText}>{t('terms_termination_text', resolvedLang)}</p>
           </div>
 
           <div className={`${styles.section} ${styles[`section_${resolvedTheme}`]}`}>
-            <h2 className={styles.sectionTitle}>{t('terms_liability_title')}</h2>
-            <p className={styles.sectionText}>{t('terms_liability_text')}</p>
+            <h2 className={styles.sectionTitle}>{t('terms_liability_title', resolvedLang)}</h2>
+            <p className={styles.sectionText}>{t('terms_liability_text', resolvedLang)}</p>
           </div>
 
           <div className={`${styles.section} ${styles[`section_${resolvedTheme}`]}`}>
-            <h2 className={styles.sectionTitle}>{t('terms_changes_title')}</h2>
-            <p className={styles.sectionText}>{t('terms_changes_text')}</p>
+            <h2 className={styles.sectionTitle}>{t('terms_changes_title', resolvedLang)}</h2>
+            <p className={styles.sectionText}>{t('terms_changes_text', resolvedLang)}</p>
           </div>
 
           <div className={`${styles.section} ${styles[`section_${resolvedTheme}`]}`}>
-            <h2 className={styles.sectionTitle}>{t('terms_contact_title')}</h2>
-            <p className={styles.sectionText}>{t('terms_contact_text')}</p>
+            <h2 className={styles.sectionTitle}>{t('terms_contact_title', resolvedLang)}</h2>
+            <p className={styles.sectionText}>{t('terms_contact_text', resolvedLang)}</p>
             <p className={styles.contactInfo}>support@academix.com</p>
           </div>
 
           <div className={`${styles.footer} ${styles[`footer_${resolvedTheme}`]}`}>
-            <p>{t('terms_last_updated')}: January 2025</p>
+            <p>{t('terms_last_updated', resolvedLang)}: January 2025</p>
             <p>© 2025 Jimstech Innovations Nigeria Limited</p>
           </div>
         </div>
