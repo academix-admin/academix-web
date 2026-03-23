@@ -375,6 +375,10 @@ export default function RolesPage() {
           );
         }
         return;
+      } else if (payment.status === 'TransactionStatus.failed') {
+        buyInBottomController.close();
+        setBuyInLoading(false);
+        throw new Error(payment.error ?? payment.status);
       }
 
       const transaction = new TransactionModel(payment.transaction_details);

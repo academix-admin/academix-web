@@ -35,6 +35,7 @@ import { useDialog } from '@/lib/DialogViewer';
 
 interface PaymentResponse {
   status: string;
+  error: string | null;
   transaction_details: any;
   payment_completion_mode?: string;
   payment_completion_data?: PaymentCompletionData;
@@ -380,6 +381,10 @@ export default function TopUpPage() {
           );
         }
         return;
+      } else if (status === 'TransactionStatus.failed') {
+        topUpBottomController.close();
+        setTopUpLoading(false);
+        throw new Error(payment.error ?? payment.status);
       }
 
       const transaction = new TransactionModel(payment.transaction_details);

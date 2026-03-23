@@ -34,6 +34,7 @@ import { useDialog } from '@/lib/DialogViewer';
 
 interface PaymentResponse {
   status: string;
+  error: string | null;
   transaction_details: any;
   payment_completion_mode?: string;
   payment_completion_data?: PaymentCompletionData;
@@ -378,6 +379,10 @@ export default function WithdrawPage() {
           );
         }
         return;
+      } else if (status === 'TransactionStatus.failed') {
+        withdrawBottomController.close();
+        setWithdrawLoading(false);
+        throw new Error(payment.error ?? payment.status);
       }
 
       const transaction = new TransactionModel(payment.transaction_details);

@@ -213,11 +213,9 @@ export default function QuizChallenge(props: QuizChallengeProps) {
                 userPin: userPin
             };
 
-            console.log("Engage Quiz Request Data:", requestData);
             const engagement = await engageQuiz(jwt, requestData);
             const status = engagement.status;
 
-            console.log("Engage Quiz Response:", engagement);
 
             if (status === 'PoolStatus.engaged' || status === 'PoolStatus.this_active') {
                 const quizModel = new UserDisplayQuizTopicModel(engagement.quiz_pool);
