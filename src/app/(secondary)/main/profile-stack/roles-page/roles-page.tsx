@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import styles from './roles-page.module.css';
@@ -28,7 +28,6 @@ import { usePaymentMethodModel } from '@/lib/stacks/payment-method-stack';
 import { usePaymentProfileModel } from '@/lib/stacks/payment-profile-stack';
 import { BottomViewer, useBottomController } from "@/lib/BottomViewer";
 import DialogCancel from '@/components/DialogCancel';
-import { StateStack } from '@/lib/state-stack';
 import CurrencySymbol from '@/components/CurrencySymbol/CurrencySymbol';
 import { useUserBalance } from '@/lib/stacks/user-balance-stack';
 import { TransactionModel } from '@/models/transaction-model';
@@ -83,6 +82,7 @@ export default function RolesPage() {
   const [academixProfileData, setAcademixProfileData] = useState<PaymentProfileModel | null>(null);
   const [continueState, setContinueState] = useState('initial');
   const [paymentActionMade, setPaymentActionMade] = useState(false);
+  const paymentActionMadeRef = useRef(false);
   const [pendingTransactionId, setPendingTransactionId] = useState<string | null>(null);
 
   const [, , , { clear: clearWallet }] = usePaymentWalletModel(lang);
@@ -171,6 +171,12 @@ export default function RolesPage() {
       setRole(roleData);
       setActivation(new RolesActivation(data.roles_activation_details));
       setPageState('data');
+      const isFresh = data.roles_activation_details?.roles_activation_is_fresh === true;
+      const pendingTxId = data.roles_activation_details?.transaction_id ?? null;
+      const actionMade = !isFresh || paymentActionMadeRef.current;
+      paymentActionMadeRef.current = actionMade;
+      setPaymentActionMade(actionMade);
+      setPendingTransactionId(pendingTxId ?? (paymentActionMadeRef.current ? pendingTransactionId : null));
     } catch(error) {
       console.log(error);
       setPageState('error');
@@ -393,6 +399,7 @@ export default function RolesPage() {
           setBuyInLoading(false);
           const shouldWaitForDialog = await handlePaymentCompletion(completionMode, completionData, transaction);
           if (!shouldWaitForDialog) {
+            paymentActionMadeRef.current = true;
             setPaymentActionMade(true);
             setPendingTransactionId(transaction.transactionId);
             await nav.push('view_transaction', { transactionId: transaction.transactionId });
@@ -400,6 +407,7 @@ export default function RolesPage() {
         } else {
           setBuyInLoading(false);
           buyInBottomController.close();
+          paymentActionMadeRef.current = true;
           setPaymentActionMade(true);
           setPendingTransactionId(transaction.transactionId);
           await nav.push('view_transaction', { transactionId: transaction.transactionId });
