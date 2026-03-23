@@ -491,10 +491,10 @@ export default function TopUpPage() {
     (selectedWalletData.paymentWalletRateType === 'RateType.PERCENT'
       ? amount * (selectedWalletData.paymentWalletFee ?? 0) / 100
       : selectedWalletData.paymentWalletRateType === 'RateType.FEE'
-      ? selectedWalletData.paymentWalletFee ?? 0
-      : selectedWalletData.paymentWalletRateType === 'RateType.FUNCTION'
-      ? Math.max(selectedWalletData.paymentWalletFeeFlat ?? 0, (amount * (selectedWalletData.paymentWalletFee ?? 0)) / 100)
-      : 0
+        ? selectedWalletData.paymentWalletFee ?? 0
+        : selectedWalletData.paymentWalletRateType === 'RateType.FUNCTION'
+          ? Math.max(selectedWalletData.paymentWalletFeeFlat ?? 0, (amount * (selectedWalletData.paymentWalletFee ?? 0)) / 100)
+          : 0
     ) : 0;
 
   const currency = selectedWalletData?.paymentWalletCurrency ?? "!";
@@ -528,6 +528,7 @@ export default function TopUpPage() {
           onWalletData={handleWalletData}
           onWalletAmount={handleAmount}
           entryMode
+          scopeKey="top_up_flow"
         />
 
         {showMethods && (
@@ -535,6 +536,7 @@ export default function TopUpPage() {
             profileType={'ProfileType.buy'}
             walletId={selectedWalletData.paymentWalletId}
             onMethodSelect={handleMethodData}
+            scopeKey="top_up_flow"
           />
         )}
 
@@ -546,6 +548,7 @@ export default function TopUpPage() {
               methodType={selectedMethodData.paymentMethodChecker}
               onProfileSelect={handleProfileData}
               onCreateProfile={createProfile}
+              scopeKey="top_up_flow"
             />
 
             {selectedMethodData.paymentMethodBuyMultiple && (
@@ -643,37 +646,14 @@ export default function TopUpPage() {
               </div>
 
               <div className={styles.divider} />
-
-              {/* Payment Method */}
-              <div className={styles.paymentMethodSection}>
-                <h3 className={styles.paymentMethodTitle}>{t('payment_method')}</h3>
-
-                <div className={styles.walletCard}>
-                  <div className={styles.walletIcon}>
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                      <path
-                        d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                      />
-                      <path
-                        d="M16 14a2 2 0 11-4 0 2 2 0 014 0z"
-                        fill="currentColor"
-                      />
-                    </svg>
-                  </div>
-
-                  <div className={styles.walletInfo}>
-                    <div className={styles.walletName}>
-                      {t('wallet_text')} (
-                      <span className={styles.academixBalance}>
-                        <CurrencySymbol /> {formatNumber(balance)}
-                      </span>
-                      )
-                    </div>
-                  </div>
-                </div>
+              {/* Total amount */}
+              <div className={styles.infoRow}>
+                <span className={styles.infoLabel}>{t('total')}:</span>
+                <span className={styles.infoValue}>
+                  {currency} {formatNumber(amount + fee)}
+                </span>
               </div>
+              <div className={styles.divider} />
 
               {/* Pay Button */}
               <button

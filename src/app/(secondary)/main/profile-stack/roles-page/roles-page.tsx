@@ -18,9 +18,11 @@ import React from 'react';
 import PaymentWallet from '../../payment-stack/payment-wallet/payment-wallet';
 import PaymentMethod from '../../payment-stack/payment-method/payment-method';
 import PaymentProfile from '../../payment-stack/payment-profile/payment-profile';
+import PaymentRedirect, { useRedirectController } from '../../payment-stack/payment-redirect/payment-redirect';
 import { PaymentWalletModel } from '@/models/payment-wallet-model';
 import { PaymentMethodModel } from '@/models/payment-method-model';
 import { PaymentProfileModel } from '@/models/payment-profile-model';
+import { PaymentCompletionData } from '@/models/completion-data';
 import { usePaymentWalletModel } from '@/lib/stacks/payment-wallet-stack';
 import { usePaymentMethodModel } from '@/lib/stacks/payment-method-stack';
 import { usePaymentProfileModel } from '@/lib/stacks/payment-profile-stack';
@@ -29,6 +31,10 @@ import DialogCancel from '@/components/DialogCancel';
 import { StateStack } from '@/lib/state-stack';
 import CurrencySymbol from '@/components/CurrencySymbol/CurrencySymbol';
 import { useUserBalance } from '@/lib/stacks/user-balance-stack';
+import { TransactionModel } from '@/models/transaction-model';
+import { useTransactionModel } from '@/lib/stacks/transactions-stack';
+import { transactionSubscriptionManager } from '@/lib/managers/TransactionSubscriptionManager';
+import { TransactionChangeEvent } from '@/lib/managers/TransactionSubscriptionManager';
 
 function getRoleIcon(checker: string): React.JSX.Element {
   switch (checker) {
@@ -64,12 +70,20 @@ export default function RolesPage() {
 
   const pinErrorDialog = useDialog();
   const errorDialog = useDialog();
+  const ussdDialog = useDialog();
+  const bankTransferDialog = useDialog();
+  const redirectController = useRedirectController();
+  const [currentTransactionId, setCurrentTransactionId] = useState<string | null>(null);
+  const [pinErrorType, setPinErrorType] = useState<'not_set' | 'incorrect' | 'locked' | null>(null);
+  const [transactionModels, , setTransactionModels] = useTransactionModel(lang);
 
   const [selectedWalletData, setSelectedWalletData] = useState<PaymentWalletModel | null>(null);
   const [selectedMethodData, setSelectedMethodData] = useState<PaymentMethodModel | null>(null);
   const [selectedProfileData, setSelectedProfileData] = useState<PaymentProfileModel | null>(null);
   const [academixProfileData, setAcademixProfileData] = useState<PaymentProfileModel | null>(null);
   const [continueState, setContinueState] = useState('initial');
+  const [paymentActionMade, setPaymentActionMade] = useState(false);
+  const [pendingTransactionId, setPendingTransactionId] = useState<string | null>(null);
 
   const [, , , { clear: clearWallet }] = usePaymentWalletModel(lang);
   const [, , , { clear: clearMethod }] = usePaymentMethodModel(lang);
@@ -222,6 +236,56 @@ export default function RolesPage() {
     }
   };
 
+  const handlePaymentCompletion = async (
+    paymentCompletionMode: string | undefined,
+    paymentCompletionData: PaymentCompletionData | undefined,
+    transactionModel: TransactionModel
+  ): Promise<boolean> => {
+    if (paymentCompletionMode === 'PaymentCompletion.redirect') {
+      const link = paymentCompletionData?.link;
+      if (link) await redirectController.open(link);
+      return false;
+    }
+
+    if (paymentCompletionMode === 'PaymentCompletion.ussd') {
+      const code = paymentCompletionData?.code;
+      if (code) {
+        setCurrentTransactionId(transactionModel.transactionId);
+        ussdDialog.open(
+          <div style={{ textAlign: 'center' }}>
+            <p>{t('ussd_code_message')}</p>
+            <p style={{ fontSize: '24px', fontWeight: 'bold', margin: '16px 0', color: theme === 'light' ? '#000' : '#fff' }}>
+              {code}
+            </p>
+          </div>
+        );
+      }
+      return true;
+    }
+
+    if (paymentCompletionMode === 'PaymentCompletion.banktransfer') {
+      const bank = paymentCompletionData?.bank;
+      const account = paymentCompletionData?.account;
+      const amount = paymentCompletionData?.amount;
+      const reference = paymentCompletionData?.reference;
+      const note = paymentCompletionData?.note;
+      const expire = paymentCompletionData?.expire;
+      setCurrentTransactionId(transactionModel.transactionId);
+      bankTransferDialog.open(
+        <div style={{ textAlign: 'left' }}>
+          <div style={{ marginBottom: '12px' }}><strong>{t('bank_text')}:</strong> {bank}</div>
+          <div style={{ marginBottom: '12px' }}><strong>{t('account_text')}:</strong> {account}</div>
+          <div style={{ marginBottom: '12px' }}><strong>{t('amount_text')}:</strong> {amount}</div>
+          <div style={{ marginBottom: '12px' }}><strong>{t('reference_text')}:</strong> {reference}</div>
+          {note && <div style={{ marginBottom: '12px' }}><strong>{t('note_text')}:</strong> {note}</div>}
+          {expire && <div style={{ marginBottom: '12px', color: '#FF3B30' }}><strong>{t('expires_text', { date: new Date(expire).toLocaleString() })}:</strong></div>}
+        </div>
+      );
+      return true;
+    }
+    return false;
+  };
+
   const handleBuyIn = async (userPin: string) => {
     if (!userData || !activation) return;
     try {
@@ -281,36 +345,70 @@ export default function RolesPage() {
       const payment = await response.json();
 
       if (payment.status === 'TransactionStatus.pinError') {
+        buyInBottomController.close();
         setBuyInLoading(false);
+
         if (payment.not_set) {
-          pinErrorDialog.open(<p style={{ textAlign: 'center' }}>{t('pin_not_set_message')}</p>);
+          setPinErrorType('not_set');
+          pinErrorDialog.open(
+            <div style={{ textAlign: 'center' }}>
+              <p>{t('pin_not_set_message')}</p>
+            </div>
+          );
         } else if ((payment.attempts_left ?? 0) > 0) {
+          setPinErrorType('incorrect');
           pinErrorDialog.open(
             <div style={{ textAlign: 'center' }}>
               <p>{t('incorrect_pin_message')}</p>
-              <p style={{ color: '#FF3B30', fontWeight: 600 }}>{payment.attempts_left} {t('attempts_remaining')}</p>
+              <p style={{ color: '#FF3B30', fontWeight: 600, marginTop: '8px' }}>
+                {payment.attempts_left} {t('attempts_remaining')}
+              </p>
             </div>
           );
-        } else {
+        } else if (payment.locked_until) {
+          setPinErrorType('locked');
           pinErrorDialog.open(
             <div style={{ textAlign: 'center' }}>
               <p style={{ color: '#FF3B30' }}>{t('pin_locked_message')}</p>
-              <p>{t('locked_until')}: {new Date(payment.locked_until).toLocaleString()}</p>
+              <p style={{ marginTop: '8px' }}>{t('locked_until')}: {new Date(payment.locked_until).toLocaleString()}</p>
             </div>
           );
         }
         return;
       }
 
-      if (payment.status === 'TransactionStatus.success') {
-        buyInBottomController.close();
-        setActivation(prev => prev ? prev.copyWith({ rolesActivationActivated: true, rolesActivationAmount: 0 }) : prev);
+      const transaction = new TransactionModel(payment.transaction_details);
+      const completionMode = payment.payment_completion_mode;
+      const completionData = new PaymentCompletionData(payment.payment_completion_data);
+
+      if (payment.transaction_details) {
+        setTransactionModels([transaction, ...transactionModels]);
+
+        if (completionMode) {
+          buyInBottomController.close();
+          setBuyInLoading(false);
+          const shouldWaitForDialog = await handlePaymentCompletion(completionMode, completionData, transaction);
+          if (!shouldWaitForDialog) {
+            setPaymentActionMade(true);
+            setPendingTransactionId(transaction.transactionId);
+            await nav.pushAndPopUntil('view_transaction', (entry: any) => entry.key === 'profile_page', { transactionId: transaction.transactionId });
+          }
+        } else {
+          setBuyInLoading(false);
+          buyInBottomController.close();
+          setPaymentActionMade(true);
+          setPendingTransactionId(transaction.transactionId);
+          await nav.pushAndPopUntil('view_transaction', (entry: any) => entry.key === 'profile_page', { transactionId: transaction.transactionId });
+        }
       }
-      setBuyInLoading(false);
     } catch {
       setBuyInLoading(false);
       buyInBottomController.close();
-      errorDialog.open(<p style={{ textAlign: 'center' }}>{t('error_occurred')}</p>);
+      errorDialog.open(
+        <div style={{ textAlign: 'center' }}>
+          <p>{t('error_occurred')}</p>
+        </div>
+      );
     }
   };
 
@@ -318,6 +416,32 @@ export default function RolesPage() {
     buyInBottomController.close();
     nav.pushWith('pin', { requireObjects: ['pin_controller'] });
   };
+
+  const handleTransactionChange = useCallback((event: TransactionChangeEvent) => {
+    const { eventType, newRecord: transaction } = event;
+    if (eventType !== 'UPDATE' || !transaction || transaction.transactionId !== pendingTransactionId) return;
+
+    const senderDone = transaction.transactionSenderStatus === 'TransactionStatus.success';
+    const receiverDone = transaction.transactionReceiverStatus === 'TransactionStatus.success';
+
+    if (senderDone && receiverDone) {
+      transactionSubscriptionManager.removeTransactionId(transaction.transactionId);
+      setPendingTransactionId(null);
+      load();
+    }
+  }, [pendingTransactionId, load]);
+
+  useEffect(() => {
+    if (!pendingTransactionId) return;
+
+    const added = transactionSubscriptionManager.addTransactionId(pendingTransactionId, { override: false, update: true });
+    if (added) transactionSubscriptionManager.updateSubscription();
+
+    transactionSubscriptionManager.attachListener(handleTransactionChange);
+    return () => {
+      transactionSubscriptionManager.removeListener(handleTransactionChange);
+    };
+  }, [pendingTransactionId, handleTransactionChange]);
 
   const goBack = async () => { await nav.pop(); };
 
@@ -399,55 +523,59 @@ export default function RolesPage() {
             {/* Payment selection for paid roles */}
             {!activation.rolesActivationActivated && needsPayment && (
               <div style={{ marginTop: '24px' }}>
-                <PaymentWallet
-                  profileType={'ProfileType.buy'}
-                  onWalletData={handleWalletData}
-                />
-
-                {showMethods && (
-                  <PaymentMethod
-                    profileType={'ProfileType.buy'}
-                    walletId={selectedWalletData!.paymentWalletId}
-                    onMethodSelect={handleMethodData}
-                  />
-                )}
-
-                {showProfile && (
+                {!paymentActionMade && (
                   <>
-                    <PaymentProfile
+                    <PaymentWallet
                       profileType={'ProfileType.buy'}
-                      methodId={selectedMethodData!.paymentMethodId}
-                      methodType={selectedMethodData!.paymentMethodChecker}
-                      onProfileSelect={handleProfileData}
-                      onCreateProfile={createProfile}
+                      onWalletData={handleWalletData}
+                      scopeKey="roles_flow"
                     />
-                    {selectedMethodData!.paymentMethodBuyMultiple && (
-                      <button className={styles.newProfileButton} onClick={createProfile}>
-                        + {t('new_profile')}
-                      </button>
+
+                    {showMethods && (
+                      <PaymentMethod
+                        profileType={'ProfileType.buy'}
+                        walletId={selectedWalletData!.paymentWalletId}
+                        onMethodSelect={handleMethodData}
+                        scopeKey="roles_flow"
+                      />
+                    )}
+
+                    {showProfile && (
+                      <>
+                        <PaymentProfile
+                          profileType={'ProfileType.buy'}
+                          methodId={selectedMethodData!.paymentMethodId}
+                          methodType={selectedMethodData!.paymentMethodChecker}
+                          onProfileSelect={handleProfileData}
+                          onCreateProfile={createProfile}
+                          scopeKey="roles_flow"
+                        />
+                        {selectedMethodData!.paymentMethodBuyMultiple && (
+                          <button className={styles.newProfileButton} onClick={createProfile}>
+                            + {t('new_profile')}
+                          </button>
+                        )}
+                      </>
+                    )}
+
+                    {showActivate && (
+                      <div className={styles.continueButtonWrapper}>
+                        <button className={styles.continueButton} onClick={handleSubmit}>
+                          {t('continue')}
+                        </button>
+                      </div>
                     )}
                   </>
                 )}
 
-                {showActivate && (
+                {paymentActionMade && (
                   <div className={styles.continueButtonWrapper}>
-                    <button className={styles.continueButton} onClick={handleSubmit}>
-                      {t('continue')}
+                    <button className={styles.continueButton} onClick={load}>
+                      {t('payment_completed_text')}
                     </button>
                   </div>
                 )}
               </div>
-            )}
-
-            {/* Activate button for free roles */}
-            {!activation.rolesActivationActivated && !needsPayment && (
-              <button
-                className={styles.activateButton}
-                onClick={getUserPin}
-                disabled={buyInLoading}
-              >
-                {buyInLoading ? <span className={styles.spinner} /> : t('activate_text') ?? 'Activate'}
-              </button>
             )}
           </>
         )}
@@ -508,6 +636,17 @@ export default function RolesPage() {
                 <span className={styles.infoValue}>{currency} {fee.toFixed(2)}</span>
               </div>
 
+              <div className={styles.divider} />
+              {/* Total amount */}
+              <div className={styles.infoRow}>
+                <span className={styles.infoLabel}>{t('total')}:</span>
+                <span className={styles.infoValue}>
+                  {currency} {formatNumber(walletAmount + fee)}
+                </span>
+              </div>
+              <div className={styles.divider} />
+
+
               <button
                 onClick={getUserPin}
                 type="button"
@@ -522,11 +661,70 @@ export default function RolesPage() {
         </div>
       </BottomViewer>
 
+      <PaymentRedirect controller={redirectController} />
+
       <pinErrorDialog.DialogViewer
         title={t('pin_error')}
-        buttons={[{ text: t('ok_text'), variant: 'primary', onClick: () => pinErrorDialog.close() }]}
-        showCancel={false}
+        buttons={[{
+          text: t('ok_text'),
+          variant: 'primary',
+          onClick: async () => {
+            pinErrorDialog.close();
+            if (pinErrorType === 'not_set') {
+              setPinErrorType(null);
+              await (await nav.goToGroupId('profile-stack')).push('security_verification', {
+                request: 'Pin',
+                isNew: true,
+                returnGroup: 'profile-stack'
+              });
+            }
+          }
+        }]}
+        showCancel={true}
+        cancelText={t('cancel_text')}
         closeOnBackdrop={false}
+        layoutProp={{
+          backgroundColor: theme === 'light' ? '#fff' : '#121212',
+          margin: '16px 16px',
+          titleColor: theme === 'light' ? '#1a1a1a' : '#fff',
+        }}
+      />
+
+      <ussdDialog.DialogViewer
+        title={t('ussd_code')}
+        buttons={[{
+          text: t('ok_text'),
+          variant: 'primary',
+          onClick: async () => {
+            ussdDialog.close();
+            if (currentTransactionId) {
+              await nav.pushAndPopUntil('view_transaction', (entry: any) => entry.key === 'profile_page', { transactionId: currentTransactionId });
+            }
+          }
+        }]}
+        showCancel={false}
+        closeOnBackdrop={true}
+        layoutProp={{
+          backgroundColor: theme === 'light' ? '#fff' : '#121212',
+          margin: '16px 16px',
+          titleColor: theme === 'light' ? '#1a1a1a' : '#fff',
+        }}
+      />
+
+      <bankTransferDialog.DialogViewer
+        title={t('bank_transfer_details')}
+        buttons={[{
+          text: t('ok_text'),
+          variant: 'primary',
+          onClick: async () => {
+            bankTransferDialog.close();
+            if (currentTransactionId) {
+              await nav.pushAndPopUntil('view_transaction', (entry: any) => entry.key === 'profile_page', { transactionId: currentTransactionId });
+            }
+          }
+        }]}
+        showCancel={false}
+        closeOnBackdrop={true}
         layoutProp={{
           backgroundColor: theme === 'light' ? '#fff' : '#121212',
           margin: '16px 16px',

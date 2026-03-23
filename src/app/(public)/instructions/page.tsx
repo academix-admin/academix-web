@@ -84,7 +84,7 @@ export default function Instructions({ searchParams }: InstructionsPageProps) {
         ...(() => {
           const selected = roles[selectedRoleIndex];
           const buyIn = selected?.roles_buy_in ?? 0;
-          return buyIn > 0 ? [`Pay buy in: *${buyIn.toLocaleString()} ADC*`] : [];
+          return buyIn > 0 ? [t('step_pay_buy_in', { amount: buyIn.toLocaleString() }, resolvedLang)] : [];
         })(),
         t('step_obtain_kyc', resolvedLang),
       ] 

@@ -7,8 +7,8 @@ import NavigationStack from "@/lib/NavigationStack";
 import PaymentPage from "./payment-page/payment-page";
 import TopUpPage from "./top-up-page/top-up-page";
 import WithdrawPage from "./withdraw-page/withdraw-page";
-import ViewTransactionPage from "./view-transaction-page/view-transaction-page";
-import NewProfilePage from "./new-profile-page/new-profile-page";
+import ViewTransactionPage from "../shared/view-transaction-page/view-transaction-page";
+import NewProfilePage from "../shared/new-profile-page/new-profile-page";
 import RatesPage from "../shared/rates-page/rates-page";
 import Pin from "../shared/pin/pin";
 

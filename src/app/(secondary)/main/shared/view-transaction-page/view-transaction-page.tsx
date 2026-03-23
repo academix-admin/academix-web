@@ -162,6 +162,8 @@ export default function ViewTransactionPage(props: ViewTransactionProps) {
         return t('quiz_payment_text');
       case 'TransactionType.participation':
         return t('participation_fee_text');
+      case 'TransactionType.buy_in':
+        return t('buy_in_text');
       default:
         return t('transaction_text');
     }
@@ -444,6 +446,8 @@ export default function ViewTransactionPage(props: ViewTransactionProps) {
     switch (transactionType) {
       case 'TransactionType.top_up':
         return senderMethod;
+      case 'TransactionType.buy_in':
+        return senderMethod;
       case 'TransactionType.academix':
         return null;
       case 'TransactionType.airtime':
@@ -472,6 +476,8 @@ export default function ViewTransactionPage(props: ViewTransactionProps) {
       case 'TransactionType.withdraw':
         return currentTransaction.paymentProfileReceiverDetails?.userDetails.paymentDetails ?? null;
       case 'TransactionType.top_up':
+        return currentTransaction.paymentProfileSenderDetails?.userDetails.paymentDetails ?? null;
+      case 'TransactionType.buy_in':
         return currentTransaction.paymentProfileSenderDetails?.userDetails.paymentDetails ?? null;
       case 'TransactionType.payment':
         return null;

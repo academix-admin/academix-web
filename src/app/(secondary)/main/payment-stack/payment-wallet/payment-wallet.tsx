@@ -29,6 +29,7 @@ interface PaymentWalletProps {
   entryMode?: boolean;
   paymentWalletId?: string | null;
   modify?: boolean;
+  scopeKey?: string;
 }
 
 interface WalletItemProps {
@@ -76,7 +77,7 @@ const WalletItem = ({ onClick, wallet, isSelected }: WalletItemProps) => {
   );
 };
 
-export default function PaymentWallet({ profileType, onWalletData, onWalletAmount, entryMode = false, paymentWalletId, modify = true }: PaymentWalletProps) {
+export default function PaymentWallet({ profileType, onWalletData, onWalletAmount, entryMode = false, paymentWalletId, modify = true, scopeKey = 'payment_flow' }: PaymentWalletProps) {
   const { theme } = useTheme();
   const { t, lang } = useLanguage();
   const nav = useNav();
@@ -113,7 +114,7 @@ export default function PaymentWallet({ profileType, onWalletData, onWalletAmoun
   const [walletSelectId, walletSelectController, walletSelectIsOpen, walletSelectionState] = useSelectionController();
   const [searchWalletQuery, setWalletQuery] = useState('');
 
-  const [walletsModel, demandPaymentWalletModel, setPaymentWalletModel, { isHydrated }] = usePaymentWalletModel(lang);
+  const [walletsModel, demandPaymentWalletModel, setPaymentWalletModel, { isHydrated }] = usePaymentWalletModel(lang, scopeKey);
 
   useEffect(() => {
     if(!walletData)return;

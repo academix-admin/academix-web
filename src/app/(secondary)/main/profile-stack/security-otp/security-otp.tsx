@@ -205,6 +205,7 @@ interface SecurityOtpProps {
   verification: 'Email' | 'Phone';
   value: string;
   isNew: boolean;
+  returnGroup: string | undefined;
 }
 
 export default function SecurityOtp(props: SecurityOtpProps) {
@@ -224,7 +225,7 @@ export default function SecurityOtp(props: SecurityOtpProps) {
   const [isRequesting, setIsRequesting] = useState(false);
   const [canGoBack, setCanGoBack] = useState(false);
 
-  const { verification, request, value, isNew } = props;
+  const { verification, request, value, isNew, returnGroup } = props;
   const disableOperation = isLoading || isRequesting || (otpTimer.isRunning && remainingSeconds > 0);
 
   const firstInputRef = useRef<HTMLInputElement>(null);
@@ -312,7 +313,7 @@ export default function SecurityOtp(props: SecurityOtpProps) {
       } else {
         // OTP verified successfully
       if(request === 'Pin') {
-        nav.pushAndPopUntil('pin_mangement', (entry)=> entry.key === (isNew ? 'profile_page' : 'security_page'), { isNew: isNew ?? false });
+        nav.pushAndPopUntil('pin_mangement', (entry)=> entry.key === (isNew ? 'profile_page' : 'security_page'), { isNew: isNew ?? false, returnGroup: returnGroup });
       } else {
         nav.pushAndPopUntil('password_management', (entry)=> entry.key === 'security_page');
       }

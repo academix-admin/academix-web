@@ -75,6 +75,7 @@ export default function QuizChallenge(props: QuizChallengeProps) {
     const [selectedRedeemCodeModel, setSelectedRedeemCodeModel] = useState<RedeemCodeModel | null>(null);
     const [selectedSkip, setSelectedSkip] = useState(false);
     const [quizLoading, setQuizLoading] = useState(false);
+    const openRedeemCodeRef = useRef<(() => void) | null>(null);
 
     const errorDialog = useDialog();
 
@@ -359,6 +360,7 @@ export default function QuizChallenge(props: QuizChallengeProps) {
                     <QuizRedeemCode
                         onRedeemCodeSelect={setSelectedRedeemCodeModel}
                         onSkip={setSelectedSkip}
+                        onRegisterOpen={(fn) => { openRedeemCodeRef.current = fn; }}
                     />
                 )}
                 {showBottom && (
@@ -435,6 +437,14 @@ export default function QuizChallenge(props: QuizChallengeProps) {
                         </div>
 
                         <div className={styles.divider} />
+                        {/* Total amount */}
+                        <div className={styles.infoRow}>
+                            <span className={styles.infoLabel}>{t('total')}:</span>
+                            <span className={styles.infoValue}>
+                                <CurrencySymbol /> {formatNumber(selectedChallengeModel?.challengePrice || 0)}
+                            </span>
+                        </div>
+                        <div className={styles.divider} />
 
                         {/* Payment Method */}
                         <div className={styles.paymentMethodSection}>
@@ -465,6 +475,18 @@ export default function QuizChallenge(props: QuizChallengeProps) {
                                     </div>
                                     {!codeCheck && <span> {t('insufficient_balance')} </span>}
                                 </div>
+
+                                <button
+                                    type="button"
+                                    className={styles.walletAddButton}
+                                    onClick={() => {
+                                        withdrawBottomController.close();
+                                        openRedeemCodeRef.current?.();
+                                    }}
+                                    aria-label="Add redeem code"
+                                >
+                                    +
+                                </button>
                             </div>
 
                             <div className={styles.walletCard}>

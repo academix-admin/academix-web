@@ -90,6 +90,7 @@ export default function QuizCommitment(props: QuizChallengeProps) {
   const [quizLoading, setQuizLoading] = useState(false);
   const [error, setError] = useState('');
   const [infoState, setInfoState] = useState('');
+  const openRedeemCodeRef = useRef<(() => void) | null>(null);
 
   const [withdrawBottomViewerId, withdrawBottomController, withdrawBottomIsOpen] = useBottomController();
 
@@ -578,6 +579,7 @@ export default function QuizCommitment(props: QuizChallengeProps) {
           <QuizRedeemCode
             onRedeemCodeSelect={setSelectedRedeemCodeModel}
             onSkip={setSelectedSkip}
+            onRegisterOpen={(fn) => { openRedeemCodeRef.current = fn; }}
           />
         )}
         {showBottom && currentQuiz && action != 'active' && (
@@ -693,6 +695,14 @@ export default function QuizCommitment(props: QuizChallengeProps) {
             </div>
 
             <div className={styles.divider} />
+            {/* Total amount */}
+            <div className={styles.infoRow}>
+              <span className={styles.infoLabel}>{t('total')}:</span>
+              <span className={styles.infoValue}>
+                <CurrencySymbol /> {formatNumber(selectedChallengeModel?.challengePrice || 0)}
+              </span>
+            </div>
+            <div className={styles.divider} />
 
             {/* Payment Method */}
             <div className={styles.paymentMethodSection}>
@@ -723,6 +733,18 @@ export default function QuizCommitment(props: QuizChallengeProps) {
                   </div>
                   {!codeCheck && <span> {t('insufficient_balance')} </span>}
                 </div>
+
+                <button
+                  type="button"
+                  className={styles.walletAddButton}
+                  onClick={() => {
+                    withdrawBottomController.close();
+                    openRedeemCodeRef.current?.();
+                  }}
+                  aria-label="Add redeem code"
+                >
+                  +
+                </button>
               </div>
 
               <div className={styles.walletCard}>

@@ -295,6 +295,8 @@ export default function PaymentTransactions({ onStateChange }: ComponentStatePro
         return t('quiz_payment_text');
       case 'TransactionType.participation':
         return t('participation_fee_text');
+      case 'TransactionType.buy_in':
+        return t('buy_in_text');
       default:
         return t('transaction_text');
     }
@@ -311,6 +313,8 @@ export default function PaymentTransactions({ onStateChange }: ComponentStatePro
           return transaction.transactionReceiverStatus;
         case 'TransactionType.participation':
           return transaction.transactionReceiverStatus;
+        case 'TransactionType.buy_in':
+          return transaction.transactionSenderStatus;
         default:
           return null;
       }
@@ -329,6 +333,8 @@ export default function PaymentTransactions({ onStateChange }: ComponentStatePro
         return transaction.transactionReceiverAmount;
       case 'TransactionType.participation':
         return transaction.transactionReceiverAmount;
+      case 'TransactionType.buy_in':
+        return transaction.transactionSenderAmount;
       default:
         return 0;
     }

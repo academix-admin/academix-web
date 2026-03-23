@@ -392,7 +392,7 @@ export default function Rewards({ searchParams }: RewardsPageProps) {
                 </div>
 
                 <div className={styles.factorsGrid}>
-                  <h4 className={styles.factorsTitle}>What contributes to your ratio:</h4>
+                  <h4 className={styles.factorsTitle}>{t('what_contributes_ratio', resolvedLang)}</h4>
                   <div className={styles.factorsList}>
                     {content.academixRatio.factors.map((factor, index) => (
                       <div key={index} className={styles.factorItem}>
@@ -406,7 +406,7 @@ export default function Rewards({ searchParams }: RewardsPageProps) {
                 <div className={styles.exampleBox}>
                   <div className={styles.exampleIcon}>💡</div>
                   <div className={styles.exampleContent}>
-                    <strong>Example:</strong> {content.academixRatio.example}
+                    <strong>{t('example_text', resolvedLang)}:</strong> {content.academixRatio.example}
                   </div>
                 </div>
               </div>
@@ -419,7 +419,7 @@ export default function Rewards({ searchParams }: RewardsPageProps) {
               <div className={styles.sectionHeader}>
                 <h2 className={styles.sectionTitle}>{content.streaks.title}</h2>
                 <div className={styles.streakCount}>
-                  {exampleData.streaks.filter(s => s.completed).length}/7 days
+                  {t('x_of_7_days', { count: exampleData.streaks.filter(s => s.completed).length }, resolvedLang)}
                 </div>
               </div>
 
@@ -428,7 +428,7 @@ export default function Rewards({ searchParams }: RewardsPageProps) {
 
                 <div className={styles.streakInfo}>
                   <div className={styles.infoItem}>
-                    <span className={styles.infoLabel}>Cycle:</span>
+                    <span className={styles.infoLabel}>{t('cycle_text', resolvedLang)}:</span>
                     <span className={styles.infoValue}>{content.streaks.cycle}</span>
                   </div>
                 </div>
@@ -449,12 +449,12 @@ export default function Rewards({ searchParams }: RewardsPageProps) {
                 <div className={styles.exampleBox}>
                   <div className={styles.exampleIcon}>💡</div>
                   <div className={styles.exampleContent}>
-                    <strong>Example:</strong> {content.streaks.example}
+                    <strong>{t('example_text', resolvedLang)}:</strong> {content.streaks.example}
                   </div>
                 </div>
 
                 <div className={styles.totalReward}>
-                  <span className={styles.totalLabel}>Period Potential:</span>
+                  <span className={styles.totalLabel}>{t('period_potential', resolvedLang)}:</span>
                   <span className={styles.totalValue}>{content.streaks.total}</span>
                 </div>
               </div>
@@ -480,7 +480,7 @@ export default function Rewards({ searchParams }: RewardsPageProps) {
                   <div className={styles.exampleBox}>
                     <div className={styles.exampleIcon}>🎯</div>
                     <div className={styles.exampleContent}>
-                      <strong>Example:</strong> {content.milestones.missions.example}
+                      <strong>{t('example_text', resolvedLang)}:</strong> {content.milestones.missions.example}
                     </div>
                   </div>
                 </div>
@@ -496,7 +496,7 @@ export default function Rewards({ searchParams }: RewardsPageProps) {
                   <div className={styles.exampleBox}>
                     <div className={styles.exampleIcon}>🏆</div>
                     <div className={styles.exampleContent}>
-                      <strong>Example:</strong> {content.milestones.achievements.example}
+                      <strong>{t('example_text', resolvedLang)}:</strong> {content.milestones.achievements.example}
                     </div>
                   </div>
                 </div>
@@ -504,7 +504,7 @@ export default function Rewards({ searchParams }: RewardsPageProps) {
 
               <div className={styles.redeemNote}>
                 <div className={styles.noteIcon}>🔑</div>
-                <p>All milestone rewards are automatically converted to redeem codes and can be redeemed to play quiz</p>
+                <p>{t('milestone_redeem_note', resolvedLang)}</p>
               </div>
             </div>
           </section>
@@ -514,14 +514,14 @@ export default function Rewards({ searchParams }: RewardsPageProps) {
             <div className={`${styles.sectionCard} ${styles[`sectionCard_${resolvedTheme}`]}`}>
               <div className={styles.sectionHeader}>
                 <h2 className={styles.sectionTitle}>{content.friends.title}</h2>
-                <div className={styles.friendsCount}>{exampleData.friends.length} examples</div>
+                <div className={styles.friendsCount}>{t('n_examples', { count: exampleData.friends.length }, resolvedLang)}</div>
               </div>
 
               <div className={styles.friendsContent}>
                 <p className={styles.description}>{content.friends.description}</p>
 
                 <div className={styles.requirements}>
-                  <h4>Requirements:</h4>
+                  <h4>{t('requirements_text', resolvedLang)}:</h4>
                   <ol className={styles.requirementsList}>
                     {content.friends.requirements.map((requirement, index) => (
                       <li key={index} className={styles.requirementItem}>
@@ -533,7 +533,7 @@ export default function Rewards({ searchParams }: RewardsPageProps) {
                 </div>
 
                 <div className={styles.friendsExamples}>
-                  <h4>Example Friends:</h4>
+                  <h4>{t('example_friends', resolvedLang)}:</h4>
                   <div className={styles.friendsList}>
                     {exampleData.friends.map((friend, index) => (
                       <div key={index} className={styles.friendExample}>
@@ -553,13 +553,13 @@ export default function Rewards({ searchParams }: RewardsPageProps) {
                 <div className={styles.exampleBox}>
                   <div className={styles.exampleIcon}>💡</div>
                   <div className={styles.exampleContent}>
-                    <strong>How to claim:</strong> {content.friends.example}
+                    <strong>{t('how_to_claim', resolvedLang)}:</strong> {content.friends.example}
                   </div>
                 </div>
 
                 <div className={styles.rewardHighlight}>
                   <span className={styles.rewardAmount}><CurrencySymbol size={16} />300</span>
-                  <span className={styles.rewardDescription}>per qualified friend</span>
+                  <span className={styles.rewardDescription}>{t('per_qualified_friend', resolvedLang)}</span>
                 </div>
               </div>
             </div>

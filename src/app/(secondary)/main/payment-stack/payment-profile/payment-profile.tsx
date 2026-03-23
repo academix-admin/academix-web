@@ -26,6 +26,7 @@ interface PaymentProfileProps {
   methodType: string;
   onProfileSelect: (profile: PaymentProfileModel) => void;
   onCreateProfile: () => void;
+  scopeKey?: string;
 }
 
 interface ProfileItemProps {
@@ -137,7 +138,7 @@ const ProfileItem = ({ onClick, profile, methodType, isSelected }: ProfileItemPr
   );
 };
 
-export default function PaymentProfile({ profileType, methodId, methodType, onProfileSelect, onCreateProfile }: PaymentProfileProps) {
+export default function PaymentProfile({ profileType, methodId, methodType, onProfileSelect, onCreateProfile, scopeKey = 'payment_flow' }: PaymentProfileProps) {
   const { theme } = useTheme();
   const { t, lang } = useLanguage();
   const { userData } = useUserData();
@@ -149,7 +150,7 @@ export default function PaymentProfile({ profileType, methodId, methodType, onPr
   const [profileSelectId, profileSelectController, profileSelectIsOpen, profileSelectionState] = useSelectionController();
   const [searchProfileQuery, setProfileQuery] = useState('');
 
-  const [profilesModel, demandPaymentProfileModel, setPaymentProfileModel] = usePaymentProfileModel(lang);
+  const [profilesModel, demandPaymentProfileModel, setPaymentProfileModel] = usePaymentProfileModel(lang, scopeKey);
 
   useEffect(() => {
     if (!profileData) return;

@@ -10,11 +10,11 @@ import { getParamatical } from '@/utils/checkers';
 import { checkLocation, checkFeatures } from '@/utils/checkers';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useUserData } from '@/lib/stacks/user-stack';
-import PaymentWallet from '../payment-wallet/payment-wallet';
-import PaymentMethod from '../payment-method/payment-method';
-import PaymentProfile from '../payment-profile/payment-profile';
-import PaymentType from '../payment-type/payment-type';
-import PaymentNetwork from '../payment-network/payment-network';
+import PaymentWallet from '../../payment-stack/payment-wallet/payment-wallet';
+import PaymentMethod from '../../payment-stack/payment-method/payment-method';
+import PaymentProfile from '../../payment-stack/payment-profile/payment-profile';
+import PaymentType from '../../payment-stack/payment-type/payment-type';
+import PaymentNetwork from '../../payment-stack/payment-network/payment-network';
 import { PaymentWalletModel } from '@/models/payment-wallet-model';
 import { PaymentMethodModel } from '@/models/payment-method-model';
 import { BackendPaymentProfileModel } from '@/models/payment-profile-model';
@@ -881,6 +881,7 @@ export default function NewProfilePage(props: NewProfileProps) {
           onWalletData={handleWalletData}
           paymentWalletId={walletId}
           modify={walletModify}
+          scopeKey="new_profile_flow"
         />
 
         {showMethods && (
@@ -890,6 +891,7 @@ export default function NewProfilePage(props: NewProfileProps) {
             onMethodSelect={handleMethodData}
             paymentMethodId={methodId}
             modify={methodModify}
+            scopeKey="new_profile_flow"
           />
         )}
 

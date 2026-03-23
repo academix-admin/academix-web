@@ -203,6 +203,7 @@ export default function PinManagement(props: { isNew: boolean, returnGroup?: str
 
         // Success navigation
         if (returnGroup) { 
+          nav.pop()
           await nav.goToGroupId(returnGroup);
         } else { nav.pop(); }
       } else {

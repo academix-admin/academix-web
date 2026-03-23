@@ -26,6 +26,7 @@ interface PaymentMethodProps {
   onMethodSelect: (method: PaymentMethodModel) => void;
   paymentMethodId?: string | null;
   modify?: boolean;
+  scopeKey?: string;
 }
 
 interface MethodItemProps {
@@ -72,7 +73,7 @@ const MethodItem = ({ onClick, method, isSelected }: MethodItemProps) => {
   );
 };
 
-export default function PaymentMethod({ profileType, walletId, onMethodSelect, paymentMethodId, modify = true }: PaymentMethodProps) {
+export default function PaymentMethod({ profileType, walletId, onMethodSelect, paymentMethodId, modify = true, scopeKey = 'payment_flow' }: PaymentMethodProps) {
   const { theme } = useTheme();
   const { t, lang } = useLanguage();
   const { userData } = useUserData();
@@ -84,7 +85,7 @@ export default function PaymentMethod({ profileType, walletId, onMethodSelect, p
   const [methodSelectId, methodSelectController, methodSelectIsOpen, methodSelectionState] = useSelectionController();
   const [searchMethodQuery, setMethodQuery] = useState('');
 
-  const [methodsModel, demandPaymentMethodModel, setPaymentMethodModel, { isHydrated }] = usePaymentMethodModel(lang);
+  const [methodsModel, demandPaymentMethodModel, setPaymentMethodModel, { isHydrated }] = usePaymentMethodModel(lang, scopeKey);
 
   useEffect(() => {
     if(!methodData)return;

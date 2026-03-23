@@ -535,6 +535,7 @@ export default function WithdrawPage() {
           onWalletData={handleWalletData}
           onWalletAmount={handleAmount}
           entryMode
+          scopeKey="withdraw_flow"
         />
 
         {showMethods && (
@@ -542,6 +543,7 @@ export default function WithdrawPage() {
             profileType={'ProfileType.sell'}
             walletId={selectedWalletData.paymentWalletId}
             onMethodSelect={handleMethodData}
+            scopeKey="withdraw_flow"
           />
         )}
 
@@ -553,6 +555,7 @@ export default function WithdrawPage() {
               methodType={selectedMethodData.paymentMethodChecker}
               onProfileSelect={handleProfileData}
               onCreateProfile={createProfile}
+              scopeKey="withdraw_flow"
             />
 
             {selectedMethodData.paymentMethodSellMultiple && (
@@ -649,6 +652,14 @@ export default function WithdrawPage() {
                 </span>
               </div>
 
+              <div className={styles.divider} />
+              {/* Total amount */}
+              <div className={styles.infoRow}>
+                <span className={styles.infoLabel}>{t('total')}:</span>
+                <span className={styles.infoValue}>
+                  <CurrencySymbol /> {formatNumber((amount * rate) + fee)}
+                </span>
+              </div>
               <div className={styles.divider} />
 
               {/* Payment Method */}

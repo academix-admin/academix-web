@@ -22,6 +22,8 @@ import TermsPage from "../shared/terms-page/terms-page";
 import PrivacyPage from "../shared/privacy-page/privacy-page";
 import RolesPage from "./roles-page/roles-page";
 import Pin from "../shared/pin/pin";
+import NewProfilePage from "../shared/new-profile-page/new-profile-page";
+import ViewTransactionPage from "../shared/view-transaction-page/view-transaction-page";
 
 
 const profileStackNavLink = {
@@ -43,7 +45,10 @@ const profileStackNavLink = {
   privacy_page: PrivacyPage,
   terms_page: TermsPage,
   roles_page: RolesPage,
-  pin: Pin
+  pin: Pin,
+  new_profile: NewProfilePage,
+  view_transaction: ViewTransactionPage,
+
 };
 
 export const ProfileStack = () => (
