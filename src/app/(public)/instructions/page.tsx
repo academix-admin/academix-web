@@ -62,6 +62,7 @@ export default function Instructions({ searchParams }: InstructionsPageProps) {
   const router = useRouter();
   const [canGoBack, setCanGoBack] = useState(false);
   const [roles, setRoles] = useState<Role[]>([]);
+  const [selectedRoleIndex, setSelectedRoleIndex] = useState(0);
 
   const config = getConfig(req);
   const resolvedTheme = col || theme;
@@ -78,7 +79,15 @@ export default function Instructions({ searchParams }: InstructionsPageProps) {
     { 
       title: t('step_complete_account', resolvedLang), 
       colors: { background: { light: '#EDFDF2', dark: '#0F1F17' }, number: { light: '#2F855A', dark: '#2F855A' }, title: { light: '#2F855A', dark: '#88E3B5' }, text: { light: '#2F855A', dark: '#88E3B5' } }, 
-      items: [t('step_verify_details', resolvedLang), t('step_obtain_kyc', resolvedLang)] 
+      items: [
+        t('step_verify_details', resolvedLang),
+        ...(() => {
+          const selected = roles[selectedRoleIndex];
+          const buyIn = selected?.roles_buy_in ?? 0;
+          return buyIn > 0 ? [`Pay buy in: *${buyIn.toLocaleString()} ADC*`] : [];
+        })(),
+        t('step_obtain_kyc', resolvedLang),
+      ] 
     },
     { 
       title: t('step_setup_profile', resolvedLang), 
@@ -165,7 +174,7 @@ export default function Instructions({ searchParams }: InstructionsPageProps) {
         {config.showTitle && (
           <h1 className={`${styles.bigTitle} ${styles[`bigTitle_${resolvedTheme}`]}`}>
             {tNode('what_academix_title', {
-              academix: <span className={`${styles.academixText} ${styles[`academixText_${resolvedTheme}`]}`}>{t('what_academix_abt_part2', resolvedLang)}</span>
+              academix: <span className={`${styles.academixText} ${styles[`academixText_${resolvedTheme}`]}`}>Academix</span>
             }, resolvedLang)}
           </h1>
         )}
@@ -188,7 +197,7 @@ export default function Instructions({ searchParams }: InstructionsPageProps) {
                   </li>
                 ))}
               </ul>
-              {step.types && <select className={styles.stepSelect} style={{ backgroundColor: step.typeBackground?.[resolvedTheme as keyof StepColors] || getThemeColor(step.colors.title) }}>{step.types.map((type, i) => <option key={i}>{type}</option>)}</select>}
+              {step.types && <select className={styles.stepSelect} style={{ backgroundColor: step.typeBackground?.[resolvedTheme as keyof StepColors] || getThemeColor(step.colors.title) }} onChange={(e) => setSelectedRoleIndex(Number(e.target.value))}>{step.types.map((type, i) => <option key={i} value={i}>{type}</option>)}</select>}
             </div>
           ))}
         </div>

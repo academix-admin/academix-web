@@ -393,8 +393,8 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
       <h2 className={`${styles.title} ${styles[`title_${theme}`]}`}>
         {getTitle(pType)}
       </h2>
-      <div className={styles.scrollWrapper}>
-        {showLeftArrow && (
+      <div className={`${styles.scrollWrapper} ${quizModels.length <= 1 ? styles.scrollWrapperExpanded : ''}`}>
+        {showLeftArrow && quizModels.length > 1 && (
           <button 
             className={`${styles.scrollArrow} ${styles.scrollArrowLeft} ${styles[`scrollArrow_${theme}`]}`}
             onClick={scrollLeft}
@@ -404,8 +404,8 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
           </button>
         )}
         
-        <div ref={scrollContainerRef} className={styles.scrollContainer}>
-          <div className={styles.gridContainer}>
+        <div ref={scrollContainerRef} className={`${styles.scrollContainer} ${quizModels.length <= 1 ? styles.scrollContainerExpanded : ''}`}>
+          <div className={`${styles.gridContainer} ${quizModels.length <= 1 ? styles.gridContainerExpanded : ''}`}>
             <div className={styles.row}>
               {quizModels.map((topic, rowIndex) => (
                     <OpenQuizCard
@@ -420,7 +420,7 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
           </div>
         </div>
         
-        {showRightArrow && (
+        {showRightArrow && quizModels.length > 1 && (
           <button 
             className={`${styles.scrollArrow} ${styles.scrollArrowRight} ${styles[`scrollArrow_${theme}`]}`}
             onClick={scrollRight}

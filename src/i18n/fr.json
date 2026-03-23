@@ -604,5 +604,6 @@
   "step_view_statistics": "Voir les statistiques, le ratio des joueurs et les gains",
   "my_role": "Mon Rôle",
   "role_acceptance_notice": "Je confirme que je ne peux pas changer mon rôle après sélection. Je comprends que je dois payer {amount} pour activer ma contribution et mes revenus des pools de quiz.",
-  "conversion_rates": "taux de conversion"
+  "conversion_rates": "taux de conversion",
+  "activate_text": "Activer"
 }

@@ -111,6 +111,64 @@ const rulesData = {
         ]
       }
     ]
+  },
+  fr: {
+    sections: [
+      {
+        type: "warning",
+        content: "Assurez-vous de vérifier le sujet, le défi, le mode de jeu et les détails de paiement avant de rejoindre le pool",
+        hasImage: true
+      },
+      {
+        type: "warning",
+        content: "Observez attentivement le statut du pool de quiz pour éviter de ne pas participer au pool de quiz"
+      },
+      {
+        title: "1. Temps d'attente",
+        items: [
+          "Le pool de quiz est ouvert pendant cette période pour permettre aux participants de rejoindre et atteindre l'exigence minimale pour le pool",
+          "Note : Les joueurs peuvent encore décider de partir s'ils ont rejoint."
+        ]
+      },
+      {
+        title: "2. Temps prolongé",
+        items: [
+          "Le pool de quiz est ouvert pendant cette période pour permettre encore aux participants de rejoindre au cas où l'exigence minimale n'aurait pas été atteinte pour le pool.",
+          "Note : Les joueurs peuvent encore décider de partir s'ils ont rejoint",
+          "Note : Si le minimum n'est pas atteint, le quiz est fermé automatiquement et les frais sont remboursés."
+        ]
+      },
+      {
+        title: "3. Temps de démarrage",
+        items: [
+          "Le pool de quiz est actif, permettant aux joueurs de se préparer pour le quiz qu'ils ont sélectionné pour participer",
+          "Note : Les joueurs ne peuvent pas quitter le pool à ce moment et les frais ne sont pas remboursables."
+        ]
+      },
+      {
+        title: "4. Période du pool",
+        items: [
+          "Le pool de quiz est disponible pour que les joueurs participent et interagissent en répondant aux questions."
+        ]
+      },
+      {
+        title: "5. Pool fermé",
+        items: [
+          "Le pool de quiz est maintenant terminé d'être actif pour les joueurs et l'interaction n'est plus possible."
+        ]
+      },
+      {
+        type: "warning",
+        content: "Les codes de remboursement ont des règles qui s'appliquent"
+      },
+      {
+        title: "Récompenses basées sur la position",
+        items: [
+          "1er, 2ème, 3ème signifie que les joueurs doivent avoir cette position pour obtenir le paiement partagé.",
+          "Haut, Milieu, Bas signifie que les joueurs doivent tomber dans la catégorie pour obtenir le paiement partagé."
+        ]
+      }
+    ]
   }
 };
 

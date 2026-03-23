@@ -280,7 +280,7 @@
 
 }
 
-@media screen and (min-width: 501px) and (max-width: 930px) {
+@media screen and (min-width: 701px) and (max-width: 930px) {
   .headerContent {
     padding: 1rem 0rem;
     margin: 0 1rem;
@@ -328,7 +328,7 @@
   }
 }
 
-@media screen and (max-width: 500px) {
+@media screen and (max-width: 700px) {
   .container {
     padding-top: 4rem;
   }

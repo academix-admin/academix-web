@@ -99,6 +99,57 @@ const rewardData = {
       reward: "300 ADC per qualified friend",
       example: "Use friend's username as redeem code to claim"
     }
+  },
+  fr: {
+    academixRatio: {
+      title: "Ratio Academix",
+      description: "Votre score d'engagement global qui détermine comment vous vous classez par rapport aux autres",
+      factors: [
+        "Cohérence des séries quotidiennes",
+        "Période de 14 jours",
+        "Participation et performance aux quiz",
+        "Achèvement des missions",
+        "Déblocage des succès",
+        "Activité de parrainage d'amis"
+      ],
+      example: "4.2"
+    },
+
+    streaks: {
+      title: "Séries Quotidiennes",
+      description: "Maintenez la cohérence par des connexions quotidiennes",
+      cycle: "Cycles hebdomadaires de 7 jours, période de série de 30 jours",
+      total: "10 ADC",
+      example: "Complétez 30 jours → code de remboursement 10 ADC"
+    },
+
+    milestones: {
+      title: "Étapes",
+      missions: {
+        title: "Missions",
+        description: "Défis spéciaux à durée limitée",
+        reward: "50 ADC par mission",
+        example: "Mission Premier Quiz → récompense 50 ADC"
+      },
+      achievements: {
+        title: "Succès",
+        description: "Accomplissements permanents",
+        reward: "100 ADC par succès",
+        example: "Succès Maître Quiz → 100 ADC"
+      }
+    },
+
+    friends: {
+      title: "Amis",
+      description: "Gagnez en invitant des amis à rejoindre Academix",
+      requirements: [
+        "L'ami s'inscrit avec votre @nomutilisateur",
+        "Effectue un premier dépôt de 1000+",
+        "Joue au moins un quiz ou attend 24 heures"
+      ],
+      reward: "300 ADC par ami qualifié",
+      example: "Utilisez le nom d'utilisateur de l'ami comme code de remboursement pour réclamer"
+    }
   }
 };
 

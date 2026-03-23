@@ -1,7 +1,7 @@
 'use client';
 
 import styles from './profile-stack.module.css';
-import {useNav } from "@/lib/NavigationStack";
+import { useNav } from "@/lib/NavigationStack";
 import NavigationStack from "@/lib/NavigationStack";
 import ProfilePage from "./profile-page/profile-page";
 import EditProfile from "./edit-profile/edit-profile";
@@ -21,6 +21,7 @@ import InstructionsPage from "../shared/instructions-page/instructions-page";
 import TermsPage from "../shared/terms-page/terms-page";
 import PrivacyPage from "../shared/privacy-page/privacy-page";
 import RolesPage from "./roles-page/roles-page";
+import Pin from "../shared/pin/pin";
 
 
 const profileStackNavLink = {
@@ -42,6 +43,7 @@ const profileStackNavLink = {
   privacy_page: PrivacyPage,
   terms_page: TermsPage,
   roles_page: RolesPage,
+  pin: Pin
 };
 
 export const ProfileStack = () => (

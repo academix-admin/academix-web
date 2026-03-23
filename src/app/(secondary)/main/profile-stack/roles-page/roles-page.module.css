@@ -248,6 +248,10 @@
         padding-top: 6rem;
           max-width: 800px;
   }
+
+  .roleCard {
+    margin: 0 1.5rem;
+  }
 }
 
 @media screen and (max-width: 500px) {
@@ -272,6 +276,10 @@
     padding-top: 5rem;
     max-width: 500px;
   }
+
+  .roleCard {
+    margin: 0 1rem;
+  }
     .redeemCodeCard {
       margin: 8px 12px 12px 12px;
       border-radius: 10px;
@@ -290,4 +298,362 @@
       font-size: 13px;
     }
 
+}
+
+/* Role Card */
+.roleCard {
+  border-radius: 16px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 1rem;
+}
+
+.roleCard_light {
+  background-color: #f9f9f9;
+  border: 1px solid #e5e5e5;
+}
+
+.roleCard_dark {
+  background-color: #1e1e1e;
+  border: 1px solid #333;
+}
+
+.roleHeader {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.roleIconWrapper {
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.roleIconSvg {
+  width: 56px;
+  height: 56px;
+}
+
+.roleHeaderInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.roleIdentity {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.roleLevel {
+  font-size: 0.85rem;
+  opacity: 0.6;
+}
+
+.activeBadge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background-color: #1C6B1E;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+.buyInRow,
+.remainingRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.buyInLabel,
+.remainingLabel {
+  font-size: 0.95rem;
+  opacity: 0.7;
+}
+
+.buyInValue {
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.remainingValue {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #FF3B30;
+}
+
+.divider {
+  height: 1px;
+  width: 100%;
+}
+
+.divider_light {
+  background-color: #e5e5e5;
+}
+
+.divider_dark {
+  background-color: #333;
+}
+
+.perksList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.perkItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.perkCheck {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.activateButton {
+  padding: 0.75rem;
+  border-radius: 10px;
+  background-color: #1C6B1E;
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.activateButton:hover {
+  background-color: #1D3D1E;
+}
+
+.activateButton:disabled {
+  background-color: #9CA3AF;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.spinner {
+  border: 3px solid #1D3D1E;
+  border-top: 3px solid white;
+  border-bottom: 3px solid white;
+  border-radius: 50%;
+  width: 10px;
+  height: 10px;
+  animation: spinRole 1s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spinRole {
+  to { transform: rotate(360deg); }
+}
+
+/* Buy-in bottom sheet */
+.dialogContainer {
+  padding: 20px;
+  min-height: 300px;
+}
+
+.dialogContainer_light {
+  background-color: #ffffff;
+  color: #000000;
+}
+
+.dialogContainer_dark {
+  background-color: #121212;
+  color: #ffffff;
+}
+
+.paymentConfirmation {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.buyInAmountSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.buyInCurrencyAmount {
+  font-size: 32px;
+  font-weight: bold;
+}
+
+.buyInAcademixAmount {
+  font-size: 32px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.academixIcon {
+  font-size: 24px;
+  font-weight: bold;
+  color: #1C6B1E;
+}
+
+.paymentMethodSection {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.paymentMethodTitle {
+  font-size: 15px;
+  font-weight: bold;
+  margin: 0;
+}
+
+.walletCard {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 12px;
+}
+
+.dialogContainer_light .walletCard {
+  background-color: #f9fafb;
+}
+
+.dialogContainer_dark .walletCard {
+  background-color: #1f2937;
+}
+
+.walletIcon {
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(28, 107, 30, 0.2);
+  color: #1C6B1E;
+}
+
+.walletInfo {
+  flex: 1;
+}
+
+.walletName {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.academixBalance {
+  color: #1C6B1E;
+}
+
+.infoRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.infoLabel {
+  opacity: 0.8;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.infoValue {
+  font-size: 16px;
+  font-weight: bold;
+  text-align: right;
+  word-break: break-word;
+}
+
+.continueButtonWrapper {
+  padding: 0 28px;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.continueButton {
+  padding: 0.75rem;
+  border-radius: 10px;
+  background-color: #1C6B1E;
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  width: 100%;
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.continueButton:hover {
+  background-color: #1D3D1E;
+}
+
+.continueButton:disabled {
+  background-color: #9CA3AF;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.dialogContainer_light .divider {
+  background-color: #e5e7eb;
+}
+
+.dialogContainer_dark .divider {
+  background-color: #374151;
+}
+
+.confirmRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.confirmLabel {
+  font-size: 0.9rem;
+  opacity: 0.7;
+}
+
+.confirmValue {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.newProfileButton {
+  padding: 0.6rem 1rem;
+  border-radius: 10px;
+  background: none;
+  border: 1px solid currentColor;
+  color: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+  margin-top: 4px;
 }
