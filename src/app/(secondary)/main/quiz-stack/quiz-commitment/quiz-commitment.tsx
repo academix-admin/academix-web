@@ -114,26 +114,45 @@ export default function QuizCommitment(props: QuizChallengeProps) {
     };
   }, { scope: 'pin_scope', dependencies: [currentQuiz, selectedRedeemCodeModel] });
 
+  // Use a ref so handlePoolChange always reads the latest currentQuiz without
+  // needing to be recreated on every render. Without this, the useEffect that
+  // attaches the listener only re-runs when handlePoolChange identity changes,
+  // meaning a DELETE event that arrives while currentQuiz is still null (first
+  // render) is silently dropped — leaving the user on a stale page.
+  const currentQuizRef = useRef<UserDisplayQuizTopicModel | null>(null);
+  useEffect(() => {
+    currentQuizRef.current = currentQuiz;
+  }, [currentQuiz]);
+
   // Subscribe to changes
-  const handlePoolChange = (event: PoolChangeEvent) => {
+  const handlePoolChange = useCallback((event: PoolChangeEvent) => {
     const { eventType, newRecord: quizPool, oldRecordId: eventPoolsId } = event;
-    if (!currentQuiz) return;
+    // Read from ref so we always have the latest value even if the closure is stale
+    const quiz = currentQuizRef.current;
+    if (!quiz) return;
 
     // Early return if pool ID doesn't match
-    if (quizPool?.poolsId !== currentQuiz?.quizPool?.poolsId && eventPoolsId !== currentQuiz?.quizPool?.poolsId) {
+    if (quizPool?.poolsId !== quiz?.quizPool?.poolsId && eventPoolsId !== quiz?.quizPool?.poolsId) {
       return;
     }
 
-    if (eventType === 'DELETE' && eventPoolsId === currentQuiz.quizPool?.poolsId) {
+    if (eventType === 'DELETE' && eventPoolsId === quiz.quizPool?.poolsId) {
       if (isTop) {
+        // Stop the polling loop — the pool no longer exists so further
+        // fetchPoolMembers calls would throw errors silently forever.
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+          timeoutRef.current = null;
+        }
         setInfoState('deleted');
         closeDisplay();
+        withdrawBottomController.close();
         quizInfoBottomController.open();
       }
-    } else if (quizPool && quizPool.poolsId === currentQuiz.quizPool?.poolsId) {
+    } else if (quizPool && quizPool.poolsId === quiz.quizPool?.poolsId) {
 
       // Update the pool
-      const topicModel = UserDisplayQuizTopicModel.from(currentQuiz);
+      const topicModel = UserDisplayQuizTopicModel.from(quiz);
       const renewedPool = topicModel?.quizPool?.getStreamedUpdate(quizPool);
       setCurrentQuiz(topicModel.copyWith({ quizPool: renewedPool }));
       //         something else
@@ -147,7 +166,7 @@ export default function QuizCommitment(props: QuizChallengeProps) {
       }
 
     }
-  };
+  }, [isTop, closeDisplay, withdrawBottomController, quizInfoBottomController]);
 
   useEffect(() => {
 
@@ -364,11 +383,32 @@ export default function QuizCommitment(props: QuizChallengeProps) {
         return;
       }
 
+      // Bug fix: poolsId must be explicitly validated before building the request.
+      // currentQuiz.quizPool?.poolsId can be undefined if the pool was deleted
+      // between page load and the join attempt. JSON.stringify silently drops
+      // undefined values, so the backend receives no p_pool_id and treats the
+      // request as an engage (create-new-pool) call — the user accidentally joins
+      // a random pool. We must abort here instead.
+      const resolvedPoolsId = currentQuiz.quizPool?.poolsId;
+      if (!resolvedPoolsId) {
+        // Pool was deleted before we even sent the request — stop the polling
+        // loop the same way as the Realtime DELETE and API response paths.
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+          timeoutRef.current = null;
+        }
+        setQuizLoading(false);
+        withdrawBottomController.close();
+        setInfoState('deleted');
+        quizInfoBottomController.open();
+        return;
+      }
+
       const requestData = {
         userId: userData.usersId,
         topicsId: currentQuiz.topicsId,
         challengeId: currentQuiz.quizPool?.challengeModel?.challengeId,
-        poolsId: currentQuiz.quizPool?.poolsId,
+        poolsId: resolvedPoolsId,
         redeemCode: selectedRedeemCodeModel?.redeemCodeValue,
         locale: paramatical.locale,
         country: paramatical.country,
@@ -385,6 +425,24 @@ export default function QuizCommitment(props: QuizChallengeProps) {
         const quizModel = new UserDisplayQuizTopicModel(engagement.quiz_pool);
         const transaction = new TransactionModel(engagement.transaction_details);
         if (engagement.transaction_details) setTransactionModels([transaction, ...transactionModels]);
+
+        // Gate ALL state mutations on replaceParam succeeding first.
+        // If popToRoot already fired concurrently (mount effect detected a missing
+        // quiz while this async call was in-flight), replaceParam returns false
+        // meaning the user has already navigated away. Writing active quiz state
+        // and subscribing to the pool in that case would corrupt state for a pool
+        // the user never intentionally joined.
+        withdrawBottomController.close();
+        const replaced = await nav.replaceParam({
+          poolsId: quizModel?.quizPool?.poolsId,
+          action: 'active'
+        });
+        if (!replaced) {
+          setQuizLoading(false);
+          return;
+        }
+
+        // Navigation succeeded — safe to commit all side-effects.
         setActiveQuizTopicModel(quizModel);
         if (quizModel?.quizPool?.poolsId) poolsSubscriptionManager.addQuizTopicPool(
           {
@@ -397,11 +455,6 @@ export default function QuizCommitment(props: QuizChallengeProps) {
           }
         );
         await fetchPoolMembers(quizModel);
-        withdrawBottomController.close();
-        await nav.replaceParam({
-          poolsId: quizModel?.quizPool?.poolsId,
-          action: 'active'
-        });
       } else if (status === 'PoolStatus.pinError') {
         withdrawBottomController.close();
         setQuizLoading(false);
@@ -418,9 +471,21 @@ export default function QuizCommitment(props: QuizChallengeProps) {
           setError(`${t('pin_locked_message')} ${t('locked_until')}: ${new Date(engagement.locked_until).toLocaleString()}`);
         }
         return;
+      } else if (status === 'PoolStatus.pool_no_longer_available') {
+        // Stop the polling loop before showing the info sheet — the pool is
+        // gone so any pending or future fetchPoolMembers calls are pointless.
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+          timeoutRef.current = null;
+        }
+        withdrawBottomController.close();
+        setQuizLoading(false);
+        setInfoState('deleted');
+        quizInfoBottomController.open();
+        return;
       } else {
         withdrawBottomController.close();
-        setError(status);
+        setError(t('error_occurred'));
       }
 
       setQuizLoading(false);
@@ -791,7 +856,7 @@ export default function QuizCommitment(props: QuizChallengeProps) {
         </div>
       </BottomViewer>}
 
-      {currentQuiz && (action === 'active' || infoState === 'deleted') && <BottomViewer
+      {currentQuiz && (action === 'active' || ['deleted', 'left', 'closed'].includes(infoState)) && <BottomViewer
         ref={quizInfoBottomRef}
         id={quizInfoBottomViewerId}
         isOpen={quizInfoBottomIsOpen}
