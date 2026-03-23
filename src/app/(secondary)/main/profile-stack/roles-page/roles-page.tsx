@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import styles from './roles-page.module.css';
@@ -82,7 +82,6 @@ export default function RolesPage() {
   const [academixProfileData, setAcademixProfileData] = useState<PaymentProfileModel | null>(null);
   const [continueState, setContinueState] = useState('initial');
   const [paymentActionMade, setPaymentActionMade] = useState(false);
-  const paymentActionMadeRef = useRef(false);
   const [pendingTransactionId, setPendingTransactionId] = useState<string | null>(null);
 
   const [, , , { clear: clearWallet }] = usePaymentWalletModel(lang);
@@ -173,10 +172,8 @@ export default function RolesPage() {
       setPageState('data');
       const isFresh = data.roles_activation_details?.roles_activation_is_fresh === true;
       const pendingTxId = data.roles_activation_details?.transaction_id ?? null;
-      const actionMade = !isFresh || paymentActionMadeRef.current;
-      paymentActionMadeRef.current = actionMade;
-      setPaymentActionMade(actionMade);
-      setPendingTransactionId(pendingTxId ?? (paymentActionMadeRef.current ? pendingTransactionId : null));
+      setPaymentActionMade(!isFresh);
+      setPendingTransactionId(pendingTxId);
     } catch(error) {
       console.log(error);
       setPageState('error');
@@ -399,17 +396,13 @@ export default function RolesPage() {
           setBuyInLoading(false);
           const shouldWaitForDialog = await handlePaymentCompletion(completionMode, completionData, transaction);
           if (!shouldWaitForDialog) {
-            paymentActionMadeRef.current = true;
-            setPaymentActionMade(true);
-            setPendingTransactionId(transaction.transactionId);
+            await load();
             await nav.push('view_transaction', { transactionId: transaction.transactionId });
           }
         } else {
           setBuyInLoading(false);
           buyInBottomController.close();
-          paymentActionMadeRef.current = true;
-          setPaymentActionMade(true);
-          setPendingTransactionId(transaction.transactionId);
+          await load();
           await nav.push('view_transaction', { transactionId: transaction.transactionId });
         }
       }
