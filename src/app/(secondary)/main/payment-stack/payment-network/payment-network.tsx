@@ -14,6 +14,7 @@ import { usePaymentMethodModel } from '@/lib/stacks/payment-method-stack';
 interface PaymentNetworkProps {
   paymentMethodId: string;
   onNetworkSelect: (network: PaymentNetworkModel) => void;
+  scopeKey?: string;
 }
 
 interface NetworkItemProps {
@@ -59,7 +60,7 @@ const NetworkItem = ({ onClick, network, isSelected }: NetworkItemProps) => {
   );
 };
 
-export default function PaymentNetwork({ paymentMethodId, onNetworkSelect }: PaymentNetworkProps) {
+export default function PaymentNetwork({ paymentMethodId, onNetworkSelect, scopeKey = 'payment_flow' }: PaymentNetworkProps) {
   const { theme } = useTheme();
   const { t, lang } = useLanguage();
   const { userData } = useUserData();
@@ -71,7 +72,7 @@ export default function PaymentNetwork({ paymentMethodId, onNetworkSelect }: Pay
   const [networkSelectId, networkSelectController, networkSelectIsOpen, networkSelectionState] = useSelectionController();
   const [searchNetworkQuery, setNetworkQuery] = useState('');
 
-  const [methodsModel, , , { isHydrated }] = usePaymentMethodModel(lang);
+  const [methodsModel, , , { isHydrated }] = usePaymentMethodModel(lang, scopeKey);
 
   useEffect(() => {
     if(!networkData)return;

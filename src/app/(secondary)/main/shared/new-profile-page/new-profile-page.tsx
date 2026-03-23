@@ -59,6 +59,7 @@ interface NewProfileProps {
   walletId: string;
   methodId: string;
   profileType: string;
+  scopeKey: string;
 }
 
 interface MobileMoneyProps {
@@ -102,11 +103,11 @@ const BankTransfer = ({ onSubmit, methodId, errorDialog }: BankTransferProps) =>
   const [searchLoading, setSearchingLoading] = useState(false);
 
   useEffect(() => {
-    if(!bankData || !accountData){
-        onSubmit(null, null);
-        return;
+    if (!bankData || !accountData) {
+      onSubmit(null, null);
+      return;
     }
-     onSubmit(bankData, accountData);
+    onSubmit(bankData, accountData);
   }, [bankData, accountData]);
 
   const handleAccountNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -122,8 +123,8 @@ const BankTransfer = ({ onSubmit, methodId, errorDialog }: BankTransferProps) =>
 
     const regex = /^\d+$/;
     const valid = regex.test(value);
-      setAccountNumberInputValue(value);
-      setAccountNumberState(valid ? 'valid' : 'invalid');
+    setAccountNumberInputValue(value);
+    setAccountNumberState(valid ? 'valid' : 'invalid');
   };
 
   // Function to find account API call
@@ -147,13 +148,13 @@ const BankTransfer = ({ onSubmit, methodId, errorDialog }: BankTransferProps) =>
     }
   };
 
-  
+
   const handleSearch = async () => {
     if (!bankData || !accountNumberInputValue) return;
 
     try {
-        setSearchingLoading(true);
-        setError('');
+      setSearchingLoading(true);
+      setError('');
       const session = await supabaseBrowser.auth.getSession();
       const jwt = session.data.session?.access_token;
 
@@ -199,51 +200,51 @@ const BankTransfer = ({ onSubmit, methodId, errorDialog }: BankTransferProps) =>
         </div>
       );
     }
-  };  
+  };
 
   return (
     <div className={styles.container}>
-       <BankView onSubmit={(bank) => {setAccountData(null); setError(''); setBankData(bank);}} methodId={methodId}/>
-          {bankData && <div className={styles.accountNumberGroup}>
-                       <label htmlFor="accountNumber" className={styles.label}>{t('account_number_label')}</label>
-                       <div className={styles.accountNumberContainer}>
-                         <input
-                           type="text"
-                           id="accountNumber"
-                           name="accountNumber"
-                           value={accountNumberInputValue}
-                           onChange={handleAccountNumberChange}
-                           placeholder={t('account_number_placeholder')}
-                           className={styles.input}
-                           inputMode="numeric"
-                           pattern="[0-9]*"
-                           required
-                         />
-                       </div>
-                                   {accountNumberState === 'invalid' && !accountData && (
-                                     <p className={styles.errorText}>{t('number_invalid')}</p>
-                                   )}
-                                   {accountNumberState === 'valid' && !accountData && (
-                                     <p className={styles.validText}>{t('number_valid')}</p>
-                                   )}
-                                   {accountData && (
-                                     <p className={styles.validText}>{accountData.account_name}</p>
-                                   )}
-                                   {error && !accountData && (
-                                     <p className={styles.errorText}>{error}</p>
-                                   )}
+      <BankView onSubmit={(bank) => { setAccountData(null); setError(''); setBankData(bank); }} methodId={methodId} />
+      {bankData && <div className={styles.accountNumberGroup}>
+        <label htmlFor="accountNumber" className={styles.label}>{t('account_number_label')}</label>
+        <div className={styles.accountNumberContainer}>
+          <input
+            type="text"
+            id="accountNumber"
+            name="accountNumber"
+            value={accountNumberInputValue}
+            onChange={handleAccountNumberChange}
+            placeholder={t('account_number_placeholder')}
+            className={styles.input}
+            inputMode="numeric"
+            pattern="[0-9]*"
+            required
+          />
+        </div>
+        {accountNumberState === 'invalid' && !accountData && (
+          <p className={styles.errorText}>{t('number_invalid')}</p>
+        )}
+        {accountNumberState === 'valid' && !accountData && (
+          <p className={styles.validText}>{t('number_valid')}</p>
+        )}
+        {accountData && (
+          <p className={styles.validText}>{accountData.account_name}</p>
+        )}
+        {error && !accountData && (
+          <p className={styles.errorText}>{error}</p>
+        )}
 
-                     </div>}
+      </div>}
 
-                             {bankData && accountNumberState === 'valid' && !accountData  && <button
-                               onClick={handleSearch}
-                               type="button"
-                               className={styles.continueButton}
-                               disabled={searchLoading}
-                               aria-disabled={searchLoading}
-                             >
-                               { searchLoading ?  <span className={styles.spinner}></span> : t('search')}
-                             </button>  }
+      {bankData && accountNumberState === 'valid' && !accountData && <button
+        onClick={handleSearch}
+        type="button"
+        className={styles.continueButton}
+        disabled={searchLoading}
+        aria-disabled={searchLoading}
+      >
+        {searchLoading ? <span className={styles.spinner}></span> : t('search')}
+      </button>}
 
 
     </div>
@@ -274,7 +275,7 @@ const BankItem = ({ onClick, bank, isSelected }: BankItemProps) => {
       {isSelected && (
         <div className={styles.bankItemCheckmark}>
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
           </svg>
         </div>
       )}
@@ -293,18 +294,18 @@ const BankView = ({ onSubmit, methodId }: BankViewProps) => {
   const [searchBankQuery, setBankQuery] = useState('');
 
   const [banksModel, demandBankModel, setBankModel, { isHydrated }] = useDemandState<BankModel[]>(
-                                                                                                       [],
-                                                                                                       {
-                                                                                                         key: "banksModel",
-                                                                                                         persist: true,
-                                                                                                         ttl: 3600,
-                                                                                                         scope: "payment_flow",
-                                                                                                         deps: [lang],
-                                                                                                       }
-                                                                                                     );
+    [],
+    {
+      key: "banksModel",
+      persist: true,
+      ttl: 3600,
+      scope: "payment_flow",
+      deps: [lang],
+    }
+  );
   useEffect(() => {
-    if(!bankData)return;
-     onSubmit(bankData);
+    if (!bankData) return;
+    onSubmit(bankData);
   }, [bankData]);
 
   // Function to fetch banks API call
@@ -345,10 +346,10 @@ const BankView = ({ onSubmit, methodId }: BankViewProps) => {
       const banksModel = await fetchBanks(jwt, requestData);
       const status = banksModel.status;
 
-      if(status === 'BankStatus.success'){
+      if (status === 'BankStatus.success') {
         return (banksModel.banks || []) as BankModel[];
-      }else{
-          return [];
+      } else {
+        return [];
       }
 
     } catch (error: any) {
@@ -378,7 +379,7 @@ const BankView = ({ onSubmit, methodId }: BankViewProps) => {
   const openBank = useCallback(() => {
     bankSelectController.toggle();
     loadBanks();
-  }, [ bankSelectController, loadBanks]);
+  }, [bankSelectController, loadBanks]);
 
   const handleBankSearch = useCallback((query: string) => {
     setBankQuery(query);
@@ -412,24 +413,24 @@ const BankView = ({ onSubmit, methodId }: BankViewProps) => {
 
   return (
     <div className={styles.formGroup}>
-        <label htmlFor="activate" className={styles.label}>{t('bank_label')}</label>
-        <button onClick={openBank} className={`${styles.selectButton} ${styles[`selectButton_${theme}`]}`}>
-          {bankData ? (
-            <div className={styles.selectedBank}>
-              <div className={`${styles.bankInfo} ${styles[`methodInfo_${theme}`]}`}>
-                <div className={styles.bankName}>{bankData.name}</div>
-                <div className={styles.bankCode}>{bankData.code}</div>
-              </div>
+      <label htmlFor="activate" className={styles.label}>{t('bank_label')}</label>
+      <button onClick={openBank} className={`${styles.selectButton} ${styles[`selectButton_${theme}`]}`}>
+        {bankData ? (
+          <div className={styles.selectedBank}>
+            <div className={`${styles.bankInfo} ${styles[`methodInfo_${theme}`]}`}>
+              <div className={styles.bankName}>{bankData.name}</div>
+              <div className={styles.bankCode}>{bankData.code}</div>
             </div>
-          ) : (
-            <div className={styles.placeholder}>
-              {t('select_banks')}
-            </div>
-          )}
-          <svg className={styles.chevron} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M7 10l5 5 5-5z"/>
-          </svg>
-        </button>
+          </div>
+        ) : (
+          <div className={styles.placeholder}>
+            {t('select_banks')}
+          </div>
+        )}
+        <svg className={styles.chevron} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M7 10l5 5 5-5z" />
+        </svg>
+      </button>
 
       <SelectionViewer
         id={bankSelectId}
@@ -497,28 +498,28 @@ const AccountActivate = ({ onSubmit, purpose }: AccountActivateProps) => {
   const { theme } = useTheme();
   const { t, lang } = useLanguage();
 
-  const [ value , setValue ] = useState(false);
+  const [value, setValue] = useState(false);
 
-  const changeValue = () =>{
-      setValue(prev => { return !prev;});
-      onSubmit(!value);
+  const changeValue = () => {
+    setValue(prev => { return !prev; });
+    onSubmit(!value);
   }
 
   return (
     <div className={styles.formGroup}>
-        <label htmlFor="activate" className={styles.label}>{t('activate_label')}</label>
-        <div
-          className={`${styles.selectButton} ${styles[`selectButton_${theme}`]} ${value ? styles.selectButton_active : ''}`}
-          onClick={changeValue}
-        >
-          <div className={`${styles.switch} ${value ? styles.switch_active : ''} ${styles[`switch_${theme}`]}`}>
-             <div className={`${styles.switchHandle} ${value ? styles.switchHandle_active : ''} ${styles[`switchHandle_${theme}`]}`} />
-          </div>
-          <span className={`${styles.optionText} ${styles[`optionText_${theme}`]}`}>
-            {purpose}
-          </span>
-
+      <label htmlFor="activate" className={styles.label}>{t('activate_label')}</label>
+      <div
+        className={`${styles.selectButton} ${styles[`selectButton_${theme}`]} ${value ? styles.selectButton_active : ''}`}
+        onClick={changeValue}
+      >
+        <div className={`${styles.switch} ${value ? styles.switch_active : ''} ${styles[`switch_${theme}`]}`}>
+          <div className={`${styles.switchHandle} ${value ? styles.switchHandle_active : ''} ${styles[`switchHandle_${theme}`]}`} />
         </div>
+        <span className={`${styles.optionText} ${styles[`optionText_${theme}`]}`}>
+          {purpose}
+        </span>
+
+      </div>
     </div>
   );
 };
@@ -546,40 +547,40 @@ const MobileMoney = ({ onSubmit, prefix, length }: MobileMoneyProps) => {
       setPhoneInputValue(value);
       setPhoneNumberState(valid ? 'valid' : 'invalid');
     }
-    if(valid && value.length === length){
-       onSubmit(`${prefix}${value}`.replace('+',''));
-    }else{
-       onSubmit(null);
+    if (valid && value.length === length) {
+      onSubmit(`${prefix}${value}`.replace('+', ''));
+    } else {
+      onSubmit(null);
     }
 
   };
 
   return (
     <div className={styles.formGroup}>
-                <label htmlFor="phoneNumber" className={styles.label}>{t('phone_number_label')}</label>
-                <div className={styles.phoneInputContainer}>
-                  <span className={styles.prefix}>{`${prefix} - `}</span>
-                  <input
-                    type="text"
-                    id="phoneNumber"
-                    name="phoneNumber"
-                    value={phoneInputValue}
-                    maxLength={length}
-                    onChange={handlePhoneNumberChange}
-                    placeholder={t('phone_number_placeholder')}
-                    className={styles.input}
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    required
-                  />
-                </div>
-                            {phoneNumberState === 'invalid' && (
-                              <p className={styles.errorText}>{t('phone_number_invalid')}</p>
-                            )}
-                            {phoneNumberState === 'valid' && (
-                              <p className={styles.validText}>{t('phone_number_valid')}</p>
-                            )}
-              </div>
+      <label htmlFor="phoneNumber" className={styles.label}>{t('phone_number_label')}</label>
+      <div className={styles.phoneInputContainer}>
+        <span className={styles.prefix}>{`${prefix} - `}</span>
+        <input
+          type="text"
+          id="phoneNumber"
+          name="phoneNumber"
+          value={phoneInputValue}
+          maxLength={length}
+          onChange={handlePhoneNumberChange}
+          placeholder={t('phone_number_placeholder')}
+          className={styles.input}
+          inputMode="numeric"
+          pattern="[0-9]*"
+          required
+        />
+      </div>
+      {phoneNumberState === 'invalid' && (
+        <p className={styles.errorText}>{t('phone_number_invalid')}</p>
+      )}
+      {phoneNumberState === 'valid' && (
+        <p className={styles.validText}>{t('phone_number_valid')}</p>
+      )}
+    </div>
   );
 };
 
@@ -589,10 +590,9 @@ export default function NewProfilePage(props: NewProfileProps) {
   const { t, lang } = useLanguage();
   const nav = useNav();
   const { userData } = useUserData();
-  const { walletId, methodId, profileType } = props;
-
+  const { walletId, methodId, profileType, scopeKey } = props;
   const [walletsModel, , , { clear: clearWallet, isHydrated: walletHydrated }] = usePaymentWalletModel(lang);
-  const [banksModel, , , { clear: clearMethod, isHydrated: methodHydrated  }] = usePaymentMethodModel(lang);
+  const [banksModel, , , { clear: clearMethod, isHydrated: methodHydrated }] = usePaymentMethodModel(lang);
   const [profilesModel, demandPaymentProfileModel, setPaymentProfileModel] = usePaymentProfileModel(lang);
 
   const [selectedWalletData, setSelectedWalletData] = useState<PaymentWalletModel | null>(null);
@@ -635,7 +635,7 @@ export default function NewProfilePage(props: NewProfileProps) {
   /** wallet handler */
   const handleWalletData = useCallback((wallet: PaymentWalletModel) => {
     if (selectedWalletData?.paymentWalletId !== wallet.paymentWalletId) {
-      if(!methodId)setSelectedMethodData(null);
+      if (!methodId) setSelectedMethodData(null);
       setSelectedWalletData(wallet);
       setError('');
     }
@@ -646,20 +646,20 @@ export default function NewProfilePage(props: NewProfileProps) {
     if (selectedMethodData?.paymentMethodId !== method.paymentMethodId) {
       setError('');
       if (profileType === 'ProfileType.buy') {
-          setTopUpModify(false);
-          setTopUp(method.paymentMethodBuyActive ?? false);
-          const getWithdrawModify = method.paymentMethodSellActive ?? true;
-          setWithdrawModify(getWithdrawModify)
-          if (!getWithdrawModify) setWithdraw(getWithdrawModify);
+        setTopUpModify(false);
+        setTopUp(method.paymentMethodBuyActive ?? false);
+        const getWithdrawModify = method.paymentMethodSellActive ?? true;
+        setWithdrawModify(getWithdrawModify);
+        if (!getWithdrawModify) setWithdraw(getWithdrawModify);
       }
       if (profileType === 'ProfileType.sell') {
-          setWithdrawModify(false);
-          setWithdraw(method.paymentMethodSellActive ?? false);
-          const getTopUpModify = method.paymentMethodBuyActive ?? true;
-          setTopUpModify(getTopUpModify);
-          if (!getTopUpModify) setTopUp(getTopUpModify);
+        setWithdrawModify(false);
+        setWithdraw(method.paymentMethodSellActive ?? false);
+        const getTopUpModify = method.paymentMethodBuyActive ?? true;
+        setTopUpModify(getTopUpModify);
+        if (!getTopUpModify) setTopUp(getTopUpModify);
       }
-        setSelectedMethodData(method);
+      setSelectedMethodData(method);
     }
   }, [selectedMethodData]);
 
@@ -718,7 +718,6 @@ export default function NewProfilePage(props: NewProfileProps) {
         return;
       }
 
-      console.log(data);
       if (data?.status === 'PaymentProfile.success') {
         const paymentProfile = new PaymentProfileModel(data.payment_profile_details);
 
@@ -804,29 +803,29 @@ export default function NewProfilePage(props: NewProfileProps) {
   }, [lang, profileType, userData]);
 
   const getPaymentMethodView = (paymentMethod: PaymentMethodModel | null): React.JSX.Element => {
-    if(!paymentMethod || !userData)return (<></>);
+    if (!paymentMethod || !userData) return (<></>);
     switch (paymentMethod.paymentMethodChecker) {
       case 'PaymentMethod.mobile_money':
-        return (<MobileMoney onSubmit={(phoneNumber) => setSelectedPaymentData(selectedPaymentData.copyWith({phone: phoneNumber, network: selectedNetworkData?.identity}))} prefix={paymentMethod.countryPhoneCode} length={paymentMethod.countryPhoneDigits} />);
+        return (<MobileMoney onSubmit={(phoneNumber) => setSelectedPaymentData(selectedPaymentData.copyWith({ phone: phoneNumber, network: selectedNetworkData?.identity }))} prefix={paymentMethod.countryPhoneCode} length={paymentMethod.countryPhoneDigits} />);
       case 'PaymentMethod.e_naira':
-        return (<AccountActivate onSubmit={(value)=> setSelectedPaymentData(selectedPaymentData.copyWith({phone: userData.usersPhone, eNaira: value}))} purpose={t('e_naira_text')} />);
+        return (<AccountActivate onSubmit={(value) => setSelectedPaymentData(selectedPaymentData.copyWith({ phone: userData.usersPhone, eNaira: value }))} purpose={t('e_naira_text')} />);
       case 'PaymentMethod.private_account':
-        return (<AccountActivate onSubmit={(value)=> setSelectedPaymentData(selectedPaymentData.copyWith({phone: userData.usersPhone, privateAccount: value}))} purpose={t('private_account_text')} />);
+        return (<AccountActivate onSubmit={(value) => setSelectedPaymentData(selectedPaymentData.copyWith({ phone: userData.usersPhone, privateAccount: value }))} purpose={t('private_account_text')} />);
       case 'PaymentMethod.opay':
-        return (<AccountActivate onSubmit={(value)=> setSelectedPaymentData(selectedPaymentData.copyWith({phone: userData.usersPhone, opay: value}))} purpose={t('opay_text')} />);
+        return (<AccountActivate onSubmit={(value) => setSelectedPaymentData(selectedPaymentData.copyWith({ phone: userData.usersPhone, opay: value }))} purpose={t('opay_text')} />);
       case 'PaymentMethod.direct_debit':
-        return (<AccountActivate onSubmit={(value)=> setSelectedPaymentData(selectedPaymentData.copyWith({phone: userData.usersPhone, directDebit: value}))} purpose={t('direct_debit_text')} />);
+        return (<AccountActivate onSubmit={(value) => setSelectedPaymentData(selectedPaymentData.copyWith({ phone: userData.usersPhone, directDebit: value }))} purpose={t('direct_debit_text')} />);
       case 'PaymentMethod.bank_transfer':
-        return (<BankTransfer onSubmit={(bank, account) => setSelectedPaymentData(selectedPaymentData.copyWith({phone: userData.usersPhone, bankCode: bank?.code, bankName: bank?.name, accountNumber: account?.account_number, fullname: account?.account_name}))} methodId={paymentMethod.paymentMethodId} errorDialog={errorDialog}/>);
+        return (<BankTransfer onSubmit={(bank, account) => setSelectedPaymentData(selectedPaymentData.copyWith({ phone: userData.usersPhone, bankCode: bank?.code, bankName: bank?.name, accountNumber: account?.account_number, fullname: account?.account_name }))} methodId={paymentMethod.paymentMethodId} errorDialog={errorDialog} />);
       case 'PaymentMethod.ussd':
-        return (<BankView onSubmit={(bank)=> setSelectedPaymentData(selectedPaymentData.copyWith({phone: userData.usersPhone, bankCode: bank.code, bankName: bank.name}))} methodId={paymentMethod.paymentMethodId}/>);
+        return (<BankView onSubmit={(bank) => setSelectedPaymentData(selectedPaymentData.copyWith({ phone: userData.usersPhone, bankCode: bank.code, bankName: bank.name }))} methodId={paymentMethod.paymentMethodId} />);
       default:
         return (<></>);
     }
   };
 
   const getPaymentVerified = (paymentMethod: PaymentMethodModel | null, selectedPaymentData: ProfileModel | null): boolean => {
-    if(!selectedPaymentData || !paymentMethod)return false;
+    if (!selectedPaymentData || !paymentMethod) return false;
     switch (paymentMethod.paymentMethodChecker) {
       case 'PaymentMethod.mobile_money':
         return !!selectedPaymentData.phone;
@@ -839,7 +838,7 @@ export default function NewProfilePage(props: NewProfileProps) {
       case 'PaymentMethod.direct_debit':
         return !!selectedPaymentData.directDebit;
       case 'PaymentMethod.bank_transfer':
-        return !!selectedPaymentData.bankCode && !!selectedPaymentData.bankName && !!selectedPaymentData.accountNumber && !!selectedPaymentData.fullname ;
+        return !!selectedPaymentData.bankCode && !!selectedPaymentData.bankName && !!selectedPaymentData.accountNumber && !!selectedPaymentData.fullname;
       case 'PaymentMethod.ussd':
         return !!selectedPaymentData.bankCode && !!selectedPaymentData.bankName;
       default:
@@ -850,7 +849,7 @@ export default function NewProfilePage(props: NewProfileProps) {
   // derived booleans
   const showMethods = !!selectedWalletData;
   const showType = !!selectedMethodData;
-  const showNetwork = showType && (selectedTopUpValue || selectedWithdrawValue);
+  const showNetwork = showType && (topUp || withdraw);
   const showInput = !!selectedNetworkData || (selectedMethodData && selectedMethodData.paymentMethodNetwork.length <= 0);
 
   return (
@@ -881,7 +880,7 @@ export default function NewProfilePage(props: NewProfileProps) {
           onWalletData={handleWalletData}
           paymentWalletId={walletId}
           modify={walletModify}
-          scopeKey="new_profile_flow"
+          scopeKey={scopeKey}
         />
 
         {showMethods && (
@@ -891,7 +890,7 @@ export default function NewProfilePage(props: NewProfileProps) {
             onMethodSelect={handleMethodData}
             paymentMethodId={methodId}
             modify={methodModify}
-            scopeKey="new_profile_flow"
+            scopeKey={scopeKey}
           />
         )}
 
@@ -910,6 +909,7 @@ export default function NewProfilePage(props: NewProfileProps) {
           <PaymentNetwork
             paymentMethodId={selectedMethodData.paymentMethodId}
             onNetworkSelect={setSelectedNetworkData}
+            scopeKey={scopeKey}
           />
         )}
 
@@ -917,13 +917,13 @@ export default function NewProfilePage(props: NewProfileProps) {
 
 
         {getPaymentVerified(selectedMethodData, selectedPaymentData) && <button
-            type="button"
-            className={styles.continueButton}
-            onClick={handleSubmit}
-            disabled={continueState === 'loading'}
-          >
-            {continueState === 'loading' ? <span className={styles.spinner}></span> : t('continue')}
-          </button>}
+          type="button"
+          className={styles.continueButton}
+          onClick={handleSubmit}
+          disabled={continueState === 'loading'}
+        >
+          {continueState === 'loading' ? <span className={styles.spinner}></span> : t('continue')}
+        </button>}
 
       </div>
 

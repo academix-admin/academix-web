@@ -143,7 +143,7 @@ export default function WithdrawPage() {
   /** New profile */
   const createProfile = async () => {
     if (!selectedWalletData || !selectedMethodData) return;
-    nav.push('new_profile', { walletId: selectedWalletData.paymentWalletId, methodId: selectedMethodData.paymentMethodId, profileType: 'ProfileType.sell' });
+    nav.push('new_profile', { walletId: selectedWalletData.paymentWalletId, methodId: selectedMethodData.paymentMethodId, profileType: 'ProfileType.sell', scopeKey: 'withdraw-flow' });
   };
 
   const [continueState, setContinueState] = useState('initial');
@@ -540,7 +540,7 @@ export default function WithdrawPage() {
           onWalletData={handleWalletData}
           onWalletAmount={handleAmount}
           entryMode
-          scopeKey="withdraw_flow"
+          scopeKey="withdraw-flow"
         />
 
         {showMethods && (
@@ -548,7 +548,7 @@ export default function WithdrawPage() {
             profileType={'ProfileType.sell'}
             walletId={selectedWalletData.paymentWalletId}
             onMethodSelect={handleMethodData}
-            scopeKey="withdraw_flow"
+            scopeKey="withdraw-flow"
           />
         )}
 
@@ -560,7 +560,7 @@ export default function WithdrawPage() {
               methodType={selectedMethodData.paymentMethodChecker}
               onProfileSelect={handleProfileData}
               onCreateProfile={createProfile}
-              scopeKey="withdraw_flow"
+              scopeKey="withdraw-flow"
             />
 
             {selectedMethodData.paymentMethodSellMultiple && (

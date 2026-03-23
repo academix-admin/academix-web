@@ -145,7 +145,7 @@ export default function TopUpPage() {
   /** New profile */
   const createProfile = async () => {
     if (!selectedWalletData || !selectedMethodData) return;
-    nav.push('new_profile', { walletId: selectedWalletData.paymentWalletId, methodId: selectedMethodData.paymentMethodId, profileType: 'ProfileType.buy' });
+    nav.push('new_profile', { walletId: selectedWalletData.paymentWalletId, methodId: selectedMethodData.paymentMethodId, profileType: 'ProfileType.buy', scopeKey: 'top-up-flow' });
   };
 
   const [continueState, setContinueState] = useState('initial');
@@ -533,7 +533,7 @@ export default function TopUpPage() {
           onWalletData={handleWalletData}
           onWalletAmount={handleAmount}
           entryMode
-          scopeKey="top_up_flow"
+          scopeKey="top-up-flow"
         />
 
         {showMethods && (
@@ -541,7 +541,7 @@ export default function TopUpPage() {
             profileType={'ProfileType.buy'}
             walletId={selectedWalletData.paymentWalletId}
             onMethodSelect={handleMethodData}
-            scopeKey="top_up_flow"
+            scopeKey="top-up-flow"
           />
         )}
 
@@ -553,7 +553,7 @@ export default function TopUpPage() {
               methodType={selectedMethodData.paymentMethodChecker}
               onProfileSelect={handleProfileData}
               onCreateProfile={createProfile}
-              scopeKey="top_up_flow"
+              scopeKey="top-up-flow"
             />
 
             {selectedMethodData.paymentMethodBuyMultiple && (

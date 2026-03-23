@@ -93,14 +93,14 @@ export default function PaymentMethod({ profileType, walletId, onMethodSelect, p
   }, [methodData]);
 
   useEffect(() => {
-    if(!isHydrated)return;
+    if (!isHydrated) return;
     const getMethod = methodsModel.find((e) => e.paymentMethodId === paymentMethodId);
-
     if (getMethod) {
       setMethodData(getMethod);
+    } else if (paymentMethodId && methodsModel.length === 0) {
+      silentLoad();
     }
-
-  }, [methodsModel, paymentMethodId ,isHydrated]);
+  }, [methodsModel, paymentMethodId, isHydrated]);
 
    useEffect(() => {
       if (methodsModel.length <= 0)setMethodData(null);
@@ -187,6 +187,17 @@ export default function PaymentMethod({ profileType, walletId, onMethodSelect, p
       setPaymentMethodModel(methods);
     }
   }, [userData, methodsModel, paginateModel, fetchPaymentMethodModel, extractLatest, setPaymentMethodModel]);
+
+  const silentLoad = useCallback(() => {
+    if (!userData) return;
+    demandPaymentMethodModel(async ({ set }) => {
+      const methods = await fetchPaymentMethodModel(userData, 100, new PaginateModel());
+      if (methods.length > 0) {
+        extractLatest(methods);
+        set(methods);
+      }
+    });
+  }, [demandPaymentMethodModel, fetchPaymentMethodModel, userData, extractLatest]);
 
   const loadMethods = useCallback(() => {
       if(!userData) return;

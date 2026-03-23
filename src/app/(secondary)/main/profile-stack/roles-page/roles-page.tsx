@@ -214,7 +214,7 @@ export default function RolesPage() {
 
   const createProfile = () => {
     if (!selectedWalletData || !selectedMethodData) return;
-    nav.push('new_profile', { walletId: selectedWalletData.paymentWalletId, methodId: selectedMethodData.paymentMethodId, profileType: 'ProfileType.buy' });
+    nav.push('new_profile', { walletId: selectedWalletData.paymentWalletId, methodId: selectedMethodData.paymentMethodId, profileType: 'ProfileType.buy', scopeKey: 'roles-flow' });
   };
 
   const handleSubmit = async () => {
@@ -533,7 +533,7 @@ export default function RolesPage() {
                     <PaymentWallet
                       profileType={'ProfileType.buy'}
                       onWalletData={handleWalletData}
-                      scopeKey="roles_flow"
+                      scopeKey="roles-flow"
                     />
 
                     {showMethods && (
@@ -541,7 +541,7 @@ export default function RolesPage() {
                         profileType={'ProfileType.buy'}
                         walletId={selectedWalletData!.paymentWalletId}
                         onMethodSelect={handleMethodData}
-                        scopeKey="roles_flow"
+                        scopeKey="roles-flow"
                       />
                     )}
 
@@ -553,7 +553,7 @@ export default function RolesPage() {
                           methodType={selectedMethodData!.paymentMethodChecker}
                           onProfileSelect={handleProfileData}
                           onCreateProfile={createProfile}
-                          scopeKey="roles_flow"
+                          scopeKey="roles-flow"
                         />
                         {selectedMethodData!.paymentMethodBuyMultiple && (
                           <button className={styles.newProfileButton} onClick={createProfile}>
