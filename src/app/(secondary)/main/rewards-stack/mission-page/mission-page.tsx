@@ -26,6 +26,7 @@ import { useMissionData } from '@/lib/stacks/milestone-stack';
 import { useMissionModel } from '@/lib/stacks/mission-stack';
 import { MissionData } from '@/models/mission-data';
 import { StateStack } from '@/lib/state-stack';
+import { useDialog } from '@/lib/DialogViewer';
 
 interface MissionContainerProps {
   tab: string;
@@ -34,8 +35,10 @@ interface MissionContainerProps {
 
 
 const MissionCard: React.FC<{ mission: MissionModel, tab: string, handleCollected: () => void }> = ({ mission, tab, handleCollected }) => {
+  const { theme } = useTheme();
   const { t, lang } = useLanguage();
   const { userData } = useUserData();
+  const errorDialog = useDialog();
   const [collecting, setCollecting] = useState(false);
   const [missionModel, demandMissionModel, setMissionModel] = useMissionModel(lang, tab);
   const [collectMissionModel, demandCollectMissionModel, setCollectMissionModel] = useMissionModel(lang, 'MissionTab.completed');
@@ -86,7 +89,7 @@ const MissionCard: React.FC<{ mission: MissionModel, tab: string, handleCollecte
 
      if (!paramatical) {
        setCollecting(false);
-       console.error("Failed to get paramatical data");
+       errorDialog.open(<p>{t('error_occurred')}</p>);
        return;
      }
 
@@ -102,6 +105,7 @@ const MissionCard: React.FC<{ mission: MissionModel, tab: string, handleCollecte
      if (error) {
        console.error("Failed to claim mission:", error);
        setCollecting(false);
+       errorDialog.open(<p>{t('error_occurred')}</p>);
        return;
      }
 
@@ -147,6 +151,7 @@ const MissionCard: React.FC<{ mission: MissionModel, tab: string, handleCollecte
      }
    } catch (err) {
      console.error("Unexpected error in handleCollect:", err);
+     errorDialog.open(<p>{t('error_occurred')}</p>);
    } finally {
      setCollecting(false);
    }
@@ -158,6 +163,14 @@ const MissionCard: React.FC<{ mission: MissionModel, tab: string, handleCollecte
     : null;
 
   return (
+    <>
+    <errorDialog.DialogViewer
+      title={t('error_text')}
+      buttons={[{ text: t('ok_text'), variant: 'primary', onClick: () => errorDialog.close() }]}
+      showCancel={false}
+      closeOnBackdrop={true}
+      layoutProp={{ backgroundColor: theme === 'light' ? '#fff' : '#121212', margin: '16px 16px', titleColor: theme === 'light' ? '#1a1a1a' : '#fff' }}
+    />
     <div className={styles.missionCard} role="group" aria-labelledby={`mission-${mission.missionId}`}>
       {/* TOP SECTION (lighter/green) */}
       <div className={styles.missionCardTop}>
@@ -260,6 +273,7 @@ const MissionCard: React.FC<{ mission: MissionModel, tab: string, handleCollecte
         )}
       </div>
     </div>
+    </>
   );
 }
 

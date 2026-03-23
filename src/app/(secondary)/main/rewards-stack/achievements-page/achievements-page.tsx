@@ -26,6 +26,7 @@ import { useAchievementsData } from '@/lib/stacks/milestone-stack';
 import { useAchievementsModel } from '@/lib/stacks/achievements-stack';
 import { AchievementsData } from '@/models/achievements-data';
 import { StateStack } from '@/lib/state-stack';
+import { useDialog } from '@/lib/DialogViewer';
 
 interface AchievementsContainerProps {
   tab: string;
@@ -34,8 +35,10 @@ interface AchievementsContainerProps {
 
 
 const AchievementsCard: React.FC<{ achievements: AchievementsModel, tab: string, handleCollected: () => void }> = ({ achievements, tab, handleCollected }) => {
+  const { theme } = useTheme();
   const { t, lang } = useLanguage();
   const { userData } = useUserData();
+  const errorDialog = useDialog();
   const [collecting, setCollecting] = useState(false);
   const [achievementsModel, demandAchievementsModel, setAchievementsModel] = useAchievementsModel(lang, tab);
   const [collectAchievementsModel, demandCollectAchievementsModel, setCollectAchievementsModel] = useAchievementsModel(lang, 'AchievementTab.completed');
@@ -86,7 +89,7 @@ const AchievementsCard: React.FC<{ achievements: AchievementsModel, tab: string,
 
      if (!paramatical) {
        setCollecting(false);
-       console.error("Failed to get paramatical data");
+       errorDialog.open(<p>{t('error_occurred')}</p>);
        return;
      }
 
@@ -102,6 +105,7 @@ const AchievementsCard: React.FC<{ achievements: AchievementsModel, tab: string,
      if (error) {
        console.error("Failed to claim achievements:", error);
        setCollecting(false);
+       errorDialog.open(<p>{t('error_occurred')}</p>);
        return;
      }
 
@@ -147,6 +151,7 @@ const AchievementsCard: React.FC<{ achievements: AchievementsModel, tab: string,
      }
    } catch (err) {
      console.error("Unexpected error in handleCollect:", err);
+     errorDialog.open(<p>{t('error_occurred')}</p>);
    } finally {
      setCollecting(false);
    }
@@ -158,6 +163,14 @@ const AchievementsCard: React.FC<{ achievements: AchievementsModel, tab: string,
     : null;
 
   return (
+    <>
+    <errorDialog.DialogViewer
+      title={t('error_text')}
+      buttons={[{ text: t('ok_text'), variant: 'primary', onClick: () => errorDialog.close() }]}
+      showCancel={false}
+      closeOnBackdrop={true}
+      layoutProp={{ backgroundColor: theme === 'light' ? '#fff' : '#121212', margin: '16px 16px', titleColor: theme === 'light' ? '#1a1a1a' : '#fff' }}
+    />
     <div className={styles.achievementsCard} role="group" aria-labelledby={`achievements-${achievements.achievementsId}`}>
       {/* TOP SECTION (lighter/green) */}
       <div className={styles.achievementsCardTop}>
@@ -260,6 +273,7 @@ const AchievementsCard: React.FC<{ achievements: AchievementsModel, tab: string,
         )}
       </div>
     </div>
+    </>
   );
 }
 

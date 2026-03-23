@@ -319,7 +319,7 @@ export default function RolesPage() {
         userId: userData.usersId,
         senderProfileId: selectedProfileData.paymentProfileId,
         receiverProfileId: academixProfileData.paymentProfileId,
-        amount: role!.roles_buy_in,
+        amount: walletAmount,
         type: 'TransactionType.buy_in',
         paymentSessionId: 'sessionId',
         locale: paramatical.locale,
@@ -395,14 +395,14 @@ export default function RolesPage() {
           if (!shouldWaitForDialog) {
             setPaymentActionMade(true);
             setPendingTransactionId(transaction.transactionId);
-            await nav.pushAndPopUntil('view_transaction', (entry: any) => entry.key === 'profile_page', { transactionId: transaction.transactionId });
+            await nav.push('view_transaction', { transactionId: transaction.transactionId });
           }
         } else {
           setBuyInLoading(false);
           buyInBottomController.close();
           setPaymentActionMade(true);
           setPendingTransactionId(transaction.transactionId);
-          await nav.pushAndPopUntil('view_transaction', (entry: any) => entry.key === 'profile_page', { transactionId: transaction.transactionId });
+          await nav.push('view_transaction', { transactionId: transaction.transactionId });
         }
       }
     } catch {

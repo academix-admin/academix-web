@@ -14,6 +14,7 @@ import { UserData } from '@/models/user-data';
 import LoadingView from '@/components/LoadingView/LoadingView';
 import NoResultsView from '@/components/NoResultsView/NoResultsView';
 import ErrorView from '@/components/ErrorView/ErrorView';
+import { useDialog } from '@/lib/DialogViewer';
 
 interface ViewProps {
   onEditing: (id: string | null) => void;
@@ -92,13 +93,14 @@ const ActionButtons = ({
 );
 
 const UserNameView = ({ onEditing }: ViewProps) => {
+  const { theme } = useTheme();
   const { t, lang } = useLanguage();
   const { userData, userData$, __meta } = useUserData();
+  const errorDialog = useDialog();
 
   const [editingValue, setEditingValue] = useState('');
   const [editing, setEditing] = useState(false);
   const [saveLoading, setSaveLoading] = useState(false);
-  const [error, setError] = useState('');
   const [userNameState, setUserNameState] = useState('initial');
 
   const validationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -113,7 +115,6 @@ const UserNameView = ({ onEditing }: ViewProps) => {
   const handleSave = async () => {
     if (!userData) return;
     setSaveLoading(true);
-    setError('');
 
     try {
       const paramatical = await getParamatical(
@@ -124,8 +125,8 @@ const UserNameView = ({ onEditing }: ViewProps) => {
       );
 
       if (!paramatical) {
-        setError(t('error_occurred'));
         setSaveLoading(false);
+        errorDialog.open(<p>{t('error_occurred')}</p>);
         return;
       }
 
@@ -140,8 +141,8 @@ const UserNameView = ({ onEditing }: ViewProps) => {
 
       if (error) {
         console.error('Username Error:', error);
-        setError(t('error_occurred'));
         setSaveLoading(false);
+        errorDialog.open(<p>{t('error_occurred')}</p>);
         return;
       }
 
@@ -149,13 +150,13 @@ const UserNameView = ({ onEditing }: ViewProps) => {
         userData$.set(UserData.from(userData).copyWith({ usersUsername: data.profile_value }));
         setEditing(false);
       } else {
-        setError(data.status);
+        errorDialog.open(<p>{data.status}</p>);
       }
       setSaveLoading(false);
     } catch (err) {
       console.error(err);
-      setError(t('error_occurred'));
       setSaveLoading(false);
+      errorDialog.open(<p>{t('error_occurred')}</p>);
     }
   };
 
@@ -254,22 +255,21 @@ const UserNameView = ({ onEditing }: ViewProps) => {
           />
         </div>
 
-        {userNameState === 'wrongFormat' && !error && (
+        {userNameState === 'wrongFormat' && (
           <p className={styles.errorText}>{t('username_wrong_format')}</p>
         )}
-        {userNameState === 'exists' && !error && (
+        {userNameState === 'exists' && (
           <p className={styles.errorText}>{t('username_exist')}</p>
         )}
-        {userNameState === 'error' && !error && (
+        {userNameState === 'error' && (
           <p className={styles.errorText}>{t('username_error')}</p>
         )}
-        {userNameState === 'valid' && !error && (
+        {userNameState === 'valid' && (
           <p className={styles.validText}>{t('username_valid')}</p>
         )}
-        {userNameState === 'checking' && !error && (
+        {userNameState === 'checking' && (
           <span className={styles.usernameSpinner}></span>
         )}
-        {error && <p className={styles.errorText}>{error}</p>}
       </div>
 
       <ActionButtons
@@ -278,18 +278,26 @@ const UserNameView = ({ onEditing }: ViewProps) => {
         saveDisabled={userNameState !== 'valid' || saveLoading || editingValue === userData.usersUsername.replace('@', '')}
         saveLoading={saveLoading}
       />
+      <errorDialog.DialogViewer
+        title={t('error_text')}
+        buttons={[{ text: t('ok_text'), variant: 'primary', onClick: () => errorDialog.close() }]}
+        showCancel={false}
+        closeOnBackdrop={true}
+        layoutProp={{ backgroundColor: theme === 'light' ? '#fff' : '#121212', margin: '16px 16px', titleColor: theme === 'light' ? '#1a1a1a' : '#fff' }}
+      />
     </div>
   );
 };
 
 const PhoneNumberView = ({ onEditing }: ViewProps) => {
+  const { theme } = useTheme();
   const { t, lang } = useLanguage();
   const { userData, userData$, __meta } = useUserData();
+  const errorDialog = useDialog();
 
   const [editingValue, setEditingValue] = useState('');
   const [editing, setEditing] = useState(false);
   const [saveLoading, setSaveLoading] = useState(false);
-  const [error, setError] = useState('');
   const [phoneNumberState, setPhoneNumberState] = useState('initial');
 
   useEffect(() => {
@@ -321,7 +329,6 @@ const PhoneNumberView = ({ onEditing }: ViewProps) => {
   const handleSave = async () => {
     if (!userData) return;
     setSaveLoading(true);
-    setError('');
 
     try {
       const paramatical = await getParamatical(
@@ -332,8 +339,8 @@ const PhoneNumberView = ({ onEditing }: ViewProps) => {
       );
 
       if (!paramatical) {
-        setError(t('error_occurred'));
         setSaveLoading(false);
+        errorDialog.open(<p>{t('error_occurred')}</p>);
         return;
       }
 
@@ -348,8 +355,8 @@ const PhoneNumberView = ({ onEditing }: ViewProps) => {
 
       if (error) {
         console.error('Phone Error:', error);
-        setError(t('error_occurred'));
         setSaveLoading(false);
+        errorDialog.open(<p>{t('error_occurred')}</p>);
         return;
       }
 
@@ -357,13 +364,13 @@ const PhoneNumberView = ({ onEditing }: ViewProps) => {
         userData$.set(UserData.from(userData).copyWith({ usersPhone: data.profile_value }));
         setEditing(false);
       } else {
-        setError(data.status);
+        errorDialog.open(<p>{data.status}</p>);
       }
       setSaveLoading(false);
     } catch (err) {
       console.error(err);
-      setError(t('error_occurred'));
       setSaveLoading(false);
+      errorDialog.open(<p>{t('error_occurred')}</p>);
     }
   };
   if(!userData)return null;
@@ -403,11 +410,10 @@ const PhoneNumberView = ({ onEditing }: ViewProps) => {
             required
           />
         </div>
-        {error && <p className={styles.errorText}>{error}</p>}
-        {phoneNumberState === 'invalid' && !error && (
+        {phoneNumberState === 'invalid' && (
           <p className={styles.errorText}>{t('phone_number_invalid')}</p>
         )}
-        {phoneNumberState === 'valid' && !error && (
+        {phoneNumberState === 'valid' && (
           <p className={styles.validText}>{t('phone_number_valid')}</p>
         )}
       </div>
@@ -418,18 +424,26 @@ const PhoneNumberView = ({ onEditing }: ViewProps) => {
         saveDisabled={phoneNumberState !== 'valid' || saveLoading || editingValue === (userData?.usersPhone?.replace('+', '') || '')}
         saveLoading={saveLoading}
       />
+      <errorDialog.DialogViewer
+        title={t('error_text')}
+        buttons={[{ text: t('ok_text'), variant: 'primary', onClick: () => errorDialog.close() }]}
+        showCancel={false}
+        closeOnBackdrop={true}
+        layoutProp={{ backgroundColor: theme === 'light' ? '#fff' : '#121212', margin: '16px 16px', titleColor: theme === 'light' ? '#1a1a1a' : '#fff' }}
+      />
     </div>
   );
 };
 
 const EmailView = ({ onEditing }: ViewProps) => {
+  const { theme } = useTheme();
   const { t, lang } = useLanguage();
   const { userData, userData$, __meta } = useUserData();
+  const errorDialog = useDialog();
 
   const [editingValue, setEditingValue] = useState('');
   const [editing, setEditing] = useState(false);
   const [saveLoading, setSaveLoading] = useState(false);
-  const [error, setError] = useState('');
 
   useEffect(() => {
     if (userData?.usersEmail && __meta.isHydrated) {
@@ -444,7 +458,6 @@ const EmailView = ({ onEditing }: ViewProps) => {
   const handleSave = async () => {
     if (!userData) return;
     setSaveLoading(true);
-    setError('');
 
     try {
       const paramatical = await getParamatical(
@@ -455,8 +468,8 @@ const EmailView = ({ onEditing }: ViewProps) => {
       );
 
       if (!paramatical) {
-        setError(t('error_occurred'));
         setSaveLoading(false);
+        errorDialog.open(<p>{t('error_occurred')}</p>);
         return;
       }
 
@@ -471,8 +484,8 @@ const EmailView = ({ onEditing }: ViewProps) => {
 
       if (error) {
         console.error('Email Error:', error);
-        setError(t('error_occurred'));
         setSaveLoading(false);
+        errorDialog.open(<p>{t('error_occurred')}</p>);
         return;
       }
 
@@ -480,13 +493,13 @@ const EmailView = ({ onEditing }: ViewProps) => {
         userData$.set(UserData.from(userData).copyWith({ usersEmail: data.profile_value }));
         setEditing(false);
       } else {
-        setError(data.status);
+        errorDialog.open(<p>{data.status}</p>);
       }
       setSaveLoading(false);
     } catch (err) {
       console.error(err);
-      setError(t('error_occurred'));
       setSaveLoading(false);
+      errorDialog.open(<p>{t('error_occurred')}</p>);
     }
   };
 
@@ -523,10 +536,9 @@ const EmailView = ({ onEditing }: ViewProps) => {
           disabled={saveLoading}
           required
         />
-        {!isEmailValid && !error && (
+        {!isEmailValid && (
           <p className={styles.errorText}>{t('email_invalid')}</p>
         )}
-        {error && <p className={styles.errorText}>{error}</p>}
       </div>
 
       <ActionButtons
@@ -535,18 +547,26 @@ const EmailView = ({ onEditing }: ViewProps) => {
         saveDisabled={!isEmailValid || saveLoading || editingValue === userData.usersEmail}
         saveLoading={saveLoading}
       />
+      <errorDialog.DialogViewer
+        title={t('error_text')}
+        buttons={[{ text: t('ok_text'), variant: 'primary', onClick: () => errorDialog.close() }]}
+        showCancel={false}
+        closeOnBackdrop={true}
+        layoutProp={{ backgroundColor: theme === 'light' ? '#fff' : '#121212', margin: '16px 16px', titleColor: theme === 'light' ? '#1a1a1a' : '#fff' }}
+      />
     </div>
   );
 };
 
 const FullnameView = ({ onEditing }: ViewProps) => {
+  const { theme } = useTheme();
   const { t, lang } = useLanguage();
   const { userData, userData$, __meta } = useUserData();
+  const errorDialog = useDialog();
 
   const [editingValue, setEditingValue] = useState('');
   const [editing, setEditing] = useState(false);
   const [saveLoading, setSaveLoading] = useState(false);
-  const [error, setError] = useState('');
 
   useEffect(() => {
     if (userData?.usersNames && __meta.isHydrated) {
@@ -560,7 +580,6 @@ const FullnameView = ({ onEditing }: ViewProps) => {
 
   const handleSave = async () => {
     if (!userData) return;
-    setError('');
     setSaveLoading(true);
 
     try {
@@ -573,8 +592,8 @@ const FullnameView = ({ onEditing }: ViewProps) => {
 
       if (!paramatical) {
         console.error('Fullname Error:');
-        setError(t('error_occurred'));
         setSaveLoading(false);
+        errorDialog.open(<p>{t('error_occurred')}</p>);
         return;
       }
 
@@ -589,8 +608,8 @@ const FullnameView = ({ onEditing }: ViewProps) => {
 
       if (error) {
         console.error('Fullname Error:', error);
-        setError(t('error_occurred'));
         setSaveLoading(false);
+        errorDialog.open(<p>{t('error_occurred')}</p>);
         return;
       }
 
@@ -598,13 +617,13 @@ const FullnameView = ({ onEditing }: ViewProps) => {
         userData$.set(UserData.from(userData).copyWith({ usersNames: data.profile_value }));
         setEditing(false);
       } else {
-        setError(data.status);
+        errorDialog.open(<p>{data.status}</p>);
       }
       setSaveLoading(false);
     } catch (err) {
       console.error(err);
-      setError(t('error_occurred'));
       setSaveLoading(false);
+      errorDialog.open(<p>{t('error_occurred')}</p>);
     }
   };
   if(!userData)return null;
@@ -639,7 +658,6 @@ const FullnameView = ({ onEditing }: ViewProps) => {
           disabled={saveLoading}
           required
         />
-        {error && <p className={styles.errorText}>{error}</p>}
       </div>
 
       <ActionButtons
@@ -647,6 +665,13 @@ const FullnameView = ({ onEditing }: ViewProps) => {
         onSave={handleSave}
         saveDisabled={!editingValue || saveLoading || editingValue === userData.usersNames}
         saveLoading={saveLoading}
+      />
+      <errorDialog.DialogViewer
+        title={t('error_text')}
+        buttons={[{ text: t('ok_text'), variant: 'primary', onClick: () => errorDialog.close() }]}
+        showCancel={false}
+        closeOnBackdrop={true}
+        layoutProp={{ backgroundColor: theme === 'light' ? '#fff' : '#121212', margin: '16px 16px', titleColor: theme === 'light' ? '#1a1a1a' : '#fff' }}
       />
     </div>
   );
@@ -656,6 +681,7 @@ const ImageView = ({ onEditing }: ViewProps) => {
   const { theme } = useTheme();
   const { t, lang } = useLanguage();
   const { userData, userData$, __meta } = useUserData();
+  const errorDialog = useDialog();
 
   const [selectedEditingImage, setSelectedEditingImage] = useState<DeviceImageInfo | null>(null);
   const [editing, setEditing] = useState(false);
@@ -678,8 +704,8 @@ const ImageView = ({ onEditing }: ViewProps) => {
 
       if (!paramatical) {
         console.error('Image Error: No paramatical data');
-        setError(t('error_occurred'));
         setSaveLoading(false);
+        errorDialog.open(<p>{t('error_occurred')}</p>);
         return;
       }
 
@@ -696,8 +722,8 @@ const ImageView = ({ onEditing }: ViewProps) => {
 
       if (operationError) {
         console.error('Operation ID Error:', operationError);
-        setError(t('error_occurred'));
         setSaveLoading(false);
+        errorDialog.open(<p>{t('error_occurred')}</p>);
         return;
       }
 
@@ -709,8 +735,8 @@ const ImageView = ({ onEditing }: ViewProps) => {
 
         if (removeImageError) {
           console.error('Remove Image Error:', removeImageError);
-          setError(t('error_occurred'));
           setSaveLoading(false);
+          errorDialog.open(<p>{t('error_occurred')}</p>);
           return;
         }
       }
@@ -731,8 +757,8 @@ const ImageView = ({ onEditing }: ViewProps) => {
 
       if (uploadImageError) {
         console.error('Upload Image Error:', uploadImageError);
-        setError(t('error_occurred'));
         setSaveLoading(false);
+        errorDialog.open(<p>{t('error_occurred')}</p>);
         return;
       }
 
@@ -756,8 +782,8 @@ const ImageView = ({ onEditing }: ViewProps) => {
 
       if (error) {
         console.error('Update Image Error:', error);
-        setError(t('error_occurred'));
         setSaveLoading(false);
+        errorDialog.open(<p>{t('error_occurred')}</p>);
         return;
       }
 
@@ -766,14 +792,14 @@ const ImageView = ({ onEditing }: ViewProps) => {
         setEditing(false);
         setSelectedEditingImage(null);
       } else {
-        setError(t('error_occurred'));
+        errorDialog.open(<p>{t('error_occurred')}</p>);
       }
       setSaveLoading(false);
 
     } catch (err) {
       console.error(err);
-      setError(t('error_occurred'));
       setSaveLoading(false);
+      errorDialog.open(<p>{t('error_occurred')}</p>);
     }
   };
 
@@ -793,8 +819,8 @@ const ImageView = ({ onEditing }: ViewProps) => {
 
       if (!paramatical) {
         console.error('Image Error: No paramatical data');
-        setError(t('error_occurred'));
         setSaveLoading(false);
+        errorDialog.open(<p>{t('error_occurred')}</p>);
         return;
       }
 
@@ -811,8 +837,8 @@ const ImageView = ({ onEditing }: ViewProps) => {
 
       if (operationError) {
         console.error('Operation ID Error:', operationError);
-        setError(t('error_occurred'));
         setSaveLoading(false);
+        errorDialog.open(<p>{t('error_occurred')}</p>);
         return;
       }
 
@@ -823,8 +849,8 @@ const ImageView = ({ onEditing }: ViewProps) => {
 
         if (removeImageError) {
           console.error('Remove Image Error:', removeImageError);
-          setError(t('error_occurred'));
           setSaveLoading(false);
+          errorDialog.open(<p>{t('error_occurred')}</p>);
           return;
         }
 
@@ -841,8 +867,8 @@ const ImageView = ({ onEditing }: ViewProps) => {
 
       if (error) {
         console.error('Update Image Error:', error);
-        setError(t('error_occurred'));
         setSaveLoading(false);
+        errorDialog.open(<p>{t('error_occurred')}</p>);
         return;
       }
 
@@ -850,14 +876,14 @@ const ImageView = ({ onEditing }: ViewProps) => {
       if (data) {
         userData$.changeImage(null);
       } else {
-        setError(t('error_occurred'));
+        errorDialog.open(<p>{t('error_occurred')}</p>);
       }
       setSaveLoading(false);
 
     } catch (err) {
       console.error(err);
-      setError(t('error_occurred'));
       setSaveLoading(false);
+      errorDialog.open(<p>{t('error_occurred')}</p>);
     }
   };
 
@@ -996,6 +1022,13 @@ const ImageView = ({ onEditing }: ViewProps) => {
         onSave={handleSave}
         saveDisabled={!selectedEditingImage || saveLoading}
         saveLoading={saveLoading}
+      />
+      <errorDialog.DialogViewer
+        title={t('error_text')}
+        buttons={[{ text: t('ok_text'), variant: 'primary', onClick: () => errorDialog.close() }]}
+        showCancel={false}
+        closeOnBackdrop={true}
+        layoutProp={{ backgroundColor: theme === 'light' ? '#fff' : '#121212', margin: '16px 16px', titleColor: theme === 'light' ? '#1a1a1a' : '#fff' }}
       />
     </div>
   );

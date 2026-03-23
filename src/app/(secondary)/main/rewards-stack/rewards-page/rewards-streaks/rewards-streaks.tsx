@@ -15,6 +15,7 @@ import { DailyStreaksModel } from '@/models/daily-streaks';
 import { ComponentStateProps } from '@/hooks/use-component-state';
 import { useAcademixRatio } from '@/lib/stacks/academix-ratio-stack';
 import { useNav } from "@/lib/NavigationStack";
+import { useDialog } from '@/lib/DialogViewer';
 
 
 // Types
@@ -237,6 +238,7 @@ export default function RewardsStreaks({ onStateChange }: ComponentStateProps) {
   const nav = useNav();
 
   const [academixRatioData, demandAcademixRatio, setAcademixRatio] = useAcademixRatio(lang);
+  const errorDialog = useDialog();
 
   const [dailyStreaks, demandDailyStreaks, setDailyStreaks] = useDemandState<DailyStreaksModel[]>(
     [],
@@ -348,7 +350,7 @@ export default function RewardsStreaks({ onStateChange }: ComponentStateProps) {
 
   const handleClaimDailyStreak = async (dateNumber: number) => {
     if (!userData) {
-      console.error('Failed to claim daily streak:');
+      errorDialog.open(<p>{t('error_occurred')}</p>);
       return;
     }
     setIsClaiming(true);
@@ -363,7 +365,10 @@ export default function RewardsStreaks({ onStateChange }: ComponentStateProps) {
         userData.usersDob
       );
 
-      if (!paramatical) return;
+      if (!paramatical) {
+        errorDialog.open(<p>{t('error_occurred')}</p>);
+        return;
+      }
 
       const { data, error } = await supabaseBrowser.rpc("claim_user_streaks", {
         p_user_id: paramatical.usersId,
@@ -411,6 +416,7 @@ export default function RewardsStreaks({ onStateChange }: ComponentStateProps) {
 
     } catch (error) {
       console.error('Failed to claim daily streak:', error);
+      errorDialog.open(<p>{t('error_occurred')}</p>);
     } finally {
       setIsClaiming(false);
       setClaimingDate(undefined);
@@ -425,6 +431,13 @@ export default function RewardsStreaks({ onStateChange }: ComponentStateProps) {
 
   return (
     <div className={styles.dailyStreaksContainer}>
+      <errorDialog.DialogViewer
+        title={t('error_text')}
+        buttons={[{ text: t('ok_text'), variant: 'primary', onClick: () => errorDialog.close() }]}
+        showCancel={false}
+        closeOnBackdrop={true}
+        layoutProp={{ backgroundColor: theme === 'light' ? '#fff' : '#121212', margin: '16px 16px', titleColor: theme === 'light' ? '#1a1a1a' : '#fff' }}
+      />
       <h2 onClick={openRewardInfo} className={`${styles.dailyStreaksTitle} ${styles[`dailyStreaksTitle_${theme}`]}`}>
         {t('streaks_text')}
         <div className={styles.infoIcon}>
