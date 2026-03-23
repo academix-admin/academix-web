@@ -50,9 +50,9 @@ export default function WithdrawPage() {
   const { userData } = useUserData();
   const isTop = nav.isTop();
 
-  const [, , , { clear: clearWallet }] = usePaymentWalletModel(lang);
-  const [, , , { clear: clearMethod }] = usePaymentMethodModel(lang);
-  const [, , , { clear: clearProfile }] = usePaymentProfileModel(lang);
+  const [, , , { clear: clearWallet }] = usePaymentWalletModel(lang, 'withdraw-flow');
+  const [, , , { clear: clearMethod }] = usePaymentMethodModel(lang, 'withdraw-flow');
+  const [, , , { clear: clearProfile }] = usePaymentProfileModel(lang, 'withdraw-flow');
   const [userBalance] = useUserBalance(lang);
   const [transactionModels, demandTransactionModels, setTransactionModels] = useTransactionModel(lang);
 

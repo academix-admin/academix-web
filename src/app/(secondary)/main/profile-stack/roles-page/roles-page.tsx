@@ -84,9 +84,9 @@ export default function RolesPage() {
   const [paymentActionMade, setPaymentActionMade] = useState(false);
   const [pendingTransactionId, setPendingTransactionId] = useState<string | null>(null);
 
-  const [, , , { clear: clearWallet }] = usePaymentWalletModel(lang);
-  const [, , , { clear: clearMethod }] = usePaymentMethodModel(lang);
-  const [, , , { clear: clearProfile }] = usePaymentProfileModel(lang);
+  const [, , , { clear: clearWallet }] = usePaymentWalletModel(lang, 'roles-flow');
+  const [, , , { clear: clearMethod }] = usePaymentMethodModel(lang, 'roles-flow');
+  const [, , , { clear: clearProfile }] = usePaymentProfileModel(lang, 'roles-flow');
 
   const [buyInBottomViewerId, buyInBottomController, buyInBottomIsOpen] = useBottomController();
   const [userBalance] = useUserBalance(lang);

@@ -51,9 +51,9 @@ export default function TopUpPage() {
   const { userData } = useUserData();
   const isTop = nav.isTop();
 
-  const [, , , { clear: clearWallet }] = usePaymentWalletModel(lang);
-  const [, , , { clear: clearMethod }] = usePaymentMethodModel(lang);
-  const [, , , { clear: clearProfile }] = usePaymentProfileModel(lang);
+  const [, , , { clear: clearWallet }] = usePaymentWalletModel(lang, 'top-up-flow');
+  const [, , , { clear: clearMethod }] = usePaymentMethodModel(lang, 'top-up-flow');
+  const [, , , { clear: clearProfile }] = usePaymentProfileModel(lang, 'top-up-flow');
   const [userBalance] = useUserBalance(lang);
   const [transactionModels, demandTransactionModels, setTransactionModels] = useTransactionModel(lang);
 
