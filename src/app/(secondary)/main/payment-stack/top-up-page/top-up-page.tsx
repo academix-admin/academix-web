@@ -348,7 +348,7 @@ export default function TopUpPage() {
       const payment = await makePayment(jwt, requestData);
       const status = payment.status;
 
-      if (status === 'TransactionStatus.pinError') {
+      if (status === 'Payment.pinError') {
         topUpBottomController.close();
         setTopUpLoading(false);
 
@@ -381,7 +381,7 @@ export default function TopUpPage() {
           );
         }
         return;
-      } else if (status === 'TransactionStatus.failed') {
+      } else if (status === 'Payment.failed') {
         topUpBottomController.close();
         setTopUpLoading(false);
         throw new Error(payment.error ?? payment.status);

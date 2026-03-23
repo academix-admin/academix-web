@@ -346,7 +346,7 @@ export default function WithdrawPage() {
       const payment = await makePayment(jwt, requestData);
       const status = payment.status;
 
-      if (status === 'TransactionStatus.pinError') {
+      if (status === 'Payment.pinError') {
         withdrawBottomController.close();
         setWithdrawLoading(false);
 
@@ -379,7 +379,7 @@ export default function WithdrawPage() {
           );
         }
         return;
-      } else if (status === 'TransactionStatus.failed') {
+      } else if (status === 'Payment.failed') {
         withdrawBottomController.close();
         setWithdrawLoading(false);
         throw new Error(payment.error ?? payment.status);

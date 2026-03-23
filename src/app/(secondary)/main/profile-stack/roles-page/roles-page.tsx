@@ -347,7 +347,7 @@ export default function RolesPage() {
       });
       const payment = await response.json();
 
-      if (payment.status === 'TransactionStatus.pinError') {
+      if (payment.status === 'Payment.pinError') {
         buyInBottomController.close();
         setBuyInLoading(false);
 
@@ -378,7 +378,7 @@ export default function RolesPage() {
           );
         }
         return;
-      } else if (payment.status === 'TransactionStatus.failed') {
+      } else if (payment.status === 'Payment.failed') {
         buyInBottomController.close();
         setBuyInLoading(false);
         throw new Error(payment.error ?? payment.status);
