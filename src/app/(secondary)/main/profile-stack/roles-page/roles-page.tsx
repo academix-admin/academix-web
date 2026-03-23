@@ -702,7 +702,7 @@ export default function RolesPage() {
           onClick: async () => {
             ussdDialog.close();
             if (currentTransactionId) {
-              await nav.pushAndPopUntil('view_transaction', (entry: any) => entry.key === 'profile_page', { transactionId: currentTransactionId });
+              await nav.push('view_transaction', { transactionId: currentTransactionId });
             }
           }
         }]}
@@ -723,7 +723,7 @@ export default function RolesPage() {
           onClick: async () => {
             bankTransferDialog.close();
             if (currentTransactionId) {
-              await nav.pushAndPopUntil('view_transaction', (entry: any) => entry.key === 'profile_page', { transactionId: currentTransactionId });
+              await nav.push('view_transaction', { transactionId: currentTransactionId });
             }
           }
         }]}

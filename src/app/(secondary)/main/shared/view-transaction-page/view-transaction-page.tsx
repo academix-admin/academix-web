@@ -141,7 +141,7 @@ export default function ViewTransactionPage(props: ViewTransactionProps) {
         }
       }
     } else if (isTop) {
-      nav.popToRoot();
+      nav.pop();
     }
   }, [getTransactionByIdObj.isProvided, getTransactionByIdObj.getter, transactionId, isTop, nav]);
 
