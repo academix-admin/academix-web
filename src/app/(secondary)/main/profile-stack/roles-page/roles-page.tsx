@@ -703,6 +703,7 @@ export default function RolesPage() {
           onClick: async () => {
             ussdDialog.close();
             if (currentTransactionId) {
+              await load();
               await nav.push('view_transaction', { transactionId: currentTransactionId });
             }
           }
@@ -724,6 +725,7 @@ export default function RolesPage() {
           onClick: async () => {
             bankTransferDialog.close();
             if (currentTransactionId) {
+              await load();
               await nav.push('view_transaction', { transactionId: currentTransactionId });
             }
           }
