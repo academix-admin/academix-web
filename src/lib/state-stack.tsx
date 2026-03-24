@@ -1079,8 +1079,15 @@ export function createStateStack<
     const [isHydrated, setIsHydrated] = useState(() => core.isHydrated(scope, keyStr));
 
     useEffect(() => {
+      // Use functional update so React bails out when the value hasn't changed.
+      // subscribeToHydration replays via queueMicrotask when already hydrated,
+      // so without the bail-out guard every re-render re-subscribes, the replay
+      // fires setIsHydrated(true) again, causing an infinite update loop.
       return core.subscribeToHydration(scope, keyStr, () => {
-        setIsHydrated(core.isHydrated(scope, keyStr));
+        setIsHydrated((prev) => {
+          const next = core.isHydrated(scope, keyStr);
+          return prev === next ? prev : next;
+        });
       });
     }, [scope, keyStr]);
 
@@ -1233,8 +1240,15 @@ export function useDemandState<T>(
   const [isHydrated, setIsHydrated] = useState(() => core.isHydrated(scope, keyStr));
 
   useEffect(() => {
+    // Use functional update so React bails out when the value hasn't changed.
+    // subscribeToHydration replays via queueMicrotask when already hydrated,
+    // so without the bail-out guard every re-render re-subscribes, the replay
+    // fires setIsHydrated(true) again, causing an infinite update loop.
     return core.subscribeToHydration(scope, keyStr, () => {
-      setIsHydrated(core.isHydrated(scope, keyStr));
+      setIsHydrated((prev) => {
+        const next = core.isHydrated(scope, keyStr);
+        return prev === next ? prev : next;
+      });
     });
   }, [scope, keyStr]);
 
