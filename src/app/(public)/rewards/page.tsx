@@ -272,28 +272,31 @@ export default function Rewards({ searchParams }: RewardsPageProps) {
 
   };
 
+  // 'academix' is the nav key but the DOM element id is 'academix-ratio'.
+  // Apply the same mapping the nav button uses so both scroll and active
+  // highlight work correctly when to='academix' is passed.
+  const resolveSection = (raw: string): string =>
+    raw === 'academix' ? 'academix-ratio' : raw;
+
   useLayoutEffect(() => {
     if (calledFind) return;
 
-    const targetSection = to || window.location.hash.replace('#', '');
+    const raw = to || window.location.hash.replace('#', '');
+    if (!raw) return;
 
-    if (targetSection) {
-      setCalledFind(true);
-      setActiveSection(targetSection);
+    const targetSection = resolveSection(raw);
 
-      // Small delay to ensure the next paint cycle
+    setCalledFind(true);
+    setActiveSection(targetSection);
+
+    requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          const element = document.getElementById(targetSection);
-          if (element) {
-            element.scrollIntoView({
-              behavior: 'smooth',
-              block: 'start'
-            });
-          }
-        });
+        const element = document.getElementById(targetSection);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
       });
-    }
+    });
   }, [to, calledFind]);
 
   const navigation = {
