@@ -386,7 +386,9 @@ export default function QuizChallenge(props: QuizChallengeProps) {
                 layoutProp={{
                     backgroundColor: theme === 'light' ? "#fff" : "#121212",
                     handleColor: "#888",
-                    handleWidth: "48px"
+                    handleWidth: "48px",
+                    maxWidth: '800px',
+                    maxHeight: '88dvh'
                 }}
                 closeThreshold={0.2}
                 zIndex={1000}
