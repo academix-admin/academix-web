@@ -37,13 +37,14 @@ const showQuestion = (question: string, status: string) => {
 };
 
 // Status badge component
-const StatusBadge = ({ status, time, onRetry, canResubmit, questionId, questionStatus }: {
+const StatusBadge = ({ status, time, onRetry, canResubmit, questionId, questionStatus, options_selected }: {
   status: string;
   time: number | null | undefined;
   onRetry: (questionId: string) => void;
   canResubmit: boolean;
   questionId: string;
   questionStatus?: string;
+  options_selected: string[];
 }) => {
   const { theme } = useTheme();
   const { t } = useLanguage();
@@ -74,6 +75,13 @@ const StatusBadge = ({ status, time, onRetry, canResubmit, questionId, questionS
   if (status === 'data') {
     return (
       <div className={`${styles.statusCompleted} ${styles[`statusCompleted_${theme}`]}`}>
+        {options_selected.length > 0 && (
+          <div className={styles.optionsSelected}>
+            {options_selected.map((opt, i) => (
+              <span key={i} className={`${styles.optionChip} ${styles[`optionChip_${theme}`]}`}>{opt}</span>
+            ))}
+          </div>
+        )}
         <div className={styles.completedContent}>
           {questionStatus === 'Question.completed' && (
             <>
@@ -123,7 +131,8 @@ const QuestionCard = ({
   onRetry,
   canResubmit,
   questionId,
-  questionStatus
+  questionStatus,
+  options_selected
 }: {
   question: string;
   index: number;
@@ -133,6 +142,7 @@ const QuestionCard = ({
   canResubmit: boolean;
   questionId: string;
   questionStatus?: string;
+  options_selected: string[];
 }) => {
   const { theme } = useTheme();
   const { t } = useLanguage();
@@ -156,6 +166,7 @@ const QuestionCard = ({
           canResubmit={canResubmit}
           questionId={questionId}
           questionStatus={questionStatus}
+          options_selected={options_selected}
         />
       </div>
     </div>
@@ -194,6 +205,7 @@ export default function TrackerSection ({
           canResubmit={item.canResubmit}
           questionId={item.questionId}
           questionStatus={item.questionStatus}
+          options_selected={item.options_selected}
         />
       ))}
     </div>

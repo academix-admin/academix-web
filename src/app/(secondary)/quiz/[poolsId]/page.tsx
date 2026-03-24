@@ -45,13 +45,13 @@ interface SubmissionState {
   status: SubmissionStatus;
   questionId: string;
   time?: number | null;
-  questionStatus?: string; // 'success', 'failed', etc.
+  questionStatus?: string;
+  options_selected: string[];
 }
 
 export type QuestionTrackerState = SubmissionState & {
   question: string;
   canResubmit: boolean;
-  questionStatus?: string; 
 };
 
 interface QuizSession {
@@ -163,7 +163,8 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
         status: q.questionTime != null ? 'data' as SubmissionStatus : 'initial',
         questionId: q.poolsQuestionId,
         time: q.questionTime,
-        questionStatus: undefined // Will be populated when backend responds
+        questionStatus: undefined,
+        options_selected: []
       }])
     );
 
@@ -279,7 +280,8 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
           status: 'error',
           questionId: question.poolsQuestionId,
           time: timeTaken,
-          questionStatus: undefined
+          questionStatus: undefined,
+          options_selected: prev.submissions.get(question.poolsQuestionId)?.options_selected ?? []
         });
         return { ...prev, submissions: newSubmissions };
       });
@@ -293,7 +295,8 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
         status: 'loading',
         questionId: question.poolsQuestionId,
         time: timeTaken,
-        questionStatus: undefined
+        questionStatus: undefined,
+        options_selected: prev.submissions.get(question.poolsQuestionId)?.options_selected ?? []
       });
       return { ...prev, submissions: newSubmissions };
     });
@@ -314,6 +317,7 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
       if (data.status === 'Submission.success' || data.status === 'Submission.duplicate') {
         // Keep original questionStatus format from backend
         const questionStatus = data.question_status || data.questionStatus;
+        const options_selected: string[] = data.options_selected ?? [];
         
         // Update submission status to successful
       setQuizSession(prev => {
@@ -333,7 +337,8 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
           status: 'data',
           questionId: question.poolsQuestionId,
           time: timeTaken,
-          questionStatus: questionStatus
+          questionStatus: questionStatus,
+          options_selected
         });
 
         return {
@@ -351,7 +356,8 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
             status: 'error',
             questionId: question.poolsQuestionId,
             time: timeTaken,
-            questionStatus: undefined
+            questionStatus: undefined,
+            options_selected: prev.submissions.get(question.poolsQuestionId)?.options_selected ?? []
           });
           return { ...prev, submissions: newSubmissions };
         });
@@ -364,7 +370,8 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
           status: 'error',
           questionId: question.poolsQuestionId,
           time: timeTaken,
-          questionStatus: undefined
+          questionStatus: undefined,
+          options_selected: prev.submissions.get(question.poolsQuestionId)?.options_selected ?? []
         });
         return { ...prev, submissions: newSubmissions };
       });
@@ -378,7 +385,8 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
           status: 'error',
           questionId: question.poolsQuestionId,
           time: timeTaken,
-          questionStatus: undefined
+          questionStatus: undefined,
+          options_selected: prev.submissions.get(question.poolsQuestionId)?.options_selected ?? []
         });
         return { ...prev, submissions: newSubmissions };
       });
@@ -407,7 +415,8 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
            status: 'loading',
            questionId: currentQuestion.poolsQuestionId,
            time: timeTaken,
-           questionStatus: undefined
+           questionStatus: undefined,
+           options_selected: prev.submissions.get(currentQuestion.poolsQuestionId)?.options_selected ?? []
         });
 
          // ✅ Mark for backend submission later
@@ -727,7 +736,8 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
         time,
         question: question.questionData.questionsText,
         canResubmit: validForNotSubmitted(question),
-        questionStatus
+        questionStatus,
+        options_selected: submission?.options_selected ?? [],
       };
     }).sort((a, b) => {
       // Sort: completed first, then in-progress, then initial
