@@ -83,6 +83,7 @@ export default function QuizCommitment(props: QuizChallengeProps) {
 
   const [currentQuiz, setCurrentQuiz] = useState<UserDisplayQuizTopicModel | null>(null);
   const getActiveQuizObj = useObject<UserDisplayQuizTopicModel | null>('getActiveQuiz', { global: true, scope: 'quiz-topics' });
+  const getQuizByPoolsIdObj = useObject<(id: string) => UserDisplayQuizTopicModel | undefined>('getQuizByPoolsId', { global: true, scope: 'quiz-topics' });
   const getCodeQuizObj = useObject<UserDisplayQuizTopicModel | null>('getCodeQuiz', { global: true, scope: 'quiz-topics' });
   const [selectedRedeemCodeModel, setSelectedRedeemCodeModel] = useState<RedeemCodeModel | null>(null);
   const [selectedSkip, setSelectedSkip] = useState(false);
@@ -176,13 +177,14 @@ export default function QuizCommitment(props: QuizChallengeProps) {
   useEffect(() => {
 
   const activeQuiz = getActiveQuizObj.isProvided ? getActiveQuizObj.getter() : null;
+  const quizById = getQuizByPoolsIdObj.isProvided ? (getQuizByPoolsIdObj.getter() ? getQuizByPoolsIdObj.getter()(poolsId) : null) : null;
   const codeQuiz = getCodeQuizObj.isProvided ? getCodeQuizObj.getter() : null;
   const resolvedQuiz =
     action === 'active'
-      ? (activeQuiz)
-      : (codeQuiz);
+      ? activeQuiz
+      : action === 'code' ? codeQuiz : quizById;
     const getQuiz = resolvedQuiz;
-    const isProvided = action === 'active' ? getActiveQuizObj.isProvided : getCodeQuizObj.isProvided;
+    const isProvided = action === 'active' ? getActiveQuizObj.isProvided : action === 'code' ? getCodeQuizObj.isProvided : getQuizByPoolsIdObj.isProvided;
 
     if (getQuiz && !currentQuiz) {
       fetchPoolMembers(getQuiz);
