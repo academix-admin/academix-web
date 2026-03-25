@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { use, useEffect, useState } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import styles from './quiz-page-title.module.css';
 import { useLanguage } from '@/context/LanguageContext';
@@ -23,17 +23,20 @@ export default function QuizPageTitle({ onStateChange }: ComponentStateProps) {
   const [bottomViewerId, bottomController, bottomIsOpen] = useBottomController();
   const [scannedQuizPool, setScannedQuizPool] = useState<UserDisplayQuizTopicModel | null>(null);
 
-  useProvideObject(
-    'getActiveQuiz',
-    () => scannedQuizPool,
-    { global: true, scope: 'quiz-topics', dependencies: [scannedQuizPool] }
-  );
+  useEffect(() => {
+    if (!scannedQuizPool) return;
+    useProvideObject(
+      'getActiveQuiz',
+      () => scannedQuizPool,
+      { global: true, scope: 'quiz-topics' }
+    );
 
-  useProvideObject(
-    'getCodeQuiz',
-    () => scannedQuizPool,
-    { global: true, scope: 'quiz-topics', dependencies: [scannedQuizPool] }
-  );
+    useProvideObject(
+      'getCodeQuiz',
+      () => scannedQuizPool,
+      { global: true, scope: 'quiz-topics' }
+    );
+  }, [scannedQuizPool]);
 
   const handleDisplayClose = () => {
     bottomController.close();
@@ -112,9 +115,9 @@ export default function QuizPageTitle({ onStateChange }: ComponentStateProps) {
   );
 }
 
-function QuizJoinContent({ theme, t, onClose, scannedQuizPool, setScannedQuizPool }: { 
-  theme: string; 
-  t: any; 
+function QuizJoinContent({ theme, t, onClose, scannedQuizPool, setScannedQuizPool }: {
+  theme: string;
+  t: any;
   onClose: () => void;
   scannedQuizPool: UserDisplayQuizTopicModel | null;
   setScannedQuizPool: (quiz: UserDisplayQuizTopicModel | null) => void;
@@ -165,12 +168,12 @@ function QuizJoinContent({ theme, t, onClose, scannedQuizPool, setScannedQuizPoo
       if (data?.status && data?.quiz_pool) {
         const quizPool = new UserDisplayQuizTopicModel(data.quiz_pool);
         const memberStatus = data?.is_member === true;
-        
+
         setScannedQuizPool(quizPool);
-        
-        nav.push('quiz_commitment', { 
-          poolsId: quizPool?.quizPool?.poolsId, 
-          action: memberStatus ? 'active' : 'code' 
+
+        nav.push('quiz_commitment', {
+          poolsId: quizPool?.quizPool?.poolsId,
+          action: memberStatus ? 'active' : 'code'
         });
         onClose();
       } else {

@@ -82,7 +82,6 @@ export default function QuizCommitment(props: QuizChallengeProps) {
   const [transactionModels, demandTransactionModels, setTransactionModels] = useTransactionModel(lang);
 
   const [currentQuiz, setCurrentQuiz] = useState<UserDisplayQuizTopicModel | null>(null);
-  const getQuizByPoolsIdObj = useObject<(id: string) => UserDisplayQuizTopicModel | undefined>('getQuizByPoolsId', { global: true, scope: 'quiz-topics' });
   const getActiveQuizObj = useObject<UserDisplayQuizTopicModel | null>('getActiveQuiz', { global: true, scope: 'quiz-topics' });
   const getCodeQuizObj = useObject<UserDisplayQuizTopicModel | null>('getCodeQuiz', { global: true, scope: 'quiz-topics' });
   const [selectedRedeemCodeModel, setSelectedRedeemCodeModel] = useState<RedeemCodeModel | null>(null);
@@ -94,7 +93,7 @@ export default function QuizCommitment(props: QuizChallengeProps) {
 
   const [withdrawBottomViewerId, withdrawBottomController, withdrawBottomIsOpen] = useBottomController();
 
-  const [activeQuiz, , setActiveQuizTopicModel] = useActiveQuiz(lang);
+  const [ activeQuiz, , setActiveQuizTopicModel] = useActiveQuiz(lang);
   const [membersCount, setMembersCount] = useState<number | null>(null);
 
   const [quizInfoBottomViewerId, quizInfoBottomController, quizInfoBottomIsOpen, , quizInfoBottomRef] = useBottomController();
@@ -103,6 +102,7 @@ export default function QuizCommitment(props: QuizChallengeProps) {
 
   const [toQuizLoading, setToQuizLoading] = useState(false);
   const leaveDialog = useDialog();
+
 
   useProvideObject<PinData>('pin_controller', () => {
     return {
@@ -123,6 +123,11 @@ export default function QuizCommitment(props: QuizChallengeProps) {
   useEffect(() => {
     currentQuizRef.current = currentQuiz;
   }, [currentQuiz]);
+
+    useEffect(() => {
+    if(!activeQuiz) return;
+    setCurrentQuiz(activeQuiz);
+  }, [activeQuiz]);
 
   // Subscribe to changes
   const handlePoolChange = useCallback((event: PoolChangeEvent) => {
@@ -170,10 +175,14 @@ export default function QuizCommitment(props: QuizChallengeProps) {
 
   useEffect(() => {
 
-    const activeQuiz = getActiveQuizObj.isProvided ? getActiveQuizObj.getter() : null;
-    const codeQuiz = getCodeQuizObj.isProvided ? getCodeQuizObj.getter() : null;
-    const getQuiz = action === 'active' ? activeQuiz : action === 'code' ? codeQuiz : (getQuizByPoolsIdObj.isProvided ? getQuizByPoolsIdObj.getter()?.(poolsId) : null);
-    const isProvided = action === 'active' ? getActiveQuizObj.isProvided : action === 'code' ? getCodeQuizObj.isProvided : getQuizByPoolsIdObj.isProvided;
+  const activeQuiz = getActiveQuizObj.isProvided ? getActiveQuizObj.getter() : null;
+  const codeQuiz = getCodeQuizObj.isProvided ? getCodeQuizObj.getter() : null;
+  const resolvedQuiz =
+    action === 'active'
+      ? (activeQuiz)
+      : (codeQuiz);
+    const getQuiz = resolvedQuiz;
+    const isProvided = action === 'active' ? getActiveQuizObj.isProvided : getCodeQuizObj.isProvided;
 
     if (getQuiz && !currentQuiz) {
       fetchPoolMembers(getQuiz);
@@ -181,10 +190,10 @@ export default function QuizCommitment(props: QuizChallengeProps) {
       if (getQuiz.quizPool?.poolsJob && getQuiz.quizPool?.poolsJobEndAt) {
         controlDisplayMessage(getQuiz.quizPool.poolsJob, getQuiz.quizPool.poolsJobEndAt);
       }
-    } else if (isProvided && isTop && !currentQuiz) {
+    } else if (isProvided && isTop && !getQuiz) {
       nav.popToRoot();
     }
-  }, [poolsId, isTop, action, controlDisplayMessage, getQuizByPoolsIdObj.isProvided, getActiveQuizObj.isProvided, getCodeQuizObj.isProvided]);
+  }, [poolsId, isTop, action, controlDisplayMessage, getActiveQuizObj.isProvided, getCodeQuizObj.isProvided]);
 
   useEffect(() => {
     poolsSubscriptionManager.attachListener(handlePoolChange, !currentQuiz);
@@ -295,7 +304,7 @@ export default function QuizCommitment(props: QuizChallengeProps) {
       const status = leave.status;
 
       if (status === 'PoolActive.success') {
-        if (activeQuiz?.quizPool?.poolsId) poolsSubscriptionManager.removeQuizTopicPool(activeQuiz.quizPool.poolsId);
+        if (currentQuiz?.quizPool?.poolsId) poolsSubscriptionManager.removeQuizTopicPool(currentQuiz.quizPool.poolsId);
         setActiveQuizTopicModel(null);
         const updatedModels = transactionModels.filter(
           (m) => m.poolsId !== leave.pools_id
@@ -306,8 +315,8 @@ export default function QuizCommitment(props: QuizChallengeProps) {
           closeDisplay();
           quizInfoBottomController.open();
         }
-      } else if (status === 'PoolActive.no_active' && activeQuiz) {
-        if (activeQuiz?.quizPool?.poolsId) poolsSubscriptionManager.removeQuizTopicPool(activeQuiz.quizPool.poolsId);
+      } else if (status === 'PoolActive.no_active' && currentQuiz) {
+        if (currentQuiz?.quizPool?.poolsId) poolsSubscriptionManager.removeQuizTopicPool(currentQuiz.quizPool.poolsId);
         setActiveQuizTopicModel(null);
         const updatedModels = transactionModels.filter(
           (m) => m.poolsId !== leave.pools_id
@@ -611,7 +620,8 @@ export default function QuizCommitment(props: QuizChallengeProps) {
 
     return false;
   };
-
+  
+  
   return (
     <main className={`${styles.container} ${styles[`container_${theme}`]}`}>
       <header className={`${styles.header} ${styles[`header_${theme}`]}`}>
@@ -661,7 +671,7 @@ export default function QuizCommitment(props: QuizChallengeProps) {
             <button
               type="button"
               className={styles.removeButton}
-              disabled={!activeQuiz || activeQuiz.quizPool?.poolsStatus != 'Pools.open'}
+              disabled={!currentQuiz || currentQuiz.quizPool?.poolsStatus != 'Pools.open'}
               onClick={handleLeave}
             >
               {quizLoading ? <span className={styles.spinner}></span> : t('leave_text')}
@@ -669,7 +679,7 @@ export default function QuizCommitment(props: QuizChallengeProps) {
             <button
               className={styles.continueButton}
               onClick={onContinueClick}
-              disabled={!activeQuiz || !getIsContinueEnabled(activeQuiz)}
+              disabled={!currentQuiz || !getIsContinueEnabled(currentQuiz)}
             >
               {toQuizLoading ? <span className={styles.spinner}></span> : t('continue')}
             </button>

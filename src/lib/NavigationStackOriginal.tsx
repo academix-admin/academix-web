@@ -170,55 +170,11 @@ export const useScrollBroadcast = (callback: (event: ScrollBroadcastEvent) => vo
   }, [callback]);
 };
 
-let _groupStyleMountCount = 0;
-const GROUP_STYLE_CSS = `
-  .group-navigation-stack {
-    position: relative;
-    width: 100%;
-    height: 100%;
-  }
-
-  .group-stack-container {
-    width: 100%;
-    height: 100%;
-  }
-
-  .group-stack-hidden {
-    display: none !important;
-    visibility: hidden !important;
-    pointer-events: none !important;
-    opacity: 0 !important;
-  }
-
-  .group-stack-active {
-    display: block !important;
-    visibility: visible !important;
-    pointer-events: all !important;
-    opacity: 1 !important;
-  }
-
-  .group-stack-container {
-    transition: opacity 0.2s ease;
-  }
-`;
-
-export type SwipeBackOptions = {
-  edgeWidth?: number;
-  threshold?: number;
-  maxTranslate?: number | string;
-  cancelDuration?: number;
-  commitDuration?: number;
-  disabled?: boolean;
-};
-
 // ==================== Types ====================
 type NavParams = Record<string, any> | undefined;
 type LazyComponent = Promise<{ default: ComponentType<any> }>;
 type TransitionState = "enter" | "idle" | "exit" | "done";
 type ParsedStack = { code: string; params?: NavParams }[];
-export type NavActionResult =
-  | { ok: true }
-  | { ok: false; reason: 'guard' | 'lock' | 'empty-stack' | 'parent-only' };
 
 export type StackEntry = {
   // uid format: "groupId:stackId:pageUid" (composite key for scroll restoration)
@@ -254,16 +210,16 @@ type MissingRouteConfig = {
 
 export type NavStackAPI = {
   id: string;
-  push: (rawKey: string, params?: NavParams, metadata?: StackEntry['metadata']) => Promise<boolean | NavActionResult>;
-  replace: (rawKey: string, params?: NavParams, metadata?: StackEntry['metadata']) => Promise<boolean | NavActionResult>;
-  pop: () => Promise<boolean | NavActionResult>;
-  popUntil: (predicate: (entry: StackEntry, idx: number, stack: StackEntry[]) => boolean) => Promise<boolean | NavActionResult>;
-  popToRoot: () => Promise<boolean | NavActionResult>;
-  pushAndPopUntil: (rawKey: string, predicate: (entry: StackEntry, idx: number, stack: StackEntry[]) => boolean, params?: NavParams, metadata?: StackEntry['metadata']) => Promise<boolean | NavActionResult>;
-  pushAndReplace: (rawKey: string, params?: NavParams, metadata?: StackEntry['metadata']) => Promise<boolean | NavActionResult>;
+  push: (rawKey: string, params?: NavParams, metadata?: StackEntry['metadata']) => Promise<boolean>;
+  replace: (rawKey: string, params?: NavParams, metadata?: StackEntry['metadata']) => Promise<boolean>;
+  pop: () => Promise<boolean>;
+  popUntil: (predicate: (entry: StackEntry, idx: number, stack: StackEntry[]) => boolean) => Promise<boolean>;
+  popToRoot: () => Promise<boolean>;
+  pushAndPopUntil: (rawKey: string, predicate: (entry: StackEntry, idx: number, stack: StackEntry[]) => boolean, params?: NavParams, metadata?: StackEntry['metadata']) => Promise<boolean>;
+  pushAndReplace: (rawKey: string, params?: NavParams, metadata?: StackEntry['metadata']) => Promise<boolean>;
   peek: () => StackEntry | undefined;
-  go: (rawKey: string, params?: NavParams, metadata?: StackEntry['metadata']) => Promise<boolean | NavActionResult>;
-  replaceParam: (params: NavParams, merge?: boolean) => Promise<boolean | NavActionResult>;
+  go: (rawKey: string, params?: NavParams, metadata?: StackEntry['metadata']) => Promise<boolean>;
+  replaceParam: (params: NavParams, merge?: boolean) => Promise<boolean>;
 
   provideObject: <T>(
     key: string,
@@ -327,7 +283,7 @@ export type NavStackAPI = {
       provideObjects?: Record<string, () => any>;
       metadata?: StackEntry['metadata'];
     }
-  ) => Promise<boolean | NavActionResult>;
+  ) => Promise<boolean>;
 
   replaceWith: (
     rawKey: string,
@@ -337,7 +293,7 @@ export type NavStackAPI = {
       provideObjects?: Record<string, () => any>;
       metadata?: StackEntry['metadata'];
     }
-  ) => Promise<boolean | NavActionResult>;
+  ) => Promise<boolean>;
 
   goWith: (
     rawKey: string,
@@ -347,7 +303,7 @@ export type NavStackAPI = {
       provideObjects?: Record<string, () => any>;
       metadata?: StackEntry['metadata'];
     }
-  ) => Promise<boolean | NavActionResult>;
+  ) => Promise<boolean>;
 
   getStack: () => StackEntry[];
   length: () => number;
@@ -1098,43 +1054,41 @@ class ObjectReferenceRegistry {
     };
   }
 
-  has(stackId: string, key: string): boolean {
-    return this.hasWithOptions(stackId, key, {});
-  }
+  // Alias methods for backward compatibility
+  has = this.hasGetter;
 }
 
 // Global instance (maintains same export)
 const globalObjectRegistry = new ObjectReferenceRegistry();
 
 // ==================== Global Systems ====================
-type RegistryEntry = {
-  stack: StackEntry[];
-  listeners: Set<StackChangeListener>;
-  guards: Set<GuardFn>;
-  middlewares: Set<MiddlewareFn>;
-  maxStackSize: number;
-  historySyncEnabled: boolean;
-  snapshotBuffer: StackEntry[];
-  parentId: string | null;
-  childIds: Set<string>;
-  navLink?: NavigationMap;
-  api?: NavStackAPI;
-  currentPath?: string;
-  isInGroup?: boolean;
-  groupId?: string;
-  lifecycleHandlers: Map<LifecycleHook, Set<LifecycleHandler | AsyncLifecycleHandler>>;
-  currentState: 'active' | 'paused' | 'background';
-  lastActiveEntry?: StackEntry;
-};
+// Only create these on the client side
+let globalRegistry: Map<string, any>;
+let isServer = typeof window === 'undefined';
 
-const _clientRegistry =
-  typeof window !== 'undefined' ? new Map<string, RegistryEntry>() : null;
-
-function getRegistry(): Map<string, RegistryEntry> {
-  if (typeof window !== 'undefined') {
-    return _clientRegistry!;
-  }
-  return new Map<string, RegistryEntry>();
+if (!isServer) {
+  globalRegistry = new Map<string, {
+    stack: StackEntry[];
+    listeners: Set<StackChangeListener>;
+    guards: Set<GuardFn>;
+    middlewares: Set<MiddlewareFn>;
+    maxStackSize: number;
+    historySyncEnabled: boolean;
+    snapshotBuffer: StackEntry[];
+    parentId: string | null;
+    childIds: Set<string>;
+    navLink?: NavigationMap;
+    api?: NavStackAPI;
+    currentPath?: string;
+    isInGroup?: boolean;
+    groupId?: string;
+    lifecycleHandlers: Map<LifecycleHook, Set<LifecycleHandler | AsyncLifecycleHandler>>;
+    currentState: 'active' | 'paused' | 'background';
+    lastActiveEntry?: StackEntry;
+  }>();
+} else {
+  // Server-side stub
+  globalRegistry = new Map();
 }
 
 // ==================== Group Context ====================
@@ -1308,14 +1262,8 @@ class TransitionManager {
 class PageMemoryManager {
   private cache = new Map<string, {
     element: ReactNode;
-    params: NavParams;
     lastActive: number;
   }>();
-
-  getMeta(uid: string): { params: NavParams } | undefined {
-    const entry = this.cache.get(uid);
-    return entry ? { params: entry.params } : undefined;
-  }
 
   get(uid: string): ReactNode | undefined {
     const entry = this.cache.get(uid);
@@ -1326,11 +1274,10 @@ class PageMemoryManager {
     return undefined;
   }
 
-  set(uid: string, element: ReactNode, params: NavParams = {}) {
+  set(uid: string, element: ReactNode) {
     this.cleanup();
     this.cache.set(uid, {
       element,
-      params,
       lastActive: Date.now()
     });
   }
@@ -1505,8 +1452,7 @@ export function useUnifiedScrollRestoration(
   renders: RenderRecord[],
   stackSnapshot: StackEntry[],
   groupContext: GroupNavigationContextType | null,
-  groupStackId: string | null,
-  enabled: boolean = true
+  groupStackId: string | null
 ) {
   // Composite key: groupId:stackId for groups, or 'standalone:stackId' for standalone
   const groupStackKey = groupContext
@@ -1592,8 +1538,6 @@ export function useUnifiedScrollRestoration(
 
   // Set up listeners for ALL pages in the stack (same as group version)
   useEffect(() => {
-    if (!enabled) return;
-    const registry = getRegistry();
     // Get ALL current UIDs from this stack
     const currentUids = new Set<string>();
     const collected = new Set<string>();
@@ -1602,7 +1546,7 @@ export function useUnifiedScrollRestoration(
       if (collected.has(stackId)) return;
       collected.add(stackId);
 
-      const regEntry = registry.get(stackId);
+      const regEntry = globalRegistry.get(stackId);
       if (!regEntry) return;
 
       if (regEntry.stack && Array.isArray(regEntry.stack)) {
@@ -1619,10 +1563,10 @@ export function useUnifiedScrollRestoration(
     };
 
     // For standalone: only collect from current stack. For groups: collect from entire tree
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && globalRegistry) {
       if (groupContext) {
         // Group mode: collect from entire tree
-        registry.forEach((regEntry, stackId) => {
+        globalRegistry.forEach((regEntry, stackId) => {
           if (!regEntry.parentId) {
             collectUidsFromStack(stackId);
           }
@@ -1711,11 +1655,10 @@ export function useUnifiedScrollRestoration(
     return () => {
       // Empty return - listeners stay active even when stack changes
     };
-  }, [stackSnapshot, groupStackKey, api.id, groupContext, enabled]);
+  }, [stackSnapshot, groupStackKey, api.id, groupContext]);
 
   // Restore scroll position when page becomes active
   useEffect(() => {
-    if (!enabled) return;
     const topEntry = stackSnapshot.at(-1);
     if (!topEntry) {
       return;
@@ -1757,12 +1700,10 @@ export function useUnifiedScrollRestoration(
     // Update global state
     globalScrollData.lastUid = uid;
     globalScrollData.lastGroupStackKey = groupStackKey;
-  }, [stackSnapshot, isActiveGroup, groupStackKey, enabled]);
+  }, [stackSnapshot, isActiveGroup, groupStackKey]);
 
   // Clean up scroll for pages no longer in navigation system
   useEffect(() => {
-    if (!enabled) return;
-    const registry = getRegistry();
     const validUids = new Set<string>();
     const visited = new Set<string>();
 
@@ -1770,7 +1711,7 @@ export function useUnifiedScrollRestoration(
       if (visited.has(stackId)) return;
       visited.add(stackId);
 
-      const regEntry = registry.get(stackId);
+      const regEntry = globalRegistry.get(stackId);
       if (!regEntry) return;
 
       if (regEntry.stack && Array.isArray(regEntry.stack)) {
@@ -1786,10 +1727,10 @@ export function useUnifiedScrollRestoration(
       }
     };
 
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && globalRegistry) {
       if (groupContext) {
         // Group mode: traverse entire registry
-        registry.forEach((regEntry, stackId) => {
+        globalRegistry.forEach((regEntry, stackId) => {
           if (!regEntry.parentId) {
             collectUidsRecursive(stackId);
           }
@@ -1829,231 +1770,13 @@ export function useUnifiedScrollRestoration(
         scrollData.pendingListeners.delete(key);
       });
     }
-  }, [stackSnapshot, api, groupContext, enabled]);
-}
-
-export function useSwipeBack(
-  containerRef: React.RefObject<HTMLElement | null>,
-  nav: NavStackAPI,
-  options: SwipeBackOptions = {}
-) {
-  const {
-    edgeWidth = 24,
-    threshold = 0.38,
-    maxTranslate,
-    cancelDuration = 300,
-    commitDuration = 200,
-    disabled = false,
-  } = options;
-
-  const gesture = useRef<{
-    active: boolean;
-    startX: number;
-    startY: number;
-    currentX: number;
-    topEl: HTMLElement | null;
-    belowEl: HTMLElement | null;
-    screenW: number;
-    locked: boolean;
-    committed: boolean;
-  }>({
-    active: false,
-    startX: 0,
-    startY: 0,
-    currentX: 0,
-    topEl: null,
-    belowEl: null,
-    screenW: 0,
-    locked: false,
-    committed: false,
-  });
-
-  useEffect(() => {
-    if (disabled || typeof window === 'undefined') return;
-    const container = containerRef.current;
-    if (!container) return;
-
-    const resolveMaxTranslate = (screenW: number) => {
-      if (typeof maxTranslate === 'number') return maxTranslate;
-      if (typeof maxTranslate === 'string' && maxTranslate.endsWith('%')) {
-        const percent = Number.parseFloat(maxTranslate);
-        return Number.isFinite(percent) ? screenW * (percent / 100) : screenW;
-      }
-      return screenW;
-    };
-
-    const getTopAndBelowPages = () => {
-      const allPages = Array.from(
-        container.querySelectorAll<HTMLElement>('[data-nav-uid]')
-      );
-      const visiblePages = allPages.filter((el) => !el.hasAttribute('inert'));
-      return {
-        top: visiblePages[visiblePages.length - 1] ?? null,
-        below: visiblePages[visiblePages.length - 2] ?? null,
-      };
-    };
-
-    const applyTranslate = (el: HTMLElement, px: number, duration = 0) => {
-      el.style.transition = duration > 0
-        ? `transform ${duration}ms cubic-bezier(0.25, 0.46, 0.45, 0.94)`
-        : 'none';
-      el.style.transform = `translateX(${px}px)`;
-      el.style.willChange = duration > 0 ? 'auto' : 'transform';
-    };
-
-    const resetTranslate = (el: HTMLElement, duration = 0) => {
-      applyTranslate(el, 0, duration);
-      if (duration > 0) {
-        el.addEventListener('transitionend', () => {
-          el.style.transition = '';
-          el.style.transform = '';
-          el.style.willChange = '';
-          el.style.pointerEvents = '';
-          el.style.boxShadow = '';
-        }, { once: true });
-      } else {
-        el.style.transition = '';
-        el.style.transform = '';
-        el.style.willChange = '';
-        el.style.pointerEvents = '';
-        el.style.boxShadow = '';
-      }
-    };
-
-    const applyBelowParallax = (el: HTMLElement, progress: number, duration = 0) => {
-      const offsetPx = -0.3 * el.offsetWidth * (1 - progress);
-      el.style.transition = duration > 0
-        ? `transform ${duration}ms cubic-bezier(0.25, 0.46, 0.45, 0.94)`
-        : 'none';
-      el.style.transform = `translateX(${offsetPx}px)`;
-    };
-
-    const resetBelow = (el: HTMLElement, duration = 0) => {
-      applyBelowParallax(el, 0, duration);
-      if (duration > 0) {
-        el.addEventListener('transitionend', () => {
-          el.style.transition = '';
-          el.style.transform = '';
-        }, { once: true });
-      } else {
-        el.style.transition = '';
-        el.style.transform = '';
-      }
-    };
-
-    const onTouchStart = (e: TouchEvent) => {
-      if (nav.length() <= 1) return;
-      const touch = e.touches[0];
-      if (touch.clientX > edgeWidth) return;
-
-      const { top, below } = getTopAndBelowPages();
-      if (!top) return;
-
-      const g = gesture.current;
-      g.active = true;
-      g.startX = touch.clientX;
-      g.startY = touch.clientY;
-      g.currentX = touch.clientX;
-      g.screenW = window.innerWidth;
-      g.topEl = top;
-      g.belowEl = below;
-      g.locked = false;
-      g.committed = false;
-
-      top.style.pointerEvents = 'none';
-      top.style.boxShadow = '-4px 0 16px rgba(0,0,0,0.15)';
-    };
-
-    const onTouchMove = (e: TouchEvent) => {
-      const g = gesture.current;
-      if (!g.active || g.locked || g.committed) return;
-
-      const touch = e.touches[0];
-      const dx = touch.clientX - g.startX;
-      const dy = touch.clientY - g.startY;
-
-      if (Math.abs(dy) > Math.abs(dx) && Math.abs(dx) < 12) {
-        g.locked = true;
-        if (g.topEl) resetTranslate(g.topEl);
-        if (g.belowEl) resetBelow(g.belowEl);
-        return;
-      }
-
-      if (dx < 0) return;
-
-      e.preventDefault();
-
-      g.currentX = touch.clientX;
-      const translatePx = Math.min(dx, resolveMaxTranslate(g.screenW));
-
-      if (g.topEl) applyTranslate(g.topEl, translatePx);
-      if (g.belowEl) applyBelowParallax(g.belowEl, Math.min(translatePx / g.screenW, 1));
-    };
-
-    const onTouchEnd = () => {
-      const g = gesture.current;
-      if (!g.active) return;
-      g.active = false;
-
-      if (g.locked) {
-        g.locked = false;
-        return;
-      }
-
-      const dx = g.currentX - g.startX;
-      const progress = dx / g.screenW;
-      const commit = progress >= threshold;
-
-      if (commit && !g.committed) {
-        g.committed = true;
-
-        if (g.topEl) applyTranslate(g.topEl, resolveMaxTranslate(g.screenW), commitDuration);
-        if (g.belowEl) applyBelowParallax(g.belowEl, 1, commitDuration);
-
-        window.setTimeout(() => {
-          void nav.pop();
-          if (g.topEl) resetTranslate(g.topEl);
-          if (g.belowEl) resetBelow(g.belowEl);
-        }, commitDuration);
-      } else {
-        if (g.topEl) resetTranslate(g.topEl, cancelDuration);
-        if (g.belowEl) resetBelow(g.belowEl, cancelDuration);
-      }
-
-      g.topEl = null;
-      g.belowEl = null;
-    };
-
-    const onTouchCancel = () => {
-      const g = gesture.current;
-      if (!g.active) return;
-      g.active = false;
-      g.locked = false;
-      if (g.topEl) resetTranslate(g.topEl, cancelDuration);
-      if (g.belowEl) resetBelow(g.belowEl, cancelDuration);
-      g.topEl = null;
-      g.belowEl = null;
-    };
-
-    container.addEventListener('touchstart', onTouchStart, { passive: true });
-    container.addEventListener('touchmove', onTouchMove, { passive: false });
-    container.addEventListener('touchend', onTouchEnd, { passive: true });
-    container.addEventListener('touchcancel', onTouchCancel, { passive: true });
-
-    return () => {
-      container.removeEventListener('touchstart', onTouchStart);
-      container.removeEventListener('touchmove', onTouchMove);
-      container.removeEventListener('touchend', onTouchEnd);
-      container.removeEventListener('touchcancel', onTouchCancel);
-    };
-  }, [nav, edgeWidth, threshold, maxTranslate, cancelDuration, commitDuration, disabled, containerRef]);
+  }, [stackSnapshot, api, groupContext]);
 }
 
 
 // ==================== Core Functions ====================
 const NavContext = createContext<NavStackAPI | null>(null);
 const CurrentPageContext = createContext<string | null>(null);
-const _currentPageUidByStack = new Map<string, string>();
 
 function findParentNavContext(): NavStackAPI | null {
   try {
@@ -2370,7 +2093,6 @@ function removeNavQueryParamForStack(stackId: string, groupContext: GroupNavigat
 
 
 function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, parentApi: NavStackAPI | null, currentPath: string, groupContext: GroupNavigationContextType | null = null, groupStackId: string | null): NavStackAPI {
-  const globalRegistry = getRegistry();
   const transitionManager = new TransitionManager();
   const memoryManager = new PageMemoryManager();
   const lifecycleManager = new EnhancedLifecycleManager(id);
@@ -2504,9 +2226,10 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
   let actionLock = false;
   let pendingOperations = 0;
 
-  async function withLock<T>(fn: () => Promise<T>): Promise<T | NavActionResult> {
+  async function withLock<T>(fn: () => Promise<T>): Promise<T | false> {
     if (actionLock) {
-      return { ok: false, reason: 'lock' } as unknown as T;
+      console.warn('[NavStack] Lock already acquired, operation rejected to prevent race condition');
+      return false as unknown as T;
     }
 
     actionLock = true;
@@ -2555,7 +2278,7 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
   const api: NavStackAPI = {
     id,
     async push(rawKey, params, metadata) {
-      return withLock<boolean | NavActionResult>(async () => {
+      return withLock<boolean>(async () => {
         const { key, params: p } = parseRawKey(rawKey, params);
 
         const newEntry: StackEntry = {
@@ -2603,7 +2326,7 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
     },
 
     async replace(rawKey, params, metadata) {
-      return withLock<boolean | NavActionResult>(async () => {
+      return withLock<boolean>(async () => {
         const { key, params: p } = parseRawKey(rawKey, params);
         const newEntry: StackEntry = { uid: generateCompositeUid(id, groupContext, groupStackId, key, p), key, params: p, metadata };
         const previousEntry = regEntry.stack[regEntry.stack.length - 1];
@@ -2649,7 +2372,7 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
     },
 
     async pop() {
-      return withLock<boolean | NavActionResult>(async () => {
+      return withLock<boolean>(async () => {
         if (regEntry.stack.length === 0) {
           if (regEntry.parentId) return false;
           return false;
@@ -2689,7 +2412,7 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
     },
 
     async popUntil(predicate) {
-      return withLock<boolean | NavActionResult>(async () => {
+      return withLock<boolean>(async () => {
         if (regEntry.stack.length === 0) {
           if (regEntry.parentId) return false;
           return false;
@@ -2751,7 +2474,7 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
     },
 
     async popToRoot() {
-      return withLock<boolean | NavActionResult>(async () => {
+      return withLock<boolean>(async () => {
         const action = {
           type: "popToRoot" as const,
           stackSnapshot: regEntry.stack.slice()
@@ -2806,7 +2529,7 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
     },
 
     async pushAndPopUntil(rawKey, predicate, params, metadata) {
-      return withLock<boolean | NavActionResult>(async () => {
+      return withLock<boolean>(async () => {
         const { key, params: p } = parseRawKey(rawKey, params);
         const newEntry: StackEntry = { uid: generateCompositeUid(id, groupContext, groupStackId, key, p), key, params: p, metadata };
 
@@ -2833,7 +2556,11 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
 
         regEntry.stack.push(newEntry);
 
-        // Pop below the predicate before emitting - single final state
+        runMiddlewares(action);
+
+        emit(previousStack, { type: 'pushAndPopUntil', target: newEntry });
+
+        // Now pop everything above the first match for predicate
         let i = regEntry.stack.length - 2; // start below newEntry
         const poppedEntries: StackEntry[] = [];
 
@@ -2842,9 +2569,6 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
           regEntry.stack.splice(i, 1);
           i--;
         }
-
-        runMiddlewares(action);
-        emit(previousStack, { type: 'pushAndPopUntil', target: newEntry });
 
         // After push lifecycle
         lifecycleManager.trigger('onAfterPush', {
@@ -2864,12 +2588,20 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
           });
         }
 
+        // Emit final stack state after all pop operations are complete
+        // This ensures subscribers and persistence layer get the correct final state.
+        // We pass the current final stack as "previousStack" so emit detects no page change
+        // at the top (since top entry is still newEntry) and only notifies subscribers/persists.
+        if (poppedEntries.length > 0) {
+          emit(regEntry.stack.slice(), { type: 'popUntil', target: undefined });
+        }
+
         return true;
       });
     },
 
     async pushAndReplace(rawKey, params, metadata) {
-      return withLock<boolean | NavActionResult>(async () => {
+      return withLock<boolean>(async () => {
         const { key, params: p } = parseRawKey(rawKey, params);
         const newEntry: StackEntry = { uid: generateCompositeUid(id, groupContext, groupStackId, key, p), key, params: p, metadata };
         const previousEntry = regEntry.stack[regEntry.stack.length - 1];
@@ -2912,7 +2644,7 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
     },
 
     async go(rawKey, params, metadata) {
-      return withLock<boolean | NavActionResult>(async () => {
+      return withLock<boolean>(async () => {
         const { key, params: p } = parseRawKey(rawKey, params);
         const newEntry: StackEntry = { uid: generateCompositeUid(id, groupContext, groupStackId, key, p), key, params: p, metadata };
         const previousEntry = regEntry.stack[regEntry.stack.length - 1];
@@ -2956,7 +2688,7 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
     },
 
     async replaceParam(newParams: NavParams, merge: boolean = true) {
-      return withLock<boolean | NavActionResult>(async () => {
+      return withLock<boolean>(async () => {
         const currentEntry = regEntry.stack[regEntry.stack.length - 1];
 
         if (!currentEntry) {
@@ -3355,10 +3087,17 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
         const top = this.peek();
         return top?.uid === uid;
       }
-      const registeredUid = _currentPageUidByStack.get(id);
-      if (registeredUid !== undefined) {
-        return this.peek()?.uid === registeredUid;
+
+      try {
+        const currentUid = useContext(CurrentPageContext);
+        if (currentUid) {
+          const top = this.peek();
+          return top?.uid === currentUid;
+        }
+      } catch (e) {
+        console.warn("nav.isTop() called outside of page context.");
       }
+
       return false;
     },
 
@@ -3886,27 +3625,6 @@ export function useNav() {
   return context;
 }
 
-export function useIsTop(): boolean {
-  const nav = useContext(NavContext);
-  const currentUid = useContext(CurrentPageContext);
-  const [isTop, setIsTop] = useState(() => {
-    if (!nav || !currentUid) return false;
-    return nav.peek()?.uid === currentUid;
-  });
-
-  useEffect(() => {
-    if (!nav || !currentUid) return;
-
-    setIsTop(nav.peek()?.uid === currentUid);
-
-    return nav.subscribe((stack) => {
-      setIsTop(stack[stack.length - 1]?.uid === currentUid);
-    });
-  }, [nav, currentUid]);
-
-  return isTop;
-}
-
 /**
  * Debug hook to inspect available objects in current stack
  * Useful for troubleshooting object availability
@@ -4394,15 +4112,22 @@ export function useObject<T>(
 
       // Subscribe to getter registration
       unsubscribeRef.current = nav.onGetterRegistered?.(key, () => {
-        if (!isMountedRef.current) return;
-        setTimeout(() => {
-          if (!isMountedRef.current) return;
-          const newGetter = nav.getObject<() => T>(key, finalOptions);
-          if (newGetter) {
-            setGetter(() => newGetter);
-            setIsProvided(true);
-          }
-        }, 0);
+        // Getter registered - force state update by setting a timestamp
+        if (isMountedRef.current) {
+          // Force re-run by updating both states
+          setIsProvided(false); // Reset first
+          setGetter(undefined);
+          // Trigger immediate re-check
+          setTimeout(() => {
+            if (isMountedRef.current) {
+              const newGetter = nav.getObject<() => T>(key, finalOptions);
+              if (newGetter) {
+                setGetter(() => newGetter);
+                setIsProvided(true);
+              }
+            }
+          }, 0);
+        }
       }, finalOptions) || (() => { });
       return;
     }
@@ -4751,23 +4476,52 @@ export function GroupNavigationStack({
   useEffect(() => {
     if (typeof document === "undefined") return;
 
-    _groupStyleMountCount++;
+    // Check if styles already exist
+    if (document.getElementById("navstack-group-styles")) return;
 
-    let styleEl = document.getElementById("navstack-group-styles") as HTMLStyleElement | null;
-    if (!styleEl) {
-      styleEl = document.createElement("style");
-      styleEl.id = "navstack-group-styles";
-      styleEl.innerHTML = GROUP_STYLE_CSS;
-      document.head.appendChild(styleEl);
-    }
+    const styleEl = document.createElement("style");
+    styleEl.id = "navstack-group-styles";
+    styleEl.innerHTML = `
+      .group-navigation-stack {
+        position: relative;
+        width: 100%;
+        height: 100%;
+      }
 
+      .group-stack-container {
+        width: 100%;
+        height: 100%;
+      }
+
+      .group-stack-hidden {
+        display: none !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+        opacity: 0 !important;
+      }
+
+      .group-stack-active {
+        display: block !important;
+        visibility: visible !important;
+        pointer-events: all !important;
+        opacity: 1 !important;
+      }
+
+      /* Optional: Add transitions for smoother switching */
+      .group-stack-container {
+        transition: opacity 0.2s ease;
+      }
+    `;
+
+    document.head.appendChild(styleEl);
+
+    // Cleanup function
     return () => {
-      _groupStyleMountCount--;
-      if (_groupStyleMountCount === 0) {
-        const styleElement = document.getElementById("navstack-group-styles");
-        if (styleElement && styleElement.parentNode) {
-          styleElement.parentNode.removeChild(styleElement);
-        }
+      // Only remove if this is the last GroupNavigationStack
+      // You might want to keep it if you have multiple groups
+      const styleElement = document.getElementById("navstack-group-styles");
+      if (styleElement && styleElement.parentNode) {
+        styleElement.parentNode.removeChild(styleElement);
       }
     };
   }, []);
@@ -4893,19 +4647,6 @@ export function GroupNavigationStack({
       <div className="group-navigation-stack">
         {Array.from(navStack.entries()).map(([stackId, stackEl]) => {
           const isActive = (hydrated || (!hydrated && current === stackId)) && stackId === activeStackId;
-
-          if (!isActive && !preloadAll) {
-            return (
-              <div
-                key={stackId}
-                className="group-stack-container group-stack-hidden"
-                style={{ display: 'none', visibility: 'hidden' }}
-                aria-hidden
-                data-stack-id={stackId}
-                data-active={false}
-              />
-            );
-          }
 
           return (
             <div
@@ -5046,7 +4787,6 @@ export default function NavigationStack(props: {
    * Allows retrieving related components by tag
    */
   componentTags?: Record<string, NavigationMap>;
-  swipeBack?: boolean | SwipeBackOptions;
 }) {
   const {
     id,
@@ -5067,7 +4807,6 @@ export default function NavigationStack(props: {
     enableScrollRestoration = true,
     additionalNavLinks = [],
     componentTags = {},
-    swipeBack = true,
   } = props;
 
   // Memoize additional navlinks to prevent unnecessary recalculations
@@ -5109,7 +4848,6 @@ export default function NavigationStack(props: {
 
   const [isInitialized, setInitialized] = useState(false);
   const [stackSnapshot, setStackSnapshot] = useState<StackEntry[]>([]);
-  const swipeContainerRef = useRef<HTMLDivElement>(null);
   const currentPathRef = useRef(
     typeof window !== 'undefined' ? window.location.pathname : ''
   );
@@ -5120,11 +4858,10 @@ export default function NavigationStack(props: {
   }, []);
 
   const api = useMemo(() => {
-    const registry = getRegistry();
     const newApi = createApiFor(id, mergedNavLink, syncHistory || false, parentApi, currentPathRef.current, groupContext, groupStackId);
 
     if (parentApi) {
-      const parentReg = registry.get(parentApi.id);
+      const parentReg = globalRegistry.get(parentApi.id);
       if (parentReg) {
         parentReg.childIds.add(id);
       }
@@ -5146,7 +4883,7 @@ export default function NavigationStack(props: {
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    const regEntry = getRegistry().get(id);
+    const regEntry = globalRegistry.get(id);
     if (!regEntry) return;
 
     const lifecycleManager = api._getLifecycleManager();
@@ -5164,15 +4901,14 @@ export default function NavigationStack(props: {
 
   // Update the registry with the current path reference
   useEffect(() => {
-    const regEntry = getRegistry().get(id);
+    const regEntry = globalRegistry.get(id);
     if (regEntry) {
       regEntry.currentPath = currentPathRef.current;
     }
   }, [id]);
 
   useIsomorphicLayoutEffect(() => {
-    const registry = getRegistry();
-    let regEntry = registry.get(id);
+    let regEntry = globalRegistry.get(id);
     if (!regEntry) {
       regEntry = {
         stack: [],
@@ -5185,11 +4921,8 @@ export default function NavigationStack(props: {
         parentId: parentApi?.id || null,
         childIds: new Set(),
         navLink,
-        lifecycleHandlers: new Map(),
-        currentState: 'active',
-        lastActiveEntry: undefined,
       };
-      registry.set(id, regEntry);
+      globalRegistry.set(id, regEntry);
     } else {
       regEntry.navLink = navLink;
       regEntry.parentId = parentApi?.id || null;
@@ -5257,7 +4990,7 @@ export default function NavigationStack(props: {
 
 
   useEffect(() => {
-    const currentRegEntry = getRegistry().get(id);
+    const currentRegEntry = globalRegistry.get(id);
     if (!currentRegEntry || !groupContext || !groupStackId) return;
     const active = groupContext.isActiveStack(groupStackId);
     if ((syncHistory || currentRegEntry.historySyncEnabled) && active) {
@@ -5280,7 +5013,7 @@ export default function NavigationStack(props: {
     if (typeof window === "undefined") return;
 
     const handlePopState = (event: PopStateEvent) => {
-      const currentRegEntry = getRegistry().get(id);
+      const currentRegEntry = globalRegistry.get(id);
       if (!currentRegEntry) return;
 
       if (!api.isActiveStack()) return;
@@ -5367,15 +5100,10 @@ export default function NavigationStack(props: {
 
   useEffect(() => {
     if (typeof document === "undefined") return;
-    const styleId = "navstack-builtins";
-    let styleEl = document.getElementById(styleId) as HTMLStyleElement | null;
+    if (document.getElementById("navstack-builtins")) return;
 
-    if (!styleEl) {
-      styleEl = document.createElement("style");
-      styleEl.id = styleId;
-      document.head.appendChild(styleEl);
-    }
-
+    const styleEl = document.createElement("style");
+    styleEl.id = "navstack-builtins";
     styleEl.innerHTML = `
       .navstack-root {  display: block; width: 100%; height: auto; overflow: hidden;}
       .navstack-page {  display: block; width: 100%; height: auto; overflow: visible; }
@@ -5392,33 +5120,20 @@ export default function NavigationStack(props: {
       .navstack-missing-route-button { margin-top: 0.5rem; padding: 0.375rem 0.75rem; background-color: #0d6efd; color: white; border: none; border-radius: 0.25rem; cursor: pointer; }
       .navstack-missing-route-button:hover { background-color: #0b5ed7; }
     `;
+    document.head.appendChild(styleEl);
+    return () => styleEl.remove();
   }, [transitionDuration]);
 
   const [renders, setRenders] = useState<RenderRecord[]>(
     () => stackSnapshot.map((e) => ({ entry: e, state: "idle", createdAt: Date.now() }))
   );
 
-    useLayoutEffect(() => {
-      const topEntry = stackSnapshot[stackSnapshot.length - 1];
-      if (topEntry) {
-        _currentPageUidByStack.set(id, topEntry.uid);
-      } else {
-        _currentPageUidByStack.delete(id);
-      }
-
-      return () => {
-        _currentPageUidByStack.delete(id);
-      };
-    }, [id, stackSnapshot]);
-
   const transitionManager = useRef<TransitionManager>(new TransitionManager()).current;
   const memoryManager = useRef<PageMemoryManager>(new PageMemoryManager()).current;
-  const swipeBackOptions = typeof swipeBack === 'object'
-    ? swipeBack
-    : { disabled: swipeBack === false };
 
-  useUnifiedScrollRestoration(api, renders, stackSnapshot, groupContext, groupStackId, enableScrollRestoration);
-  useSwipeBack(swipeContainerRef, api, swipeBackOptions);
+  if (enableScrollRestoration) {
+    useUnifiedScrollRestoration(api, renders, stackSnapshot, groupContext, groupStackId);
+  }
 
 
   useEffect(() => {
@@ -5463,7 +5178,7 @@ export default function NavigationStack(props: {
   function renderEntry(rec: RenderRecord, idx: number) {
     const topEntry = stackSnapshot[stackSnapshot.length - 1];
     const isTop = topEntry ? rec.entry.uid === topEntry.uid : false;
-    const pageOrComp = mergedNavLink[rec.entry.key];
+    const pageOrComp = navLink[rec.entry.key];
 
     // 🔥 CRITICAL: Always get the FRESH entry from current stack
     const currentEntry = stackSnapshot.find(s => s.uid === rec.entry.uid) || rec.entry;
@@ -5471,10 +5186,8 @@ export default function NavigationStack(props: {
 
     // 🔥 Check if params changed since last render
     const cached = memoryManager.get(rec.entry.uid);
-    const cachedMeta = memoryManager.getMeta(rec.entry.uid);
-    const hasParamChanges = cached && cachedMeta
-      ? JSON.stringify(currentParams) !== JSON.stringify(cachedMeta.params)
-      : false;
+    const hasParamChanges = cached &&
+      JSON.stringify(currentParams) !== JSON.stringify(rec.entry.params);
 
     let child: ReactNode = null;
 
@@ -5617,11 +5330,7 @@ export default function NavigationStack(props: {
 
   return (
     <NavContext.Provider value={api}>
-      <div
-        ref={swipeContainerRef}
-        className={`navstack-root ${className ?? ""}`}
-        style={{ position: "relative", width: "100%", height: "100%", overflow: "hidden", ...style }}
-      >
+      <div className={`navstack-root ${className ?? ""}`} style={{ position: "relative", width: "100%", height: "100%", overflow: "hidden", ...style }}>
         {renders.map((r, idx) => (
           <React.Fragment key={r.entry.uid}>
             {renderEntry(r, idx)}
@@ -5634,7 +5343,7 @@ export default function NavigationStack(props: {
 
 if (typeof module !== 'undefined' && (module as any).hot) {
   (module as any).hot.dispose(() => {
-    getRegistry().forEach((_, id) => {
+    globalRegistry.forEach((_, id) => {
       const api = createApiFor(id, {}, false, null, '', null, null);
       api.dispose();
     });

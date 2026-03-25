@@ -56,7 +56,7 @@ export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) 
   const { closeDisplay, controlDisplayMessage } = useQuizDisplay();
 
   useEffect(() => {
-    if (!isHydrated) return;
+    if (!isHydrated || !activeQuiz) return;
     nav.provideObject(
       'getActiveQuiz',
       () => activeQuiz,
