@@ -309,17 +309,19 @@
   display: flex;
   gap: 8px;
   align-items: center;
-  flex-wrap: wrap;
+  width: 100%;
 }
 
 .passwordInputWrapper {
   position: relative;
-  flex: 1 1 220px;
+  display: block;
+  width: 100%;
   min-width: 0;
 }
 
 .passwordCancelButton,
 .passwordSaveButton {
+  flex: 1;
   min-height: 40px;
   border-radius: 8px;
   padding: 0 14px;
@@ -408,7 +410,7 @@
   padding: 12px 14px;
   padding-right: 44px;
   border-radius: 8px;
-  font-size: 15px;
+  font-size: 16px;
   outline: none;
   box-sizing: border-box;
 }

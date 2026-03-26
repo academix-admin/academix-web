@@ -20,6 +20,7 @@ import NoResultsView from '@/components/NoResultsView/NoResultsView';
 import ErrorView from '@/components/ErrorView/ErrorView';
 import DialogCancel from '@/components/DialogCancel';
 import { useRedeemCodeModel } from '@/lib/stacks/redeem-code-stack';
+import { useDialog } from '@/lib/DialogViewer';
 
 
 interface QuizRedeemCodeProps {
@@ -165,13 +166,12 @@ const RedeemCodeView = ({
   const [isFormValid, setIsFormValid] = useState(false);
   const [collecting, setCollecting] = useState(false);
   const [codeText, setCodeText] = useState('');
-  const [error, setError] = useState('');
+  const errorDialog = useDialog();
 
   const onSearchClick = async () => {
     if (!userData) {
       console.warn("User data not available");
-      setError(t('error_occurred'));
-
+      errorDialog.open(<div style={{ textAlign: 'center' }}><p>{t('error_occurred')}</p></div>);
       return;
     }
     try {
@@ -186,8 +186,7 @@ const RedeemCodeView = ({
 
       if (!paramatical) {
         setCollecting(false);
-        setError(t('error_occurred'));
-        console.error("Failed to get code data");
+        errorDialog.open(<div style={{ textAlign: 'center' }}><p>{t('error_occurred')}</p></div>);
         return;
       }
 
@@ -200,13 +199,10 @@ const RedeemCodeView = ({
       );
 
       if (!feature) {
-        console.log('feature not available');
-        setError(t('feature_unavailable'));
         setCollecting(false);
-
+        errorDialog.open(<div style={{ textAlign: 'center' }}><p>{t('feature_unavailable')}</p></div>);
         return;
       }
-
 
       const { data: rpcResult, error } = await supabaseBrowser.rpc('get_code_data', {
         p_user_id: paramatical.usersId,
@@ -219,17 +215,17 @@ const RedeemCodeView = ({
       if (error) throw error;
 
       if (rpcResult.status === 'RedeemCode.found') {
-        const redeemCode = new RedeemCodeModel(rpcResult.code_data);
-        setError('');
-        onRedeemCodeSelect(redeemCode);
+        onRedeemCodeSelect(new RedeemCodeModel(rpcResult.code_data));
       } else {
-        setError(t('redeem_code_not_found'));
+        setCodeText('');
+        setIsFormValid(false);
+        errorDialog.open(<div style={{ textAlign: 'center' }}><p>{t('redeem_code_not_found')}</p></div>);
       }
       setCollecting(false);
     } catch (err) {
       console.error(err);
       setCollecting(false);
-      setError(t('error_occurred'));
+      errorDialog.open(<div style={{ textAlign: 'center' }}><p>{t('error_occurred')}</p></div>);
     }
   };
 
@@ -243,6 +239,17 @@ const RedeemCodeView = ({
 
   return (
     <>
+      <errorDialog.DialogViewer
+        title={t('error_text')}
+        buttons={[{ text: t('ok_text'), variant: 'primary', onClick: () => errorDialog.close() }]}
+        showCancel={false}
+        closeOnBackdrop={true}
+        layoutProp={{
+          backgroundColor: theme === 'light' ? '#fff' : '#121212',
+          margin: '16px 16px',
+          titleColor: theme === 'light' ? '#1a1a1a' : '#fff',
+        }}
+      />
       <div className={styles.formGroup}>
         <label htmlFor="codeText" className={styles.label}>{t('code_text_label')}</label>
         <input
@@ -397,6 +404,23 @@ export default function QuizRedeemCode({ onRedeemCodeSelect, onSkip, onRegisterO
     });
   }, [demandRedeemCodes, fetchRedeemCodes, userData, extractLatest, redeemCodeSelectController]);
 
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const refreshRedeemCodes = useCallback(async () => {
+    if (!userData || isRefreshing) return;
+    setIsRefreshing(true);
+    redeemCodeSelectController.setSelectionState('loading');
+    const models = await fetchRedeemCodes(userData, 100, new PaginateModel());
+    if (models.length > 0) {
+      extractLatest(models);
+      setRedeemCodes(models);
+      redeemCodeSelectController.setSelectionState('data');
+    } else {
+      redeemCodeSelectController.setSelectionState('empty');
+    }
+    setIsRefreshing(false);
+  }, [userData, isRefreshing, fetchRedeemCodes, extractLatest, setRedeemCodes, redeemCodeSelectController]);
+
   const openRedeemCode = useCallback(() => {
     if (!userData) return;
     redeemCodeSelectController.toggle();
@@ -539,6 +563,26 @@ export default function QuizRedeemCode({ onRedeemCodeSelect, onSkip, onRegisterO
         selectionState={redeemCodeSelectionState}
         zIndex={1000}
       >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 16px 8px 16px' }}>
+          <span style={{ fontSize: '13px' }}>
+            {filteredRedeemCodes.length} {t('redeem_code_text')}
+          </span>
+          <button
+            onClick={refreshRedeemCodes}
+            disabled={isRefreshing}
+            style={{ background: 'none', border: 'none', cursor: isRefreshing ? 'default' : 'pointer', padding: '4px', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px' }}
+            aria-label="Refresh codes"
+          >
+            {t('refresh')}
+            {isRefreshing ? (
+              <span style={{ display: 'inline-block', width: '14px', height: '14px', border: '2px solid currentColor', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+            ) : (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2" />
+              </svg>
+            )}
+          </button>
+        </div>
         {filteredRedeemCodes.map((redeemCode) => (
           <RedeemCodeCard
             key={redeemCode.redeemCodeId}
