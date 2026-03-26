@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import styles from './view-transaction-page.module.css';
@@ -10,8 +10,8 @@ import { transactionSubscriptionManager } from '@/lib/managers/TransactionSubscr
 import { TransactionChangeEvent } from '@/lib/managers/TransactionSubscriptionManager';
 import { poolsSubscriptionManager } from '@/lib/managers/PoolsQuizTopicSubscriptionManager';
 import { PoolChangeEvent } from '@/lib/managers/PoolsQuizTopicSubscriptionManager';
-
 import { PaymentDetails } from '@/models/payment-details';
+import { supabaseBrowser } from '@/lib/supabase/client';
 
 interface ViewTransactionProps {
   transactionId: string;
@@ -26,6 +26,7 @@ export default function ViewTransactionPage(props: ViewTransactionProps) {
   const getTransactionByIdObj = useObject<(id: string) => TransactionModel | undefined>('getTransactionById', { global: true, scope: 'payment-transactions' });
 
   const [currentTransaction, setCurrentTransaction] = useState<TransactionModel | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Handle pool changes - if pool is removed, pop the page
   const handlePoolChange = (event: PoolChangeEvent) => {
@@ -45,9 +46,9 @@ export default function ViewTransactionPage(props: ViewTransactionProps) {
     } else if (transaction && transaction.transactionId === currentTransaction?.transactionId) {
       // Transaction was updated, update current transaction
       const updatedTransaction = TransactionModel.from(currentTransaction);
-      const newTransaction = updatedTransaction.copyWith({ 
-        transactionReceiverStatus: transaction.transactionReceiverStatus, 
-        transactionSenderStatus: transaction.transactionSenderStatus  
+      const newTransaction = updatedTransaction.copyWith({
+        transactionReceiverStatus: transaction.transactionReceiverStatus,
+        transactionSenderStatus: transaction.transactionSenderStatus
       });
       setCurrentTransaction(newTransaction);
 
@@ -67,35 +68,56 @@ export default function ViewTransactionPage(props: ViewTransactionProps) {
     return senderStatus != 'TransactionStatus.pending' && receiverStatus != 'TransactionStatus.pending';
   }
 
-  usePageLifecycle(nav, {
-      onEnter: ({ current, previous }) => {
-        console.log(`onEnter: ${JSON.stringify(current.key)}`);
-        // Analytics, data loading, animations, etc.
-      },
+  const refreshTransaction = useCallback(async (transaction: TransactionModel) => {
+    if (isRefreshing) return;
+    try {
+      setIsRefreshing(true);
+      const session = await supabaseBrowser.auth.getSession();
+      const jwt = session.data.session?.access_token;
+      if (!jwt) return;
 
-      onExit: ({ current, previous }) => {
-        console.log(`onExit: ${JSON.stringify(previous.key)}`);
-        // Cleanup, pause videos, save state, etc.
-      },
+      const response = await fetch('/api/refresh-transaction', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${jwt}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ transactionId: transaction.transactionId }),
+      });
 
-      onPause: ({ stack, current }) => {
-        console.log(`App backgrounded: ${JSON.stringify(current.key)}`);
-        // Pause timers, videos, animations
-      },
+      const data = await response.json();
 
-      onResume: ({ stack, current }) => {
-        console.log(`App foregrounded: ${JSON.stringify(current.key)}`);
-        // Resume timers, refresh data
-      },
-
-      onBeforePush: async ({ action }) => {
-        console.log('📤 Before push to:', action?.target?.key);
-        // Navigation guards, permission checks
-        if (action?.target?.key === 'premium') {
-          throw new Error('Premium feature required');
+      if (data.status === 'RefreshStatus.success' && data.transaction_update) {
+        const update = data.transaction_update;
+        const updated = TransactionModel.from(transaction).copyWith({
+          transactionSenderStatus: update.transaction_sender_status,
+          transactionReceiverStatus: update.transaction_receiver_status,
+        });
+        setCurrentTransaction(updated);
+        if (shouldRemoveTransactionSubscription(updated)) {
+          transactionSubscriptionManager.removeTransactionId(transaction.transactionId);
         }
       }
-    }, [transactionId]);
+    } catch (err) {
+      console.error('[ViewTransaction] refresh error:', err);
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [isRefreshing]);
+
+  usePageLifecycle(nav, {
+    onEnter: ({ current }) => {
+      // Auto-refresh on enter if either status is pending
+      if (!currentTransaction) return;
+      const { transactionSenderStatus, transactionReceiverStatus } = currentTransaction;
+      if (
+        transactionSenderStatus === 'TransactionStatus.pending' ||
+        transactionReceiverStatus === 'TransactionStatus.pending'
+      ) {
+        refreshTransaction(currentTransaction);
+      }
+    },
+  }, [transactionId, currentTransaction, refreshTransaction]);
 
   // Subscribe to transaction changes
   useEffect(() => {
@@ -117,17 +139,17 @@ export default function ViewTransactionPage(props: ViewTransactionProps) {
 
   useEffect(() => {
     if (!getTransactionByIdObj.isProvided) return;
-    
+
     const getTransaction = getTransactionByIdObj.getter();
     const transaction = getTransaction?.(transactionId);
 
     if (transaction) {
       setCurrentTransaction(transaction);
-      
+
       // Subscribe to transaction updates if it's pending
       const senderStatus = transaction.transactionSenderStatus;
       const receiverStatus = transaction.transactionReceiverStatus;
-      
+
       if (senderStatus === 'TransactionStatus.pending' || receiverStatus === 'TransactionStatus.pending') {
         const added = transactionSubscriptionManager.addTransactionId(
           transaction.transactionId,
@@ -234,188 +256,188 @@ export default function ViewTransactionPage(props: ViewTransactionProps) {
   };
 
   const getStatusIcon = (status: string | null): React.JSX.Element => {
-      switch (status) {
-        case 'TransactionStatus.success':
-          return (
-            <svg className={`${styles.statusIcon} ${styles.iconSuccess}`} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          );
-        case 'TransactionStatus.failed':
-          return (
-            <svg className={`${styles.statusIcon} ${styles.statusFailed}`} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M10 14L12 12M12 12L14 10M12 12L10 10M12 12L14 14M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          );
-        case 'TransactionStatus.pending':
-          return (
-            <svg className={`${styles.statusIcon} ${styles.statusPending}`} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 8V12L15 15M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          );
-        case 'TransactionStatus.cancelled':
-          return (
-            <svg className={`${styles.statusIcon} ${styles.statusCancelled}`} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M6 18L18 6M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          );
-        default:
-          return (
-            <svg className={`${styles.statusIcon} ${styles.statusUnknown}`} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M8 12H8.01M12 12H12.01M16 12H16.01M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          );
-      }
-    };
+    switch (status) {
+      case 'TransactionStatus.success':
+        return (
+          <svg className={`${styles.statusIcon} ${styles.iconSuccess}`} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        );
+      case 'TransactionStatus.failed':
+        return (
+          <svg className={`${styles.statusIcon} ${styles.statusFailed}`} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M10 14L12 12M12 12L14 10M12 12L10 10M12 12L14 14M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        );
+      case 'TransactionStatus.pending':
+        return (
+          <svg className={`${styles.statusIcon} ${styles.statusPending}`} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 8V12L15 15M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        );
+      case 'TransactionStatus.cancelled':
+        return (
+          <svg className={`${styles.statusIcon} ${styles.statusCancelled}`} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M6 18L18 6M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        );
+      default:
+        return (
+          <svg className={`${styles.statusIcon} ${styles.statusUnknown}`} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M8 12H8.01M12 12H12.01M16 12H16.01M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        );
+    }
+  };
 
 
   const getTransactionIcon = (transactionType: string | undefined | null): React.JSX.Element => {
     switch (transactionType) {
       case 'TransactionType.top_up':
         return <svg className={styles.transactionIcon} fill="none" height="20" viewBox="0 0 20 20" width="20" xmlns="http://www.w3.org/2000/svg">
-                         <path
-                           d="M16.432 6.75L19.637 3.545C20 5.009 20 7.04 20 10C20 14.714 20 17.071 18.535 18.535C17.072 20 14.714 20 10 20C5.286 20 2.929 20 1.464 18.535C0 17.072 0 14.714 0 10C0 5.286 0 2.929 1.464 1.464C2.93 0 5.286 0 10 0C12.96 0 14.991 -8.9407e-08 16.455 0.363L13.25 3.568V3C13.25 2.40326 13.0129 1.83097 12.591 1.40901C12.169 0.987053 11.5967 0.75 11 0.75C10.4033 0.75 9.83097 0.987053 9.40901 1.40901C8.98705 1.83097 8.75 2.40326 8.75 3V9C8.75 9.59674 8.98705 10.169 9.40901 10.591C9.83097 11.0129 10.4033 11.25 11 11.25H17C17.5967 11.25 18.169 11.0129 18.591 10.591C19.0129 10.169 19.25 9.59674 19.25 9C19.25 8.40326 19.0129 7.83097 18.591 7.40901C18.169 6.98705 17.5967 6.75 17 6.75H16.432Z"
-                           fill="currentColor"
-                         />
-                         <path
-                           d="M17 9.75003C17.1989 9.75003 17.3897 9.67101 17.5303 9.53036C17.671 9.38971 17.75 9.19894 17.75 9.00003C17.75 8.80112 17.671 8.61035 17.5303 8.4697C17.3897 8.32905 17.1989 8.25003 17 8.25003H12.81L19.53 1.53003C19.6625 1.38785 19.7346 1.19981 19.7312 1.00551C19.7277 0.811206 19.649 0.625821 19.5116 0.488408C19.3742 0.350995 19.1888 0.272283 18.9945 0.268855C18.8002 0.265426 18.6122 0.33755 18.47 0.47003L11.75 7.19003V3.00003C11.75 2.80112 11.671 2.61035 11.5303 2.4697C11.3897 2.32905 11.1989 2.25003 11 2.25003C10.8011 2.25003 10.6103 2.32905 10.4697 2.4697C10.329 2.61035 10.25 2.80112 10.25 3.00003V9.00003C10.25 9.41403 10.586 9.75003 11 9.75003H17Z"
-                           fill="currentColor"
-                         />
-                       </svg>;
+          <path
+            d="M16.432 6.75L19.637 3.545C20 5.009 20 7.04 20 10C20 14.714 20 17.071 18.535 18.535C17.072 20 14.714 20 10 20C5.286 20 2.929 20 1.464 18.535C0 17.072 0 14.714 0 10C0 5.286 0 2.929 1.464 1.464C2.93 0 5.286 0 10 0C12.96 0 14.991 -8.9407e-08 16.455 0.363L13.25 3.568V3C13.25 2.40326 13.0129 1.83097 12.591 1.40901C12.169 0.987053 11.5967 0.75 11 0.75C10.4033 0.75 9.83097 0.987053 9.40901 1.40901C8.98705 1.83097 8.75 2.40326 8.75 3V9C8.75 9.59674 8.98705 10.169 9.40901 10.591C9.83097 11.0129 10.4033 11.25 11 11.25H17C17.5967 11.25 18.169 11.0129 18.591 10.591C19.0129 10.169 19.25 9.59674 19.25 9C19.25 8.40326 19.0129 7.83097 18.591 7.40901C18.169 6.98705 17.5967 6.75 17 6.75H16.432Z"
+            fill="currentColor"
+          />
+          <path
+            d="M17 9.75003C17.1989 9.75003 17.3897 9.67101 17.5303 9.53036C17.671 9.38971 17.75 9.19894 17.75 9.00003C17.75 8.80112 17.671 8.61035 17.5303 8.4697C17.3897 8.32905 17.1989 8.25003 17 8.25003H12.81L19.53 1.53003C19.6625 1.38785 19.7346 1.19981 19.7312 1.00551C19.7277 0.811206 19.649 0.625821 19.5116 0.488408C19.3742 0.350995 19.1888 0.272283 18.9945 0.268855C18.8002 0.265426 18.6122 0.33755 18.47 0.47003L11.75 7.19003V3.00003C11.75 2.80112 11.671 2.61035 11.5303 2.4697C11.3897 2.32905 11.1989 2.25003 11 2.25003C10.8011 2.25003 10.6103 2.32905 10.4697 2.4697C10.329 2.61035 10.25 2.80112 10.25 3.00003V9.00003C10.25 9.41403 10.586 9.75003 11 9.75003H17Z"
+            fill="currentColor"
+          />
+        </svg>;
       default:
         return <svg className={styles.transactionIcon} fill="none" height="14" viewBox="0 0 19 14" width="19" xmlns="http://www.w3.org/2000/svg">
-                                   <path
-                                       d="M3.26562 0C2.39953 0 1.5689 0.33802 0.956479 0.939699C0.344056 1.54138 0 2.35743 0 3.20833V4.66667H19V3.20833C19 2.35743 18.6559 1.54138 18.0435 0.939699C17.4311 0.33802 16.6005 0 15.7344 0H3.26562ZM19 5.83333H0V10.7917C0 11.6426 0.344056 12.4586 0.956479 13.0603C1.5689 13.662 2.39953 14 3.26562 14H15.7344C16.6005 14 17.4311 13.662 18.0435 13.0603C18.6559 12.4586 19 11.6426 19 10.7917V5.83333ZM13.6562 10.5H16.0312C16.1887 10.5 16.3397 10.5615 16.4511 10.6709C16.5624 10.7802 16.625 10.9286 16.625 11.0833C16.625 11.238 16.5624 11.3864 16.4511 11.4958C16.3397 11.6052 16.1887 11.6667 16.0312 11.6667H13.6562C13.4988 11.6667 13.3478 11.6052 13.2364 11.4958C13.1251 11.3864 13.0625 11.238 13.0625 11.0833C13.0625 10.9286 13.1251 10.7802 13.2364 10.6709C13.3478 10.5615 13.4988 10.5 13.6562 10.5Z"
-                                       fill="currentColor" />
-                               </svg>;
+          <path
+            d="M3.26562 0C2.39953 0 1.5689 0.33802 0.956479 0.939699C0.344056 1.54138 0 2.35743 0 3.20833V4.66667H19V3.20833C19 2.35743 18.6559 1.54138 18.0435 0.939699C17.4311 0.33802 16.6005 0 15.7344 0H3.26562ZM19 5.83333H0V10.7917C0 11.6426 0.344056 12.4586 0.956479 13.0603C1.5689 13.662 2.39953 14 3.26562 14H15.7344C16.6005 14 17.4311 13.662 18.0435 13.0603C18.6559 12.4586 19 11.6426 19 10.7917V5.83333ZM13.6562 10.5H16.0312C16.1887 10.5 16.3397 10.5615 16.4511 10.6709C16.5624 10.7802 16.625 10.9286 16.625 11.0833C16.625 11.238 16.5624 11.3864 16.4511 11.4958C16.3397 11.6052 16.1887 11.6667 16.0312 11.6667H13.6562C13.4988 11.6667 13.3478 11.6052 13.2364 11.4958C13.1251 11.3864 13.0625 11.238 13.0625 11.0833C13.0625 10.9286 13.1251 10.7802 13.2364 10.6709C13.3478 10.5615 13.4988 10.5 13.6562 10.5Z"
+            fill="currentColor" />
+        </svg>;
     }
   };
 
   const formatCurrency = (amount: number, currency: string): string => {
     if (currency.toLowerCase() === 'adc') {
-      return `ADC ${amount.toLocaleString(lang, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`.toString().replace('.00', '').replace('-','');
+      return `ADC ${amount.toLocaleString(lang, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`.toString().replace('.00', '').replace('-', '');
     }
-    return `${currency} ${amount.toLocaleString(lang, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`.toString().replace('.00', '').replace('-','');
+    return `${currency} ${amount.toLocaleString(lang, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`.toString().replace('.00', '').replace('-', '');
   };
 
   const buildProfileView = (details: PaymentDetails | null, methodType: string | null) => {
-      if(!details || !methodType)return null;
-      switch (methodType) {
-        case 'PaymentMethod.mobile_money':
-          return (
-            <div className={styles.profileItem}>
-              <div className={styles.profileItemRight}>
-                <span className={styles.profileValue}>
-                  {details.phone || t('error_text')}
-                </span>
-                <svg className={styles.chevron} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
-                </svg>
-              </div>
+    if (!details || !methodType) return null;
+    switch (methodType) {
+      case 'PaymentMethod.mobile_money':
+        return (
+          <div className={styles.profileItem}>
+            <div className={styles.profileItemRight}>
+              <span className={styles.profileValue}>
+                {details.phone || t('error_text')}
+              </span>
+              <svg className={styles.chevron} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z" />
+              </svg>
             </div>
-          );
+          </div>
+        );
 
-        case 'PaymentMethod.private_account':
-          return (
-            <div className={styles.profileItem}>
-              <div className={styles.profileItemRight}>
-                <span className={styles.profileValue}>
-                  {t('private_account')}
-                </span>
-                <svg className={styles.infoIcon} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
-                </svg>
-              </div>
+      case 'PaymentMethod.private_account':
+        return (
+          <div className={styles.profileItem}>
+            <div className={styles.profileItemRight}>
+              <span className={styles.profileValue}>
+                {t('private_account')}
+              </span>
+              <svg className={styles.infoIcon} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
+              </svg>
             </div>
-          );
+          </div>
+        );
 
-        case 'PaymentMethod.e_naira':
-          return (
-            <div className={styles.profileItem}>
-              <div className={styles.profileItemRight}>
-                <span className={styles.profileValue}>
-                  {t('e_naira_text')}
-                </span>
-                <svg className={styles.infoIcon} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
-                </svg>
-              </div>
+      case 'PaymentMethod.e_naira':
+        return (
+          <div className={styles.profileItem}>
+            <div className={styles.profileItemRight}>
+              <span className={styles.profileValue}>
+                {t('e_naira_text')}
+              </span>
+              <svg className={styles.infoIcon} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
+              </svg>
             </div>
-          );
+          </div>
+        );
 
-        case 'PaymentMethod.direct_debit':
-          return (
-            <div className={styles.profileItem}>
-              <div className={styles.profileItemRight}>
-                <span className={styles.profileValue}>
-                  {t('direct_debit_text')}
-                </span>
-                <svg className={styles.infoIcon} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
-                </svg>
-              </div>
+      case 'PaymentMethod.direct_debit':
+        return (
+          <div className={styles.profileItem}>
+            <div className={styles.profileItemRight}>
+              <span className={styles.profileValue}>
+                {t('direct_debit_text')}
+              </span>
+              <svg className={styles.infoIcon} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
+              </svg>
             </div>
-          );
+          </div>
+        );
 
-        case 'PaymentMethod.ussd':
-          return (
-            <div className={styles.profileItem}>
-              <div className={styles.profileItemRight}>
-                <span className={styles.profileValue}>
+      case 'PaymentMethod.ussd':
+        return (
+          <div className={styles.profileItem}>
+            <div className={styles.profileItemRight}>
+              <span className={styles.profileValue}>
+                {details.bankName || t('error_text')}
+              </span>
+              <svg className={styles.infoIcon} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
+              </svg>
+            </div>
+          </div>
+        );
+
+      case 'PaymentMethod.opay':
+        return (
+          <div className={styles.profileItem}>
+            <div className={styles.profileItemRight}>
+              <span className={styles.profileValue}>
+                {t('opay_text')}
+              </span>
+              <svg className={styles.infoIcon} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
+              </svg>
+            </div>
+          </div>
+        );
+
+      case 'PaymentMethod.bank_transfer':
+        return (
+          <div className={styles.profileItem}>
+            <div className={styles.profileItemRight}>
+              <div className={styles.bankDetails}>
+                <div className={styles.bankDetailRow}>
+                  {details.fullname || t('error_text')}
+                </div>
+                <div className={styles.bankDetailRow}>
+                  {details.accountNumber || t('error_text')}
+                </div>
+                <div className={styles.bankDetailRow}>
                   {details.bankName || t('error_text')}
-                </span>
-                <svg className={styles.infoIcon} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
-                </svg>
-              </div>
-            </div>
-          );
-
-        case 'PaymentMethod.opay':
-          return (
-            <div className={styles.profileItem}>
-              <div className={styles.profileItemRight}>
-                <span className={styles.profileValue}>
-                  {t('opay_text')}
-                </span>
-                <svg className={styles.infoIcon} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
-                </svg>
-              </div>
-            </div>
-          );
-
-        case 'PaymentMethod.bank_transfer':
-          return (
-            <div className={styles.profileItem}>
-              <div className={styles.profileItemRight}>
-                <div className={styles.bankDetails}>
-                  <div className={styles.bankDetailRow}>
-                    {details.fullname || t('error_text')}
-                  </div>
-                  <div className={styles.bankDetailRow}>
-                    {details.accountNumber || t('error_text')}
-                  </div>
-                  <div className={styles.bankDetailRow}>
-                    {details.bankName || t('error_text')}
-                  </div>
                 </div>
               </div>
             </div>
-          );
+          </div>
+        );
 
-        default:
-          return (
-            <div className={styles.profileItem}>
-              <div className={styles.profileItemRight}>
-                <span className={styles.profileValue}>
-                  {t('error_text')}
-                </span>
-              </div>
+      default:
+        return (
+          <div className={styles.profileItem}>
+            <div className={styles.profileItemRight}>
+              <span className={styles.profileValue}>
+                {t('error_text')}
+              </span>
             </div>
-          );
-      }
-    };
+          </div>
+        );
+    }
+  };
 
   const formatDate = (dateString: string): string => {
     const date = new Date(dateString);
@@ -508,6 +530,20 @@ export default function ViewTransactionPage(props: ViewTransactionProps) {
             </svg>
           </button>
           <h1 className={styles.title}>{t('transaction_text')}</h1>
+          <button
+            className={styles.refreshButton}
+            onClick={() => currentTransaction && refreshTransaction(currentTransaction)}
+            disabled={isRefreshing}
+            aria-label="Refresh transaction"
+          >
+            {isRefreshing ? (
+              <span className={`${styles.refreshSpinner} ${styles[`refreshSpinner_${theme}`]}`} />
+            ) : (
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2" />
+              </svg>
+            )}
+          </button>
         </div>
       </header>
 
@@ -516,7 +552,7 @@ export default function ViewTransactionPage(props: ViewTransactionProps) {
         {/* Transaction Card */}
         <div className={`${styles.transactionCard} ${styles[`transactionCard_${theme}`]}`}>
           <div className={`${styles.transactionTypeIcon} ${styles[`transactionTypeIcon_${theme}`]}`}>
-                        {getTransactionIcon(currentTransaction.transactionType)}
+            {getTransactionIcon(currentTransaction.transactionType)}
           </div>
           <div className={styles.transactionHeader}>
             <h2 className={styles.transactionTitle}>
@@ -548,8 +584,8 @@ export default function ViewTransactionPage(props: ViewTransactionProps) {
               </div>
 
               <div className={styles.statusConnectorContainer}>
-               <div className={`${styles.statusConnector} ${getIconClass(currentTransaction.transactionSenderStatus)}`}></div>
-               <div className={`${styles.statusConnector} ${getIconClass(currentTransaction.transactionReceiverStatus)}`}></div>
+                <div className={`${styles.statusConnector} ${getIconClass(currentTransaction.transactionSenderStatus)}`}></div>
+                <div className={`${styles.statusConnector} ${getIconClass(currentTransaction.transactionReceiverStatus)}`}></div>
               </div>
 
               <div className={styles.statusItem}>
