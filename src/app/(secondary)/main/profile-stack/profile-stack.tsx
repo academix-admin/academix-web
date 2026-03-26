@@ -24,6 +24,7 @@ import RolesPage from "./roles-page/roles-page";
 import Pin from "../shared/pin/pin";
 import NewProfilePage from "../shared/new-profile-page/new-profile-page";
 import ViewTransactionPage from "../shared/view-transaction-page/view-transaction-page";
+import GiveBackPage from "./giveback-page/giveback-page";
 
 
 const profileStackNavLink = {
@@ -48,7 +49,7 @@ const profileStackNavLink = {
   pin: Pin,
   new_profile: NewProfilePage,
   view_transaction: ViewTransactionPage,
-
+  giveback_page: GiveBackPage,
 };
 
 export const ProfileStack = () => (

@@ -619,5 +619,16 @@
   "my_role": "My Role",
   "role_acceptance_notice": "I confirm that I cannot change my role after selection. I understand that I have to pay {amount} to activate my contribution and revenue from quiz pools.",
   "conversion_rates": "conversion rates",
-  "activate_text": "Activate"
+  "activate_text": "Activate",
+  "give_backs": "Give Backs",
+  "unclaimed_text": "Unclaimed",
+  "claimed_text": "Claimed",
+  "slots_remaining_text": "slots remaining",
+  "claim_text": "Claim",
+  "spent_text": "Spent",
+  "already_claimed_text": "You have already claimed this give back",
+  "giveback_exhausted_text": "All slots for this give back have been used",
+  "invalid_password_text": "Incorrect password. Please try again.",
+  "enter_password_text": "Enter Password",
+  "password_text": "Password"
 }
