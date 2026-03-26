@@ -390,7 +390,9 @@ export default function WithdrawPage() {
       const completionData = new PaymentCompletionData(payment.payment_completion_data);
 
       if (payment.transaction_details) {
-        setTransactionModels([transaction, ...transactionModels]);
+        const updatedModels = [transaction, ...transactionModels];
+        setTransactionModels(updatedModels);
+        nav.provideObject('getTransactionById', () => (id: string) => updatedModels.find(t => t.transactionId === id), { global: true, scope: 'payment-transactions' });
 
         if (completionMode) {
           setWithdrawLoading(false);
