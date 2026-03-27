@@ -4740,7 +4740,7 @@ export function GroupNavigationStack({
   current,
   onCurrentChange,
   persist = false,
-  preloadAll = false,
+  preloadAll = true,
   defaultStack
 }: GroupNavigationStackProps) {
 
@@ -4894,19 +4894,6 @@ export function GroupNavigationStack({
         {Array.from(navStack.entries()).map(([stackId, stackEl]) => {
           const isActive = (hydrated || (!hydrated && current === stackId)) && stackId === activeStackId;
 
-          if (!isActive && !preloadAll) {
-            return (
-              <div
-                key={stackId}
-                className="group-stack-container group-stack-hidden"
-                style={{ display: 'none', visibility: 'hidden' }}
-                aria-hidden
-                data-stack-id={stackId}
-                data-active={false}
-              />
-            );
-          }
-
           return (
             <div
               key={stackId}
@@ -4920,7 +4907,7 @@ export function GroupNavigationStack({
               data-active={isActive}
             >
               <GroupStackIdContext.Provider value={stackId}>
-                {stackEl}
+                {(isActive || preloadAll) && stackEl}
               </GroupStackIdContext.Provider>
             </div>
           );
