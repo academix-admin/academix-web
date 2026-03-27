@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { Sheet } from "@/lib/ModalSheetView";
+import { Sheet } from "react-modal-sheet";
 
 // ==================== Types ====================
 interface LayoutProps {
@@ -35,7 +35,7 @@ interface BottomViewerProps {
 }
 
 // ==================== Styles ====================
-const getStyles = (id: string) => `
+const getStyles = (id: string, maxHeight?: string) => `
 #${id} .bottom-viewer-drag-handle {
   height: 5px;
   border-radius: 3px;
@@ -55,9 +55,14 @@ const getStyles = (id: string) => `
   flex-shrink: 0;
 }
 #${id} .bottom-viewer-content {
+  height: 100%;
   overflow-y: auto;
   padding: 0 0px 0px 0px;
   -webkit-overflow-scrolling: touch;
+  flex-direction: column;
+  gap: 8px;
+  box-sizing: border-box;
+  contain: layout style paint;
 }
 #${id} .bottom-viewer-cancel-btn {
   position: absolute;
@@ -75,9 +80,17 @@ const getStyles = (id: string) => `
 #${id} .bottom-viewer-cancel-btn.left { left: 0px; }
 #${id} .bottom-viewer-cancel-btn.right { right: 0px; }
 #${id} {
+  max-height: ${maxHeight ? `calc(${maxHeight} - env(safe-area-inset-top) - 34px)` : 'calc(100% - env(safe-area-inset-top) - 34px)'} !important;
+  max-width: 500px;
+  margin: 0 auto;
   border-top-left-radius: 16px;
   border-top-right-radius: 16px;
   box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  left: 0;
+  right: 0;
 }
 #${id} .react-modal-sheet-backdrop {
   background-color: rgba(0, 0, 0, 0.5) !important;
@@ -86,10 +99,17 @@ const getStyles = (id: string) => `
 #${id} .react-modal-sheet-content {
   padding: 0;
   height: 100%;
+  display: flex;
+  flex-direction: column;
+  contain: layout style;
 }
 @media (max-width: 500px) {
   #${id} {
+    max-width: 100%;
     border-radius: 0;
+    margin-left: env(safe-area-inset-left, 0px);
+    margin-right: env(safe-area-inset-right, 0px);
+    width: calc(100% - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px));
   }
 }
 #${id} .body-bottom-sheet-open {
@@ -97,6 +117,9 @@ const getStyles = (id: string) => `
   position: fixed;
   width: 100%;
   height: 100%;
+}
+#${id} .bottom-viewer-content-dynamic {
+  transition: all 0.3s ease-out;
 }
 #${id} .bottom-viewer-loading {
   display: flex;
@@ -108,15 +131,17 @@ const getStyles = (id: string) => `
 `;
 
 // ==================== Hook to inject CSS per instance ====================
-const useInjectStyles = (id: string) => {
+const useInjectStyles = (id: string, maxHeight?: string, isOpen?: boolean) => {
   useEffect(() => {
+    if (!isOpen) return;
+
     const styleId = `bottom-viewer-styles-${id}`;
     let styleTag = document.getElementById(styleId) as HTMLStyleElement | null;
 
     if (!styleTag) {
       styleTag = document.createElement("style");
       styleTag.id = styleId;
-      styleTag.innerHTML = getStyles(id);
+      styleTag.innerHTML = getStyles(id, maxHeight);
       document.head.appendChild(styleTag);
     }
 
@@ -125,7 +150,7 @@ const useInjectStyles = (id: string) => {
         document.head.removeChild(styleTag);
       }
     };
-  }, [id]);
+  }, [id, maxHeight, isOpen]);
 };
 
 // ==================== BottomViewer Component ====================
@@ -137,7 +162,7 @@ const BottomViewer = React.forwardRef<any, BottomViewerProps>(({
   cancelButton,
   layoutProp,
   children,
-  unmountOnClose = false,
+  unmountOnClose = true,
   zIndex = 1000,
   detent = "content",
   disableDrag = false,
@@ -147,12 +172,13 @@ const BottomViewer = React.forwardRef<any, BottomViewerProps>(({
   const [id] = useState(() => providedId || `bottomviewer-${Math.random().toString(36).substr(2, 9)}`);
   const sheetRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
   const previousActiveElement = useRef<Element | null>(null);
 
   const initialChildrenRef = useRef<React.ReactNode>(children);
   const [currentContent, setCurrentContent] = useState<React.ReactNode>(children);
 
-  useInjectStyles(id);
+  useInjectStyles(id, layoutProp?.maxHeight, isOpen);
 
   const isControlledInternally = useRef(false);
 
@@ -191,6 +217,7 @@ const BottomViewer = React.forwardRef<any, BottomViewerProps>(({
     if (isOpen) {
       previousActiveElement.current = document.activeElement;
       document.body.classList.add('body-bottom-sheet-open');
+      setTimeout(() => contentRef.current?.focus(), 100);
     } else {
       document.body.classList.remove('body-bottom-sheet-open');
       if (previousActiveElement.current instanceof HTMLElement) {
@@ -254,30 +281,29 @@ const BottomViewer = React.forwardRef<any, BottomViewerProps>(({
     }
   }));
 
+  if (!isOpen && unmountOnClose) return null;
+
   return (
     <Sheet
       ref={sheetRef}
       isOpen={isOpen}
       onClose={onClose}
       detent="content"
-      ease="easeOut"
-      duration={0.25}
       style={{ zIndex }}
       disableDrag={disableDrag}
       avoidKeyboard={avoidKeyboard}
-      maxHeight={layoutProp?.maxHeight}
     >
       <Sheet.Container
         id={id}
         ref={containerRef}
-        backgroundColor={layoutProp?.backgroundColor || '#fff'}
-        borderRadius="16px"
-        boxShadow="0 -4px 20px rgba(0,0,0,0.15)"
-        maxWidth={getMaxWidth()}
-        className="bottom-viewer-container"
         style={{
-          maxHeight: layoutProp?.maxHeight,
+          maxWidth: getMaxWidth(),
+          margin: "0 auto",
+          width: "100%",
+          background: layoutProp?.backgroundColor || "#fff",
+          maxHeight: layoutProp?.maxHeight ? `calc(${layoutProp.maxHeight} - env(safe-area-inset-top) - 34px)` : undefined,
         }}
+        className="bottom-viewer-container"
       >
         <Sheet.Header>
           <div className="bottom-viewer-header">
@@ -315,10 +341,22 @@ const BottomViewer = React.forwardRef<any, BottomViewerProps>(({
           </div>
         </Sheet.Header>
 
-        <Sheet.Content >
+        <Sheet.Content
+          style={{
+            flex: 1,
+            overflow: "hidden",
+            height: '100%',
+            willChange: 'transform',
+          }}
+        >
           <div
-            className="bottom-viewer-content"
+            ref={contentRef}
+            tabIndex={-1}
+            className="bottom-viewer-content bottom-viewer-content-dynamic"
             onClick={e => e.stopPropagation()}
+            style={{
+              contain: 'layout style paint',
+            }}
           >
             {currentContent}
           </div>

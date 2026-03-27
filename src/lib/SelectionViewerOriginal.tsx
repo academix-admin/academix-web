@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { Sheet } from "@/lib/ModalSheetView";
+import { Sheet } from "react-modal-sheet";
 
 // ==================== Types ====================
 type Padding = {
@@ -280,7 +280,7 @@ const useInjectStyles = (id: string) => {
   useEffect(() => {
     const styleId = `selection-viewer-styles-${id}`;
     let styleTag = document.getElementById(styleId) as HTMLStyleElement | null;
-
+    
     if (!styleTag) {
       styleTag = document.createElement("style");
       styleTag.id = styleId;
@@ -347,6 +347,9 @@ const SelectionViewer: React.FC<SelectionViewerProps> = ({
 
   const handleSearchFocus = () => {
     setIsSearchFocused(true);
+    if (sheetRef.current) {
+      sheetRef.current.snapTo(snapPoints.length - 1); // Snap to max height (last index)
+    }
     searchProp?.onFocus?.();
   };
 
@@ -358,6 +361,9 @@ const SelectionViewer: React.FC<SelectionViewerProps> = ({
     setIsSearchFocused(false);
     if (searchInputRef.current) {
       searchInputRef.current.blur();
+    }
+    if (sheetRef.current) {
+      sheetRef.current.snapTo(initialSnap );
     }
   };
 
@@ -398,9 +404,11 @@ const SelectionViewer: React.FC<SelectionViewerProps> = ({
       ref={sheetRef}
       isOpen={isOpen}
       onClose={onClose}
+      snapPoints={snapPoints}
+      initialSnap={initialSnap}
+      onSnap={setActiveSnap}
       detent="content"
       style={{ zIndex }}
-      maxHeight={maxHeight}
     >
       <Sheet.Container
         id={id}
@@ -420,61 +428,60 @@ const SelectionViewer: React.FC<SelectionViewerProps> = ({
       >
         {isSearchFocused ? (
           <Sheet.Header>
-            <div
-              className="selection-viewer-fullscreen-search"
-              style={layoutProp?.fullScreenSearchHeaderStyle}
-            >
-              <div className="selection-viewer-search" style={{
-                ...searchProp?.containerStyle,
-                background: searchProp?.background,
-                padding: searchProp?.padding
-                  ? `${searchProp.padding.t} ${searchProp.padding.r} ${searchProp.padding.b} ${searchProp.padding.l}`
-                  : "16px",
-                margin: 0,
-              }}>
+          <div
+            className="selection-viewer-fullscreen-search"
+            style={layoutProp?.fullScreenSearchHeaderStyle}
+          >
+            <div className="selection-viewer-search" style={{
+              ...searchProp?.containerStyle,
+              background: searchProp?.background,
+              padding: searchProp?.padding
+                ? `${searchProp.padding.t} ${searchProp.padding.r} ${searchProp.padding.b} ${searchProp.padding.l}`
+                : "16px",
+              margin: 0,
+            }}>
+              <button
+                className="selection-viewer-search-back-button"
+                onClick={handleBackFromSearch}
+                aria-label="Exit search mode"
+              >
+                {searchProp?.backIcon || (
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M15 18L9 12L15 6" stroke= {searchProp?.textColor || 'currentColor'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                )}
+              </button>
+
+              <input
+                ref={searchInputRef}
+                type="text"
+                placeholder={searchProp?.text}
+                value={searchValue}
+                onChange={handleSearchChange}
+                className={searchProp?.className || "selection-viewer-search-input"}
+                style={{
+                    color: searchProp?.textColor,
+                    ...searchProp?.inputStyle}}
+                autoFocus
+                onFocus={handleSearchFocus}
+                onBlur={handleSearchBlur}
+              />
+
+              {searchValue && (
                 <button
-                  className="selection-viewer-search-back-button"
-                  onClick={handleBackFromSearch}
-                  aria-label="Exit search mode"
+                  className="selection-viewer-search-clear-button"
+                  onClick={clearSearch}
+                  aria-label="Clear search"
                 >
-                  {searchProp?.backIcon || (
+                  {searchProp?.clearIcon || (
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M15 18L9 12L15 6" stroke={searchProp?.textColor || 'currentColor'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M18 6L6 18M6 6L18 18" stroke={searchProp?.textColor || 'currentColor'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
                   )}
                 </button>
-
-                <input
-                  ref={searchInputRef}
-                  type="text"
-                  placeholder={searchProp?.text}
-                  value={searchValue}
-                  onChange={handleSearchChange}
-                  className={searchProp?.className || "selection-viewer-search-input"}
-                  style={{
-                    color: searchProp?.textColor,
-                    ...searchProp?.inputStyle
-                  }}
-                  autoFocus
-                  onFocus={handleSearchFocus}
-                  onBlur={handleSearchBlur}
-                />
-
-                {searchValue && (
-                  <button
-                    className="selection-viewer-search-clear-button"
-                    onClick={clearSearch}
-                    aria-label="Clear search"
-                  >
-                    {searchProp?.clearIcon || (
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M18 6L6 18M6 6L18 18" stroke={searchProp?.textColor || 'currentColor'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    )}
-                  </button>
-                )}
-              </div>
+              )}
             </div>
+          </div>
           </Sheet.Header>
         ) : (
           <Sheet.Header>
@@ -567,9 +574,8 @@ const SelectionViewer: React.FC<SelectionViewerProps> = ({
                   onChange={handleSearchChange}
                   className={searchProp.className || "selection-viewer-search-input"}
                   style={{
-                    color: searchProp?.textColor,
-                    ...searchProp.inputStyle
-                  }}
+                      color: searchProp?.textColor,
+                      ...searchProp.inputStyle}}
                   autoFocus={searchProp.autoFocus}
                   onFocus={handleSearchFocus}
                   onBlur={handleSearchBlur}
@@ -583,7 +589,7 @@ const SelectionViewer: React.FC<SelectionViewerProps> = ({
                   >
                     {searchProp.clearIcon || searchProp.suffixIcon || (
                       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                       </svg>
                     )}
                   </button>
@@ -603,8 +609,7 @@ const SelectionViewer: React.FC<SelectionViewerProps> = ({
             className={`selection-viewer-content ${childrenDirection}`}
             onScroll={onPaginate ? handleScroll : undefined}
             style={{
-              paddingTop: isSearchFocused ? layoutProp?.gapBetweenSearchAndContent : '0'
-            }}
+                paddingTop: isSearchFocused ? layoutProp?.gapBetweenSearchAndContent : '0'}}
           >
             {/* Show children first, then loading at bottom */}
             {React.Children.count(children) > 0 ? (
@@ -641,34 +646,34 @@ const SelectionViewer: React.FC<SelectionViewerProps> = ({
                 )}
               </div>
             ) : selectionState === "loading" ? (
-              <div
-                className="selection-viewer-loading"
-                style={{
-                  padding: loadingProp?.padding
-                    ? `${loadingProp.padding.t} ${loadingProp.padding.r} ${loadingProp.padding.b} ${loadingProp.padding.l}`
-                    : "16px",
-                  ...loadingProp?.style
-                }}
-              >
-                {loadingProp?.view}
-              </div>
-            ) : (selectionState === "error") ? (
-              <div
-                className="selection-viewer-error"
-                style={{
-                  padding: errorProp?.padding
-                    ? `${errorProp.padding.t} ${errorProp.padding.r} ${errorProp.padding.b} ${errorProp.padding.l}`
-                    : "16px",
-                  ...errorProp?.style
-                }}
-              >
-                {errorProp?.view || (
-                  <div className="selection-viewer-default-error">
-                    {errorProp?.text || "No results found"}
-                  </div>
-                )}
-              </div>
-            ) : null}
+                                  <div
+                                    className="selection-viewer-loading"
+                                    style={{
+                                      padding: loadingProp?.padding
+                                        ? `${loadingProp.padding.t} ${loadingProp.padding.r} ${loadingProp.padding.b} ${loadingProp.padding.l}`
+                                        : "16px",
+                                      ...loadingProp?.style
+                                    }}
+                                  >
+                                    {loadingProp?.view}
+                                  </div>
+                                ) : (selectionState === "error") ? (
+                                                  <div
+                                                    className="selection-viewer-error"
+                                                    style={{
+                                                      padding: errorProp?.padding
+                                                        ? `${errorProp.padding.t} ${errorProp.padding.r} ${errorProp.padding.b} ${errorProp.padding.l}`
+                                                        : "16px",
+                                                      ...errorProp?.style
+                                                    }}
+                                                  >
+                                                    {errorProp?.view || (
+                                                      <div className="selection-viewer-default-error">
+                                                        {errorProp?.text || "No results found"}
+                                                      </div>
+                                                    )}
+                                                  </div>
+                                                ) :  null}
           </div>
         </Sheet.Content>
       </Sheet.Container>

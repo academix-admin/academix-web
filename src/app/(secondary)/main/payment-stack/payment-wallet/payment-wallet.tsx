@@ -594,13 +594,13 @@ export default function PaymentWallet({ profileType, onWalletData, onWalletAmoun
           gapBetweenSearchAndContent: "16px",
           backgroundColor:  theme === 'light' ?  "#fff" : "#121212",
           handleColor: "#888",
-          handleWidth: "48px",
+          handleWidth: "48px"
         }}
         childrenDirection="vertical"
         snapPoints={[0, 1]}
         initialSnap={1}
-        minHeight="65vh"
-        maxHeight="90vh"
+        minHeight="65dvh"
+        maxHeight="90dvh"
         closeThreshold={0.2}
         selectionState={walletSelectionState}
         zIndex={1000}
