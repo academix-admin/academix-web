@@ -35,7 +35,7 @@ const LanguageItem = ({ onClick, text }: { onClick: () => void; text: string }) 
 };
 
 export default function ProfileTitle({ onStateChange }: ComponentStateProps) {
-  const { theme, toggleTheme } = useTheme();
+  const { theme, storedTheme, cycleTheme } = useTheme();
   const { t, lang, setLang } = useLanguage();
   const { userData, userData$, __meta } = useUserData();
   const { replaceAndWait } = useAwaitableRouter();
@@ -143,14 +143,18 @@ export default function ProfileTitle({ onStateChange }: ComponentStateProps) {
           </svg>
         </div>
 
-        <div role="button" onClick={toggleTheme} className={styles.iconButton} title={t('switch_theme')}>
-          {theme === 'light' ? (
+        <div role="button" onClick={cycleTheme} className={styles.iconButton} title={t('switch_theme')}>
+          {storedTheme === 'light' ? (
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
-          ) : (
+          ) : storedTheme === 'dark' ? (
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          ) : (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           )}
         </div>

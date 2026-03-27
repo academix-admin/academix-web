@@ -564,13 +564,23 @@ export default function QuizRedeemCode({ onRedeemCodeSelect, onSkip, onRegisterO
         zIndex={1000}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 16px 8px 16px' }}>
-          <span style={{ fontSize: '13px' }}>
+          <span style={{ fontSize: '13px', color: theme === 'light' ? '#666' : '#aaa' }}>
             {filteredRedeemCodes.length} {t('redeem_code_text')}
           </span>
           <button
             onClick={refreshRedeemCodes}
             disabled={isRefreshing}
-            style={{ background: 'none', border: 'none', cursor: isRefreshing ? 'default' : 'pointer', padding: '4px', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px' }}
+            style={{ 
+              background: 'none', 
+              border: 'none', 
+              cursor: isRefreshing ? 'default' : 'pointer', 
+              padding: '4px', 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '6px', 
+              fontSize: '13px',
+              color: theme === 'light' ? '#007AFF' : '#0A84FF'
+            }}
             aria-label="Refresh codes"
           >
             {t('refresh')}

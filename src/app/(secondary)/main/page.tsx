@@ -35,6 +35,10 @@ const Main = () => {
           await StateStack.core.clearScope('mission_flow');
           await StateStack.core.clearScope('achievements_flow');
           await StateStack.core.clearScope('payment_flow');
+          await StateStack.core.clearScope('top-up-flow'),
+          await StateStack.core.clearScope('withdraw-flow'),
+          await StateStack.core.clearScope('roles-flow'),
+          await StateStack.core.clearScope('redeem_code_flow')
           sessionStorage.clear();
         } catch (error) {
           console.error('Sign out error:', error);

@@ -126,6 +126,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 StateStack.core.clearScope('achievements_flow'),
                 StateStack.core.clearScope('payment_flow'),
                 StateStack.core.clearScope('secondary_flow'),
+                StateStack.core.clearScope('top-up-flow'),
+                StateStack.core.clearScope('withdraw-flow'),
+                StateStack.core.clearScope('roles-flow'),
+                StateStack.core.clearScope('roles-flow'),
+                StateStack.core.clearScope('redeem_code_flow'),
               ]);
               sessionStorage.clear();
               if (matchesRoutePattern(pathname, protectedRoutes)) {
@@ -141,6 +146,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                   StateStack.core.clearScope('achievements_flow'),
                   StateStack.core.clearScope('payment_flow'),
                   StateStack.core.clearScope('secondary_flow'),
+                  StateStack.core.clearScope('top-up-flow'),
+                  StateStack.core.clearScope('withdraw-flow'),
+                  StateStack.core.clearScope('roles-flow'),
+                  StateStack.core.clearScope('redeem_code_flow')
                 ]);
                 sessionStorage.clear();
                 if (matchesRoutePattern(pathname, protectedRoutes)) {

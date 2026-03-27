@@ -23,7 +23,7 @@ const NAV_LINKS = [
 ];
 
 export default function LandingHeader() {
-  const { theme, toggleTheme } = useTheme();
+  const { theme, storedTheme, cycleTheme } = useTheme();
   const { lang, setLang, t } = useLanguage();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const headerRef = useRef<HTMLDivElement>(null);
@@ -120,10 +120,10 @@ export default function LandingHeader() {
             {NAV_LINKS.map((link) => renderNavLink(link))}
             <button
               className={styles.themeSwitch}
-              onClick={toggleTheme}
+              onClick={cycleTheme}
               aria-label="Toggle theme"
             >
-              {theme === 'light' ? '🌞' : '🌙'}
+              {storedTheme === 'light' ? '🌞' : storedTheme === 'dark' ? '🌙' : '💻'}
             </button>
             <Link className={`${styles.startButton} ${styles[`startButton_${theme}`]}`} href='/welcome'>
               {t('start_text')}
@@ -135,10 +135,10 @@ export default function LandingHeader() {
             {renderLanguageSelector}
             <button
               className={styles.themeSwitch}
-              onClick={toggleTheme}
+              onClick={cycleTheme}
               aria-label="Toggle theme"
             >
-              {theme === 'light' ? '🌞' : '🌙'}
+              {storedTheme === 'light' ? '🌞' : storedTheme === 'dark' ? '🌙' : '💻'}
             </button>
             <button
               className={`${styles.menuButton} ${styles[`menuButton_${theme}`]}`}
