@@ -122,8 +122,12 @@ export default function LoginUser() {
     }
   }, [login.login]);
 
-  const handleSubmit = async () => {
-    if (!isFormValid || !login?.login) return;
+  const handleSubmit = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    
+    if (!isFormValid || !login?.login) {
+      return;
+    }
 
     setLoginLoading(true);
     setError('');
@@ -132,6 +136,7 @@ export default function LoginUser() {
       const userLoginAccount: UserLoginAccount | null = await fetchUserDetails(login.login);
       if (!userLoginAccount) {
         setError(t('invalid_login_credentials'));
+        setLoginLoading(false);
         return;
       }
 
@@ -149,6 +154,8 @@ export default function LoginUser() {
         await handleCreatedUser(userLoginAccount.users_login_type,
           userLoginAccount.users_login_type === 'UserLoginType.email' ? userLoginAccount.users_email : userLoginAccount.users_phone,
           userObj);
+      } else {
+        setLoginLoading(false);
       }
 
     } catch (err) {
@@ -453,7 +460,7 @@ export default function LoginUser() {
 
         <p className={styles.titleSmall}>{t('greetings')}</p>
         <h2 className={styles.titleBig}>{t('great_seeing_again')}</h2>
-        <form className={styles.form}>
+        <form className={styles.form} onSubmit={handleSubmit}>
 
           <div className={styles.formGroup}>
             <label htmlFor="login" className={styles.label}>{t('login_label')}</label>
@@ -541,7 +548,6 @@ export default function LoginUser() {
           <button
             type="submit"
             className={styles.loginButton}
-            onClick={handleSubmit}
             disabled={!isFormValid || loginLoading}
           >
             {loginLoading ? <span className={styles.spinner}></span> : t('login')}

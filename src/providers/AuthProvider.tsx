@@ -175,7 +175,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       mounted = false;
       if (unsubscribe) unsubscribe();
     };
-  }, [__meta.isHydrated, pathname]);
+  }, [__meta.isHydrated, userData, pathname]);
 
   return (
     <AuthContext.Provider value={{ initialized, session, userData, hasValidSession: !!session && !isSessionExpired(session) }}>

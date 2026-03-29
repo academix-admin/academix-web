@@ -1,4 +1,4 @@
-import { createStateStack } from '../state-stack';
+import { createStateStack, StackConfig } from '../state-stack';
 import { UserData } from '@/models/user-data';
 
 const methods = {
@@ -17,8 +17,8 @@ const methods = {
 
 export const { useStack } = createStateStack(methods);
 
-export const userDataConfig = {
-  initial: null,
+export const userDataConfig: StackConfig<UserData | null> = {
+  initial: null as UserData | null,
   persist: true,
 //   ttl: 3600,
   historyDepth: 1,
