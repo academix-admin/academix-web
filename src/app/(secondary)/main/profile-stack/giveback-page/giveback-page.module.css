@@ -33,12 +33,17 @@
   justify-content: space-between;
   width: 100%;
   gap: 1rem;
-  padding: 1.1rem 2rem;
   box-sizing: border-box;
   min-width: 0;
+  padding-left: 16px;
+  padding-right: 16px;
+  padding-top: 8px;
+  padding-bottom: 8px;
 }
 
 .backButton {
+  min-width: 44px;
+  min-height: 44px;
   background: none;
   border: none;
   cursor: pointer;
@@ -46,7 +51,7 @@
   border-radius: 50%;
   display: flex;
   align-items: center;
-  padding: 4px;
+  padding: 12px;
   justify-content: center;
   margin-left: -8px;
 }
@@ -434,14 +439,22 @@
 /* Responsive */
 @media screen and (max-width: 800px) {
   .header { left: 0; }
-  .headerContent { padding: 1rem 0; margin: 0 1rem; }
+  .headerContent { margin: 0 1rem;   padding-left: 16px;
+   padding-right: 16px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+ }
   .tabBar { padding: 0 1rem; }
   .content { padding: 0; padding-top: 8rem; max-width: 800px; }
 }
 
 @media screen and (max-width: 500px) {
   .header { left: 0; }
-  .headerContent { margin: 0; padding: 1rem; }
+  .headerContent { margin: 0;   padding-left: 16px;
+   padding-right: 16px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+ }
   .tabBar { padding: 0 0.5rem; }
   .title { font-size: 1.2rem; }
   .backIcon { width: 16px; height: 16px; }

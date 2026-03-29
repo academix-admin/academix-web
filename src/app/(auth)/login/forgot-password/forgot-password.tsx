@@ -39,7 +39,7 @@ const normalizeLoginInputValue = (accountDetailsModel: LoginModel | null): strin
 export default function ForgotPassword() {
   const { theme } = useTheme();
   const { t, lang } = useLanguage();
-  const { accountDetails, accountDetails$, __meta} = useAccountDetails();
+  const { accountDetails, accountDetails$, __meta } = useAccountDetails();
   const nav = useNav();
 
   const [canGoBack, setCanGoBack] = useState(false);
@@ -57,104 +57,104 @@ export default function ForgotPassword() {
 
   useEffect(() => {
     setIsFormValid(accountDetailsState !== 'error' && accountDetailsState !== 'initial');
-  }, [ accountDetailsState]);
+  }, [accountDetailsState]);
 
 
   useEffect(() => {
     if (accountDetails?.accountDetails) {
-       // Use the normalize function to display the clean value
-       const normalizedValue = normalizeLoginInputValue(accountDetails.accountDetails);
-       if (normalizedValue.includes("@") && isEmail(normalizedValue)) {
-             setAccountDetailsState('email');
-           } else if (!normalizedValue.includes("@") && allNumber(normalizedValue)) {
-             setAccountDetailsState('phone');
-           } else if (!isEmail(normalizedValue) &&
-               !containsUpperCase(normalizedValue) &&
-               getSpecialCharacters(normalizedValue).every((c) => c === '.' || c === '_') && normalizedValue.length > 0) {
-             setAccountDetailsState('username');
-           }else{
-                                           setAccountDetailsState('initial');
-               }
+      // Use the normalize function to display the clean value
+      const normalizedValue = normalizeLoginInputValue(accountDetails.accountDetails);
+      if (normalizedValue.includes("@") && isEmail(normalizedValue)) {
+        setAccountDetailsState('email');
+      } else if (!normalizedValue.includes("@") && allNumber(normalizedValue)) {
+        setAccountDetailsState('phone');
+      } else if (!isEmail(normalizedValue) &&
+        !containsUpperCase(normalizedValue) &&
+        getSpecialCharacters(normalizedValue).every((c) => c === '.' || c === '_') && normalizedValue.length > 0) {
+        setAccountDetailsState('username');
+      } else {
+        setAccountDetailsState('initial');
+      }
 
-       setLoginInputValue(normalizedValue);
-    }else{
-                                         setAccountDetailsState('initial');
-         }
+      setLoginInputValue(normalizedValue);
+    } else {
+      setAccountDetailsState('initial');
+    }
   }, [accountDetails.accountDetails]);
 
   const handleSubmit = async () => {
-      if (!isFormValid || !accountDetails?.accountDetails) return;
+    if (!isFormValid || !accountDetails?.accountDetails) return;
 
-      setLoginLoading(true);
-                                          setError('');
+    setLoginLoading(true);
+    setError('');
 
-      try {
-          
-          const userLoginAccount: UserLoginAccount | null = await fetchUserDetails(accountDetails.accountDetails);
-                  if (!userLoginAccount) {
-                    console.error('User not found');
-                    setError(t('user_not_found'));
-                    return;
-                  }
+    try {
 
-              const location = await checkLocation();
-                       if (!location) {
-                         console.log('location not determined');
-                                    setError(t('error_occurred'));
+      const userLoginAccount: UserLoginAccount | null = await fetchUserDetails(accountDetails.accountDetails);
+      if (!userLoginAccount) {
+        console.error('User not found');
+        setError(t('user_not_found'));
+        return;
+      }
 
-                         return null;
-                       }
+      const location = await checkLocation();
+      if (!location) {
+        console.log('location not determined');
+        setError(t('error_occurred'));
 
-                       const partialData =  userLoginAccount.users_login_type === 'UserLoginType.email' ? await fetchUserPartialDetails(userLoginAccount.users_email) : await fetchUserPartialDetails(userLoginAccount.users_phone);
-                       const feature = await checkFeatures(
-                         userLoginAccount.users_login_type === 'UserLoginType.email' ? 'Features.email_recovery' : 'Features.phone_recovery' ,
-                         lang,
-                         location.country_code,
-                         partialData?.users_sex,
-                         partialData?.users_dob
-                       );
+        return null;
+      }
 
-                       if (!feature) {
-                         console.log('feature not available');
-                                    setError(t('feature_unavailable'));
-                         return null;
-                       }
+      const partialData = userLoginAccount.users_login_type === 'UserLoginType.email' ? await fetchUserPartialDetails(userLoginAccount.users_email) : await fetchUserPartialDetails(userLoginAccount.users_phone);
+      const feature = await checkFeatures(
+        userLoginAccount.users_login_type === 'UserLoginType.email' ? 'Features.email_recovery' : 'Features.phone_recovery',
+        lang,
+        location.country_code,
+        partialData?.users_sex,
+        partialData?.users_dob
+      );
+
+      if (!feature) {
+        console.log('feature not available');
+        setError(t('feature_unavailable'));
+        return null;
+      }
 
       const verificationMethods: VerificationMethodModel[] = [];
 
-            if (userLoginAccount.users_login_type === 'UserLoginType.email') {
-              verificationMethods.push({
-                type: userLoginAccount.users_login_type,
-                value: userLoginAccount.users_email,
-              });
-            } else if (userLoginAccount.users_login_type === 'UserLoginType.phone') {
-              verificationMethods.push({
-                type: userLoginAccount.users_login_type,
-                value: userLoginAccount.users_phone,
-              });
-            } else {
-              console.error('Invalid login type for recovery');
-                                                  setError(t('error_occurred'));
-              return;
-            }
-
-            if (verificationMethods.length > 0) {
-              accountDetails$.setField({ field: 'methods', value: verificationMethods });
-              nav.replace('recovery',{names: userLoginAccount.users_names});
-            } else {
-              console.error('No verification methods available');
-                                                  setError(t('error_occurred'));
-            }
-
-      } catch (err) {
-        console.error(err);
+      if (userLoginAccount.users_login_type === 'UserLoginType.email') {
+        verificationMethods.push({
+          type: userLoginAccount.users_login_type,
+          value: userLoginAccount.users_email,
+        });
+      } else if (userLoginAccount.users_login_type === 'UserLoginType.phone') {
+        verificationMethods.push({
+          type: userLoginAccount.users_login_type,
+          value: userLoginAccount.users_phone,
+        });
+      } else {
+        console.error('Invalid login type for recovery');
         setError(t('error_occurred'));
-      } finally {
-        setLoginLoading(false);
+        return;
       }
-    };
 
-   
+      if (verificationMethods.length > 0) {
+        accountDetails$.setField({ field: 'methods', value: verificationMethods });
+        nav.replace('recovery', { names: userLoginAccount.users_names });
+      } else {
+        console.error('No verification methods available');
+        setError(t('error_occurred'));
+      }
+
+    } catch (err) {
+      console.error(err);
+      setError(t('error_occurred'));
+    } finally {
+      setLoginLoading(false);
+    }
+  };
+
+
   const isEmail = (value: string): boolean => {
     const emailRegex = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/i;
     return emailRegex.test(value);
@@ -179,7 +179,7 @@ export default function ForgotPassword() {
     const cleanValue = value.trim();
 
     setLoginInputValue(cleanValue);
-                                    setError('');
+    setError('');
 
     if (cleanValue.length === 0) {
       setAccountDetailsState('initial');
@@ -202,8 +202,8 @@ export default function ForgotPassword() {
       };
       setAccountDetailsState('phone');
     } else if (!isEmail(cleanValue) &&
-        !containsUpperCase(cleanValue) &&
-        getSpecialCharacters(cleanValue).every((c) => c === '.' || c === '_')) {
+      !containsUpperCase(cleanValue) &&
+      getSpecialCharacters(cleanValue).every((c) => c === '.' || c === '_')) {
       loginModel = {
         loginType: 'UserLoginType.username',
         loginDetails: `@${cleanValue}`
@@ -219,8 +219,8 @@ export default function ForgotPassword() {
   };
 
   const cancelForgotPassword = () => {
-      nav.pop();
-      __meta.clear();
+    nav.pop();
+    __meta.clear();
   }
 
 
@@ -272,9 +272,9 @@ export default function ForgotPassword() {
 
           <div className={styles.formGroup}>
             <div className={`${styles.instructionSection} ${styles[`instructionSection_${theme}`]}`}>
-                <div className={`${styles.instructionInfo} ${styles[`instructionInfo_${theme}`]}`}>
-                   {t('forgot_password_instruction')}
-                </div>
+              <div className={`${styles.instructionInfo} ${styles[`instructionInfo_${theme}`]}`}>
+                {t('forgot_password_instruction')}
+              </div>
             </div>
             <label htmlFor="account_details" className={styles.label}>{t('account_details_label')}</label>
             <input
@@ -295,7 +295,7 @@ export default function ForgotPassword() {
             {accountDetailsState === 'username' && !error && (
               <p className={styles.validText}>{t('login_username')}</p>
             )}
-            {accountDetailsState === 'phone'&& !error && (
+            {accountDetailsState === 'phone' && !error && (
               <p className={styles.validText}>{t('login_phone')}</p>
             )}
             {accountDetailsState === 'email' && !error && (
@@ -303,11 +303,11 @@ export default function ForgotPassword() {
             )}
           </div>
 
-        {error && ( <div className={styles.errorSection}>
-                    <p className={styles.errorText}>
-                              {error}
-                    </p>
-                  </div>)}
+          {error && (<div className={styles.errorSection}>
+            <p className={styles.errorText}>
+              {error}
+            </p>
+          </div>)}
 
           <button
             type="submit"

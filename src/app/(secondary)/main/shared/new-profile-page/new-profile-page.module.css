@@ -35,9 +35,12 @@
   justify-content: space-between;
   width: 100%;
   gap: 1rem;
-  padding: 1.1rem 2rem;
   box-sizing: border-box;
   min-width: 0;
+  padding-left: 16px;
+  padding-right: 16px;
+  padding-top: 8px;
+  padding-bottom: 8px;
 }
 
 .innerBody{
@@ -53,6 +56,8 @@
 
 
 .backButton {
+  min-width: 44px;
+  min-height: 44px;
   background: none;
   border: none;
   cursor: pointer;
@@ -60,7 +65,7 @@
   border-radius: 50%;
   display: flex;
   align-items: center;
-  padding: 4px;
+  padding: 12px;
   justify-content: center;
   margin-left: -8px;
 }
@@ -556,8 +561,11 @@
    left: 0;
   }
  .headerContent {
-   padding: 1rem 0rem;
    margin: 0 1rem;
+   padding-left: 16px;
+  padding-right: 16px;
+  padding-top: 8px;
+  padding-bottom: 8px;
  }
   .logo {
        width: 35px;
@@ -580,7 +588,10 @@
  }
  .headerContent {
     margin: 0;
-   padding: 1rem 1rem;
+   padding-left: 16px;
+  padding-right: 16px;
+  padding-top: 8px;
+  padding-bottom: 8px;
  }
   .innerBody {
     padding-top: 5rem;

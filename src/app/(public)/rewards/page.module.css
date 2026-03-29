@@ -50,10 +50,13 @@
   justify-content: space-between;
   width: 100%;
   gap: 1rem;
-  padding: 1rem 0;
   margin: 0 20%;
   box-sizing: border-box;
   min-width: 0;
+  padding-left: 16px;
+  padding-right: 16px;
+  padding-top: 8px;
+  padding-bottom: 8px;
 }
 
 .innerBody {
@@ -83,6 +86,8 @@
 }
 
 .backButton {
+  min-width: 44px;
+  min-height: 44px;
   background: none;
   border: none;
   cursor: pointer;
@@ -90,7 +95,7 @@
   border-radius: 50%;
   display: flex;
   align-items: center;
-  padding: 8px;
+  padding: 12px;
   justify-content: center;
   transition: background-color 0.2s ease;
 }
@@ -168,13 +173,6 @@
   cursor: pointer;
   transition: all 0.3s ease;
   flex-shrink: 0;
-}
-
-.navButton:hover {
-  background: #667eea;
-  color: white;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
 .navButtonActive {
@@ -765,9 +763,12 @@
 /* Tablet */
 @media screen and (min-width: 501px) and (max-width: 930px) {
   .headerContent {
-    padding: 1rem;
     margin: 0;
     max-width: 100%;
+    padding-left: 16px;
+  padding-right: 16px;
+  padding-top: 8px;
+  padding-bottom: 8px;
   }
 
   .logo {
@@ -870,9 +871,12 @@
 @media screen and (max-width: 500px) {
   .headerContent {
     margin: 0;
-    padding: 1rem;
     max-width: 100%;
     gap: 0.5rem;
+    padding-left: 16px;
+  padding-right: 16px;
+  padding-top: 8px;
+  padding-bottom: 8px;
   }
 
   .innerBody {

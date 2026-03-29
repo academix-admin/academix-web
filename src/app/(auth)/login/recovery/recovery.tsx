@@ -41,6 +41,11 @@ export default function Recovery(props: RecoveryProps) {
   }, []);
 
   useEffect(() => {
+    console.log({
+      accountDetailsMethods: accountDetails?.methods,
+      isHydrated: __meta.isHydrated,
+      isTop 
+    })
     if(accountDetails?.methods.length === 0 && __meta.isHydrated && isTop)nav.popToRoot();
   }, [accountDetails.methods,__meta.isHydrated, isTop]);
 
