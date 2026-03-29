@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import styles from './active-quiz-topic.module.css';
 import { useLanguage } from '@/context/LanguageContext';
@@ -412,6 +412,12 @@ function CurrentQuizCard({ topic, getInitials, onClick, onLeave, showContinue }:
 
   const [toQuizLoading, setToQuizLoading] = useState(false);
 
+  // Memoize values to prevent flashing
+  const answeredCount = useMemo(() => topic.quizPool?.questionTrackerCount || 0, [topic.quizPool?.questionTrackerCount]);
+  const totalQuestions = useMemo(() => topic.quizPool?.challengeModel?.challengeQuestionCount || 0, [topic.quizPool?.challengeModel?.challengeQuestionCount]);
+  const quizCode = useMemo(() => topic.quizPool?.poolsCode || '', [topic.quizPool?.poolsCode]);
+  const status = useMemo(() => topic.quizPool?.poolsJob || '', [topic.quizPool?.poolsJob]);
+
   const formatQuizPoolStatusTime = useCallback((status: string | null, seconds: number): string => {
     if (!status) return t('open_quiz');
 
@@ -556,11 +562,7 @@ function CurrentQuizCard({ topic, getInitials, onClick, onLeave, showContinue }:
     setToQuizLoading(false);
   };
 
-  const status = topic.quizPool?.poolsJob || '';
-  const displayTime = formatQuizPoolStatusTime(status, remainingTime);
-  const quizCode = topic.quizPool?.poolsCode || '';
-  const answeredCount = topic.quizPool?.questionTrackerCount || 0;
-  const totalQuestions = topic.quizPool?.challengeModel?.challengeQuestionCount || 0;
+  const displayTime = useMemo(() => formatQuizPoolStatusTime(status, remainingTime), [status, remainingTime, formatQuizPoolStatusTime]);
 
   return (
     <div className={`${styles.quizContainer} ${styles[`quizContainer_${theme}`]}`} >
