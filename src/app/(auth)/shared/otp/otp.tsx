@@ -13,7 +13,7 @@ import { createStateStack, useDemandState, StateStack } from '@/lib/state-stack'
 import { useAwaitableRouter } from "@/hooks/useAwaitableRouter";
 import { UserData } from '@/models/user-data';
 import { useUserData } from '@/lib/stacks/user-stack';
-import {  fetchUserData } from '@/utils/checkers';
+import { fetchUserData } from '@/utils/checkers';
 import { useRouter } from "next/navigation";
 
 // Define types for OTPInput props
@@ -35,24 +35,24 @@ const OTPInput: React.FC<OTPInputProps> = ({
 }) => {
   const inputs = Array(length).fill(0);
 
-   const handleChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
-     const digit = e.target.value.replace(/\D/g, "").slice(-1);
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+    const digit = e.target.value.replace(/\D/g, "").slice(-1);
 
-     const otpArray = value.split("");
-     otpArray[index] = digit || "";
-     const nextValue = otpArray.join("");
+    const otpArray = value.split("");
+    otpArray[index] = digit || "";
+    const nextValue = otpArray.join("");
 
-     onChange(nextValue);
+    onChange(nextValue);
 
-     // ---- FIX: compute allowed index from the new value ---- //
-     const allowedIndex = getFirstInvalidIndex(nextValue);
+    // ---- FIX: compute allowed index from the new value ---- //
+    const allowedIndex = getFirstInvalidIndex(nextValue);
 
-     // Auto-advance only if digit is valid and index < allowed position
-     if (digit && index < length - 1 && index < allowedIndex) {
-       const next = e.target.nextElementSibling as HTMLInputElement | null;
-       next?.focus();
-     }
-   };
+    // Auto-advance only if digit is valid and index < allowed position
+    if (digit && index < length - 1 && index < allowedIndex) {
+      const next = e.target.nextElementSibling as HTMLInputElement | null;
+      next?.focus();
+    }
+  };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
     if (e.key !== "Backspace") return;
@@ -161,7 +161,7 @@ const Keypad: React.FC<KeypadProps> = ({ value, onChange, disabled = false, erro
   const handleDigitInput = (digit: number) => {
     if (value.length < 6) {
       onChange(value + digit);
-    } else if(!!error && value.length === 6){
+    } else if (!!error && value.length === 6) {
       onChange(`${digit}`);
     }
   };
@@ -169,7 +169,7 @@ const Keypad: React.FC<KeypadProps> = ({ value, onChange, disabled = false, erro
   const handleBackspace = () => {
     if (value.length > 0 && !error) {
       onChange(value.slice(0, -1));
-    } else if(!!error && value.length === 6){
+    } else if (!!error && value.length === 6) {
       onChange('');
     }
   };
@@ -229,11 +229,12 @@ export default function Otp(props: OtpProps) {
 
   const firstInputRef = useRef<HTMLInputElement>(null);
 
-    useEffect(() => {
-        if (!otpTimer.expiresAt && __meta.isHydrated && isTop) {
-          nav.popToRoot();
-        }
-    }, [otpTimer.expiresAt, __meta.isHydrated, isTop]);
+  useEffect(() => {
+    // Only check timer validity after hydration is complete
+    if (__meta.isHydrated && isTop && !otpTimer.expiresAt) {
+      nav.popToRoot();
+    }
+  }, [otpTimer.expiresAt, __meta.isHydrated, isTop]);
 
   useEffect(() => {
     setCanGoBack(window.history.length > 1);
@@ -269,19 +270,19 @@ export default function Otp(props: OtpProps) {
     setError('');
     try {
 
-      if(verificationRequest === 'SignUp'){
-      if (verificationType === 'UserLoginType.email') {
-        await resendTokenForEmail(verificationValue);
-      } else if (verificationType === 'UserLoginType.phone') {
-        await resendTokenForPhone(verificationValue);
+      if (verificationRequest === 'SignUp') {
+        if (verificationType === 'UserLoginType.email') {
+          await resendTokenForEmail(verificationValue);
+        } else if (verificationType === 'UserLoginType.phone') {
+          await resendTokenForPhone(verificationValue);
+        }
+      } else {
+        if (verificationType === 'UserLoginType.email') {
+          await resetPasswordForEmail(verificationValue);
+        } else if (verificationType === 'UserLoginType.phone') {
+          await resetPasswordForPhone(verificationValue);
+        }
       }
-     }else{
-         if (verificationType === 'UserLoginType.email') {
-           await resetPasswordForEmail(verificationValue);
-         } else if (verificationType === 'UserLoginType.phone') {
-           await resetPasswordForPhone(verificationValue);
-         }
-     }
 
       otpTimer$.start(300);
     } catch (error) {
@@ -301,20 +302,20 @@ export default function Otp(props: OtpProps) {
 
     try {
       let result;
-      if(verificationRequest === 'SignUp'){
+      if (verificationRequest === 'SignUp') {
 
-      if (verificationType === 'UserLoginType.email') {
-        result = await verifyEmailAddressWithOTP(verificationValue, otpValue);
-      } else if (verificationType === 'UserLoginType.phone') {
-        result = await verifyPhoneNumberWithOTP(verificationValue, otpValue);
+        if (verificationType === 'UserLoginType.email') {
+          result = await verifyEmailAddressWithOTP(verificationValue, otpValue);
+        } else if (verificationType === 'UserLoginType.phone') {
+          result = await verifyPhoneNumberWithOTP(verificationValue, otpValue);
+        }
+      } else {
+        if (verificationType === 'UserLoginType.email') {
+          result = await verifyPasswordResetEmailOTP(verificationValue, otpValue);
+        } else if (verificationType === 'UserLoginType.phone') {
+          result = await verifyPhoneNumberWithOTP(verificationValue, otpValue);
+        }
       }
-     }else{
-      if (verificationType === 'UserLoginType.email') {
-        result = await verifyPasswordResetEmailOTP(verificationValue, otpValue);
-      } else if (verificationType === 'UserLoginType.phone') {
-        result = await verifyPhoneNumberWithOTP(verificationValue, otpValue);
-      }
-     }
 
       if (result?.error) {
         setError(t('incorrect_code'));
@@ -323,39 +324,39 @@ export default function Otp(props: OtpProps) {
         setIsLoading(false);
       } else {
         // OTP verified successfully
-        if(verificationRequest === 'SignUp'){
+        if (verificationRequest === 'SignUp') {
 
           if (result?.data.user != null) {
-             const userObj : UserData | null = await fetchUserData(result?.data.user.id);
+            const userObj: UserData | null = await fetchUserData(result?.data.user.id);
 
-             if(userObj){
-                await StateStack.core.clearScope('secondary_flow');
-                await userData$.set(userObj);
-                __meta.clear();
-                nav.dispose();
-                const navResult = await replaceAndWait("/main");
+            if (userObj) {
+              await StateStack.core.clearScope('secondary_flow');
+              await userData$.set(userObj);
+              __meta.clear();
+              nav.dispose();
+              const navResult = await replaceAndWait("/main");
 
-                if (!navResult.success) {
-                    router.replace("/main");
-                    setIsLoading(false);
-                }else{
+              if (!navResult.success) {
+                router.replace("/main");
+                setIsLoading(false);
+              } else {
 
-                 setIsLoading(false);
-                 }
-             }else{
-               __meta.clear();
-               await nav.popToRoot();
-               setIsLoading(false);
-             }
-          }else{
-             setError(t('error_occurred'));
-             setIsLoading(false);
+                setIsLoading(false);
+              }
+            } else {
+              __meta.clear();
+              await nav.popToRoot();
+              setIsLoading(false);
+            }
+          } else {
+            setError(t('error_occurred'));
+            setIsLoading(false);
           }
 
 
-        }else{
+        } else {
           __meta.clear();
-          await nav.pushAndPopUntil('reset_password',(entry) => entry.key === 'login',{names});
+          await nav.pushAndPopUntil('reset_password', (entry) => entry.key === 'login', { names });
           setIsLoading(false);
         }
       }
@@ -370,7 +371,7 @@ export default function Otp(props: OtpProps) {
   useEffect(() => {
     if (otpValue.length === 6 && !error) {
       verifyOTP();
-    } if(!!error && otpValue.length <= 6){
+    } if (!!error && otpValue.length <= 6) {
       setError('');
     }
   }, [otpValue]);
@@ -393,21 +394,21 @@ export default function Otp(props: OtpProps) {
   };
 
   const resetPasswordForEmail = async (email: string) => {
-      const { data, error } = await supabaseBrowser.auth.resetPasswordForEmail(email);
-      if (error) {
-        console.error('Error resetting password for email:', error);
-        throw error;
-      }
-      return data;
+    const { data, error } = await supabaseBrowser.auth.resetPasswordForEmail(email);
+    if (error) {
+      console.error('Error resetting password for email:', error);
+      throw error;
     }
-    const resetPasswordForPhone = async (phone: string) => {
-      const { data, error } = await supabaseBrowser.auth.signInWithOtp({phone, options: { shouldCreateUser: false }});
-      if (error) {
-        console.error('Error resetting password for phone:', error);
-        throw error;
-      }
-      return data;
+    return data;
+  }
+  const resetPasswordForPhone = async (phone: string) => {
+    const { data, error } = await supabaseBrowser.auth.signInWithOtp({ phone, options: { shouldCreateUser: false } });
+    if (error) {
+      console.error('Error resetting password for phone:', error);
+      throw error;
     }
+    return data;
+  }
 
   const verifyEmailAddressWithOTP = async (email: string, token: string) => {
     return await supabaseBrowser.auth.verifyOtp({
@@ -418,11 +419,11 @@ export default function Otp(props: OtpProps) {
   };
 
   const verifyPasswordResetEmailOTP = async (email: string, token: string) => {
-      return await supabaseBrowser.auth.verifyOtp({
-        email,
-        token,
-        type: 'recovery'
-      });
+    return await supabaseBrowser.auth.verifyOtp({
+      email,
+      token,
+      type: 'recovery'
+    });
   };
 
   const verifyPhoneNumberWithOTP = async (phone: string, token: string) => {
@@ -524,7 +525,7 @@ export default function Otp(props: OtpProps) {
               disabled={disableOperation}
               className={styles.resendButton}
             >
-              { isRequesting ? <span className={styles.resendSpinner}></span> : t('resend')}
+              {isRequesting ? <span className={styles.resendSpinner}></span> : t('resend')}
             </button>
           )}
         </div>

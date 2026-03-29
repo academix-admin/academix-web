@@ -477,9 +477,6 @@ class StateStackCore {
         try {
           const storageKey = this.storageKey(scope, key);
           await storage.setItem(storageKey, JSON.stringify(value));
-          
-          // Broadcast to other tabs via BroadcastChannel
-          this.broadcastStateChange(scope, key, value);
         } catch (err) {
           console.error("[StateStack] persist error:", err);
           // Even if persist fails, we'll update in-memory state
@@ -609,7 +606,7 @@ class StateStackCore {
     const scopeMap = this.stacks.get(scope);
     const storage = getDefaultStorage();
     if (scopeMap) {
-      for (const key of scopeMap.keys()) {
+      for (const key of Array.from(scopeMap.keys())) {
         const timerKey = this.subKey(scope, key);
         
         // Mark as not hydrated first
@@ -617,9 +614,6 @@ class StateStackCore {
         this.loadedKeys.delete(timerKey);
         this.demandedKeys.delete(timerKey);
         this.notifyHydration(scope, key);
-        
-        // Cleanup hydration subscribers
-        this.hydrationSubscribers.delete(timerKey);
         
         // Then clear in-memory state
         scopeMap.delete(key);
@@ -637,9 +631,6 @@ class StateStackCore {
           try {
             const storageKey = this.storageKey(scope, key);
             await storage.removeItem(storageKey);
-            
-            // Broadcast deletion to other tabs
-            this.broadcastStateChange(scope, key, null);
           } catch (err) {
             console.error("[StateStack] clearScope persist remove error:", err);
           }
@@ -649,24 +640,18 @@ class StateStackCore {
     }
 
     // Also remove tracked loaded/hydrated keys matching scope
-    for (const internalKey of this.loadedKeys) {
+    for (const internalKey of Array.from(this.loadedKeys)) {
       const [keyScope, key] = this.parseSubKey(internalKey);
       if (keyScope === scope) {
         this.hydratedKeys.delete(internalKey);
         this.loadedKeys.delete(internalKey);
         this.demandedKeys.delete(internalKey);
         this.notifyHydration(keyScope, key);
-        
-        // Cleanup hydration subscribers
-        this.hydrationSubscribers.delete(internalKey);
 
         if (removePersist) {
           try {
             const storageKey = this.storageKey(scope, key);
             await storage.removeItem(storageKey);
-            
-            // Broadcast deletion to other tabs
-            this.broadcastStateChange(scope, key, null);
           } catch (err) {
             console.error("[StateStack] clearScope demand persist remove error:", err);
           }
@@ -696,18 +681,12 @@ class StateStackCore {
     this.demandedKeys.delete(internalKey);
     this.notifyHydration(scope, key);
 
-    // Cleanup hydration subscribers
-    this.hydrationSubscribers.delete(internalKey);
-
     if (!this.stacks.has(scope)) {
       if (removePersist) {
         try {
           const storage = getDefaultStorage();
           const storageKey = this.storageKey(scope, key);
           storage.removeItem(storageKey).catch((err) => console.error("[StateStack] clearKey remove persist error:", err));
-          
-          // Broadcast deletion to other tabs
-          this.broadcastStateChange(scope, key, null);
         } catch (err) {
           console.error("[StateStack] clearKey remove persist error:", err);
         }
@@ -732,9 +711,6 @@ class StateStackCore {
         const storage = getDefaultStorage();
         const storageKey = this.storageKey(scope, key);
         storage.removeItem(storageKey).catch((err) => console.error("[StateStack] clearKey remove persist error:", err));
-        
-        // Broadcast deletion to other tabs
-        this.broadcastStateChange(scope, key, null);
       } catch (err) {
         console.error("[StateStack] clearKey remove persist error:", err);
       }
@@ -1011,10 +987,9 @@ class StateStackCore {
     }
     this.storageEventListenerAttached = true;
 
-    // Setup BroadcastChannel for cross-tab sync (works with IndexedDB)
-    this.setupBroadcastChannel();
-
-    // Keep storage event listener for backward compatibility and localStorage sync
+    // FIX (cross-tab sync): the `storage` event is now reliably fired because
+    // defaultStorageAdapter.setItem mirrors writes to localStorage. This
+    // listener therefore works correctly for the default 'auto' storage mode.
     window.addEventListener("storage", (ev) => {
       try {
         if (!ev.key) return;
@@ -1061,81 +1036,6 @@ class StateStackCore {
     });
   }
 
-  /**
-   * Setup BroadcastChannel for true cross-tab sync that works with IndexedDB.
-   * This ensures state changes are synchronized across tabs even when using IndexedDB.
-   */
-  private setupBroadcastChannel() {
-    if (typeof BroadcastChannel === "undefined") {
-      this.debugLog("BroadcastChannel not available, cross-tab sync limited to localStorage");
-      return;
-    }
-
-    try {
-      this.broadcastChannel = new BroadcastChannel('state-stack-sync');
-      
-      this.broadcastChannel.onmessage = (event) => {
-        try {
-          const { scope, key, value, timestamp } = event.data;
-          
-          if (!scope || !key) return;
-          
-          const internalKey = this.subKey(scope, key);
-          
-          // Handle deletion
-          if (value === null) {
-            this.stacks.get(scope)?.delete(key);
-            this.hydratedKeys.delete(internalKey);
-            this.loadedKeys.delete(internalKey);
-            this.demandedKeys.delete(internalKey);
-            this.notify(scope, key);
-            this.notifyHydration(scope, key);
-          } else {
-            // Handle update
-            if (!this.stacks.has(scope)) this.stacks.set(scope, new Map());
-            this.stacks.get(scope)!.set(key, value);
-            this.hydratedKeys.add(internalKey);
-            this.loadedKeys.add(internalKey);
-            this.notify(scope, key);
-            this.notifyHydration(scope, key);
-          }
-          
-          this.debugLog(`Received cross-tab update: ${scope}::${key}`, { timestamp });
-        } catch (err) {
-          console.error("[StateStack] BroadcastChannel message handler error:", err);
-        }
-      };
-      
-      this.broadcastChannel.onmessageerror = (event) => {
-        console.error("[StateStack] BroadcastChannel message error:", event);
-      };
-      
-      this.debugLog("BroadcastChannel initialized for cross-tab sync");
-    } catch (err) {
-      console.error("[StateStack] Failed to setup BroadcastChannel:", err);
-    }
-  }
-
-  /**
-   * Broadcast state change to other tabs via BroadcastChannel.
-   * This enables cross-tab sync for IndexedDB changes.
-   */
-  private broadcastStateChange(scope: string, key: string, value: any) {
-    if (!this.broadcastChannel) return;
-    
-    try {
-      this.broadcastChannel.postMessage({
-        scope,
-        key,
-        value,
-        timestamp: Date.now()
-      });
-      this.debugLog(`Broadcasted state change: ${scope}::${key}`);
-    } catch (err) {
-      console.error("[StateStack] Failed to broadcast state change:", err);
-    }
-  }
-
   debug() {
     const stacks: Record<string, Record<string, any>> = {};
     for (const [scope, map] of this.stacks) {
@@ -1152,30 +1052,7 @@ class StateStackCore {
       pendingUpdates: Array.from(this.pendingUpdates.keys()),
       hydratedKeys: Array.from(this.hydratedKeys),
       loadedKeys: Array.from(this.loadedKeys),
-      broadcastChannelActive: !!this.broadcastChannel,
     };
-  }
-
-  /**
-   * Cleanup method to close BroadcastChannel and clear resources.
-   * Useful for testing or when disposing the state stack.
-   */
-  dispose() {
-    if (this.broadcastChannel) {
-      try {
-        this.broadcastChannel.close();
-        this.broadcastChannel = undefined;
-        this.debugLog("BroadcastChannel closed");
-      } catch (err) {
-        console.error("[StateStack] Error closing BroadcastChannel:", err);
-      }
-    }
-    
-    // Clear all timers
-    for (const timer of this.timers.values()) {
-      clearTimeout(timer);
-    }
-    this.timers.clear();
   }
 }
 

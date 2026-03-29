@@ -21,7 +21,7 @@ interface RecoveryProps {
 export default function Recovery(props: RecoveryProps) {
   const { theme } = useTheme();
   const { t, tNode, lang } = useLanguage();
-  const { accountDetails, accountDetails$, __meta} = useAccountDetails();
+  const { accountDetails, accountDetails$, __meta } = useAccountDetails();
   const { otpTimer, otpTimer$ } = useOtp();
   const nav = useNav();
   const isTop = nav.isTop();
@@ -41,20 +41,15 @@ export default function Recovery(props: RecoveryProps) {
   }, []);
 
   useEffect(() => {
-    console.log({
-      accountDetailsMethods: accountDetails?.methods,
-      isHydrated: __meta.isHydrated,
-      isTop 
-    })
     if(accountDetails?.methods.length === 0 && __meta.isHydrated && isTop)nav.popToRoot();
-  }, [accountDetails.methods,__meta.isHydrated, isTop]);
+  }, [accountDetails.methods, __meta.isHydrated, isTop]);
 
   useEffect(() => {
     setIsFormValid(!!verificationSelected);
   }, [verificationSelected]);
 
   const handleChange = (verificationMethodModel: VerificationMethodModel) => {
-      setVerificationSelected(verificationMethodModel);
+    setVerificationSelected(verificationMethodModel);
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -62,24 +57,24 @@ export default function Recovery(props: RecoveryProps) {
     if (!isFormValid) return;
 
     setSendLoading(true);
-                                              setError('');
+    setError('');
 
     try {
 
-    if(verificationSelected?.type === 'UserLoginType.email'){
-         await resetPasswordForEmail(verificationSelected.value);
-         handleRecovery(verificationSelected.type,verificationSelected.value)
-    }else if(verificationSelected?.type === 'UserLoginType.phone'){
-         await resetPasswordForPhone(verificationSelected.value)
-         handleRecovery(verificationSelected.type,verificationSelected.value)
-    }else{
+      if (verificationSelected?.type === 'UserLoginType.email') {
+        await resetPasswordForEmail(verificationSelected.value);
+        handleRecovery(verificationSelected.type, verificationSelected.value)
+      } else if (verificationSelected?.type === 'UserLoginType.phone') {
+        await resetPasswordForPhone(verificationSelected.value)
+        handleRecovery(verificationSelected.type, verificationSelected.value)
+      } else {
         console.error('Unknown verification type');
-                                                         setError(t('error_occurred'));
+        setError(t('error_occurred'));
 
-    }
+      }
     } catch (error) {
       console.error('Error during password reset:', error);
-                                                       setError(t('error_occurred'));
+      setError(t('error_occurred'));
 
     } finally {
       setSendLoading(false);
@@ -95,7 +90,7 @@ export default function Recovery(props: RecoveryProps) {
     return data;
   }
   const resetPasswordForPhone = async (phone: string) => {
-    const { data, error } = await supabaseBrowser.auth.signInWithOtp({phone, options: { shouldCreateUser: false }});
+    const { data, error } = await supabaseBrowser.auth.signInWithOtp({ phone, options: { shouldCreateUser: false } });
     if (error) {
       console.error('Error resetting password for phone:', error);
       throw error;
@@ -106,8 +101,8 @@ export default function Recovery(props: RecoveryProps) {
   const handleRecovery = async (type: string, value: string) => {
     // Navigate to otp screen
     otpTimer$.start(300);
+    await nav.pushAndPopUntil('otp', (entry) => entry.key === 'login', { verificationType: type, verificationValue: value, verificationRequest: 'Recovery', names });
     __meta.clear();
-    await nav.pushAndPopUntil('otp',(entry) => entry.key === 'login',{ verificationType: type, verificationValue: value, verificationRequest: 'Recovery', names });
   };
 
 
@@ -158,47 +153,47 @@ export default function Recovery(props: RecoveryProps) {
         <form onSubmit={handleSubmit} className={styles.form}>
           <div className={styles.formGroup}>
             <label htmlFor="verify_identity" className={styles.label}>{t('verify_identity_label')}</label>
-                        <div className={styles.emptyState}>
-              { accountDetails?.methods.length === 0 && (<NoResultsView text="Nothing found."/>)}
+            <div className={styles.emptyState}>
+              {accountDetails?.methods.length === 0 && (<NoResultsView text="Nothing found." />)}
 
-          </div>
+            </div>
             <div className={styles.radioGroup}>
               {accountDetails?.methods.map((method, index) => (
-              <label key={index} className={`${styles.radioLabel} ${verificationSelected?.type === method.type ? styles.radioLabelSelected : ''}`}>
-                <input
-                  type="radio"
-                  name="recovery"
-                  value={method.value}
-                  checked={verificationSelected?.type === method.type}
-                  onChange={() => handleChange(method)}
-                  className={styles.radioInput}
-                />
-                <div className={styles.radioContent}>
-                  <span className={styles.radioText}>
-                    { method.type === 'UserLoginType.email' ? tNode('code_through_email', { email: <strong>{method.value}</strong> }) : tNode('code_through_phone', { phone: <strong>{method.value}</strong> })}
-                  </span>
-                </div>
-              </label>
-               ))}
+                <label key={index} className={`${styles.radioLabel} ${verificationSelected?.type === method.type ? styles.radioLabelSelected : ''}`}>
+                  <input
+                    type="radio"
+                    name="recovery"
+                    value={method.value}
+                    checked={verificationSelected?.type === method.type}
+                    onChange={() => handleChange(method)}
+                    className={styles.radioInput}
+                  />
+                  <div className={styles.radioContent}>
+                    <span className={styles.radioText}>
+                      {method.type === 'UserLoginType.email' ? tNode('code_through_email', { email: <strong>{method.value}</strong> }) : tNode('code_through_phone', { phone: <strong>{method.value}</strong> })}
+                    </span>
+                  </div>
+                </label>
+              ))}
             </div>
 
           </div>
 
 
-           {error && ( <div className={styles.errorSection}>
-                      <p className={styles.errorText}>
-                                {error}
-                      </p>
-                    </div>)}
+          {error && (<div className={styles.errorSection}>
+            <p className={styles.errorText}>
+              {error}
+            </p>
+          </div>)}
 
 
-          { accountDetails?.methods.length > 0 && (<button
+          {accountDetails?.methods.length > 0 && (<button
             type="submit"
             className={styles.sendButton}
             disabled={!isFormValid || sendLoading}
           >
             {sendLoading ? <span className={styles.spinner}></span> : t('send')}
-          </button>) }
+          </button>)}
         </form>
       </div>
     </main>

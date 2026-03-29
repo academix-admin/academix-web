@@ -61,7 +61,7 @@ const normalizeLoginInputValue = (loginModel: LoginModel | null): string => {
 export default function LoginUser() {
   const { theme } = useTheme();
   const { t, lang } = useLanguage();
-  const { login, login$, __meta} = useLogin();
+  const { login, login$, __meta } = useLogin();
   const { userData, userData$ } = useUserData();
   const nav = useNav();
   const { otpTimer, otpTimer$ } = useOtp();
@@ -96,224 +96,224 @@ export default function LoginUser() {
       const result = validatePassword(login.password);
       setPasswordChecks(result);
       setPasswordInputValue(login.password);
-    }else{
+    } else {
       setPasswordInputValue('');
     }
   }, [login.password]);
 
   useEffect(() => {
     if (login?.login) {
-       // Use the normalize function to display the clean value
-       const normalizedValue = normalizeLoginInputValue(login.login);
-       if (normalizedValue.includes("@") && isEmail(normalizedValue)) {
-             setLoginState('email');
-           } else if (!normalizedValue.includes("@") && allNumber(normalizedValue)) {
-             setLoginState('phone');
-           } else if (!isEmail(normalizedValue) &&
-               !containsUpperCase(normalizedValue) &&
-               getSpecialCharacters(normalizedValue).every((c) => c === '.' || c === '_') && normalizedValue.length > 0) {
-             setLoginState('username');
-           }else{
-                            setLoginState('initial');
-           }
-       setLoginInputValue(normalizedValue);
-    }else{
-                                    setLoginState('initial');
+      // Use the normalize function to display the clean value
+      const normalizedValue = normalizeLoginInputValue(login.login);
+      if (normalizedValue.includes("@") && isEmail(normalizedValue)) {
+        setLoginState('email');
+      } else if (!normalizedValue.includes("@") && allNumber(normalizedValue)) {
+        setLoginState('phone');
+      } else if (!isEmail(normalizedValue) &&
+        !containsUpperCase(normalizedValue) &&
+        getSpecialCharacters(normalizedValue).every((c) => c === '.' || c === '_') && normalizedValue.length > 0) {
+        setLoginState('username');
+      } else {
+        setLoginState('initial');
+      }
+      setLoginInputValue(normalizedValue);
+    } else {
+      setLoginState('initial');
     }
   }, [login.login]);
 
   const handleSubmit = async () => {
-      if (!isFormValid || !login?.login) return;
+    if (!isFormValid || !login?.login) return;
 
-      setLoginLoading(true);
-                                          setError('');
+    setLoginLoading(true);
+    setError('');
 
-      try {
-        const userLoginAccount: UserLoginAccount | null = await fetchUserDetails(login.login);
-        if (!userLoginAccount) {
-          setError(t('invalid_login_credentials'));
-          return;
-        }
-
-        let userObj: UserData | null = null;
-
-        if (userLoginAccount.users_login_type === 'UserLoginType.email') {
-          userObj = await signInWithEmail(
-            userLoginAccount.users_email, login.password || '');
-        } else if (userLoginAccount.users_login_type === 'UserLoginType.phone') {
-          userObj = await signInWithPhone(
-            userLoginAccount.users_phone, login.password || '');
-        }
-
-        if (userObj) {
-          await handleCreatedUser(userLoginAccount.users_login_type,
-            userLoginAccount.users_login_type === 'UserLoginType.email' ? userLoginAccount.users_email : userLoginAccount.users_phone,
-            userObj);
-        }
-
-      } catch (err) {
-        console.error(err);
-        setError(t('error_occurred'));
-      } finally {
-        setLoginLoading(false);
+    try {
+      const userLoginAccount: UserLoginAccount | null = await fetchUserDetails(login.login);
+      if (!userLoginAccount) {
+        setError(t('invalid_login_credentials'));
+        return;
       }
-    };
+
+      let userObj: UserData | null = null;
+
+      if (userLoginAccount.users_login_type === 'UserLoginType.email') {
+        userObj = await signInWithEmail(
+          userLoginAccount.users_email, login.password || '');
+      } else if (userLoginAccount.users_login_type === 'UserLoginType.phone') {
+        userObj = await signInWithPhone(
+          userLoginAccount.users_phone, login.password || '');
+      }
+
+      if (userObj) {
+        await handleCreatedUser(userLoginAccount.users_login_type,
+          userLoginAccount.users_login_type === 'UserLoginType.email' ? userLoginAccount.users_email : userLoginAccount.users_phone,
+          userObj);
+      }
+
+    } catch (err) {
+      console.error(err);
+      setError(t('error_occurred'));
+    } finally {
+      setLoginLoading(false);
+    }
+  };
 
 
 
-   const signInWithEmail = async (email: string, password: string): Promise<UserData | null> => {
+  const signInWithEmail = async (email: string, password: string): Promise<UserData | null> => {
 
-       try {
-         const location = await checkLocation();
-         if (!location) {
-           console.log('location not determined');
-           setError(t('error_occurred'));
-           return null;
-         }
+    try {
+      const location = await checkLocation();
+      if (!location) {
+        console.log('location not determined');
+        setError(t('error_occurred'));
+        return null;
+      }
 
-         const partialData = await fetchUserPartialDetails(email);
-         const feature = await checkFeatures(
-           'Features.sign_in',
-           lang,
-           location.country_code,
-           partialData?.users_sex,
-           partialData?.users_dob
-         );
+      const partialData = await fetchUserPartialDetails(email);
+      const feature = await checkFeatures(
+        'Features.sign_in',
+        lang,
+        location.country_code,
+        partialData?.users_sex,
+        partialData?.users_dob
+      );
 
-         if (!feature) {
-           console.log('feature not available', location);
-           setError(t('feature_unavailable'));
-           return null;
-         }
+      if (!feature) {
+        console.log('feature not available', location);
+        setError(t('feature_unavailable'));
+        return null;
+      }
 
-         const { data, error } = await supabaseBrowser.auth.signInWithPassword({
-           email: email,
-           password: password,
-         });
+      const { data, error } = await supabaseBrowser.auth.signInWithPassword({
+        email: email,
+        password: password,
+      });
 
-         if (error) throw error;
+      if (error) throw error;
 
-         if (data.user != null) {
-           const userData : UserData | null = await fetchUserData(data.user.id);
-           return userData;
-         }
+      if (data.user != null) {
+        const userData: UserData | null = await fetchUserData(data.user.id);
+        return userData;
+      }
 
-         return null;
-       } catch (error: any) {
-         console.error('Signin error:', error);
+      return null;
+    } catch (error: any) {
+      console.error('Signin error:', error);
 
-         if (error.code === 'email_not_confirmed') {
-           await resendTokenForEmail(email);
-           otpTimer$.start(300);
-           await StateStack.core.clearScope('login_flow');
-           setLoginInputValue('');
-                 setPasswordInputValue('');
-                 setError('');
-           nav.pushAndPopUntil('otp', (entry: any) => entry.key === 'login', {
-             verificationType: 'UserLoginType.email',
-             verificationValue: email, verificationRequest: 'SignUp'
-           });
-         } else if (error.code === 'invalid_credentials') {
-           setError(t('invalid_login_credentials'));
-           return null;
-         }
+      if (error.code === 'email_not_confirmed') {
+        await resendTokenForEmail(email);
+        otpTimer$.start(300);
+        await StateStack.core.clearScope('login_flow');
+        setLoginInputValue('');
+        setPasswordInputValue('');
+        setError('');
+        nav.pushAndPopUntil('otp', (entry: any) => entry.key === 'login', {
+          verificationType: 'UserLoginType.email',
+          verificationValue: email, verificationRequest: 'SignUp'
+        });
+      } else if (error.code === 'invalid_credentials') {
+        setError(t('invalid_login_credentials'));
+        return null;
+      }
 
-         return null;
-       }
-     };
+      return null;
+    }
+  };
 
-     const signInWithPhone = async (phone: string, password: string): Promise<UserData | null> => {
-       try {
-         const location = await checkLocation();
-         if (!location) {
-           console.log('location not determined');
-           setError(t('error_occurred'));
-           return null;
-         }
+  const signInWithPhone = async (phone: string, password: string): Promise<UserData | null> => {
+    try {
+      const location = await checkLocation();
+      if (!location) {
+        console.log('location not determined');
+        setError(t('error_occurred'));
+        return null;
+      }
 
-         const partialData = await fetchUserPartialDetails(undefined, phone);
-         const feature = await checkFeatures(
-           'Features.sign_in',
-           lang,
-           location.country_code,
-           partialData?.users_sex,
-           partialData?.users_dob
-         );
+      const partialData = await fetchUserPartialDetails(undefined, phone);
+      const feature = await checkFeatures(
+        'Features.sign_in',
+        lang,
+        location.country_code,
+        partialData?.users_sex,
+        partialData?.users_dob
+      );
 
-         if (!feature) {
-           console.log('feature not available');
-           setError(t('feature_unavailable'));
-           return null;
-         }
+      if (!feature) {
+        console.log('feature not available');
+        setError(t('feature_unavailable'));
+        return null;
+      }
 
-         const { data, error } = await supabaseBrowser.auth.signInWithPassword({
-           phone: phone,
-           password: password,
-         });
+      const { data, error } = await supabaseBrowser.auth.signInWithPassword({
+        phone: phone,
+        password: password,
+      });
 
-         if (error) throw error;
+      if (error) throw error;
 
-         if (data.user != null) {
-           const userData : UserData | null = await fetchUserData(data.user.id);
-           return userData;
-         }
+      if (data.user != null) {
+        const userData: UserData | null = await fetchUserData(data.user.id);
+        return userData;
+      }
 
-         return null;
-       } catch (error: any) {
-         console.error('Signin error:', error);
+      return null;
+    } catch (error: any) {
+      console.error('Signin error:', error);
 
-         if (error.code === 'phone_not_confirmed') {
-           await resendTokenForPhone(phone);
-           otpTimer$.start(300);
-           await StateStack.core.clearScope('login_flow');
-           setLoginInputValue('');
-                 setPasswordInputValue('');
-                 setError('');
-           nav.pushAndPopUntil('otp', (entry: any) => entry.key === 'login', {
-             verificationType: 'UserLoginType.phone',
-             verificationValue: phone, verificationRequest: 'SignUp'
-           });
-         } else if (error.code === 'invalid_credentials') {
-           setError(t('invalid_login_credentials'));
-           return null;
-         }
+      if (error.code === 'phone_not_confirmed') {
+        await resendTokenForPhone(phone);
+        otpTimer$.start(300);
+        await StateStack.core.clearScope('login_flow');
+        setLoginInputValue('');
+        setPasswordInputValue('');
+        setError('');
+        nav.pushAndPopUntil('otp', (entry: any) => entry.key === 'login', {
+          verificationType: 'UserLoginType.phone',
+          verificationValue: phone, verificationRequest: 'SignUp'
+        });
+      } else if (error.code === 'invalid_credentials') {
+        setError(t('invalid_login_credentials'));
+        return null;
+      }
 
-         return null;
-       }
-     };
+      return null;
+    }
+  };
 
-   const resendTokenForEmail = async (email: string) => {
-       const { error } = await supabaseBrowser.auth.resend({
-         type: 'signup',
-         email: email,
-       });
-       if (error) throw error;
-     };
+  const resendTokenForEmail = async (email: string) => {
+    const { error } = await supabaseBrowser.auth.resend({
+      type: 'signup',
+      email: email,
+    });
+    if (error) throw error;
+  };
 
-     const resendTokenForPhone = async (phone: string) => {
-       const { error } = await supabaseBrowser.auth.resend({
-         type: 'sms',
-         phone: phone,
-       });
-       if (error) throw error;
-     };
+  const resendTokenForPhone = async (phone: string) => {
+    const { error } = await supabaseBrowser.auth.resend({
+      type: 'sms',
+      phone: phone,
+    });
+    if (error) throw error;
+  };
 
-const handleCreatedUser = async (type: string, value: string, userObj: UserData) => {
+  const handleCreatedUser = async (type: string, value: string, userObj: UserData) => {
 
-  await StateStack.core.clearScope('secondary_flow');
+    await StateStack.core.clearScope('secondary_flow');
 
-  // Clear only the login flow & secondary_flow
-  await StateStack.core.clearScope('login_flow');
-  await userData$.set(userObj);
+    // Clear only the login flow & secondary_flow
+    await StateStack.core.clearScope('login_flow');
+    await userData$.set(userObj);
 
-  __meta.clear();
-  nav.dispose();
-  setLoginInputValue('');
-  setPasswordInputValue('');
-  setError('');
+    __meta.clear();
+    nav.dispose();
+    setLoginInputValue('');
+    setPasswordInputValue('');
+    setError('');
 
-  await replaceAndWait("/main");
-};
+    await replaceAndWait("/main");
+  };
 
 
   const cancelLogin = async () => {
@@ -346,7 +346,7 @@ const handleCreatedUser = async (type: string, value: string, userObj: UserData)
     const cleanValue = value.trim();
 
     setLoginInputValue(cleanValue);
-                                    setError('');
+    setError('');
 
     if (cleanValue.length === 0) {
       setLoginState('initial');
@@ -369,8 +369,8 @@ const handleCreatedUser = async (type: string, value: string, userObj: UserData)
       };
       setLoginState('phone');
     } else if (!isEmail(cleanValue) &&
-        !containsUpperCase(cleanValue) &&
-        getSpecialCharacters(cleanValue).every((c) => c === '.' || c === '_')) {
+      !containsUpperCase(cleanValue) &&
+      getSpecialCharacters(cleanValue).every((c) => c === '.' || c === '_')) {
       loginModel = {
         loginType: 'UserLoginType.username',
         loginDetails: `@${cleanValue}`
@@ -401,12 +401,12 @@ const handleCreatedUser = async (type: string, value: string, userObj: UserData)
     setShowPassword(!showPassword);
   };
 
-  const handleForgotPassword =  async () => {
-      await StateStack.core.clearScope('login_flow');
-      setError('');
-      setLoginInputValue('');
-      setPasswordInputValue('');
-      nav.push('forgot_password');
+  const handleForgotPassword = async () => {
+    await StateStack.core.clearScope('login_flow');
+    setError('');
+    setLoginInputValue('');
+    setPasswordInputValue('');
+    nav.push('forgot_password');
   };
 
   return (
@@ -508,33 +508,33 @@ const handleCreatedUser = async (type: string, value: string, userObj: UserData)
               >
                 {showPassword ? (
                   <svg className={styles.eyeIcon} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M1 12C1 12 5 4 12 4C19 4 23 12 23 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M1 12C1 12 5 20 12 20C19 20 23 12 23 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M1 12C1 12 5 4 12 4C19 4 23 12 23 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M1 12C1 12 5 20 12 20C19 20 23 12 23 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 ) : (
                   <svg className={styles.eyeIcon} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M10.5858 10.5858C10.2107 10.9609 10 11.4696 10 12C10 13.1046 10.8954 14 12 14C12.5304 14 13.0391 13.7893 13.4142 13.4142" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M17.6112 17.6112C16.0556 18.979 14.1364 19.7493 12.0001 19.7493C5.63647 19.7493 2.25011 12.3743 2.25011 12.3743C3.47011 10.1443 5.27761 8.35577 7.38911 7.13965" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M20.8892 6.00928C21.8292 6.78928 22.6732 7.70428 23.3892 8.72428C23.7502 9.23428 23.7502 9.91428 23.3892 10.4243C22.6732 11.4443 21.8292 12.3593 20.8892 13.1393" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M14.9318 6.00928C13.6618 5.38928 12.2818 5.02928 10.8188 5.00928C9.35585 4.98928 7.93185 5.30928 6.61185 5.88928" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M21 3L3 21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M10.5858 10.5858C10.2107 10.9609 10 11.4696 10 12C10 13.1046 10.8954 14 12 14C12.5304 14 13.0391 13.7893 13.4142 13.4142" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M17.6112 17.6112C16.0556 18.979 14.1364 19.7493 12.0001 19.7493C5.63647 19.7493 2.25011 12.3743 2.25011 12.3743C3.47011 10.1443 5.27761 8.35577 7.38911 7.13965" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M20.8892 6.00928C21.8292 6.78928 22.6732 7.70428 23.3892 8.72428C23.7502 9.23428 23.7502 9.91428 23.3892 10.4243C22.6732 11.4443 21.8292 12.3593 20.8892 13.1393" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M14.9318 6.00928C13.6618 5.38928 12.2818 5.02928 10.8188 5.00928C9.35585 4.98928 7.93185 5.30928 6.61185 5.88928" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M21 3L3 21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 )}
               </button>
             </div>
           </div>
           <button
-             type="button"
-             className={styles.forgotPasswordLink}
-             onClick={handleForgotPassword}
+            type="button"
+            className={styles.forgotPasswordLink}
+            onClick={handleForgotPassword}
           >
-             {t('forgot_password')}
+            {t('forgot_password')}
           </button>
 
-         {error && ( <div className={styles.errorSection}>
+          {error && (<div className={styles.errorSection}>
             <p className={styles.errorText}>
-                      {error}
+              {error}
             </p>
           </div>)}
 

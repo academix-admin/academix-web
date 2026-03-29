@@ -39,9 +39,9 @@ export default function Verification() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-      if (!signup.fullName && __meta.isHydrated && isTop) {
-        nav.go('step1');
-      }
+    if (!signup.fullName && __meta.isHydrated && isTop) {
+      nav.go('step1');
+    }
   }, [signup.fullName, __meta.isHydrated, isTop]);
 
   useEffect(() => {
@@ -54,23 +54,23 @@ export default function Verification() {
   }, [signup.verification]);
 
   const handleChange = (type: string) => {
-                 setError('');
+    setError('');
     signup$.setField({ field: 'verification', value: type });
   };
 
-  const getSignupData = () : UserRegistrationData | null => {
+  const getSignupData = (): UserRegistrationData | null => {
     if (!signup.email ||
-        !signup.phoneNumber ||
-        !signup.birthday ||
-        !signup.gender ||
-        !signup.username ||
-        !signup.fullName ||
-        !signup.country ||
-        !signup.language ||
-        !signup.role ||
-        !signup.sixDigitPin ||
-        !signup.verification ||
-        !signup.password
+      !signup.phoneNumber ||
+      !signup.birthday ||
+      !signup.gender ||
+      !signup.username ||
+      !signup.fullName ||
+      !signup.country ||
+      !signup.language ||
+      !signup.role ||
+      !signup.sixDigitPin ||
+      !signup.verification ||
+      !signup.password
     ) return null;
 
     return {
@@ -113,63 +113,63 @@ export default function Verification() {
     if (!isFormValid) return;
 
     const signUpData = getSignupData();
-    if(!signUpData){
-       console.error('Something is wrong');
-       setError(t('error_occurred'));
-       return;
+    if (!signUpData) {
+      console.error('Something is wrong');
+      setError(t('error_occurred'));
+      return;
     }
 
     setContinueLoading(true);
     setError('');
 
-        try {
-          const location = await checkLocation();
-          if(!location){
-            console.log('location not determined');
-            setError(t('error_occurred'));
-            setContinueLoading(false);
-            return;
-          }
+    try {
+      const location = await checkLocation();
+      if (!location) {
+        console.log('location not determined');
+        setError(t('error_occurred'));
+        setContinueLoading(false);
+        return;
+      }
 
-          const feature = await checkFeatures(
-            signUpData.users_login_type === 'UserLoginType.email' ? 'Features.sign_up_email' : 'Features.sign_up_phone',
-            lang,
-            location.country_code,
-            signUpData.users_sex,
-            signUpData.users_dob
-          );
+      const feature = await checkFeatures(
+        signUpData.users_login_type === 'UserLoginType.email' ? 'Features.sign_up_email' : 'Features.sign_up_phone',
+        lang,
+        location.country_code,
+        signUpData.users_sex,
+        signUpData.users_dob
+      );
 
-          if(!feature){
-            console.log('feature not available');
-            setError(t('feature_unavailable'));
-            setContinueLoading(false);
-            return null;
-          }
+      if (!feature) {
+        console.log('feature not available');
+        setError(t('feature_unavailable'));
+        setContinueLoading(false);
+        return null;
+      }
 
-          const result = await createAccount(signUpData);
+      const result = await createAccount(signUpData);
 
-          if (!result.user) {
-             setError(t('unable_to_create_account'));
-             setContinueLoading(false);
-             return null;
-          }
+      if (!result.user) {
+        setError(t('unable_to_create_account'));
+        setContinueLoading(false);
+        return null;
+      }
 
-          handleCreatedUser(signUpData.users_login_type, signUpData.users_login_type === 'UserLoginType.email' ? signUpData.users_email : signUpData.users_phone,new UserData(result.user));
-          setContinueLoading(false);
-        } catch (err) {
-          console.error('Signup error:', err);
-          setError(t('error_occurred'));
-          setContinueLoading(false);
-          return null;
-        }
+      handleCreatedUser(signUpData.users_login_type, signUpData.users_login_type === 'UserLoginType.email' ? signUpData.users_email : signUpData.users_phone, new UserData(result.user));
+      setContinueLoading(false);
+    } catch (err) {
+      console.error('Signup error:', err);
+      setError(t('error_occurred'));
+      setContinueLoading(false);
+      return null;
+    }
   };
 
 
   const handleCreatedUser = async (type: string, value: string, userObj: UserData) => {
-    // Navigate to otp screen
+    // Start timer - the fixed state-stack now writes to both IndexedDB and localStorage
     otpTimer$.start(300);
     await StateStack.core.clearScope('signup_flow');
-    nav.pushAndPopUntil('otp',(entry) => entry.key === 'step1', { verificationType: type, verificationValue: value, verificationRequest: 'SignUp' });
+    nav.pushAndPopUntil('otp', (entry) => entry.key === 'step1', { verificationType: type, verificationValue: value, verificationRequest: 'SignUp' });
   };
 
 
@@ -256,11 +256,11 @@ export default function Verification() {
             </div>
           </div>
 
-          {error && ( <div className={styles.errorSection}>
-                      <p className={styles.errorText}>
-                                {error}
-                      </p>
-                    </div>)}
+          {error && (<div className={styles.errorSection}>
+            <p className={styles.errorText}>
+              {error}
+            </p>
+          </div>)}
 
           <button
             type="submit"
