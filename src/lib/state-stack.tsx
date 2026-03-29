@@ -1546,16 +1546,13 @@ export function useDemandState<T>(
     core.isHydrated(scope, key)
   );
 
-  useEffect(
-    () =>
-      core.subscribeToHydration(scope, key, () => {
-        setIsHydrated((prev) => {
-          const next = core.isHydrated(scope, key);
-          return prev === next ? prev : next;
-        });
-      }),
-    [scope, key]
-  );
+  useEffect(() => {
+    const unsubscribe = core.subscribeToHydration(scope, key, () => {
+      const next = core.isHydrated(scope, key);
+      setIsHydrated((prev) => (prev === next ? prev : next));
+    });
+    return unsubscribe;
+  }, [scope, key]);
 
   const state = useSyncExternalStore(
     useCallback((cb) => core.subscribe(scope, key, cb), [scope, key]),

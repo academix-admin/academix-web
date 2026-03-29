@@ -67,12 +67,14 @@ const ActionButtons = ({
   onCancel,
   onSave,
   saveDisabled,
-  saveLoading
+  saveLoading,
+  t
 }: {
   onCancel: () => void;
   onSave: () => void;
   saveDisabled: boolean;
   saveLoading: boolean;
+  t: (key: string) => string;
 }) => (
   <div className={styles.actionsRow}>
     <button
@@ -80,14 +82,14 @@ const ActionButtons = ({
       className={styles.cancelButton}
       onClick={onCancel}
     >
-      Cancel
+      {t('cancel_text')}
     </button>
     <button
       onClick={onSave}
       className={styles.saveButton}
       disabled={saveDisabled || saveLoading}
     >
-      {saveLoading ? <span className={styles.spinner}></span> : 'Save'}
+      {saveLoading ? <span className={styles.spinner}></span> : t('save_text')}
     </button>
   </div>
 );
@@ -224,7 +226,11 @@ const UserNameView = ({ onEditing }: ViewProps) => {
     return (
       <div className={styles.profileField}>
         <div className={styles.fieldContent}>
-          <div className={styles.fieldIcon}>👤</div>
+          <div className={styles.fieldIcon}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 5C13.66 5 15 6.34 15 8C15 9.66 13.66 11 12 11C10.34 11 9 9.66 9 8C9 6.34 10.34 5 12 5ZM12 19.2C9.5 19.2 7.29 17.92 6 15.98C6.03 13.99 10 12.9 12 12.9C13.99 12.9 17.97 13.99 18 15.98C16.71 17.92 14.5 19.2 12 19.2Z" fill="currentColor"/>
+            </svg>
+          </div>
           <div className={styles.fieldInfo}>
             <span className={styles.fieldLabel}>{t('username_label')}</span>
             <span className={styles.fieldValue}>{userData.usersUsername}</span>
@@ -277,6 +283,7 @@ const UserNameView = ({ onEditing }: ViewProps) => {
         onSave={handleSave}
         saveDisabled={userNameState !== 'valid' || saveLoading || editingValue === userData.usersUsername.replace('@', '')}
         saveLoading={saveLoading}
+        t={t}
       />
       <errorDialog.DialogViewer
         title={t('error_text')}
@@ -379,7 +386,11 @@ const PhoneNumberView = ({ onEditing }: ViewProps) => {
     return (
       <div className={styles.profileField}>
         <div className={styles.fieldContent}>
-          <div className={styles.fieldIcon}>📱</div>
+          <div className={styles.fieldIcon}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M6.62 10.79C8.06 13.62 10.38 15.94 13.21 17.38L15.41 15.18C15.69 14.9 16.08 14.82 16.43 14.93C17.55 15.3 18.75 15.5 20 15.5C20.55 15.5 21 15.95 21 16.5V20C21 20.55 20.55 21 20 21C10.61 21 3 13.39 3 4C3 3.45 3.45 3 4 3H7.5C8.05 3 8.5 3.45 8.5 4C8.5 5.25 8.7 6.45 9.07 7.57C9.18 7.92 9.1 8.31 8.82 8.59L6.62 10.79Z" fill="currentColor"/>
+            </svg>
+          </div>
           <div className={styles.fieldInfo}>
             <span className={styles.fieldLabel}>{t('phone_number_label')}</span>
             <span className={styles.fieldValue}>{userData.usersPhone}</span>
@@ -423,6 +434,7 @@ const PhoneNumberView = ({ onEditing }: ViewProps) => {
         onSave={handleSave}
         saveDisabled={phoneNumberState !== 'valid' || saveLoading || editingValue === (userData?.usersPhone?.replace('+', '') || '')}
         saveLoading={saveLoading}
+        t={t}
       />
       <errorDialog.DialogViewer
         title={t('error_text')}
@@ -510,7 +522,11 @@ const EmailView = ({ onEditing }: ViewProps) => {
     return (
       <div className={styles.profileField}>
         <div className={styles.fieldContent}>
-          <div className={styles.fieldIcon}>📧</div>
+          <div className={styles.fieldIcon}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M20 4H4C2.9 4 2.01 4.9 2.01 6L2 18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V6C22 4.9 21.1 4 20 4ZM20 8L12 13L4 8V6L12 11L20 6V8Z" fill="currentColor"/>
+            </svg>
+          </div>
           <div className={styles.fieldInfo}>
             <span className={styles.fieldLabel}>{t('email_label')}</span>
             <span className={styles.fieldValue}>{userData.usersEmail}</span>
@@ -546,6 +562,7 @@ const EmailView = ({ onEditing }: ViewProps) => {
         onSave={handleSave}
         saveDisabled={!isEmailValid || saveLoading || editingValue === userData.usersEmail}
         saveLoading={saveLoading}
+        t={t}
       />
       <errorDialog.DialogViewer
         title={t('error_text')}
@@ -632,7 +649,11 @@ const FullnameView = ({ onEditing }: ViewProps) => {
     return (
       <div className={styles.profileField}>
         <div className={styles.fieldContent}>
-          <div className={styles.fieldIcon}>👋</div>
+          <div className={styles.fieldIcon}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 12C14.21 12 16 10.21 16 8C16 5.79 14.21 4 12 4C9.79 4 8 5.79 8 8C8 10.21 9.79 12 12 12ZM12 14C9.33 14 4 15.34 4 18V20H20V18C20 15.34 14.67 14 12 14Z" fill="currentColor"/>
+            </svg>
+          </div>
           <div className={styles.fieldInfo}>
             <span className={styles.fieldLabel}>{t('fullname_label')}</span>
             <span className={styles.fieldValue}>{userData.usersNames}</span>
@@ -665,6 +686,7 @@ const FullnameView = ({ onEditing }: ViewProps) => {
         onSave={handleSave}
         saveDisabled={!editingValue || saveLoading || editingValue === userData.usersNames}
         saveLoading={saveLoading}
+        t={t}
       />
       <errorDialog.DialogViewer
         title={t('error_text')}
@@ -682,10 +704,13 @@ const ImageView = ({ onEditing }: ViewProps) => {
   const { t, lang } = useLanguage();
   const { userData, userData$, __meta } = useUserData();
   const errorDialog = useDialog();
+  const previewDialog = useDialog();
+  const deleteDialog = useDialog();
 
   const [selectedEditingImage, setSelectedEditingImage] = useState<DeviceImageInfo | null>(null);
   const [editing, setEditing] = useState(false);
   const [saveLoading, setSaveLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const [error, setError] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -804,10 +829,17 @@ const ImageView = ({ onEditing }: ViewProps) => {
   };
 
 
+  const confirmDelete = () => {
+    deleteDialog.open(
+      <p>{t('confirm_delete_image')}</p>
+    );
+  };
+
   const handleRemove = async () => {
     if (!userData || !userData.usersImage) return;
+    deleteDialog.close();
     setError('');
-    setSaveLoading(true);
+    setDeleteLoading(true);
 
     try {
       const paramatical = await getParamatical(
@@ -819,7 +851,7 @@ const ImageView = ({ onEditing }: ViewProps) => {
 
       if (!paramatical) {
         console.error('Image Error: No paramatical data');
-        setSaveLoading(false);
+        setDeleteLoading(false);
         errorDialog.open(<p>{t('error_occurred')}</p>);
         return;
       }
@@ -837,7 +869,7 @@ const ImageView = ({ onEditing }: ViewProps) => {
 
       if (operationError) {
         console.error('Operation ID Error:', operationError);
-        setSaveLoading(false);
+        setDeleteLoading(false);
         errorDialog.open(<p>{t('error_occurred')}</p>);
         return;
       }
@@ -849,7 +881,7 @@ const ImageView = ({ onEditing }: ViewProps) => {
 
         if (removeImageError) {
           console.error('Remove Image Error:', removeImageError);
-          setSaveLoading(false);
+          setDeleteLoading(false);
           errorDialog.open(<p>{t('error_occurred')}</p>);
           return;
         }
@@ -867,22 +899,21 @@ const ImageView = ({ onEditing }: ViewProps) => {
 
       if (error) {
         console.error('Update Image Error:', error);
-        setSaveLoading(false);
+        setDeleteLoading(false);
         errorDialog.open(<p>{t('error_occurred')}</p>);
         return;
       }
 
-       console.log(data);
       if (data) {
         userData$.changeImage(null);
       } else {
         errorDialog.open(<p>{t('error_occurred')}</p>);
       }
-      setSaveLoading(false);
+      setDeleteLoading(false);
 
     } catch (err) {
       console.error(err);
-      setSaveLoading(false);
+      setDeleteLoading(false);
       errorDialog.open(<p>{t('error_occurred')}</p>);
     }
   };
@@ -893,7 +924,13 @@ const ImageView = ({ onEditing }: ViewProps) => {
 
     // Check if file is an image
     if (!file.type.startsWith('image/')) {
-      setError('Please select a valid image file');
+      setError(t('invalid_image_file'));
+      return;
+    }
+
+    // Check file size (5MB limit)
+    if (file.size > 5 * 1024 * 1024) {
+      setError(t('image_too_large'));
       return;
     }
 
@@ -925,15 +962,34 @@ const ImageView = ({ onEditing }: ViewProps) => {
   };
   if(!userData)return null;
 
+  const handleImagePreview = () => {
+    if (!userData.usersImage) return;
+    previewDialog.open(
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', padding: '1rem' }}>
+        <Image
+          src={userData.usersImage}
+          alt={t('profile_image')}
+          width={300}
+          height={300}
+          style={{ maxWidth: '100%', height: 'auto', borderRadius: '8px', objectFit: 'contain' }}
+        />
+      </div>
+    );
+  };
+
   if (!editing) {
     return (
       <div className={styles.profileImageSection}>
-        <div className={styles.profileImageContainer}>
+        <div 
+          className={styles.profileImageContainer}
+          onClick={handleImagePreview}
+          style={{ cursor: userData.usersImage ? 'pointer' : 'default' }}
+        >
           {userData.usersImage ? (
             <Image
               className={styles.profileImage}
               src={userData.usersImage}
-              alt="Profile"
+              alt={t('profile_image')}
               width={100}
               height={100}
             />
@@ -946,18 +1002,35 @@ const ImageView = ({ onEditing }: ViewProps) => {
         <div className={styles.imageActionRow}>
         { userData.usersImage && <button
           className={styles.removeImageButton}
-          onClick={handleRemove}
-          disabled={saveLoading}
+          onClick={confirmDelete}
+          disabled={deleteLoading}
         >
-          {saveLoading ? <span className={styles.spinner}></span> : 'Remove Photo'}
+          {deleteLoading ? <span className={styles.spinner}></span> : t('remove_photo')}
         </button> }
         <button
           className={styles.changeImageButton}
           onClick={() => setEditing(true)}
         >
-          Change Photo
+          {t('change_photo')}
         </button>
       </div>
+      <previewDialog.DialogViewer
+        title={t('profile_image')}
+        buttons={[{ text: t('close_text'), variant: 'secondary', onClick: () => previewDialog.close() }]}
+        showCancel={false}
+        closeOnBackdrop={true}
+        layoutProp={{ backgroundColor: theme === 'light' ? '#fff' : '#121212', margin: '16px', titleColor: theme === 'light' ? '#1a1a1a' : '#fff' }}
+      />
+      <deleteDialog.DialogViewer
+        title={t('delete_image_title')}
+        buttons={[
+          { text: t('cancel_text'), variant: 'secondary', onClick: () => deleteDialog.close() },
+          { text: t('delete_text'), variant: 'primary', onClick: handleRemove }
+        ]}
+        showCancel={false}
+        closeOnBackdrop={true}
+        layoutProp={{ backgroundColor: theme === 'light' ? '#fff' : '#121212', margin: '16px', titleColor: theme === 'light' ? '#1a1a1a' : '#fff' }}
+      />
       </div>
     );
   }
@@ -966,7 +1039,7 @@ const ImageView = ({ onEditing }: ViewProps) => {
     <div className={styles.editSection}>
       <div className={styles.formGroup}>
         <label htmlFor="profileImage" className={styles.label}>
-          Profile Image
+          {t('profile_image')}
         </label>
 
         <input
@@ -981,16 +1054,29 @@ const ImageView = ({ onEditing }: ViewProps) => {
         <div className={styles.imageUploadContainer}>
           {selectedEditingImage ? (
             <div className={styles.imagePreview}>
-              <img
-                src={selectedEditingImage.data}
-                alt="Preview"
-                className={styles.previewImage}
-              />
+              <div 
+                className={styles.previewImageWrapper}
+                onClick={() => previewDialog.open(
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', padding: '1rem' }}>
+                    <img
+                      src={selectedEditingImage.data}
+                      alt={t('image_preview')}
+                      style={{ maxWidth: '100%', height: 'auto', borderRadius: '8px', objectFit: 'contain', maxHeight: '70vh' }}
+                    />
+                  </div>
+                )}
+              >
+                <img
+                  src={selectedEditingImage.data}
+                  alt={t('image_preview')}
+                  className={styles.previewImage}
+                />
+              </div>
               <button
                 onClick={triggerFileInput}
                 className={styles.changeImageButton}
               >
-                Choose Different Image
+                {t('choose_different_image')}
               </button>
             </div>
           ) : (
@@ -1004,8 +1090,8 @@ const ImageView = ({ onEditing }: ViewProps) => {
                 <circle cx="12" cy="13" r="3" stroke="currentColor" strokeWidth="2"/>
                 <path d="M17 21v-2a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2v2" stroke="currentColor" strokeWidth="2"/>
               </svg>
-              <span>Click to select an image</span>
-              <span className={styles.uploadHint}>JPG, PNG, GIF up to 5MB</span>
+              <span>{t('click_to_select_image')}</span>
+              <span className={styles.uploadHint}>{t('image_upload_hint')}</span>
             </div>
           )}
         </div>
@@ -1022,13 +1108,21 @@ const ImageView = ({ onEditing }: ViewProps) => {
         onSave={handleSave}
         saveDisabled={!selectedEditingImage || saveLoading}
         saveLoading={saveLoading}
+        t={t}
+      />
+      <previewDialog.DialogViewer
+        title={t('image_preview')}
+        buttons={[{ text: t('close_text'), variant: 'secondary', onClick: () => previewDialog.close() }]}
+        showCancel={false}
+        closeOnBackdrop={true}
+        layoutProp={{ backgroundColor: theme === 'light' ? '#fff' : '#121212', margin: '16px', titleColor: theme === 'light' ? '#1a1a1a' : '#fff' }}
       />
       <errorDialog.DialogViewer
         title={t('error_text')}
         buttons={[{ text: t('ok_text'), variant: 'primary', onClick: () => errorDialog.close() }]}
         showCancel={false}
         closeOnBackdrop={true}
-        layoutProp={{ backgroundColor: theme === 'light' ? '#fff' : '#121212', margin: '16px 16px', titleColor: theme === 'light' ? '#1a1a1a' : '#fff' }}
+        layoutProp={{ backgroundColor: theme === 'light' ? '#fff' : '#121212', margin: '16px', titleColor: theme === 'light' ? '#1a1a1a' : '#fff' }}
       />
     </div>
   );
@@ -1038,7 +1132,7 @@ export default function EditProfile() {
   const { theme } = useTheme();
   const { t } = useLanguage();
   const nav = useNav();
-  const { userData, userData$ } = useUserData();
+  const { userData, userData$, __meta } = useUserData();
 
   const [fetchedUserData, setFetchedUserData] = useState<UserData | null>(null);
   const [fetchLoading, setFetchLoading] = useState(false);
@@ -1047,7 +1141,8 @@ export default function EditProfile() {
   const goBack = () => nav.pop();
 
   const fetchUserData = useCallback(async (): Promise<void> => {
-    if (fetchedUserData || !userData) return;
+    if (fetchedUserData) return;
+    if (!userData || !__meta.isHydrated) return;
 
     try {
       setFetchLoading(true);
@@ -1060,6 +1155,7 @@ export default function EditProfile() {
       if (error) {
         console.error("[UserFetch] error:", error);
         setError(t('error_occurred'));
+        setFetchLoading(false);
         return;
       }
 
@@ -1072,11 +1168,13 @@ export default function EditProfile() {
       setFetchLoading(false);
       setError(t('error_occurred'));
     }
-  }, [userData, fetchedUserData, t]);
+  }, [userData, __meta.isHydrated, fetchedUserData, t, userData$]);
 
   useEffect(() => {
-    fetchUserData();
-  }, []);
+    if (userData && __meta.isHydrated && !fetchedUserData) {
+      fetchUserData();
+    }
+  }, [userData, __meta.isHydrated, fetchedUserData, fetchUserData]);
 
   return (
     <main className={`${styles.container} ${styles[`container_${theme}`]}`}>
@@ -1100,20 +1198,20 @@ export default function EditProfile() {
       </header>
 
       <div className={styles.content}>
-        {fetchLoading && !error && !fetchedUserData && <LoadingView />}
+        {fetchLoading && <LoadingView />}
 
-        {!fetchLoading && !error && !fetchedUserData && (
+        {!fetchLoading && error && (
           <ErrorView
             text={error}
-            buttonText="Try Again"
+            buttonText={t('try_again')}
             onButtonClick={fetchUserData}
           />
         )}
 
-        {!fetchLoading && !fetchedUserData && !error && (
+        {!fetchLoading && !error && !fetchedUserData && (
           <NoResultsView
-            text="No result"
-            buttonText="Try Again"
+            text={t('no_results')}
+            buttonText={t('try_again')}
             onButtonClick={fetchUserData}
           />
         )}

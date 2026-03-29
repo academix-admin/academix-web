@@ -12,6 +12,7 @@ import { poolsSubscriptionManager } from '@/lib/managers/PoolsQuizTopicSubscript
 import { PoolChangeEvent } from '@/lib/managers/PoolsQuizTopicSubscriptionManager';
 import { PaymentDetails } from '@/models/payment-details';
 import { supabaseBrowser } from '@/lib/supabase/client';
+import { useDialog } from '@/lib/DialogViewer';
 
 interface ViewTransactionProps {
   transactionId: string;
@@ -27,6 +28,7 @@ export default function ViewTransactionPage(props: ViewTransactionProps) {
 
   const [currentTransaction, setCurrentTransaction] = useState<TransactionModel | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const successDialog = useDialog();
 
   // Handle pool changes - if pool is removed, pop the page
   const handlePoolChange = (event: PoolChangeEvent) => {
@@ -97,6 +99,11 @@ export default function ViewTransactionPage(props: ViewTransactionProps) {
         if (shouldRemoveTransactionSubscription(updated)) {
           transactionSubscriptionManager.removeTransactionId(transaction.transactionId);
         }
+        successDialog.open(
+          <div style={{ textAlign: 'center' }}>
+            <p>{t('refresh_success_message')}</p>
+          </div>
+        );
       }
     } catch (err) {
       console.error('[ViewTransaction] refresh error:', err);
@@ -666,6 +673,24 @@ export default function ViewTransactionPage(props: ViewTransactionProps) {
           </div>
         </div>
       </div>
+
+      <successDialog.DialogViewer
+        title={t('success_text')}
+        buttons={[
+          {
+            text: t('ok_text'),
+            variant: 'primary',
+            onClick: () => successDialog.close()
+          }
+        ]}
+        showCancel={false}
+        closeOnBackdrop={true}
+        layoutProp={{
+          backgroundColor: theme === 'light' ? '#fff' : '#121212',
+          margin: '16px 16px',
+          titleColor: theme === 'light' ? '#1a1a1a' : '#fff'
+        }}
+      />
     </main>
   );
 }

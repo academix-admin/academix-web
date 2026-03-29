@@ -233,6 +233,55 @@
   width: 100%;
 }
 
+/* Tab Switcher Styles */
+.tabSwitcher {
+  display: flex;
+  gap: 8px;
+  padding: 4px;
+  border-radius: 12px;
+  width: 100%;
+  margin: 0 0 24px 0;
+  box-sizing: border-box;
+}
+
+.tabSwitcher_light {
+  background-color: #f3f4f6;
+}
+
+.tabSwitcher_dark {
+  background-color: #1f2937;
+}
+
+.tab {
+  flex: 1;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: transparent;
+}
+
+.tab_light {
+  color: #6b7280;
+}
+
+.tab_dark {
+  color: #9ca3af;
+}
+
+.tab:hover {
+  opacity: 0.8;
+}
+
+.tabActive {
+  background-color: #1C6B1E !important;
+  color: white !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
 .formGroup {
   display: flex;
   flex-direction: column;

@@ -620,6 +620,7 @@
   "invalid_password_text": "Mot de passe incorrect. Veuillez réessayer.",
   "enter_password_text": "Entrer le mot de passe",
   "password_text": "Mot de passe",
+  "refresh_success_message": "Transaction actualisée avec succès",
   "what_contributes_ratio": "Ce qui contribue à votre ratio :",
   "example_text": "Exemple",
   "cycle_text": "Cycle",
@@ -630,5 +631,18 @@
   "example_friends": "Exemples d'amis",
   "how_to_claim": "Comment réclamer",
   "per_qualified_friend": "par ami qualifié",
-  "x_of_7_days": "{count}/7 jours"
+  "x_of_7_days": "{count}/7 jours",
+  "profile_image": "Image de Profil",
+  "remove_photo": "Supprimer la Photo",
+  "change_photo": "Changer la Photo",
+  "delete_image_title": "Supprimer l'Image de Profil",
+  "confirm_delete_image": "Êtes-vous sûr de vouloir supprimer votre image de profil ?",
+  "delete_text": "Supprimer",
+  "close_text": "Fermer",
+  "image_preview": "Aperçu de l'Image",
+  "choose_different_image": "Choisir une Autre Image",
+  "click_to_select_image": "Cliquez pour sélectionner une image",
+  "image_upload_hint": "JPG, PNG, GIF jusqu'à 5 Mo",
+  "invalid_image_file": "Veuillez sélectionner un fichier image valide",
+  "image_too_large": "La taille de l'image doit être inférieure à 5 Mo"
 }

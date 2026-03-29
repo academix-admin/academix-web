@@ -17,26 +17,27 @@ export default function PaymentAction({ onStateChange }: ComponentStateProps) {
     onStateChange?.('data');
   }, []);
 
-    const handleActionClick = (actionId: string) => {
-      switch(actionId) {
-        case 'topup':
-          // Handle top up action
-          nav.push('top_up_page');
-          break;
-        case 'withdraw':
-          // Handle withdraw action
-          nav.push('withdraw_page');
-          break;
-        case 'payments':
-          // Handle payments action
-          break;
-        case 'statements':
-          // Handle statements action
-          break;
-        default:
-          break;
-      }
-    };
+  const handleActionClick = (actionId: string) => {
+    switch (actionId) {
+      case 'topup':
+        // Handle top up action
+        nav.push('top_up_page');
+        break;
+      case 'withdraw':
+        // Handle withdraw action
+        nav.push('withdraw_page');
+        break;
+      case 'new_profile':
+        // Handle new_profile action
+        nav.push('new_profile', { scopeKey: 'new-profile-flow' });
+        break;
+      case 'statements':
+        // Handle statements action
+        break;
+      default:
+        break;
+    }
+  };
 
   const actions = [
     {
@@ -68,15 +69,18 @@ export default function PaymentAction({ onStateChange }: ComponentStateProps) {
       text: t('withdraw_text')
     },
     {
-      id: 'payments',
+      id: 'new_profile',
       icon: (
-        <svg fill="none" height="14" viewBox="0 0 19 14" width="19" xmlns="http://www.w3.org/2000/svg">
-            <path
-                d="M3.26562 0C2.39953 0 1.5689 0.33802 0.956479 0.939699C0.344056 1.54138 0 2.35743 0 3.20833V4.66667H19V3.20833C19 2.35743 18.6559 1.54138 18.0435 0.939699C17.4311 0.33802 16.6005 0 15.7344 0H3.26562ZM19 5.83333H0V10.7917C0 11.6426 0.344056 12.4586 0.956479 13.0603C1.5689 13.662 2.39953 14 3.26562 14H15.7344C16.6005 14 17.4311 13.662 18.0435 13.0603C18.6559 12.4586 19 11.6426 19 10.7917V5.83333ZM13.6562 10.5H16.0312C16.1887 10.5 16.3397 10.5615 16.4511 10.6709C16.5624 10.7802 16.625 10.9286 16.625 11.0833C16.625 11.238 16.5624 11.3864 16.4511 11.4958C16.3397 11.6052 16.1887 11.6667 16.0312 11.6667H13.6562C13.4988 11.6667 13.3478 11.6052 13.2364 11.4958C13.1251 11.3864 13.0625 11.238 13.0625 11.0833C13.0625 10.9286 13.1251 10.7802 13.2364 10.6709C13.3478 10.5615 13.4988 10.5 13.6562 10.5Z"
-                fill="currentColor" />
+        <svg fill="none" height="20" viewBox="0 0 20 20" width="20" xmlns="http://www.w3.org/2000/svg">
+          <path
+            d="M10 0C8.68678 0 7.38642 0.258658 6.17317 0.761205C4.95991 1.26375 3.85752 2.00035 2.92893 2.92893C1.05357 4.8043 0 7.34784 0 10C0 12.6522 1.05357 15.1957 2.92893 17.0711C3.85752 17.9997 4.95991 18.7362 6.17317 19.2388C7.38642 19.7413 8.68678 20 10 20C12.6522 20 15.1957 18.9464 17.0711 17.0711C18.9464 15.1957 20 12.6522 20 10C20 8.68678 19.7413 7.38642 19.2388 6.17317C18.7362 4.95991 17.9997 3.85752 17.0711 2.92893C16.1425 2.00035 15.0401 1.26375 13.8268 0.761205C12.6136 0.258658 11.3132 0 10 0ZM10 5C10.663 5 11.2989 5.26339 11.7678 5.73223C12.2366 6.20107 12.5 6.83696 12.5 7.5C12.5 8.16304 12.2366 8.79893 11.7678 9.26777C11.2989 9.73661 10.663 10 10 10C9.33696 10 8.70107 9.73661 8.23223 9.26777C7.76339 8.79893 7.5 8.16304 7.5 7.5C7.5 6.83696 7.76339 6.20107 8.23223 5.73223C8.70107 5.26339 9.33696 5 10 5ZM10 17C8.33333 17 6.66667 16.3333 5.5 15.1667C5.66667 13.8333 8.33333 13 10 13C11.6667 13 14.3333 13.8333 14.5 15.1667C13.3333 16.3333 11.6667 17 10 17Z"
+            fill="currentColor"
+          />
+          <circle cx="15" cy="5" r="4" fill="currentColor"/>
+          <path d="M15 3V7M13 5H17" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
         </svg>
       ),
-      text: t('payments_text')
+      text: t('new_profile_text')
     },
     {
       id: 'statements',

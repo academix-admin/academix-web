@@ -630,5 +630,19 @@
   "giveback_exhausted_text": "All slots for this give back have been used",
   "invalid_password_text": "Incorrect password. Please try again.",
   "enter_password_text": "Enter Password",
-  "password_text": "Password"
+  "password_text": "Password",
+  "refresh_success_message": "Transaction refreshed successfully",
+  "profile_image": "Profile Image",
+  "remove_photo": "Remove Photo",
+  "change_photo": "Change Photo",
+  "delete_image_title": "Delete Profile Image",
+  "confirm_delete_image": "Are you sure you want to delete your profile image?",
+  "delete_text": "Delete",
+  "close_text": "Close",
+  "image_preview": "Image Preview",
+  "choose_different_image": "Choose Different Image",
+  "click_to_select_image": "Click to select an image",
+  "image_upload_hint": "JPG, PNG, GIF up to 5MB",
+  "invalid_image_file": "Please select a valid image file",
+  "image_too_large": "Image size must be less than 5MB"
 }

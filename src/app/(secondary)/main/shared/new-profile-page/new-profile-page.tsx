@@ -56,10 +56,15 @@ interface BankResponse {
 }
 
 interface NewProfileProps {
-  walletId: string;
-  methodId: string;
-  profileType: string;
+  walletId?: string;
+  methodId?: string;
+  profileType?: string;
   scopeKey: string;
+}
+
+interface TabSwitcherProps {
+  profileType: 'ProfileType.buy' | 'ProfileType.sell';
+  setProfileType: (type: 'ProfileType.buy' | 'ProfileType.sell') => void;
 }
 
 interface MobileMoneyProps {
@@ -585,14 +590,38 @@ const MobileMoney = ({ onSubmit, prefix, length }: MobileMoneyProps) => {
 };
 
 
+const TabSwitcher = ({ profileType, setProfileType }: TabSwitcherProps) => {
+  const { theme } = useTheme();
+  const { t } = useLanguage();
+
+  return (
+    <div className={`${styles.tabSwitcher} ${styles[`tabSwitcher_${theme}`]}`}>
+      <button
+        className={`${styles.tab} ${profileType === 'ProfileType.buy' ? styles.tabActive : ''} ${styles[`tab_${theme}`]}`}
+        onClick={() => setProfileType('ProfileType.buy')}
+      >
+        {t('top_up_text')}
+      </button>
+      <button
+        className={`${styles.tab} ${profileType === 'ProfileType.sell' ? styles.tabActive : ''} ${styles[`tab_${theme}`]}`}
+        onClick={() => setProfileType('ProfileType.sell')}
+      >
+        {t('withdraw_text')}
+      </button>
+    </div>
+  );
+};
+
+
 export default function NewProfilePage(props: NewProfileProps) {
   const { theme } = useTheme();
   const { t, lang } = useLanguage();
   const nav = useNav();
   const { userData } = useUserData();
-  const { walletId, methodId, profileType, scopeKey } = props;
-  const [walletsModel, , , { clear: clearWallet, isHydrated: walletHydrated }] = usePaymentWalletModel(lang);
-  const [banksModel, , , { clear: clearMethod, isHydrated: methodHydrated }] = usePaymentMethodModel(lang);
+  const { walletId, methodId, profileType: propsProfileType, scopeKey } = props;
+  const [profileType, setProfileType] = useState<'ProfileType.buy' | 'ProfileType.sell'>(propsProfileType as 'ProfileType.buy' | 'ProfileType.sell' || 'ProfileType.buy');
+  const [walletsModel, , , { clear: clearWallet, isHydrated: walletHydrated }] = usePaymentWalletModel(lang, scopeKey);
+  const [banksModel, , , { clear: clearMethod, isHydrated: methodHydrated }] = usePaymentMethodModel(lang, scopeKey);
   const [profilesModel, demandPaymentProfileModel, setPaymentProfileModel] = usePaymentProfileModel(lang);
 
   const [selectedWalletData, setSelectedWalletData] = useState<PaymentWalletModel | null>(null);
@@ -607,7 +636,7 @@ export default function NewProfilePage(props: NewProfileProps) {
 
   const [topUpModify, setTopUpModify] = useState(false);
   const [withdrawModify, setWithdrawModify] = useState(false);
-
+  
   const [walletModify, setWalletModify] = useState(false);
   const [methodModify, setMethodModify] = useState(false);
 
@@ -618,6 +647,23 @@ export default function NewProfilePage(props: NewProfileProps) {
   const [continueState, setContinueState] = useState('initial');
   const errorDialog = useDialog();
   const successDialog = useDialog();
+
+  // Handle profile type change
+  const handleProfileTypeChange = useCallback((newProfileType: 'ProfileType.buy' | 'ProfileType.sell') => {
+    setProfileType(newProfileType);
+    // Reset all selections when profile type changes
+    setSelectedMethodData(null);
+    setSelectedNetworkData(null);
+    setSelectedPaymentData(new ProfileModel());
+    setTopUp(false);
+    setWithdraw(false);
+    setTopUpModify(false);
+    setWithdrawModify(false);
+    setError('');
+    // Clear the cached data to force fresh fetch
+    clearWallet();
+    clearMethod();
+  }, [clearWallet, clearMethod]);
 
   useEffect(() => {
     setWalletModify(selectedWalletData === null);
@@ -875,7 +921,17 @@ export default function NewProfilePage(props: NewProfileProps) {
 
       <div className={styles.innerBody}>
 
+        {!propsProfileType && (
+          <div className={styles.experienceContainer}>
+            <TabSwitcher
+              profileType={profileType}
+              setProfileType={handleProfileTypeChange}
+            />
+          </div>
+        )}
+
         <PaymentWallet
+          key={profileType}
           profileType={profileType}
           onWalletData={handleWalletData}
           paymentWalletId={walletId}
@@ -885,6 +941,7 @@ export default function NewProfilePage(props: NewProfileProps) {
 
         {showMethods && (
           <PaymentMethod
+            key={`${profileType}-${selectedWalletData?.paymentWalletId}`}
             profileType={profileType}
             walletId={selectedWalletData.paymentWalletId}
             onMethodSelect={handleMethodData}
@@ -896,6 +953,7 @@ export default function NewProfilePage(props: NewProfileProps) {
 
         {showType && (
           <PaymentType
+            key={`type-${profileType}-${selectedMethodData?.paymentMethodId}`}
             onTopUp={setSelectedTopUpValue}
             onWithdraw={setSelectedWithdrawValue}
             initialTopUp={topUp}
@@ -907,6 +965,7 @@ export default function NewProfilePage(props: NewProfileProps) {
 
         {showNetwork && (
           <PaymentNetwork
+            key={`network-${profileType}-${selectedMethodData?.paymentMethodId}`}
             paymentMethodId={selectedMethodData.paymentMethodId}
             onNetworkSelect={setSelectedNetworkData}
             scopeKey={scopeKey}
