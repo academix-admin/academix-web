@@ -277,16 +277,19 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
   const refreshData = async () => {
     if (!userData) return;
     try {
-        const quizzesModel = await fetchUserDisplayQuizTopicModel(userData, 10, paginateModel);
+        const quizzesModel = await fetchUserDisplayQuizTopicModel(userData, 10, new PaginateModel());
         if (quizzesModel.length > 0) {
           extractLatest(quizzesModel);
           
-          // Only update if data actually changed
-          const hasChanged = JSON.stringify(quizzesModel.map(q => q.quizPool)) !== 
-            JSON.stringify(quizModels.map(q => q.quizPool));
+          // Only update if data actually changed - compare first 10 items
+          const currentFirst10 = quizModels.slice(0, 10);
+          const hasChanged = JSON.stringify(quizzesModel.map(q => q.quizPool?.poolsId)) !== 
+            JSON.stringify(currentFirst10.map(q => q.quizPool?.poolsId));
           
           if (hasChanged) {
-            setUserDisplayQuizTopicModel(quizzesModel);
+            // Replace first 10 items with fresh data, keep the rest
+            const updatedModels = [...quizzesModel, ...quizModels.slice(10)];
+            setUserDisplayQuizTopicModel(updatedModels);
           }
         }
     } catch (error) {

@@ -1141,7 +1141,6 @@ export default function EditProfile() {
   const goBack = () => nav.pop();
 
   const fetchUserData = useCallback(async (): Promise<void> => {
-    if (fetchedUserData) return;
     if (!userData || !__meta.isHydrated) return;
 
     try {
@@ -1168,7 +1167,7 @@ export default function EditProfile() {
       setFetchLoading(false);
       setError(t('error_occurred'));
     }
-  }, [userData, __meta.isHydrated, fetchedUserData, t, userData$]);
+  }, [userData, __meta.isHydrated, t, userData$]);
 
   useEffect(() => {
     if (userData && __meta.isHydrated && !fetchedUserData) {

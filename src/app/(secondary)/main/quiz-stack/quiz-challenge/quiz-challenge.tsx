@@ -228,8 +228,16 @@ export default function QuizChallenge(props: QuizChallengeProps) {
                     poolsId: poolsId,
                     poolsSubscriptionType: 'active'
                 });
-
+ 
                 setActiveQuizTopicModel(quizModel);
+                
+                // Provide the active quiz object before navigation
+                nav.provideObject(
+                    'getActiveQuiz',
+                    () => () => quizModel,
+                    { global: true, scope: 'active-quiz' }
+                );
+                
                 withdrawBottomController.close();
                 await nav.pushAndPopUntil('quiz_commitment', (entry: any) => entry.key === 'quiz_page', {
                     poolsId: poolsId,
