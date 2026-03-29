@@ -280,7 +280,14 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
         const quizzesModel = await fetchUserDisplayQuizTopicModel(userData, 10, paginateModel);
         if (quizzesModel.length > 0) {
           extractLatest(quizzesModel);
-          setUserDisplayQuizTopicModel(quizzesModel);
+          
+          // Only update if data actually changed
+          const hasChanged = JSON.stringify(quizzesModel.map(q => q.quizPool)) !== 
+            JSON.stringify(quizModels.map(q => q.quizPool));
+          
+          if (hasChanged) {
+            setUserDisplayQuizTopicModel(quizzesModel);
+          }
         }
     } catch (error) {
       console.error('Error fetching data:', error);

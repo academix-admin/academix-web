@@ -173,7 +173,13 @@ export default function AvailableQuizTopics({ onStateChange, pType }: AvailableQ
          const quizzesModel = await fetchUserDisplayQuizTopicModel(userData, 10, paginateModel);
          if (quizzesModel.length > 0) {
            extractLatest(quizzesModel);
-           setUserDisplayQuizTopicModel(quizzesModel);
+           
+           // Only update if data actually changed
+           const hasChanged = JSON.stringify(quizzesModel) !== JSON.stringify(quizModels);
+           
+           if (hasChanged) {
+             setUserDisplayQuizTopicModel(quizzesModel);
+           }
          }
      } catch (error) {
        console.error('Error fetching data:', error);

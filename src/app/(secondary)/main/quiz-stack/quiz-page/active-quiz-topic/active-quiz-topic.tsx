@@ -203,7 +203,14 @@ export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) 
       if (active?.quizPool) poolsSubscriptionManager.handleQuizTopicData('UPDATE', active.quizPool ?? null, undefined, active.quizPool?.poolsId);
       if (!active && activeQuiz) poolsSubscriptionManager.handleQuizTopicData('DELETE', null, activeQuiz.quizPool?.poolsId, activeQuiz.quizPool?.poolsId);
       if (activeQuiz?.quizPool?.poolsId && !active) poolsSubscriptionManager.removeQuizTopicPool(activeQuiz.quizPool.poolsId);
-      setActiveQuizTopicModel(active);
+      
+      // Only update if data actually changed
+      const hasChanged = !activeQuiz || 
+        JSON.stringify(active?.quizPool) !== JSON.stringify(activeQuiz?.quizPool);
+      
+      if (hasChanged) {
+        setActiveQuizTopicModel(active);
+      }
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
@@ -458,6 +465,13 @@ function CurrentQuizCard({ topic, getInitials, onClick, onLeave, showContinue }:
 
     const endTime = new Date(topic.quizPool.poolsJobEndAt);
     const startTime = new Date();
+    
+    // Check if endTime is valid and in the future
+    if (isNaN(endTime.getTime()) || startTime >= endTime) {
+      console.warn('Invalid or past endTime, skipping timer setup');
+      return;
+    }
+    
     if (topic.quizPool?.poolsJob && topic.quizPool?.poolsJobEndAt) {
       controlDisplayMessage(topic.quizPool.poolsJob, topic.quizPool.poolsJobEndAt);
     }

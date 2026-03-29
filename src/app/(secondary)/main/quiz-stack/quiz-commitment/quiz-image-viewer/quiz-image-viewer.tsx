@@ -17,9 +17,11 @@ export default function QuizImageViewer({ imageUrl, identity }: QuizImageViewerP
   const { t } = useLanguage();
 
   const getInitials = (text: string): string => {
-    const words = text.trim().split(' ');
-    if (words.length === 1) return words[0][0].toUpperCase();
-    return (words[0][0] + words[1][0]).toUpperCase();
+    if (!text) return '?';
+    const words = text.trim().split(' ').filter(word => word.length > 0);
+    if (words.length === 0) return '?';
+    if (words.length === 1) return words[0][0]?.toUpperCase() || '?';
+    return ((words[0][0] || '') + (words[1][0] || '')).toUpperCase() || '?';
   };
 
   return (
