@@ -251,7 +251,7 @@ export class QuizPool {
       pools_code: data.poolsCode,
       pools_job: data.poolsJob,
       pools_duration: data.poolsDuration,
-      challenge_details: ChallengeModel.from(data.challengeModel)?.toBackend(),
+      challenge_details: data.challengeModel ? ChallengeModel.from(data.challengeModel)?.toBackend() : null,
       pools_starting_at: data.poolsStartingAt,
       pools_job_end_at: data.poolsJobEndAt,
       pools_graded_at: data.poolsGradedAt,
@@ -384,7 +384,7 @@ export class UserDisplayQuizTopicModel {
         users_names: data.fullNameText,
         users_username: data.usernameText,
       },
-      pools_details: QuizPool.from(data.quizPool)?.toBackend(),
+      pools_details: data.quizPool ? QuizPool.from(data.quizPool)?.toBackend() : null,
       topics_sponsorship: data.topicsSponsorship,
     });
   }
