@@ -51,11 +51,28 @@
   position: relative;
   flex-shrink: 0;
   margin-top: 0.25rem;
+  cursor: pointer;
+  padding: 12px;
+  margin: -12px;
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.infoIcon:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.infoIcon:active {
+  transform: scale(0.95);
 }
 
 /* Base SVG size for web (default) */
 .svgSection {
-
+  width: 22px;
+  height: 22px;
   transition: all 0.3s ease;
 }
 
@@ -70,39 +87,36 @@
 
 /* Responsive Styles */
 @media screen and (min-width: 801px) {
-  /* Web styles - default is already set */
-  .infoIcon {
-    width: 24px;  /* 24px */
-    height: 24px;   /* 32px */
+  /* Web styles */
+  .svgSection {
+    width: 24px;
+    height: 24px;
   }
-
 }
 
 @media screen and (min-width: 500px) and (max-width: 800px) {
   /* Tablet styles */
-  .infoIcon {
-    width: 24px;  /* 22px */
-    height: 24px; /* 30px */
+  .svgSection {
+    width: 22px;
+    height: 22px;
   }
 
   .mainSection {
     gap: 0.875rem;
     padding: 18px 20px 24px 20px;
-
   }
 }
 
 @media screen and (max-width: 500px) {
   /* Mobile styles */
-  .infoIcon {
-    width: 22px;  /* 20px */
-    height: 22px; /* 28px */
+  .svgSection {
+    width: 22px;
+    height: 22px;
   }
 
   .mainSection {
     gap: 0.75rem;
     padding: 16px 16px 18px 16px;
-
   }
 
   .titleTop {
@@ -116,8 +130,13 @@
 
 /* Reduced motion for accessibility */
 @media (prefers-reduced-motion: reduce) {
-  .svgSection {
+  .svgSection,
+  .infoIcon {
     transition: none;
+  }
+
+  .infoIcon:active {
+    transform: none;
   }
 }
 

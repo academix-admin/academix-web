@@ -47,12 +47,12 @@ export default function AvailableQuizTopics({ onStateChange, pType }: AvailableQ
   const [activeQuiz, ,] = useActiveQuiz(lang);
 
   useEffect(() => {
-    if (!isHydrated) return;
-    nav.provideObject(
-      'getQuizByTopicsId',
-      () => (topicsId: string) => quizModels.find(q => q.topicsId === topicsId),
-      { global: true, scope: 'quiz-topics' }
-    );
+    if (!isHydrated || quizModels.length <= 0) return;
+    // nav.provideObject(
+    //   'getQuizByTopicsId',
+    //   () => (topicsId: string) => quizModels.find(q => q.topicsId === topicsId),
+    //   { global: true, scope: 'quiz-topics' }
+    // );
   }, [isHydrated, quizModels, nav]);
 
   useEffect(() => {
@@ -169,16 +169,12 @@ export default function AvailableQuizTopics({ onStateChange, pType }: AvailableQ
   const refreshData = async () => {
     if (!userData) return;
 
-    if (activeQuiz) {
-      if (isMountedRef.current) {
-        timeoutRef.current = setTimeout(() => {
-          refreshData();
-        }, 10000);
-      }
-      return;
-    }
-
     try {
+      // Skip fetch if activeQuiz is present, but continue the refresh cycle
+      if (activeQuiz) {
+        return;
+      }
+
       const quizzesModel = await fetchUserDisplayQuizTopicModel(userData, 10, new PaginateModel());
       if (quizzesModel.length > 0) {
         extractLatest(quizzesModel);
@@ -197,7 +193,7 @@ export default function AvailableQuizTopics({ onStateChange, pType }: AvailableQ
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
-      // Schedule next call only if component is still mounted
+      // Always schedule next call if component is still mounted
       if (isMountedRef.current) {
         timeoutRef.current = setTimeout(() => {
           refreshData();
@@ -307,6 +303,11 @@ export default function AvailableQuizTopics({ onStateChange, pType }: AvailableQ
 
   const handleTopicClick = (topic: UserDisplayQuizTopicModel) => {
     if (activeQuiz) return;
+    nav.provideObject(
+      'getQuizByTopicsId',
+      () => (topicsId: string) => quizModels.find(q => q.topicsId === topicsId),
+      { global: true, scope: 'quiz-topics' }
+    );
     nav.push('quiz_challenge', { topicsId: topic.topicsId, pType: pType });
   };
 

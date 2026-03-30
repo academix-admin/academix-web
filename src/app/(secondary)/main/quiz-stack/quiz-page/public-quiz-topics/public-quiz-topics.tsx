@@ -55,12 +55,12 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
   const [activeQuiz, ,] = useActiveQuiz(lang);
 
   useEffect(() => {
-    if (!isHydrated) return;
-    nav.provideObject(
-      'getQuizByPoolsId',
-      () => (poolsId: string) => quizModels.find(q => q.quizPool?.poolsId === poolsId),
-      { global: true, scope: 'quiz-topics' }
-    );
+    if (!isHydrated || quizModels.length <= 0) return;
+    // nav.provideObject(
+    //   'getQuizByPoolsId',
+    //   () => (poolsId: string) => quizModels.find(q => q.quizPool?.poolsId === poolsId),
+    //   { global: true, scope: 'quiz-topics' }
+    // );
   }, [isHydrated, quizModels, nav]);
 
   // Subscribe to changes
@@ -277,16 +277,12 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
   const refreshData = async () => {
     if (!userData) return;
 
-    if (activeQuiz) {
-      if (isMountedRef.current) {
-        timeoutRef.current = setTimeout(() => {
-          refreshData();
-        }, 10000);
-      }
-      return;
-    }
-
     try {
+      // Skip fetch if activeQuiz is present, but continue the refresh cycle
+      if (activeQuiz) {
+        return;
+      }
+
       const quizzesModel = await fetchUserDisplayQuizTopicModel(userData, 10, new PaginateModel());
       if (quizzesModel.length > 0) {
         extractLatest(quizzesModel);
@@ -305,14 +301,13 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
-      // Schedule next call only if component is still mounted
+      // Always schedule next call if component is still mounted
       if (isMountedRef.current) {
         timeoutRef.current = setTimeout(() => {
           refreshData();
         }, 10000);
       }
     }
-
   };
 
   useEffect(() => {
@@ -405,6 +400,11 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
   const handleTopicClick = (topic: UserDisplayQuizTopicModel) => {
     if (activeQuiz) return;
     maybeActivePoolId.current = topic?.quizPool?.poolsId ?? null;
+    nav.provideObject(
+      'getQuizByPoolsId',
+      () => (poolsId: string) => quizModels.find(q => q.quizPool?.poolsId === poolsId),
+      { global: true, scope: 'quiz-topics' }
+    );
     nav.push('quiz_commitment', { poolsId: topic?.quizPool?.poolsId, action: pType });
   };
 
@@ -611,7 +611,7 @@ function OpenQuizCard({ topic, length, getInitials, onClick }: OpenQuizCardProps
           >
             <div className={styles.codeIcon}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V8l8 5 8-5v10zm-8-7L4 6h16l-8 5z" />
+                <path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/>
               </svg>
             </div>
             <span className={styles.codeText}>

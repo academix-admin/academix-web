@@ -47,14 +47,37 @@
 }
 
 .notificationIcon {
-  position: relative;
   flex-shrink: 0;
   margin-top: 0.25rem;
+  cursor: pointer;
+  padding: 12px;
+  margin: -12px;
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.notificationIcon:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.notificationIcon:active {
+  transform: scale(0.95);
+}
+
+.iconWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Base SVG size for web (default) */
 .svgSection {
-
+  width: 22px;
+  height: 30px;
   transition: all 0.3s ease;
 }
 
@@ -68,74 +91,62 @@
 
 .notificationBadge {
   position: absolute;
-  top: -0.25rem;
-  right: -0.25rem;
+  top: -4px;
+  right: -4px;
   background-color: #ff4d4f;
   color: white;
   border-radius: 50%;
-  width: 1.125rem;
-  height: 1.125rem;
-  font-size: 0.6875rem;
+  width: 18px;
+  height: 18px;
+  font-size: 11px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 600;
+  pointer-events: none;
 }
 
 /* Responsive Styles */
 @media screen and (min-width: 801px) {
-  /* Web styles - default is already set */
-  .notificationIcon {
-    width: 22px;  /* 24px */
-    height: 22px;   /* 32px */
-  }
-
+  /* Web styles */
   .notificationBadge {
-    width: 1.125rem;
-    height: 1.125rem;
-    font-size: 0.6875rem;
+    width: 18px;
+    height: 18px;
+    font-size: 11px;
+    top: -4px;
+    right: -4px;
   }
 }
 
 @media screen and (min-width: 500px) and (max-width: 800px) {
   /* Tablet styles */
-  .notificationIcon {
-    width: 22px;  /* 22px */
-    height: 22px; /* 30px */
-  }
-
   .notificationBadge {
-    width: 1rem;
-    height: 1rem;
-    font-size: 0.625rem;
+    width: 16px;
+    height: 16px;
+    font-size: 10px;
+    top: -3px;
+    right: -3px;
   }
 
   .mainSection {
     gap: 0.875rem;
     padding: 18px 20px 24px 20px;
-
   }
 }
 
 @media screen and (max-width: 500px) {
   /* Mobile styles */
-  .notificationIcon {
-    width: 16px;  /* 20px */
-    height: 16px; /* 28px */
-  }
-
   .notificationBadge {
-    width: 0.875rem;
-    height: 0.875rem;
-    font-size: 0.5625rem;
-    top: -0.375rem;
-    right: -0.375rem;
+    width: 14px;
+    height: 14px;
+    font-size: 9px;
+    top: -2px;
+    right: -2px;
   }
 
   .mainSection {
     gap: 0.75rem;
     padding: 16px 16px 18px 16px;
-
   }
 
   .titleTop {

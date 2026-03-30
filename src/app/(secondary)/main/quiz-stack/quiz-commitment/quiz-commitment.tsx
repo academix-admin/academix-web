@@ -29,7 +29,7 @@ import QuizRuleAcceptance from "../quiz_rule-acceptance/quiz_rule-acceptance";
 import QuizPayoutAcceptance from "../quiz_payout-acceptance/quiz_payout-acceptance";
 import QuizRedeemCode from "../quiz-redeem-code/quiz-redeem-code";
 import QuizImageViewer from "./quiz-image-viewer/quiz-image-viewer";
-import QuizDetailsViewer from "./quiz-details-viewer/quiz-details-viewer";
+import QuizDetailsViewer from "../../shared/quiz-details-viewer/quiz-details-viewer";
 import QuizChallengeDetails from "./quiz-challenge-details/quiz-challenge-details";
 import QuizStatusInfo from "./quiz-status-info/quiz-status-info";
 import { TransactionModel } from '@/models/transaction-model';

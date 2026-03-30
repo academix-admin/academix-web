@@ -49,7 +49,7 @@
 .infoIcon {
   display: flex;
   flex-shrink: 0;
-  gap: 16px;
+  gap: 24px;
   margin-top: 0.25rem;
 }
 
@@ -58,16 +58,17 @@
   background: none;
   border: none;
   cursor: pointer;
-  padding: 4px;
-  border-radius: 4px;
-  transition: all 0.2s ease;
+  padding: 12px;
+  margin: -12px;
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .iconButton:hover {
-  background-color: rgba(0, 0, 0, 0.1);
+  background-color: rgba(0, 0, 0, 0.05);
 }
 
 .iconButton:active {
@@ -76,9 +77,9 @@
 
 /* Base SVG size for web (default) */
 .svgSection {
-  transition: all 0.3s ease;
   width: 22px;
   height: 22px;
+  transition: all 0.3s ease;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -358,28 +359,24 @@
 @media screen and (min-width: 801px) {
   /* Web styles */
   .svgSection {
-    width: 32px;
-    height: 32px;
+    width: 24px;
+    height: 24px;
   }
 
-  .iconButton {
-    padding: 6px;
+  .infoIcon {
+    gap: 24px;
   }
 }
 
 @media screen and (min-width: 500px) and (max-width: 800px) {
   /* Tablet styles */
   .svgSection {
-    width: 28px;
-    height: 28px;
+    width: 22px;
+    height: 22px;
   }
 
   .infoIcon {
-    gap: 14px;
-  }
-
-  .iconButton {
-    padding: 5px;
+    gap: 18px;
   }
 
   .mainSection {
@@ -391,16 +388,12 @@
 @media screen and (max-width: 500px) {
   /* Mobile styles */
   .svgSection {
-    width: 24px;
-    height: 24px;
+    width: 22px;
+    height: 22px;
   }
 
   .infoIcon {
-    gap: 12px;
-  }
-
-  .iconButton {
-    padding: 4px;
+    gap: 16px;
   }
 
   .mainSection {

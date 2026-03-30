@@ -340,6 +340,7 @@
   "number_invalid": "Number is invalid",
   "topic_creator": "TOPIC CREATOR",
   "follow_text": "Follow",
+  "unfollow_text": "Unfollow",
   "minimum_members": "Minimum of {count}",
   "maximum_members": "Maximum of {count}",
   "members_text": "Members",

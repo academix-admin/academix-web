@@ -41,6 +41,7 @@ import { useActiveQuiz } from "@/lib/stacks/active-quiz-stack";
 import { PinData } from '@/models/pin-data';
 import CurrencySymbol from '@/components/CurrencySymbol/CurrencySymbol';
 import { useDialog } from '@/lib/DialogViewer';
+import QuizDetailsViewer from "../../shared/quiz-details-viewer/quiz-details-viewer";
 
 interface QuizChallengeProps {
     topicsId: string;
@@ -351,6 +352,7 @@ export default function QuizChallenge(props: QuizChallengeProps) {
 
             <div className={styles.innerBody}>
                 <QuizAllocation />
+                {currentQuiz && <QuizDetailsViewer topicsModel={currentQuiz} />}
                 {currentQuiz && <GameMode onModeSelect={setSelectedGameModeModel} topicsId={currentQuiz.topicsId} />}
                 {currentQuiz && selectedGameModeModel && (
                     <GameChallenge

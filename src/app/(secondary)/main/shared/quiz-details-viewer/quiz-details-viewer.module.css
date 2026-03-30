@@ -178,6 +178,7 @@
   flex: 1;
   display: flex;
   justify-content: flex-end;
+  margin-bottom: 16px;
 }
 
 .codeCopyText {
@@ -191,7 +192,6 @@
   display: flex;
   flex-direction: column;
   padding: 8px;
-  margin-top: 16px;
   border-radius: 8px;
   position: relative;
 }
@@ -258,11 +258,7 @@
   color: #fff;
 }
 
-.joinButton {
-    position: absolute;
-    right: 16px;
-    top: 50%;
-      transform: translateY(-50%);
+.followButton {
   background: #667eea;
   color: white;
   border: none;
@@ -273,15 +269,30 @@
   cursor: pointer;
   transition: background-color 0.2s;
   white-space: nowrap;
+  margin-left: auto;
 }
 
-.joinButton:hover {
+.followButton:hover {
   background: #5a6fd8;
 }
 
-.joinButton:disabled {
+.followButton:disabled {
   background: #ccc;
   cursor: not-allowed;
+}
+
+.spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 /* Responsive Styles */

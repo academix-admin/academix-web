@@ -62,6 +62,7 @@ export interface BackendUserDisplayQuizTopicModel {
   };
   pools_details?: BackendQuizPool | null;
   topics_sponsorship?: string;
+  creator_is_followed: boolean;
 }
 
 // ========================
@@ -349,6 +350,7 @@ export class UserDisplayQuizTopicModel {
   fullNameText: string;
   quizPool?: QuizPool | null;
   topicsSponsorship?: string;
+  creatorIsFollowed: boolean;
 
   constructor(data?: BackendUserDisplayQuizTopicModel | null) {
     this.sortCreatedId = data?.sort_created_id ?? "";
@@ -365,6 +367,7 @@ export class UserDisplayQuizTopicModel {
     this.fullNameText = data?.creator_details?.users_names ?? "";
     this.quizPool = data?.pools_details ? new QuizPool(data.pools_details) : null;
     this.topicsSponsorship = data?.topics_sponsorship ?? "";
+    this.creatorIsFollowed = data?.creator_is_followed ?? false;
   }
 
   static from(data: any): UserDisplayQuizTopicModel {
@@ -386,6 +389,7 @@ export class UserDisplayQuizTopicModel {
       },
       pools_details: data.quizPool ? QuizPool.from(data.quizPool)?.toBackend() : null,
       topics_sponsorship: data.topicsSponsorship,
+      creator_is_followed: data.creatorIsFollowed,
     });
   }
 
@@ -407,6 +411,7 @@ export class UserDisplayQuizTopicModel {
       },
       pools_details: this.quizPool?.toBackend() ?? null,
       topics_sponsorship: this.topicsSponsorship ?? "",
+      creator_is_followed: this.creatorIsFollowed,
     };
   }
 
@@ -428,6 +433,7 @@ export class UserDisplayQuizTopicModel {
       },
       pools_details: (update.quizPool ?? this.quizPool)?.toBackend() ?? null,
       topics_sponsorship: update.topicsSponsorship ?? this.topicsSponsorship,
+      creator_is_followed: update.creatorIsFollowed ?? this.creatorIsFollowed,
     });
   }
 }
