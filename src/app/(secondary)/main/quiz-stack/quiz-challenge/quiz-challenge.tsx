@@ -216,7 +216,6 @@ export default function QuizChallenge(props: QuizChallengeProps) {
             const engagement = await engageQuiz(jwt, requestData);
             const status = engagement.status;
 
-
             if (status === 'PoolStatus.engaged' || status === 'PoolStatus.this_active') {
                 const quizModel = new UserDisplayQuizTopicModel(engagement.quiz_pool);
                 const transaction = new TransactionModel(engagement.transaction_details);
@@ -228,16 +227,17 @@ export default function QuizChallenge(props: QuizChallengeProps) {
                     poolsId: poolsId,
                     poolsSubscriptionType: 'active'
                 });
- 
-                setActiveQuizTopicModel(quizModel);
-                
+
+
                 // Provide the active quiz object before navigation
                 nav.provideObject(
                     'getActiveQuiz',
                     () => () => quizModel,
                     { global: true, scope: 'active-quiz' }
                 );
-                
+
+                setActiveQuizTopicModel(quizModel);
+
                 withdrawBottomController.close();
                 await nav.pushAndPopUntil('quiz_commitment', (entry: any) => entry.key === 'quiz_page', {
                     poolsId: poolsId,

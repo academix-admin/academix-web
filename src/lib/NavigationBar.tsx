@@ -310,8 +310,7 @@ export default function NavigationBar({
     return () => {
       try {
         unsub?.();
-        if (!unsub) console.log(`[NavigationBar] cleanup: no unsubscribe returned at ${new Date().toISOString()}`);
-        else console.log(`[NavigationBar] unsubscribed from onScroll at ${new Date().toISOString()}`);
+        // Removed cleanup logs to reduce console spam
       } catch (err) {
       }
     };

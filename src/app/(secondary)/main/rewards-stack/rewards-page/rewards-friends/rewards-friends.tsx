@@ -45,7 +45,7 @@ export default function RewardsFriends({ onStateChange }: ComponentStateProps) {
   );
 
   // Subscribe to changes
-  const handleFriendChange = (event: FriendsChangeEvent) => {
+  const handleFriendChange = useCallback((event: FriendsChangeEvent) => {
     const { eventType, newRecord: friend, oldRecordId: usersId } = event;
 
     if (eventType === 'DELETE' && usersId) {
@@ -70,7 +70,7 @@ export default function RewardsFriends({ onStateChange }: ComponentStateProps) {
 
       setFriendsModel(updatedModels);
     }
-  };
+  }, [friendsModel, setFriendsModel]);
 
   useEffect(() => {
     friendsSubscriptionManager.attachListener(handleFriendChange);

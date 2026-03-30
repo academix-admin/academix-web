@@ -67,9 +67,9 @@ export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) 
   const [toQuizLoading, setToQuizLoading] = useState(false);
 
   // Subscribe to changes
-  const handlePoolChange = (event: PoolChangeEvent) => {
+  const handlePoolChange = useCallback((event: PoolChangeEvent) => {
     const { eventType, newRecord: quizPool, oldRecordId: poolsId } = event;
-    if (!activeQuiz) return;
+    if (activeQuiz?.quizPool?.poolsId !== quizPool?.poolsId || activeQuiz?.quizPool?.poolsId !== poolsId) return;
     if (eventType === 'DELETE' && poolsId) {
       // 🔹 Remove deleted pool
       setActiveQuizTopicModel(null);
@@ -87,7 +87,7 @@ export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) 
       const renewedPool = topicModel?.quizPool?.getStreamedUpdate(quizPool);
       setActiveQuizTopicModel(topicModel.copyWith({ quizPool: renewedPool }));
     }
-  };
+  }, [activeQuiz, setActiveQuizTopicModel]);
 
   function shouldRemoveOtherQuizPool(updatedPool?: QuizPool | null): boolean {
     if (!updatedPool) return false;
@@ -203,11 +203,11 @@ export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) 
       if (active?.quizPool) poolsSubscriptionManager.handleQuizTopicData('UPDATE', active.quizPool ?? null, undefined, active.quizPool?.poolsId);
       if (!active && activeQuiz) poolsSubscriptionManager.handleQuizTopicData('DELETE', null, activeQuiz.quizPool?.poolsId, activeQuiz.quizPool?.poolsId);
       if (activeQuiz?.quizPool?.poolsId && !active) poolsSubscriptionManager.removeQuizTopicPool(activeQuiz.quizPool.poolsId);
-      
+
       // Only update if data actually changed
-      const hasChanged = !activeQuiz || 
+      const hasChanged = !activeQuiz ||
         JSON.stringify(active?.quizPool) !== JSON.stringify(activeQuiz?.quizPool);
-      
+
       if (hasChanged) {
         setActiveQuizTopicModel(active);
       }
@@ -331,8 +331,6 @@ export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) 
 
       const leave = await leaveQuiz(jwt, requestData);
       const status = leave.status;
-
-      console.log(leave);
 
       if (status === 'PoolActive.success') {
         if (activeQuiz?.quizPool?.poolsId) poolsSubscriptionManager.removeQuizTopicPool(activeQuiz.quizPool.poolsId);
@@ -465,13 +463,13 @@ function CurrentQuizCard({ topic, getInitials, onClick, onLeave, showContinue }:
 
     const endTime = new Date(topic.quizPool.poolsJobEndAt);
     const startTime = new Date();
-    
+
     // Check if endTime is valid and in the future
     if (isNaN(endTime.getTime()) || startTime >= endTime) {
       console.warn('Invalid or past endTime, skipping timer setup');
       return;
     }
-    
+
     if (topic.quizPool?.poolsJob && topic.quizPool?.poolsJobEndAt) {
       controlDisplayMessage(topic.quizPool.poolsJob, topic.quizPool.poolsJobEndAt);
     }

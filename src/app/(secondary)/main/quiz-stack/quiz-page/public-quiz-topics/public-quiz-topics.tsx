@@ -5,7 +5,7 @@ import { useTheme } from '@/context/ThemeContext';
 import styles from './public-quiz-topics.module.css';
 import { useLanguage } from '@/context/LanguageContext';
 import { getLastNameOrSingle, capitalize } from '@/utils/textUtils';
-import { getParamatical, ParamaticalData} from '@/utils/checkers';
+import { getParamatical, ParamaticalData } from '@/utils/checkers';
 import { useUserData } from '@/lib/stacks/user-stack';
 import { useDemandState } from '@/lib/state-stack';
 import { supabaseBrowser } from '@/lib/supabase/client';
@@ -22,7 +22,7 @@ import { usePublicQuiz } from "@/lib/stacks/public-quiz-stack";
 import { poolsSubscriptionManager } from '@/lib/managers/PoolsQuizTopicSubscriptionManager';
 import { PoolChangeEvent } from '@/lib/managers/PoolsQuizTopicSubscriptionManager';
 import { BottomViewer, useBottomController } from "@/lib/BottomViewer";
-import { TimelapseManager, useTimelapseManager, TimelapseType  } from '@/lib/managers/TimelapseManager';
+import { TimelapseManager, useTimelapseManager, TimelapseType } from '@/lib/managers/TimelapseManager';
 import DialogCancel from '@/components/DialogCancel';
 import { QRCodeSVG } from 'qrcode.react';
 import { useActiveQuiz } from "@/lib/stacks/active-quiz-stack";
@@ -52,7 +52,7 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
 
 
   const [quizModels, demandUserDisplayQuizTopicModel, setUserDisplayQuizTopicModel, { isHydrated }] = usePublicQuiz(lang, pType);
-  const [activeQuiz, , ] = useActiveQuiz(lang);
+  const [activeQuiz, ,] = useActiveQuiz(lang);
 
   useEffect(() => {
     if (!isHydrated) return;
@@ -64,7 +64,7 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
   }, [isHydrated, quizModels, nav]);
 
   // Subscribe to changes
-  const handlePoolChange = (event: PoolChangeEvent) => {
+  const handlePoolChange = useCallback((event: PoolChangeEvent) => {
     const { eventType, newRecord: quizPool, oldRecordId: poolsId } = event;
     if (!quizModels || quizModels.length === 0) return;
 
@@ -82,7 +82,7 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
           (m) => m.quizPool?.poolsId !== quizPool.poolsId
         );
         setUserDisplayQuizTopicModel(updatedModels);
-        if(maybeActivePoolId.current != quizPool.poolsId)poolsSubscriptionManager.removeQuizTopicPool(quizPool.poolsId);
+        if (maybeActivePoolId.current != quizPool.poolsId) poolsSubscriptionManager.removeQuizTopicPool(quizPool.poolsId);
         return;
       }
 
@@ -98,7 +98,7 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
 
       setUserDisplayQuizTopicModel(updatedModels);
     }
-  };
+  }, [quizModels, setUserDisplayQuizTopicModel]);
 
   function shouldRemoveOtherQuizPool(updatedPool?: QuizPool | null): boolean {
     if (!updatedPool) return false;
@@ -134,12 +134,12 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
   }, [handlePoolChange]);
 
   useEffect(() => {
-    if(!activeQuiz)return;
-          const updatedModels = quizModels.filter(
-            (m) => m.quizPool?.poolsId !== activeQuiz.quizPool?.poolsId
-          );
-          setUserDisplayQuizTopicModel(updatedModels);
-  }, [activeQuiz]);
+    if (!activeQuiz) return;
+    const updatedModels = quizModels.filter(
+      (m) => m.quizPool?.poolsId !== activeQuiz.quizPool?.poolsId
+    );
+    setUserDisplayQuizTopicModel(updatedModels);
+  }, [activeQuiz, quizModels, setUserDisplayQuizTopicModel]);
 
   useEffect(() => {
     if (!quizModels?.length) return;
@@ -171,23 +171,23 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
   }, [quizModels]);
 
   useEffect(() => {
-        if (!loaderRef.current) return;
+    if (!loaderRef.current) return;
 
-     const observer = new IntersectionObserver(
-        (entries) => {
-            if (entries[0].isIntersecting) {
-                callPaginate();
-            }
-        },
-        { threshold: 1.0, root: scrollContainerRef.current }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          callPaginate();
+        }
+      },
+      { threshold: 1.0, root: scrollContainerRef.current }
     );
 
     observer.observe(loaderRef.current);
 
-        return () => {
-            if (loaderRef.current) observer.unobserve(loaderRef.current);
-        };
-    }, [quizModels, paginateModel]);
+    return () => {
+      if (loaderRef.current) observer.unobserve(loaderRef.current);
+    };
+  }, [quizModels, paginateModel]);
 
   const fetchUserDisplayQuizTopicModel = useCallback(async (userData: UserData, limitBy: number, paginateModel: PaginateModel): Promise<UserDisplayQuizTopicModel[]> => {
     if (!userData) return [];
@@ -249,10 +249,10 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
 
 
   useEffect(() => {
-      if (!userData ) return;
+    if (!userData) return;
     demandUserDisplayQuizTopicModel(async ({ get, set }) => {
       setFirstLoaded(true);
-      const quizzesModel = await fetchUserDisplayQuizTopicModel(userData, 10,  new PaginateModel());
+      const quizzesModel = await fetchUserDisplayQuizTopicModel(userData, 10, new PaginateModel());
       extractLatest(quizzesModel);
       set(quizzesModel);
       setFirstLoaded(false);
@@ -276,22 +276,32 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
 
   const refreshData = async () => {
     if (!userData) return;
+
+    if (activeQuiz) {
+      if (isMountedRef.current) {
+        timeoutRef.current = setTimeout(() => {
+          refreshData();
+        }, 10000);
+      }
+      return;
+    }
+
     try {
-        const quizzesModel = await fetchUserDisplayQuizTopicModel(userData, 10, new PaginateModel());
-        if (quizzesModel.length > 0) {
-          extractLatest(quizzesModel);
-          
-          // Only update if data actually changed - compare first 10 items
-          const currentFirst10 = quizModels.slice(0, 10);
-          const hasChanged = JSON.stringify(quizzesModel.map(q => q.quizPool?.poolsId)) !== 
-            JSON.stringify(currentFirst10.map(q => q.quizPool?.poolsId));
-          
-          if (hasChanged) {
-            // Replace first 10 items with fresh data, keep the rest
-            const updatedModels = [...quizzesModel, ...quizModels.slice(10)];
-            setUserDisplayQuizTopicModel(updatedModels);
-          }
+      const quizzesModel = await fetchUserDisplayQuizTopicModel(userData, 10, new PaginateModel());
+      if (quizzesModel.length > 0) {
+        extractLatest(quizzesModel);
+
+        // Only update if data actually changed - compare first 10 items
+        const currentFirst10 = quizModels.slice(0, 10);
+        const hasChanged = JSON.stringify(quizzesModel.map(q => q.quizPool?.poolsId)) !==
+          JSON.stringify(currentFirst10.map(q => q.quizPool?.poolsId));
+
+        if (hasChanged) {
+          // Replace first 10 items with fresh data, keep the rest
+          const updatedModels = [...quizzesModel, ...quizModels.slice(10)];
+          setUserDisplayQuizTopicModel(updatedModels);
         }
+      }
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
@@ -349,53 +359,53 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
   }, [quizModels]);
 
   const getTitle = (type: string | null): string => {
-      switch (type) {
-        case 'creator':
-          return t('followed_creator');
-        case 'personalized':
-          return t('discovered_interest');
-        case 'public':
-          return t('active_suggestions');
-        default:
-          return t('active_suggestions');
-      }
+    switch (type) {
+      case 'creator':
+        return t('followed_creator');
+      case 'personalized':
+        return t('discovered_interest');
+      case 'public':
+        return t('active_suggestions');
+      default:
+        return t('active_suggestions');
+    }
+  };
+
+  const getInitials = (text: string): string => {
+    if (!text) return '?';
+    return text.split(' ')
+      .map(word => word.charAt(0).toUpperCase())
+      .slice(0, 2)
+      .join('');
+  };
+
+  const formatDate = (dateString: string): string => {
+    const date = new Date(dateString);
+    const options: Intl.DateTimeFormatOptions = {
+      month: 'short',
+      day: 'numeric',
     };
 
-   const getInitials = (text: string): string => {
-     if (!text) return '?';
-     return text.split(' ')
-       .map(word => word.charAt(0).toUpperCase())
-       .slice(0, 2)
-       .join('');
-   };
+    const timeOptions: Intl.DateTimeFormatOptions = {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    };
 
-   const formatDate = (dateString: string): string => {
-       const date = new Date(dateString);
-       const options: Intl.DateTimeFormatOptions = {
-         month: 'short',
-         day: 'numeric',
-       };
+    const formattedDate = date.toLocaleDateString('en-US', options);
+    const formattedTime = date.toLocaleTimeString('en-US', timeOptions)
+      .toLowerCase()
+      .replace(' ', '');
 
-       const timeOptions: Intl.DateTimeFormatOptions = {
-         hour: 'numeric',
-         minute: '2-digit',
-         hour12: true
-       };
+    return `${formattedDate} at ${formattedTime}`;
+  };
 
-       const formattedDate = date.toLocaleDateString('en-US', options);
-       const formattedTime = date.toLocaleTimeString('en-US', timeOptions)
-         .toLowerCase()
-         .replace(' ', '');
-
-       return `${formattedDate} at ${formattedTime}`;
-     };
-
-  if(quizModels.length <= 0) return null;
+  if (quizModels.length <= 0) return null;
 
   const handleTopicClick = (topic: UserDisplayQuizTopicModel) => {
-    if(activeQuiz)return;
+    if (activeQuiz) return;
     maybeActivePoolId.current = topic?.quizPool?.poolsId ?? null;
-    nav.push('quiz_commitment',{poolsId: topic?.quizPool?.poolsId, action: pType});
+    nav.push('quiz_commitment', { poolsId: topic?.quizPool?.poolsId, action: pType });
   };
 
   return (
@@ -405,7 +415,7 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
       </h2>
       <div className={`${styles.scrollWrapper} ${quizModels.length <= 1 ? styles.scrollWrapperExpanded : ''}`}>
         {showLeftArrow && quizModels.length > 1 && (
-          <button 
+          <button
             className={`${styles.scrollArrow} ${styles.scrollArrowLeft} ${styles[`scrollArrow_${theme}`]}`}
             onClick={scrollLeft}
             aria-label="Scroll left"
@@ -413,25 +423,25 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
             ←
           </button>
         )}
-        
+
         <div ref={scrollContainerRef} className={`${styles.scrollContainer} ${quizModels.length <= 1 ? styles.scrollContainerExpanded : ''}`}>
           <div className={`${styles.gridContainer} ${quizModels.length <= 1 ? styles.gridContainerExpanded : ''}`}>
             <div className={styles.row}>
               {quizModels.map((topic, rowIndex) => (
-                    <OpenQuizCard
-                      key={topic.topicsId}
-                      topic={topic}
-                      length={quizModels.length}
-                      getInitials={getInitials}
-                      onClick={()=> handleTopicClick(topic)}
-                    />
+                <OpenQuizCard
+                  key={topic.topicsId}
+                  topic={topic}
+                  length={quizModels.length}
+                  getInitials={getInitials}
+                  onClick={() => handleTopicClick(topic)}
+                />
               ))}
             </div>
           </div>
         </div>
-        
+
         {showRightArrow && quizModels.length > 1 && (
-          <button 
+          <button
             className={`${styles.scrollArrow} ${styles.scrollArrowRight} ${styles[`scrollArrow_${theme}`]}`}
             onClick={scrollRight}
             aria-label="Scroll right"
@@ -452,7 +462,7 @@ interface OpenQuizCardProps {
   onClick: () => void;
 }
 
-function OpenQuizCard({ topic, length, getInitials, onClick  }: OpenQuizCardProps) {
+function OpenQuizCard({ topic, length, getInitials, onClick }: OpenQuizCardProps) {
   const { theme } = useTheme();
   const { t } = useLanguage();
   const [remainingTime, setRemainingTime] = useState<number>(0);
@@ -471,13 +481,13 @@ function OpenQuizCard({ topic, length, getInitials, onClick  }: OpenQuizCardProp
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
 
-   if(secs <= 0)return t('open_quiz');
+    if (secs <= 0) return t('open_quiz');
 
     const timeString = hours > 0
       ? `${hours}h ${minutes}m`
       : minutes > 0
-      ? `${minutes}m ${secs}s`
-      : `${secs}s`;
+        ? `${minutes}m ${secs}s`
+        : `${secs}s`;
 
     switch (status) {
       case 'PoolJob.waiting':
@@ -496,7 +506,7 @@ function OpenQuizCard({ topic, length, getInitials, onClick  }: OpenQuizCardProp
   }, []);
 
   const handleTimeUpdate = (remaining: number) => {
-     setRemainingTime(Math.floor(remaining / 1000)); // Convert to seconds
+    setRemainingTime(Math.floor(remaining / 1000)); // Convert to seconds
   };
 
   useEffect(() => {
@@ -546,8 +556,8 @@ function OpenQuizCard({ topic, length, getInitials, onClick  }: OpenQuizCardProp
   const quizCode = topic.quizPool?.poolsCode || '';
 
   return (
-    <div className={`${styles.quizContainer} ${styles[`quizContainer_${theme}`]} ${length > 1 ?  '' : styles.expanded}`}>
-      <div className={`${styles.topicCard} ${length > 1 ?  '' : styles.expanded}`}>
+    <div className={`${styles.quizContainer} ${styles[`quizContainer_${theme}`]} ${length > 1 ? '' : styles.expanded}`}>
+      <div className={`${styles.topicCard} ${length > 1 ? '' : styles.expanded}`}>
         {/* Main Image with Overlay */}
         <div className={styles.imageContainer}>
           {topic.topicsImageUrl && !imageError ? (
@@ -597,11 +607,11 @@ function OpenQuizCard({ topic, length, getInitials, onClick  }: OpenQuizCardProp
           {/* Quiz Code */}
           <div
             className={styles.codeContainer}
-            onClick={()=> codeBottomController.open()}
+            onClick={() => codeBottomController.open()}
           >
             <div className={styles.codeIcon}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V8l8 5 8-5v10zm-8-7L4 6h16l-8 5z"/>
+                <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V8l8 5 8-5v10zm-8-7L4 6h16l-8 5z" />
               </svg>
             </div>
             <span className={styles.codeText}>
@@ -663,7 +673,7 @@ function OpenQuizCard({ topic, length, getInitials, onClick  }: OpenQuizCardProp
           >
             <div className={styles.codeCopyIcon}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V8l8 5 8-5v10zm-8-7L4 6h16l-8 5z"/>
+                <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V8l8 5 8-5v10zm-8-7L4 6h16l-8 5z" />
               </svg>
             </div>
             <span className={styles.codeCopyText}>
@@ -671,9 +681,9 @@ function OpenQuizCard({ topic, length, getInitials, onClick  }: OpenQuizCardProp
             </span>
             <div className={styles.copyContainer}>
               <div className={styles.copyIcon}>
-               <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                 <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
-               </svg>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
+                </svg>
               </div>
             </div>
           </div>

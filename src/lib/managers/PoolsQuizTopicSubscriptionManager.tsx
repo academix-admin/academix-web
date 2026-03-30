@@ -62,7 +62,7 @@ class PoolsQuizTopicSubscriptionManager {
 
   private replayLatestEventsToListener(listener: PoolChangeListener, listenerAttachTime: number): void {
     this.lastEventPerPool.forEach((event) => {
-      if (event.timestamp <= listenerAttachTime) {
+      if (event.timestamp >= listenerAttachTime) {
         try {
           listener(event);
         } catch (error) {

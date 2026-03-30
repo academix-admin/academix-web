@@ -27,12 +27,12 @@ export default function UserBalance({ onStateChange }: ComponentStateProps) {
   const [userBalance, demandUserBalance, setUserBalance] = useUserBalance(lang);
 
   // Subscribe to changes
-  const handleBalanceChange = (event: UserBalanceChangeEvent) => {
+  const handleBalanceChange = useCallback((event: UserBalanceChangeEvent) => {
     const { eventType, newRecord: userBalance, oldRecordId: usersId } = event;
      if (userBalance) {
        setUserBalance(userBalance);
     }
-  };
+  }, [setUserBalance]);
 
   useEffect(() => {
     userBalanceSubscriptionManager.attachListener(handleBalanceChange);

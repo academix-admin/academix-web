@@ -5,7 +5,7 @@ import { useTheme } from '@/context/ThemeContext';
 import styles from './available-quiz-topics.module.css';
 import { useLanguage } from '@/context/LanguageContext';
 import { getLastNameOrSingle, capitalize } from '@/utils/textUtils';
-import { getParamatical, ParamaticalData} from '@/utils/checkers';
+import { getParamatical, ParamaticalData } from '@/utils/checkers';
 import { useUserData } from '@/lib/stacks/user-stack';
 import { useDemandState } from '@/lib/state-stack';
 import { supabaseBrowser } from '@/lib/supabase/client';
@@ -44,7 +44,7 @@ export default function AvailableQuizTopics({ onStateChange, pType }: AvailableQ
 
   const [quizModels, demandUserDisplayQuizTopicModel, setUserDisplayQuizTopicModel, { isHydrated }] = useAvailableQuiz(lang, pType);
 
-  const [activeQuiz, , ] = useActiveQuiz(lang);
+  const [activeQuiz, ,] = useActiveQuiz(lang);
 
   useEffect(() => {
     if (!isHydrated) return;
@@ -56,31 +56,31 @@ export default function AvailableQuizTopics({ onStateChange, pType }: AvailableQ
   }, [isHydrated, quizModels, nav]);
 
   useEffect(() => {
-    if(!activeQuiz)return;
+    if (!activeQuiz) return;
     const updatedModels = quizModels.filter(
       (m) => m.topicsId !== activeQuiz.topicsId
     );
     setUserDisplayQuizTopicModel(updatedModels);
-  }, [activeQuiz]);
+  }, [activeQuiz, quizModels, setUserDisplayQuizTopicModel]);
 
   useEffect(() => {
-        if (!loaderRef.current) return;
+    if (!loaderRef.current) return;
 
-     const observer = new IntersectionObserver(
-        (entries) => {
-            if (entries[0].isIntersecting) {
-                callPaginate();
-            }
-        },
-        { threshold: 1.0, root: scrollContainerRef.current }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          callPaginate();
+        }
+      },
+      { threshold: 1.0, root: scrollContainerRef.current }
     );
 
     observer.observe(loaderRef.current);
 
-        return () => {
-            if (loaderRef.current) observer.unobserve(loaderRef.current);
-        };
-    }, [quizModels, paginateModel]);
+    return () => {
+      if (loaderRef.current) observer.unobserve(loaderRef.current);
+    };
+  }, [quizModels, paginateModel]);
 
   const fetchUserDisplayQuizTopicModel = useCallback(async (userData: UserData, limitBy: number, paginateModel: PaginateModel): Promise<UserDisplayQuizTopicModel[]> => {
     if (!userData) return [];
@@ -142,10 +142,10 @@ export default function AvailableQuizTopics({ onStateChange, pType }: AvailableQ
 
 
   useEffect(() => {
-      if (!userData) return;
+    if (!userData) return;
     demandUserDisplayQuizTopicModel(async ({ get, set }) => {
       setFirstLoaded(true);
-      const quizzesModel = await fetchUserDisplayQuizTopicModel(userData, 10,  new PaginateModel());
+      const quizzesModel = await fetchUserDisplayQuizTopicModel(userData, 10, new PaginateModel());
       extractLatest(quizzesModel);
       set(quizzesModel);
       setFirstLoaded(false);
@@ -169,32 +169,41 @@ export default function AvailableQuizTopics({ onStateChange, pType }: AvailableQ
   const refreshData = async () => {
     if (!userData) return;
 
-     try {
-         const quizzesModel = await fetchUserDisplayQuizTopicModel(userData, 10, new PaginateModel());
-         if (quizzesModel.length > 0) {
-           extractLatest(quizzesModel);
-           
-           // Only update if data actually changed - compare first 10 items
-           const currentFirst10 = quizModels.slice(0, 10);
-           const hasChanged = JSON.stringify(quizzesModel.map(q => q.topicsId)) !== 
-             JSON.stringify(currentFirst10.map(q => q.topicsId));
-           
-           if (hasChanged) {
-             // Replace first 10 items with fresh data, keep the rest
-             const updatedModels = [...quizzesModel, ...quizModels.slice(10)];
-             setUserDisplayQuizTopicModel(updatedModels);
-           }
-         }
-     } catch (error) {
-       console.error('Error fetching data:', error);
-     } finally {
-       // Schedule next call only if component is still mounted
-       if (isMountedRef.current) {
-         timeoutRef.current = setTimeout(() => {
-           refreshData();
-         }, 10000);
-       }
-     }
+    if (activeQuiz) {
+      if (isMountedRef.current) {
+        timeoutRef.current = setTimeout(() => {
+          refreshData();
+        }, 10000);
+      }
+      return;
+    }
+
+    try {
+      const quizzesModel = await fetchUserDisplayQuizTopicModel(userData, 10, new PaginateModel());
+      if (quizzesModel.length > 0) {
+        extractLatest(quizzesModel);
+
+        // Only update if data actually changed - compare first 10 items
+        const currentFirst10 = quizModels.slice(0, 10);
+        const hasChanged = JSON.stringify(quizzesModel.map(q => q.topicsId)) !==
+          JSON.stringify(currentFirst10.map(q => q.topicsId));
+
+        if (hasChanged) {
+          // Replace first 10 items with fresh data, keep the rest
+          const updatedModels = [...quizzesModel, ...quizModels.slice(10)];
+          setUserDisplayQuizTopicModel(updatedModels);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    } finally {
+      // Schedule next call only if component is still mounted
+      if (isMountedRef.current) {
+        timeoutRef.current = setTimeout(() => {
+          refreshData();
+        }, 10000);
+      }
+    }
   };
 
   useEffect(() => {
@@ -240,65 +249,65 @@ export default function AvailableQuizTopics({ onStateChange, pType }: AvailableQ
   }, [quizModels]);
 
   const getTitle = (type: string | null): string => {
-      switch (type) {
-        case 'creator':
-          return t('favourite_contributors');
-        case 'personalized':
-          return t('just_for_you');
-        case 'public':
-          return t('might_interest_you');
-        default:
-          return t('error_occurred');
-      }
+    switch (type) {
+      case 'creator':
+        return t('favourite_contributors');
+      case 'personalized':
+        return t('just_for_you');
+      case 'public':
+        return t('might_interest_you');
+      default:
+        return t('error_occurred');
+    }
+  };
+
+  const getInitials = (text: string): string => {
+    if (!text) return '?';
+    return text.split(' ')
+      .map(word => word.charAt(0).toUpperCase())
+      .slice(0, 2)
+      .join('');
+  };
+
+  const formatDate = (dateString: string): string => {
+    const date = new Date(dateString);
+    const options: Intl.DateTimeFormatOptions = {
+      month: 'short',
+      day: 'numeric',
     };
 
-   const getInitials = (text: string): string => {
-     if (!text) return '?';
-     return text.split(' ')
-       .map(word => word.charAt(0).toUpperCase())
-       .slice(0, 2)
-       .join('');
-   };
+    const timeOptions: Intl.DateTimeFormatOptions = {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    };
 
-   const formatDate = (dateString: string): string => {
-       const date = new Date(dateString);
-       const options: Intl.DateTimeFormatOptions = {
-         month: 'short',
-         day: 'numeric',
-       };
+    const formattedDate = date.toLocaleDateString('en-US', options);
+    const formattedTime = date.toLocaleTimeString('en-US', timeOptions)
+      .toLowerCase()
+      .replace(' ', '');
 
-       const timeOptions: Intl.DateTimeFormatOptions = {
-         hour: 'numeric',
-         minute: '2-digit',
-         hour12: true
-       };
+    return `${formattedDate} at ${formattedTime}`;
+  };
 
-       const formattedDate = date.toLocaleDateString('en-US', options);
-       const formattedTime = date.toLocaleTimeString('en-US', timeOptions)
-         .toLowerCase()
-         .replace(' ', '');
-
-       return `${formattedDate} at ${formattedTime}`;
-     };
-
-  if(quizModels.length <= 0) return null;
+  if (quizModels.length <= 0) return null;
 
   function createSubgroups<T>(list: T[], subgroupLength: number): T[][] {
-  const result: T[][] = [];
-  const totalGroups = Math.ceil(list.length / subgroupLength);
+    const result: T[][] = [];
+    const totalGroups = Math.ceil(list.length / subgroupLength);
 
-  for (let i = 0; i < totalGroups; i++) {
-    const start = i * subgroupLength;
-    const end = Math.min((i + 1) * subgroupLength, list.length);
-    result.push(list.slice(start, end));
-  }
+    for (let i = 0; i < totalGroups; i++) {
+      const start = i * subgroupLength;
+      const end = Math.min((i + 1) * subgroupLength, list.length);
+      result.push(list.slice(start, end));
+    }
 
-  return result;
+    return result;
   }
 
   const handleTopicClick = (topic: UserDisplayQuizTopicModel) => {
-      if(activeQuiz)return;
-    nav.push('quiz_challenge',{topicsId: topic.topicsId, pType: pType});
+    if (activeQuiz) return;
+    nav.push('quiz_challenge', { topicsId: topic.topicsId, pType: pType });
   };
 
 
@@ -310,7 +319,7 @@ export default function AvailableQuizTopics({ onStateChange, pType }: AvailableQ
 
       <div className={styles.scrollWrapper}>
         {showLeftArrow && (
-          <button 
+          <button
             className={`${styles.scrollArrow} ${styles.scrollArrowLeft} ${styles[`scrollArrow_${theme}`]}`}
             onClick={scrollLeft}
             aria-label="Scroll left"
@@ -318,7 +327,7 @@ export default function AvailableQuizTopics({ onStateChange, pType }: AvailableQ
             ←
           </button>
         )}
-        
+
         <div ref={scrollContainerRef} className={styles.scrollContainer}>
           <div className={styles.gridContainer}>
             <div className={styles.row}>
@@ -331,7 +340,7 @@ export default function AvailableQuizTopics({ onStateChange, pType }: AvailableQ
                       theme={theme}
                       getInitials={getInitials}
                       formatDate={formatDate}
-                      onClick={()=> handleTopicClick(topic)}
+                      onClick={() => handleTopicClick(topic)}
                     />
                   ))}
                 </div>
@@ -339,9 +348,9 @@ export default function AvailableQuizTopics({ onStateChange, pType }: AvailableQ
             </div>
           </div>
         </div>
-        
+
         {showRightArrow && (
-          <button 
+          <button
             className={`${styles.scrollArrow} ${styles.scrollArrowRight} ${styles[`scrollArrow_${theme}`]}`}
             onClick={scrollRight}
             aria-label="Scroll right"
@@ -399,10 +408,10 @@ function TopicCard({ topic, theme, getInitials, formatDate, onClick }: TopicCard
             </h3>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               {topic.quizPool?.poolsLocale && (
-                <span style={{ 
-                  padding: '2px 6px', 
-                  borderRadius: '4px', 
-                  fontSize: '10px', 
+                <span style={{
+                  padding: '2px 6px',
+                  borderRadius: '4px',
+                  fontSize: '10px',
                   fontWeight: 600,
                   backgroundColor: theme === 'light' ? '#e3f2fd' : '#1e3a5f',
                   color: theme === 'light' ? '#1976d2' : '#64b5f6'

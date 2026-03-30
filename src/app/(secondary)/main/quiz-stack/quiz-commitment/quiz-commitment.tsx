@@ -94,7 +94,7 @@ export default function QuizCommitment(props: QuizChallengeProps) {
 
   const [withdrawBottomViewerId, withdrawBottomController, withdrawBottomIsOpen] = useBottomController();
 
-  const [ activeQuiz, , setActiveQuizTopicModel] = useActiveQuiz(lang);
+  const [activeQuiz, , setActiveQuizTopicModel] = useActiveQuiz(lang);
   const [membersCount, setMembersCount] = useState<number | null>(null);
 
   const [quizInfoBottomViewerId, quizInfoBottomController, quizInfoBottomIsOpen, , quizInfoBottomRef] = useBottomController();
@@ -125,8 +125,8 @@ export default function QuizCommitment(props: QuizChallengeProps) {
     currentQuizRef.current = currentQuiz;
   }, [currentQuiz]);
 
-    useEffect(() => {
-    if(!activeQuiz) return;
+  useEffect(() => {
+    if (!activeQuiz) return;
     setCurrentQuiz(activeQuiz);
   }, [activeQuiz]);
 
@@ -176,13 +176,13 @@ export default function QuizCommitment(props: QuizChallengeProps) {
 
   useEffect(() => {
 
-  const activeQuiz = getActiveQuizObj.isProvided ? getActiveQuizObj.getter() : null;
-  const quizById = getQuizByPoolsIdObj.isProvided ? (getQuizByPoolsIdObj.getter() ? getQuizByPoolsIdObj.getter()(poolsId) : null) : null;
-  const codeQuiz = getCodeQuizObj.isProvided ? getCodeQuizObj.getter() : null;
-  const resolvedQuiz =
-    action === 'active'
-      ? activeQuiz
-      : action === 'code' ? codeQuiz : quizById;
+    const activeQuiz = getActiveQuizObj.isProvided ? getActiveQuizObj.getter() : null;
+    const quizById = getQuizByPoolsIdObj.isProvided ? (getQuizByPoolsIdObj.getter() ? getQuizByPoolsIdObj.getter()(poolsId) : null) : null;
+    const codeQuiz = getCodeQuizObj.isProvided ? getCodeQuizObj.getter() : null;
+    const resolvedQuiz =
+      action === 'active'
+        ? activeQuiz
+        : action === 'code' ? codeQuiz : quizById;
     const getQuiz = resolvedQuiz;
     const isProvided = action === 'active' ? getActiveQuizObj.isProvided : action === 'code' ? getCodeQuizObj.isProvided : getQuizByPoolsIdObj.isProvided;
 
@@ -270,7 +270,6 @@ export default function QuizCommitment(props: QuizChallengeProps) {
 
     try {
       setQuizLoading(true);
-      const location = await checkLocation();
       const paramatical = await getParamatical(
         userData.usersId,
         lang,
@@ -449,7 +448,14 @@ export default function QuizCommitment(props: QuizChallengeProps) {
           action: 'active'
         });
         if (!replaced) {
+          if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
+            timeoutRef.current = null;
+          }
           setQuizLoading(false);
+          withdrawBottomController.close();
+          setInfoState('deleted');
+          quizInfoBottomController.open();
           return;
         }
 
@@ -515,18 +521,17 @@ export default function QuizCommitment(props: QuizChallengeProps) {
   };
 
   const fetchPoolMembers = useCallback(async (currentQuiz: UserDisplayQuizTopicModel) => {
-    if (!userData || !currentQuiz) return;
+    if (!userData || !currentQuiz?.quizPool?.poolsId) return;
     try {
 
       const { data, error } = await supabaseBrowser.rpc("get_pools_members_count", {
         p_user_id: userData.usersId,
-        p_pools_id: poolsId,
+        p_pools_id: currentQuiz.quizPool.poolsId,
         p_topics_id: currentQuiz.topicsId
       });
 
-
       if (error) {
-        console.error("[Members] error:", error);
+        console.error("[Members] error:", error?.message || error || 'Unknown error');
         return;
       }
 
@@ -536,9 +541,11 @@ export default function QuizCommitment(props: QuizChallengeProps) {
       return;
     } finally {
       // Schedule next call only if component is still mounted
-      if (isMountedRef.current) {
+      const latest = currentQuizRef.current;
+
+      if (isMountedRef.current && latest) {
         timeoutRef.current = setTimeout(() => {
-          fetchPoolMembers(currentQuiz);
+          fetchPoolMembers(latest);
         }, 10000);
       }
     }
@@ -622,8 +629,8 @@ export default function QuizCommitment(props: QuizChallengeProps) {
 
     return false;
   };
-  
-  
+
+
   return (
     <main className={`${styles.container} ${styles[`container_${theme}`]}`}>
       <header className={`${styles.header} ${styles[`header_${theme}`]}`}>

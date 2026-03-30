@@ -442,6 +442,7 @@ type AsyncLifecycleHandler = (context: {
 type ObjectKey = string | string[];
 
 type ObjectOptions = {
+  stack?: boolean;
   scope?: string;
   global?: boolean;
 };
@@ -482,7 +483,7 @@ class ObjectReferenceRegistry {
   private cleanupTimers = new Map<string, NodeJS.Timeout>();
   private readonly CLEANUP_TIMEOUT = 1000 * 60 * 10; // 10 minutes
 
-  // Backward Compatible Methods
+  // ============ Backward Compatible Methods ============
 
   // Register a getter function for an object (backward compatible)
   register<T>(
@@ -493,6 +494,7 @@ class ObjectReferenceRegistry {
   ): () => void {
     return this.registerWithOptions(stackId, key, getter, {
       scopeId,
+      isStackScoped: false,
       isGlobal: false
     });
   }
@@ -558,9 +560,7 @@ class ObjectReferenceRegistry {
     const keysToRemove: string[] = [];
 
     for (const [key, meta] of this.metadata.entries()) {
-      // Match both old format (stackId:scopeId:key) and new format (scopeId:key)
-      if ((key.startsWith(`${stackId}:`) && meta.scopeId === scopeId) ||
-          (key.startsWith(`${scopeId}:`) && meta.scopeId === scopeId)) {
+      if (key.startsWith(`${stackId}:`) && meta.scopeId === scopeId) {
         keysToRemove.push(key);
       }
     }
@@ -671,19 +671,21 @@ class ObjectReferenceRegistry {
   // ============ Enhanced Methods ============
 
   // Enhanced register with options
-  // Priority: global > custom scope > page scope (default with stackId)
+  // Priority: global > stack > custom scope > page scope (default)
   registerWithOptions<T>(
     stackId: string,
     key: string,
     getter: () => T | Promise<T>,
     options?: {
       scopeId?: string;
+      isStackScoped?: boolean;
       isGlobal?: boolean;
       description?: string;
     }
   ): () => void {
     const {
       scopeId,
+      isStackScoped = false,
       isGlobal = false,
       description
     } = options || {};
@@ -693,23 +695,20 @@ class ObjectReferenceRegistry {
 
     // Priority: global wins over all
     if (isGlobal) {
-      if (scopeId) {
-        // Global with custom scope: global:scopeId:key
-        finalKey = `global:${scopeId}:${key}`;
-        finalScopeId = scopeId;
-      } else {
-        // Global without scope: global:key
-        finalKey = `global:${key}`;
-        finalScopeId = 'global';
-      }
+      finalKey = `global:${key}`;
+      finalScopeId = 'global';
+    } else if (isStackScoped) {
+      // Stack scope is second priority
+      finalKey = `${stackId}:${key}`;
+      finalScopeId = stackId;
     } else if (typeof scopeId === 'string' && scopeId) {
-      // Custom scope (not global): scopeId:key
-      finalKey = `${scopeId}:${key}`;
+      // Custom scope is third priority - ✅ FIXED: removed typo 'k'
+      finalKey = `${stackId}:${scopeId}:${key}`;
       finalScopeId = scopeId;
     } else {
-      // Default to page scope with stackId: stackId:key
+      // Default to page scope
       finalKey = `${stackId}:${key}`;
-      finalScopeId = undefined;
+      finalScopeId = scopeId;
     }
 
     // Register the getter
@@ -717,7 +716,7 @@ class ObjectReferenceRegistry {
     this.metadata.set(finalKey, {
       scopeId: finalScopeId,
       description: description || `Object ${key}`,
-      isStackScoped: false, // Deprecated, always false now
+      isStackScoped,
       isGlobal,
       originalKey: key
     });
@@ -746,11 +745,13 @@ class ObjectReferenceRegistry {
     key: string,
     options?: {
       scopeId?: string;
+      isStackScoped?: boolean;
       isGlobal?: boolean;
     }
   ): { value: T | Promise<T> | undefined; patternKey: string | null } {
     const {
       scopeId,
+      isStackScoped = false,
       isGlobal = false
     } = options || {};
 
@@ -758,24 +759,22 @@ class ObjectReferenceRegistry {
     const searchPatterns: string[] = [];
 
     if (isGlobal) {
-      if (scopeId) {
-        // Global with custom scope
-        searchPatterns.push(`global:${scopeId}:${key}`);
-      } else {
-        // Global without scope
-        searchPatterns.push(`global:${key}`);
-      }
+      // Global scope
+      searchPatterns.push(`global:${key}`);
     }
 
-    if (scopeId && !isGlobal) {
-      // Custom scope (not global) - NO stackId prefix
-      searchPatterns.push(`${scopeId}:${key}`);
-    }
-
-    // Page scope (default fallback) - includes stackId
-    if (!isGlobal) {
+    if (isStackScoped) {
+      // Stack scope
       searchPatterns.push(`${stackId}:${key}`);
     }
+
+    if (scopeId) {
+      // Custom scope
+      searchPatterns.push(`${stackId}:${scopeId}:${key}`);
+    }
+
+    // Page scope (default fallback)
+    searchPatterns.push(`${stackId}:${key}`);
 
     // Try each pattern in order
     for (const pattern of searchPatterns) {
@@ -795,6 +794,7 @@ class ObjectReferenceRegistry {
     key: string,
     options?: {
       scopeId?: string;
+      isStackScoped?: boolean;
       isGlobal?: boolean;
     }
   ): T | undefined {
@@ -808,11 +808,13 @@ class ObjectReferenceRegistry {
     key: string,
     options?: {
       scopeId?: string;
+      isStackScoped?: boolean;
       isGlobal?: boolean;
     }
   ): boolean {
     const {
       scopeId,
+      isStackScoped = false,
       isGlobal = false
     } = options || {};
 
@@ -820,24 +822,19 @@ class ObjectReferenceRegistry {
     const searchPatterns: string[] = [];
 
     if (isGlobal) {
-      if (scopeId) {
-        // Global with custom scope
-        searchPatterns.push(`global:${scopeId}:${key}`);
-      } else {
-        // Global without scope
-        searchPatterns.push(`global:${key}`);
-      }
+      searchPatterns.push(`global:${key}`);
     }
 
-    if (scopeId && !isGlobal) {
-      // Custom scope (not global) - NO stackId prefix
-      searchPatterns.push(`${scopeId}:${key}`);
-    }
-
-    // Page scope (default) - includes stackId
-    if (!isGlobal) {
+    if (isStackScoped) {
       searchPatterns.push(`${stackId}:${key}`);
     }
+
+    if (scopeId) {
+      searchPatterns.push(`${stackId}:${scopeId}:${key}`);
+    }
+
+    // Page scope (default)
+    searchPatterns.push(`${stackId}:${key}`);
 
     // Check if any pattern exists
     return searchPatterns.some(pattern => this.getters.has(pattern));
@@ -3028,30 +3025,33 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
       });
     },
 
-    provideObject<T>(key: string, getter: () => T, options?: ObjectOptions) {
-      const { scope, global = false } = options || {};
+    provideObject<T>(key: string, getter: () => T | Promise<T>, options?: ObjectOptions) {
+      const { stack = false, scope, global = false } = options || {};
       const current = regEntry.stack[regEntry.stack.length - 1];
 
       return globalObjectRegistry.registerWithOptions(id, key, getter, {
         scopeId: scope || current?.uid,
+        isStackScoped: stack,
         isGlobal: global
       });
     },
 
     getObject<T>(key: string, options?: ObjectOptions): T | undefined {
-      const { scope, global = false } = options || {};
+      const { stack = false, scope, global = false } = options || {};
 
       return globalObjectRegistry.getWithOptions<T>(id, key, {
         scopeId: scope,
+        isStackScoped: stack,
         isGlobal: global
       });
     },
 
     hasObject(key: string, options?: ObjectOptions): boolean {
-      const { scope, global = false } = options || {};
+      const { stack = false, scope, global = false } = options || {};
 
       return globalObjectRegistry.hasWithOptions(id, key, {
         scopeId: scope,
+        isStackScoped: stack,
         isGlobal: global
       });
     },
@@ -3073,18 +3073,16 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
       callback: (value: T) => void,
       options?: ObjectOptions
     ): () => void {
-      const { scope, global = false } = options || {};
+      const { stack = false, scope, global = false } = options || {};
 
       // Build the pattern key
       let patternKey: string;
       if (global) {
-        if (scope) {
-          patternKey = `global:${scope}:${key}`;
-        } else {
-          patternKey = `global:${key}`;
-        }
+        patternKey = `global:${key}`;
+      } else if (stack) {
+        patternKey = `${id}:${key}`;
       } else if (scope) {
-        patternKey = `${scope}:${key}`;
+        patternKey = `${id}:${scope}:${key}`;
       } else {
         patternKey = `${id}:${key}`;
       }
@@ -3103,18 +3101,16 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
       callback: () => void,
       options?: ObjectOptions
     ): () => void {
-      const { scope, global = false } = options || {};
+      const { stack = false, scope, global = false } = options || {};
 
       // Build the pattern key
       let patternKey: string;
       if (global) {
-        if (scope) {
-          patternKey = `global:${scope}:${key}`;
-        } else {
-          patternKey = `global:${key}`;
-        }
+        patternKey = `global:${key}`;
+      } else if (stack) {
+        patternKey = `${id}:${key}`;
       } else if (scope) {
-        patternKey = `${scope}:${key}`;
+        patternKey = `${id}:${scope}:${key}`;
       } else {
         patternKey = `${id}:${key}`;
       }
@@ -3130,18 +3126,16 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
       handler: (request: TRequest) => TResponse | Promise<TResponse>,
       options?: ObjectOptions
     ): () => void {
-      const { scope, global = false } = options || {};
+      const { stack = false, scope, global = false } = options || {};
 
       // Build the pattern key
       let patternKey: string;
       if (global) {
-        if (scope) {
-          patternKey = `global:${scope}:${key}`;
-        } else {
-          patternKey = `global:${key}`;
-        }
+        patternKey = `global:${key}`;
+      } else if (stack) {
+        patternKey = `${id}:${key}`;
       } else if (scope) {
-        patternKey = `${scope}:${key}`;
+        patternKey = `${id}:${scope}:${key}`;
       } else {
         patternKey = `${id}:${key}`;
       }
@@ -3154,18 +3148,16 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
       request: TRequest,
       options?: ObjectOptions
     ): Promise<TResponse> {
-      const { scope, global = false } = options || {};
+      const { stack = false, scope, global = false } = options || {};
 
       // Build the pattern key
       let patternKey: string;
       if (global) {
-        if (scope) {
-          patternKey = `global:${scope}:${key}`;
-        } else {
-          patternKey = `global:${key}`;
-        }
+        patternKey = `global:${key}`;
+      } else if (stack) {
+        patternKey = `${id}:${key}`;
       } else if (scope) {
-        patternKey = `${scope}:${key}`;
+        patternKey = `${id}:${scope}:${key}`;
       } else {
         patternKey = `${id}:${key}`;
       }
@@ -3178,18 +3170,16 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
       callback: () => void,
       options?: ObjectOptions
     ): () => void {
-      const { scope, global = false } = options || {};
+      const { stack = false, scope, global = false } = options || {};
 
       // Build the pattern key
       let patternKey: string;
       if (global) {
-        if (scope) {
-          patternKey = `global:${scope}:${key}`;
-        } else {
-          patternKey = `global:${key}`;
-        }
+        patternKey = `global:${key}`;
+      } else if (stack) {
+        patternKey = `${id}:${key}`;
       } else if (scope) {
-        patternKey = `${scope}:${key}`;
+        patternKey = `${id}:${scope}:${key}`;
       } else {
         patternKey = `${id}:${key}`;
       }
@@ -3211,12 +3201,9 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
       const { requireObjects = [], provideObjects = {}, metadata } = options || {};
 
       // Verify required objects exist
-      for (const objKey of requireObjects) {
-        if (!objectExistsInAnyScope(objKey)) {
-          console.warn(
-            `[NavStack] Cannot push "${rawKey}": required object "${objKey}" not found ` +
-            `in any scope for stack "${id}".`
-          );
+      for (const key of requireObjects) {
+        if (!globalObjectRegistry.hasGetter(id, key)) {
+          console.warn(`Cannot push ${rawKey}: Required object "${key}" not found`);
           return false;
         }
       }
@@ -3254,12 +3241,9 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
       const { requireObjects = [], provideObjects = {}, metadata } = options || {};
 
       // Verify required objects exist
-      for (const objKey of requireObjects) {
-        if (!objectExistsInAnyScope(objKey)) {
-          console.warn(
-            `[NavStack] Cannot replace with "${rawKey}": required object "${objKey}" not found ` +
-            `in any scope for stack "${id}".`
-          );
+      for (const key of requireObjects) {
+        if (!globalObjectRegistry.hasGetter(id, key)) {
+          console.warn(`Cannot replace with ${rawKey}: Required object "${key}" not found`);
           return false;
         }
       }
@@ -3297,12 +3281,9 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
       const { requireObjects = [], provideObjects = {}, metadata } = options || {};
 
       // Verify required objects exist
-      for (const objKey of requireObjects) {
-        if (!objectExistsInAnyScope(objKey)) {
-          console.warn(
-            `[NavStack] Cannot go with "${rawKey}": required object "${objKey}" not found ` +
-            `in any scope for stack "${id}".`
-          );
+      for (const key of requireObjects) {
+        if (!globalObjectRegistry.hasGetter(id, key)) {
+          console.warn(`Cannot go with ${rawKey}: Required object "${key}" not found`);
           return false;
         }
       }
@@ -3528,18 +3509,6 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
       }
     }
   };
-
-  // Helper to check object existence across all scopes
-  function objectExistsInAnyScope(key: string): boolean {
-    return (
-      globalObjectRegistry.hasWithOptions(id, key, { isGlobal: true }) ||
-      globalObjectRegistry.hasWithOptions(id, key, { isGlobal: true, scopeId: undefined }) ||
-      globalObjectRegistry.hasWithOptions(id, key, {})
-    );
-  }
-
-  // Attach helper to API for use in methods
-  (api as any).objectExistsInAnyScope = objectExistsInAnyScope;
 
   regEntry.api = api;
   (api as any).lifecycleManager = lifecycleManager;
@@ -4400,11 +4369,14 @@ export function useObject<T>(
 
   const finalOptions = useMemo(() => {
     const opts = { ...optionsRef.current };
-    // stack was removed from ObjectOptions in the new version.
-    // Delete it in case any call site still passes it.
-    delete (opts as any).stack;
+
+    // If requesting stack-scoped without explicit scope, use current stack
+    if (opts.stack && !opts.scope && !opts.global) {
+      opts.scope = nav.id;
+    }
+
     return opts;
-  }, [optionsString]);
+  }, [nav.id, optionsString]);
 
   useEffect(() => {
     // Reset mounted flag when effect runs
@@ -4524,6 +4496,12 @@ export function useSendRequest<TRequest = any, TResponse = any>(
 
   const finalOptions = useMemo(() => {
     const opts = { ...options };
+
+    // If requesting stack-scoped without explicit scope, use current stack
+    if (opts.stack && !opts.scope && !opts.global) {
+      opts.scope = nav.id;
+    }
+
     return opts;
   }, [options, nav.id]);
 
@@ -4629,40 +4607,19 @@ export function useObjectExists(
 ): boolean {
   const nav = useContext(NavContext);
   const [exists, setExists] = useState(false);
-  const unsubscribeRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     if (!nav) return;
 
-    // Check immediately
     setExists(nav.hasObject(key, options));
 
-    // Subscribe to getter registration to detect when object becomes available
-    const { scope, global = false } = options || {};
-    let patternKey: string;
-    if (global) {
-      if (scope) {
-        patternKey = `global:${scope}:${key}`;
-      } else {
-        patternKey = `global:${key}`;
-      }
-    } else if (scope) {
-      patternKey = `${scope}:${key}`;
-    } else {
-      patternKey = `${nav.id}:${key}`;
-    }
+    // Optional: Watch for changes
+    const checkInterval = setInterval(() => {
+      setExists(nav.hasObject(key, options));
+    }, 100);
 
-    unsubscribeRef.current = globalObjectRegistry.onGetterRegistered(patternKey, () => {
-      setExists(true);
-    });
-
-    return () => {
-      if (unsubscribeRef.current) {
-        unsubscribeRef.current();
-        unsubscribeRef.current = null;
-      }
-    };
-  }, [nav, key, JSON.stringify(options)]);
+    return () => clearInterval(checkInterval);
+  }, [nav, key, options]);
 
   return exists;
 }

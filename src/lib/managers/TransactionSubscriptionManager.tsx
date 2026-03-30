@@ -57,7 +57,7 @@ class TransactionSubscriptionManager {
 
   private replayLatestEventsToListener(listener: TransactionChangeListener, listenerAttachTime: number): void {
     this.lastEventPerTransaction.forEach((event) => {
-      if (event.timestamp <= listenerAttachTime) {
+      if (event.timestamp >= listenerAttachTime) {
         try {
           listener(event);
         } catch (error) {

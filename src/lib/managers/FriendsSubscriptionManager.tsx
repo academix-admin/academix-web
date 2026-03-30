@@ -57,7 +57,7 @@ class FriendsSubscriptionManager {
 
   private replayLatestEventsToListener(listener: FriendsChangeListener, listenerAttachTime: number): void {
     this.lastEventPerFriend.forEach((event) => {
-      if (event.timestamp <= listenerAttachTime) {
+      if (event.timestamp >= listenerAttachTime) {
         try {
           listener(event);
         } catch (error) {

@@ -31,15 +31,15 @@ export default function ViewTransactionPage(props: ViewTransactionProps) {
   const successDialog = useDialog();
 
   // Handle pool changes - if pool is removed, pop the page
-  const handlePoolChange = (event: PoolChangeEvent) => {
+  const handlePoolChange = useCallback((event: PoolChangeEvent) => {
     const { eventType, oldRecordId: poolsId } = event;
     if (eventType === 'DELETE' && poolsId && currentTransaction?.poolsId === poolsId) {
       nav.pop();
     }
-  };
+  }, [currentTransaction, nav]);
 
   // Handle transaction changes - update current transaction or pop if deleted
-  const handleTransactionChange = (event: TransactionChangeEvent) => {
+  const handleTransactionChange = useCallback((event: TransactionChangeEvent) => {
     const { eventType, newRecord: transaction, oldRecordId: transactionId } = event;
 
     if (eventType === 'DELETE' && transactionId === currentTransaction?.transactionId) {
@@ -59,7 +59,7 @@ export default function ViewTransactionPage(props: ViewTransactionProps) {
         transactionSubscriptionManager.removeTransactionId(transaction.transactionId);
       }
     }
-  };
+  }, [currentTransaction, nav]);
 
   function shouldRemoveTransactionSubscription(updatedTransaction?: TransactionModel | null): boolean {
     if (!updatedTransaction) return false;

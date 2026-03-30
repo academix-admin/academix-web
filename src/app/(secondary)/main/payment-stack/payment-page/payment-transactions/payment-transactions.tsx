@@ -52,7 +52,7 @@ export default function PaymentTransactions({ onStateChange }: ComponentStatePro
     return cleanup;
   }, [isHydrated, transactionModels, nav]);
 
-  const handlePoolChange = (event: PoolChangeEvent) => {
+  const handlePoolChange = useCallback((event: PoolChangeEvent) => {
     const { eventType, newRecord: quizPool, oldRecordId: poolsId } = event;
     if (eventType === 'DELETE' && poolsId) {
       const updatedModels = transactionModels.filter(
@@ -60,10 +60,10 @@ export default function PaymentTransactions({ onStateChange }: ComponentStatePro
       );
       setTransactionModels(updatedModels);
     }
-  };
+  }, [transactionModels, setTransactionModels]);
 
   // Subscribe to changes
-  const handleTransactionChange = (event: TransactionChangeEvent) => {
+  const handleTransactionChange = useCallback((event: TransactionChangeEvent) => {
     const { eventType, newRecord: transaction, oldRecordId: transactionId } = event;
 
     if (eventType === 'DELETE' && transactionId) {
@@ -88,7 +88,7 @@ export default function PaymentTransactions({ onStateChange }: ComponentStatePro
 
       setTransactionModels(updatedModels);
     }
-  };
+  }, [transactionModels, setTransactionModels]);
 
   function shouldRemoveTransactionSubscription(updatedTransaction?: TransactionModel | null): boolean {
     if (!updatedTransaction) return false;
