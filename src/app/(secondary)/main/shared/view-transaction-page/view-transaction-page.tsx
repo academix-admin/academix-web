@@ -6,6 +6,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import styles from './view-transaction-page.module.css';
 import { useNav, usePageLifecycle, useObject } from "@/lib/NavigationStack";
 import { TransactionModel } from '@/models/transaction-model';
+import { useTransactionModel } from '@/lib/stacks/transactions-stack';
 import { transactionSubscriptionManager } from '@/lib/managers/TransactionSubscriptionManager';
 import { TransactionChangeEvent } from '@/lib/managers/TransactionSubscriptionManager';
 import { poolsSubscriptionManager } from '@/lib/managers/PoolsQuizTopicSubscriptionManager';
@@ -25,6 +26,7 @@ export default function ViewTransactionPage(props: ViewTransactionProps) {
   const isTop = nav.isTop();
   const { transactionId } = props;
   const getTransactionByIdObj = useObject<(id: string) => TransactionModel | undefined>('getTransactionById', { global: true, scope: 'payment-transactions' });
+  const [transactionModels, , setTransactionModels] = useTransactionModel(lang);
 
   const [currentTransaction, setCurrentTransaction] = useState<TransactionModel | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -96,6 +98,13 @@ export default function ViewTransactionPage(props: ViewTransactionProps) {
           transactionReceiverStatus: update.transaction_receiver_status,
         });
         setCurrentTransaction(updated);
+        
+        // ✅ Update global transactionModels array
+        const updatedModels = transactionModels.map((m) => 
+          m.transactionId === transaction.transactionId ? updated : m
+        );
+        setTransactionModels(updatedModels);
+        
         if (shouldRemoveTransactionSubscription(updated)) {
           transactionSubscriptionManager.removeTransactionId(transaction.transactionId);
         }
@@ -110,7 +119,7 @@ export default function ViewTransactionPage(props: ViewTransactionProps) {
     } finally {
       setIsRefreshing(false);
     }
-  }, [isRefreshing]);
+  }, [isRefreshing, transactionModels, setTransactionModels]);
 
   usePageLifecycle(nav, {
     onEnter: ({ current }) => {

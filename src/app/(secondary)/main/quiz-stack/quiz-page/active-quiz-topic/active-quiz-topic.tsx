@@ -200,11 +200,21 @@ export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) 
     isRefreshingRef.current = true;
     try {
       const active = await fetchActiveQuizTopicModel(userData);
-      if (active?.quizPool) poolsSubscriptionManager.handleQuizTopicData('UPDATE', active.quizPool ?? null, undefined, active.quizPool?.poolsId);
-      if (!active && activeQuiz) poolsSubscriptionManager.handleQuizTopicData('DELETE', null, activeQuiz.quizPool?.poolsId, activeQuiz.quizPool?.poolsId);
-      if (activeQuiz?.quizPool?.poolsId && !active) poolsSubscriptionManager.removeQuizTopicPool(activeQuiz.quizPool.poolsId);
+      
+      // Only update if data actually changed
+      const hasChanged = !activeQuiz || 
+        JSON.stringify(active?.quizPool) !== JSON.stringify(activeQuiz?.quizPool);
 
-      setActiveQuizTopicModel(active);
+      if (hasChanged) {
+        if (active?.quizPool) {
+          poolsSubscriptionManager.handleQuizTopicData('UPDATE', active.quizPool, undefined, active.quizPool.poolsId);
+        }
+        if (!active && activeQuiz?.quizPool?.poolsId) {
+          poolsSubscriptionManager.handleQuizTopicData('DELETE', null, activeQuiz.quizPool.poolsId, activeQuiz.quizPool.poolsId);
+          poolsSubscriptionManager.removeQuizTopicPool(activeQuiz.quizPool.poolsId);
+        }
+        setActiveQuizTopicModel(active);
+      }
       
     } catch (error) {
       console.error('Error fetching data:', error);
