@@ -648,5 +648,9 @@
   "image_too_large": "La taille de l'image doit être inférieure à 5 Mo",
   "newsletter_subscribed": "Abonné avec succès à la newsletter !",
   "newsletter_unsubscribed": "Désabonné avec succès de la newsletter",
-  "invalid_email": "Veuillez entrer une adresse e-mail valide"
+  "invalid_email": "Veuillez entrer une adresse e-mail valide",
+  "loading_quiz": "Veuillez patienter pendant que nous chargeons votre quiz...",
+  "exiting_quiz": "Sortie du quiz...",
+  "quiz_not_found": "Le quiz que vous recherchez n'existe pas ou vous n'y avez pas accès.",
+  "quiz_loading_error": "Une erreur s'est produite lors du chargement du quiz."
 }

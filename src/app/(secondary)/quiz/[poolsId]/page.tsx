@@ -583,8 +583,12 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
     const allQuestionsAttempted = completedQuestions.length === quizSession.totalQuestions;
 
     // Check if quiz has ended (only from external factors, not user actions)
-    if (checkEnd()) {
-      if (quizState !== 'quizEnd') {
+    const isQuizClosed = checkEnd();
+    
+    if (isQuizClosed) {
+      // When quiz is closed by system, maintain current state if it's a terminal state
+      // Only transition to quizEnd if we're not already in a valid closed state
+      if (quizState !== 'quizEnd' && quizState !== 'questionTrack' && quizState !== 'quizReward') {
         setQuizState('quizEnd');
       }
       return;
@@ -619,8 +623,16 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
   // Monitor quiz session and quiz model to determine state transitions
   useEffect(() => {
     if(!quizModel)return;
+    
+    // Don't auto-transition if we're in quizEnd or quizReward state
+    // These states should only be changed by user actions (clicking buttons)
+    const isUserControlledState = quizState === 'quizEnd' || quizState === 'quizReward';
+    if (isUserControlledState) {
+      return;
+    }
+    
     determineState();
-  }, [quizSession, quizModel]);
+  }, [quizSession, quizModel, quizState, determineState]);
 
 
   // Fetch initial quiz data
@@ -948,18 +960,20 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
 
     switch (quizState) {
       case 'loading':
-        return (<LoadingView text="Please wait while we load your quiz..." />);
+        return (<LoadingView text={t('loading_quiz')} />);
 
       case 'notFound':
-        return (<NoResultsView text="The quiz you're looking for doesn't exist or you don't have access to it." buttonText="Exit quiz" onButtonClick={returnToMain} />);
+        return (isNavigating ? <LoadingView text={t('exiting_quiz')} /> : <NoResultsView text={t('quiz_not_found')} buttonText={t('exit_text')} onButtonClick={returnToMain} />);
 
       case 'error':
-        return (<ErrorView text="Something went wrong while loading the quiz." buttonText="Try Again" onButtonClick={()=> window.location.reload()} />);
+        return (<ErrorView text={t('quiz_loading_error')} buttonText={t('try_again')} onButtonClick={()=> window.location.reload()} />);
 
       case 'quizTime':
         return <QuizTimer 
           quizTimerValue={quizTimerValue} 
-          onSkip={() => {setQuizState('quizEnd');}} 
+          onSkip={() => {
+            setQuizState('quizEnd');
+          }} 
           clickMenu={()=> setDrawerIsOpen(!isDrawerOpen)} 
           clickExit={()=> {setDialogType('exit'); openDialog();}}
           timerExpired={timerExpired}
