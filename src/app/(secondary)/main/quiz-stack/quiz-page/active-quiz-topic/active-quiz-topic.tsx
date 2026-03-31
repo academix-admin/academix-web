@@ -69,7 +69,7 @@ export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) 
   // Subscribe to changes
   const handlePoolChange = useCallback((event: PoolChangeEvent) => {
     const { eventType, newRecord: quizPool, oldRecordId: poolsId } = event;
-    if (activeQuiz?.quizPool?.poolsId !== quizPool?.poolsId || activeQuiz?.quizPool?.poolsId !== poolsId) return;
+    if (activeQuiz?.quizPool?.poolsId !== quizPool?.poolsId && activeQuiz?.quizPool?.poolsId !== poolsId) return;
     if (eventType === 'DELETE' && poolsId) {
       // 🔹 Remove deleted pool
       setActiveQuizTopicModel(null);
@@ -204,13 +204,8 @@ export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) 
       if (!active && activeQuiz) poolsSubscriptionManager.handleQuizTopicData('DELETE', null, activeQuiz.quizPool?.poolsId, activeQuiz.quizPool?.poolsId);
       if (activeQuiz?.quizPool?.poolsId && !active) poolsSubscriptionManager.removeQuizTopicPool(activeQuiz.quizPool.poolsId);
 
-      // Only update if data actually changed
-      const hasChanged = !activeQuiz ||
-        JSON.stringify(active?.quizPool) !== JSON.stringify(activeQuiz?.quizPool);
-
-      if (hasChanged) {
-        setActiveQuizTopicModel(active);
-      }
+      setActiveQuizTopicModel(active);
+      
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {

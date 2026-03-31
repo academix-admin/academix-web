@@ -54,14 +54,19 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
   const [quizModels, demandUserDisplayQuizTopicModel, setUserDisplayQuizTopicModel, { isHydrated }] = usePublicQuiz(lang, pType);
   const [activeQuiz, ,] = useActiveQuiz(lang);
 
+  // Filter out active quiz synchronously during render to prevent flash
+  const filteredQuizModels = quizModels.filter(
+    (m) => !activeQuiz || m.quizPool?.poolsId !== activeQuiz.quizPool?.poolsId
+  );
+
   useEffect(() => {
-    if (!isHydrated || quizModels.length <= 0) return;
+    if (!isHydrated || filteredQuizModels.length <= 0) return;
     // nav.provideObject(
     //   'getQuizByPoolsId',
     //   () => (poolsId: string) => quizModels.find(q => q.quizPool?.poolsId === poolsId),
     //   { global: true, scope: 'quiz-topics' }
     // );
-  }, [isHydrated, quizModels, nav]);
+  }, [isHydrated, filteredQuizModels, nav]);
 
   // Subscribe to changes
   const handlePoolChange = useCallback((event: PoolChangeEvent) => {
@@ -135,11 +140,15 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
 
   useEffect(() => {
     if (!activeQuiz) return;
+    // When activeQuiz appears, update the stored state to remove it
     const updatedModels = quizModels.filter(
       (m) => m.quizPool?.poolsId !== activeQuiz.quizPool?.poolsId
     );
-    setUserDisplayQuizTopicModel(updatedModels);
-  }, [activeQuiz, quizModels, setUserDisplayQuizTopicModel]);
+    // Only update if there's actually a change
+    if (updatedModels.length !== quizModels.length) {
+      setUserDisplayQuizTopicModel(updatedModels);
+    }
+  }, [activeQuiz]);
 
   useEffect(() => {
     if (!quizModels?.length) return;
@@ -187,7 +196,7 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
     return () => {
       if (loaderRef.current) observer.unobserve(loaderRef.current);
     };
-  }, [quizModels, paginateModel]);
+  }, [filteredQuizModels, paginateModel]);
 
   const fetchUserDisplayQuizTopicModel = useCallback(async (userData: UserData, limitBy: number, paginateModel: PaginateModel): Promise<UserDisplayQuizTopicModel[]> => {
     if (!userData) return [];
@@ -264,7 +273,7 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
 
 
   const callPaginate = async () => {
-    if (!userData || quizModels.length <= 0 || quizLoading) return;
+    if (!userData || filteredQuizModels.length <= 0 || quizLoading) return;
     setQuizLoading(true);
     const quizzesModel = await fetchUserDisplayQuizTopicModel(userData, 20, paginateModel);
     setQuizLoading(false);
@@ -351,7 +360,7 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
       container.removeEventListener('scroll', checkScrollButtons);
       window.removeEventListener('resize', checkScrollButtons);
     };
-  }, [quizModels]);
+  }, [filteredQuizModels]);
 
   const getTitle = (type: string | null): string => {
     switch (type) {
@@ -395,14 +404,14 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
     return `${formattedDate} at ${formattedTime}`;
   };
 
-  if (quizModels.length <= 0) return null;
+  if (filteredQuizModels.length <= 0) return null;
 
   const handleTopicClick = (topic: UserDisplayQuizTopicModel) => {
     if (activeQuiz) return;
     maybeActivePoolId.current = topic?.quizPool?.poolsId ?? null;
     nav.provideObject(
       'getQuizByPoolsId',
-      () => (poolsId: string) => quizModels.find(q => q.quizPool?.poolsId === poolsId),
+      () => (poolsId: string) => filteredQuizModels.find(q => q.quizPool?.poolsId === poolsId),
       { global: true, scope: 'quiz-topics' }
     );
     nav.push('quiz_commitment', { poolsId: topic?.quizPool?.poolsId, action: pType });
@@ -413,8 +422,8 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
       <h2 className={`${styles.title} ${styles[`title_${theme}`]}`}>
         {getTitle(pType)}
       </h2>
-      <div className={`${styles.scrollWrapper} ${quizModels.length <= 1 ? styles.scrollWrapperExpanded : ''}`}>
-        {showLeftArrow && quizModels.length > 1 && (
+      <div className={`${styles.scrollWrapper} ${filteredQuizModels.length <= 1 ? styles.scrollWrapperExpanded : ''}`}>
+        {showLeftArrow && filteredQuizModels.length > 1 && (
           <button
             className={`${styles.scrollArrow} ${styles.scrollArrowLeft} ${styles[`scrollArrow_${theme}`]}`}
             onClick={scrollLeft}
@@ -424,14 +433,14 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
           </button>
         )}
 
-        <div ref={scrollContainerRef} className={`${styles.scrollContainer} ${quizModels.length <= 1 ? styles.scrollContainerExpanded : ''}`}>
-          <div className={`${styles.gridContainer} ${quizModels.length <= 1 ? styles.gridContainerExpanded : ''}`}>
+        <div ref={scrollContainerRef} className={`${styles.scrollContainer} ${filteredQuizModels.length <= 1 ? styles.scrollContainerExpanded : ''}`}>
+          <div className={`${styles.gridContainer} ${filteredQuizModels.length <= 1 ? styles.gridContainerExpanded : ''}`}>
             <div className={styles.row}>
-              {quizModels.map((topic, rowIndex) => (
+              {filteredQuizModels.map((topic, rowIndex) => (
                 <OpenQuizCard
                   key={topic.topicsId}
                   topic={topic}
-                  length={quizModels.length}
+                  length={filteredQuizModels.length}
                   getInitials={getInitials}
                   onClick={() => handleTopicClick(topic)}
                 />
@@ -440,7 +449,7 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
           </div>
         </div>
 
-        {showRightArrow && quizModels.length > 1 && (
+        {showRightArrow && filteredQuizModels.length > 1 && (
           <button
             className={`${styles.scrollArrow} ${styles.scrollArrowRight} ${styles[`scrollArrow_${theme}`]}`}
             onClick={scrollRight}

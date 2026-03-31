@@ -46,22 +46,31 @@ export default function AvailableQuizTopics({ onStateChange, pType }: AvailableQ
 
   const [activeQuiz, ,] = useActiveQuiz(lang);
 
+  // Filter out active quiz synchronously during render to prevent flash
+  const filteredQuizModels = quizModels.filter(
+    (m) => !activeQuiz || m.topicsId !== activeQuiz.topicsId
+  );
+
   useEffect(() => {
-    if (!isHydrated || quizModels.length <= 0) return;
+    if (!isHydrated || filteredQuizModels.length <= 0) return;
     // nav.provideObject(
     //   'getQuizByTopicsId',
     //   () => (topicsId: string) => quizModels.find(q => q.topicsId === topicsId),
     //   { global: true, scope: 'quiz-topics' }
     // );
-  }, [isHydrated, quizModels, nav]);
+  }, [isHydrated, filteredQuizModels, nav]);
 
   useEffect(() => {
     if (!activeQuiz) return;
+    // When activeQuiz appears, update the stored state to remove it
     const updatedModels = quizModels.filter(
       (m) => m.topicsId !== activeQuiz.topicsId
     );
-    setUserDisplayQuizTopicModel(updatedModels);
-  }, [activeQuiz, quizModels, setUserDisplayQuizTopicModel]);
+    // Only update if there's actually a change
+    if (updatedModels.length !== quizModels.length) {
+      setUserDisplayQuizTopicModel(updatedModels);
+    }
+  }, [activeQuiz]);
 
   useEffect(() => {
     if (!loaderRef.current) return;
@@ -80,7 +89,7 @@ export default function AvailableQuizTopics({ onStateChange, pType }: AvailableQ
     return () => {
       if (loaderRef.current) observer.unobserve(loaderRef.current);
     };
-  }, [quizModels, paginateModel]);
+  }, [filteredQuizModels, paginateModel]);
 
   const fetchUserDisplayQuizTopicModel = useCallback(async (userData: UserData, limitBy: number, paginateModel: PaginateModel): Promise<UserDisplayQuizTopicModel[]> => {
     if (!userData) return [];
@@ -157,7 +166,7 @@ export default function AvailableQuizTopics({ onStateChange, pType }: AvailableQ
 
 
   const callPaginate = async () => {
-    if (!userData || quizModels.length <= 0 || quizLoading) return;
+    if (!userData || filteredQuizModels.length <= 0 || quizLoading) return;
     setQuizLoading(true);
     const quizzesModel = await fetchUserDisplayQuizTopicModel(userData, 20, paginateModel);
     setQuizLoading(false);
@@ -242,7 +251,7 @@ export default function AvailableQuizTopics({ onStateChange, pType }: AvailableQ
       container.removeEventListener('scroll', checkScrollButtons);
       window.removeEventListener('resize', checkScrollButtons);
     };
-  }, [quizModels]);
+  }, [filteredQuizModels]);
 
   const getTitle = (type: string | null): string => {
     switch (type) {
@@ -286,7 +295,7 @@ export default function AvailableQuizTopics({ onStateChange, pType }: AvailableQ
     return `${formattedDate} at ${formattedTime}`;
   };
 
-  if (quizModels.length <= 0) return null;
+  if (filteredQuizModels.length <= 0) return null;
 
   function createSubgroups<T>(list: T[], subgroupLength: number): T[][] {
     const result: T[][] = [];
@@ -305,7 +314,7 @@ export default function AvailableQuizTopics({ onStateChange, pType }: AvailableQ
     if (activeQuiz) return;
     nav.provideObject(
       'getQuizByTopicsId',
-      () => (topicsId: string) => quizModels.find(q => q.topicsId === topicsId),
+      () => (topicsId: string) => filteredQuizModels.find(q => q.topicsId === topicsId),
       { global: true, scope: 'quiz-topics' }
     );
     nav.push('quiz_challenge', { topicsId: topic.topicsId, pType: pType });
@@ -332,7 +341,7 @@ export default function AvailableQuizTopics({ onStateChange, pType }: AvailableQ
         <div ref={scrollContainerRef} className={styles.scrollContainer}>
           <div className={styles.gridContainer}>
             <div className={styles.row}>
-              {createSubgroups(quizModels, 2).map((topics, rowIndex) => (
+              {createSubgroups(filteredQuizModels, 2).map((topics, rowIndex) => (
                 <div className={styles.column} key={rowIndex}>
                   {topics.map((topic) => (
                     <TopicCard
