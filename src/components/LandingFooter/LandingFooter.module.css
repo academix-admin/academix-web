@@ -185,10 +185,19 @@
   cursor: pointer;
   transition: opacity 0.2s ease;
   width: fit-content;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 100px;
 }
 
 .subscribeButton:hover {
   opacity: 0.9;
+}
+
+.subscribeButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .subscribeButton_light {
@@ -199,6 +208,30 @@
 .subscribeButton_dark {
   background: #fff;
   color: #121212;
+}
+
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+.subscribeButton_light .spinner {
+  border-color: rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+}
+
+.subscribeButton_dark .spinner {
+  border-color: rgba(0, 0, 0, 0.3);
+  border-top-color: #121212;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 .footerBottom {

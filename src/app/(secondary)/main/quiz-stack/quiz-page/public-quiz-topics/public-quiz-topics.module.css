@@ -298,7 +298,8 @@
   padding: 16px;
   display: flex;
   flex-direction: column;
-  padding-bottom: 40vh;
+  max-height: 80vh;
+  overflow-y: auto;
 }
 
 .dialogContainer_light {
@@ -501,6 +502,7 @@
 
   .dialogContainer {
     padding: 12px;
+    padding-bottom: 12px;
   }
 
   .dialogTitle {
@@ -521,4 +523,54 @@
     font-size: 14px;
   }
 
+}
+
+.loadMoreSentinel {
+  height: 40px;
+}
+
+.moreSpinnerContainer {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.moreSpinner {
+  border: 3px solid #1D3D1E;
+  border-top: 3px solid white;
+  border-radius: 50%;
+  width: 10px;
+  height: 10px;
+  animation: spinLoader 1s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spinLoader {
+  to { transform: rotate(360deg); }
+}
+
+.refreshIcon_light svg {
+  stroke: #000;
+}
+
+.refreshIcon_dark svg {
+  stroke: #fff;
+}
+
+.refreshSpinner {
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  animation: spinLoader 0.8s linear infinite;
+  display: inline-block;
+}
+
+.refreshSpinner_light {
+  border-top-color: #000;
+}
+
+.refreshSpinner_dark {
+  border-top-color: #fff;
 }

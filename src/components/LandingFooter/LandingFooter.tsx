@@ -1,9 +1,12 @@
 'use client';
+import { useState } from 'react';
 import styles from './LandingFooter.module.css';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import Image from 'next/image';
 import Link from 'next/link';
+import { supabaseBrowser } from '@/lib/supabase/client';
+import { useDialog } from '@/lib/DialogViewer';
 
 const SOCIAL_LINKS = [
   {
@@ -26,7 +29,7 @@ const SOCIAL_LINKS = [
   },
   {
     name: 'instagram',
-    url: '#',
+    url: 'https://www.instagram.com/academix4u?igsh=eWRudjl3MmZ0aXdk&utm_source=qr',
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" height="1.30em" width="1.30em" fill="currentColor">
         <path d="M224.1 141c-63.6 0-114.9 51.3-114.9 114.9s51.3 114.9 114.9 114.9S339 319.5 339 255.9 287.7 141 224.1 141zm0 189.6c-41.1 0-74.7-33.5-74.7-74.7s33.5-74.7 74.7-74.7 74.7 33.5 74.7 74.7-33.6 74.7-74.7 74.7zm146.4-194.3c0 14.9-12 26.8-26.8 26.8-14.9 0-26.8-12-26.8-26.8s12-26.8 26.8-26.8 26.8 12 26.8 26.8zm76.1 27.2c-1.7-35.9-9.9-67.7-36.2-93.9-26.2-26.2-58-34.4-93.9-36.2-37-2.1-147.9-2.1-184.9 0-35.8 1.7-67.6 9.9-93.9 36.1s-34.4 58-36.2 93.9c-2.1 37-2.1 147.9 0 184.9 1.7 35.9 9.9 67.7 36.2 93.9s58 34.4 93.9 36.2c37 2.1 147.9 2.1 184.9 0 35.9-1.7 67.7-9.9 93.9-36.2 26.2-26.2 34.4-58 36.2-93.9 2.1-37 2.1-147.8 0-184.8zM398.8 388c-7.8 19.6-22.9 34.7-42.6 42.6-29.5 11.7-99.5 9-132.1 9s-102.7 2.6-132.1-9c-19.6-7.8-34.7-22.9-42.6-42.6-11.7-29.5-9-99.5-9-132.1s-2.6-102.7 9-132.1c7.8-19.6 22.9-34.7 42.6-42.6 29.5-11.7 99.5-9 132.1-9s102.7-2.6 132.1 9c19.6 7.8 34.7 22.9 42.6 42.6 11.7 29.5 9 99.5 9 132.1s2.7 102.7-9 132.1z"/>
@@ -62,6 +65,57 @@ const LEGAL_LINKS = [
 export default function LandingFooter() {
   const { theme } = useTheme();
   const { t } = useLanguage();
+  const [email, setEmail] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const dialog = useDialog();
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim() || isLoading) return;
+
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabaseBrowser.rpc('change_newsletter_subscription', {
+        p_email: email
+      });
+
+      if (error || data?.error) throw data?.error ?? error;
+
+      const status = data?.status;
+      if (status === 'NewsletterStatus.subscribed') {
+        dialog.open(
+          <div style={{ textAlign: 'center' }}>
+            <p>{t('newsletter_subscribed')}</p>
+          </div>
+        );
+        setEmail('');
+      } else if (status === 'NewsletterStatus.unsubscribed') {
+        dialog.open(
+          <div style={{ textAlign: 'center' }}>
+            <p>{t('newsletter_unsubscribed')}</p>
+          </div>
+        );
+        setEmail('');
+      } else if (status === 'NewsletterStatus.invalid_email') {
+        dialog.open(
+          <div style={{ textAlign: 'center' }}>
+            <p>{t('invalid_email')}</p>
+          </div>
+        );
+      } else {
+        throw new Error('Unknown status');
+      }
+    } catch (err) {
+      console.error('Newsletter subscription error:', err);
+      dialog.open(
+        <div style={{ textAlign: 'center' }}>
+          <p>{t('error_occurred')}</p>
+        </div>
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <footer className={`${styles.footer} ${styles[`footer_${theme}`]}`}>
@@ -125,18 +179,22 @@ export default function LandingFooter() {
           <div className={styles.newsletterSection}>
             <h3 className={styles.linksHeading}>{t('newsletter')}</h3>
             <p className={styles.newsletterText}>{t('newsletter_text')}</p>
-            <form className={styles.newsletterForm}>
+            <form className={styles.newsletterForm} onSubmit={handleSubscribe}>
               <input
                 type="email"
                 placeholder={t('sub_email_placeholder')}
                 className={`${styles.emailInput} ${styles[`emailInput_${theme}`]}`}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={isLoading}
                 required
               />
               <button
                 type="submit"
                 className={`${styles.subscribeButton} ${styles[`subscribeButton_${theme}`]}`}
+                disabled={isLoading}
               >
-                {t('subscribe')}
+                {isLoading ? <span className={styles.spinner}></span> : t('subscribe')}
               </button>
             </form>
           </div>
@@ -159,6 +217,24 @@ export default function LandingFooter() {
           </div>
         </div>
       </div>
+
+      <dialog.DialogViewer
+        title={t('newsletter')}
+        buttons={[
+          {
+            text: t('ok_text'),
+            variant: 'primary',
+            onClick: () => dialog.close()
+          }
+        ]}
+        showCancel={false}
+        closeOnBackdrop={true}
+        layoutProp={{
+          backgroundColor: theme === 'light' ? '#fff' : '#121212',
+          margin: '16px 16px',
+          titleColor: theme === 'light' ? '#1a1a1a' : '#fff'
+        }}
+      />
     </footer>
   );
 }

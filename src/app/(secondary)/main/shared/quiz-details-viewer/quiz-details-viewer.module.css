@@ -44,6 +44,7 @@
   flex: 1;
   cursor: pointer;
   padding: 4px 0;
+  padding-bottom: 16px;
   transition: opacity 0.2s;
 }
 
@@ -77,7 +78,8 @@
   padding: 16px;
   display: flex;
   flex-direction: column;
-  padding-bottom: 40vh;
+  max-height: 80vh;
+  overflow-y: auto;
 }
 
 .dialogContainer_light {
@@ -127,7 +129,6 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  flex: 1;
   margin: 20px 0;
 }
 
@@ -178,7 +179,6 @@
   flex: 1;
   display: flex;
   justify-content: flex-end;
-  margin-bottom: 16px;
 }
 
 .codeCopyText {
@@ -281,6 +281,32 @@
   cursor: not-allowed;
 }
 
+.loveButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s;
+  color: #e74c3c;
+}
+
+.loveButton:hover {
+  transform: scale(1.1);
+}
+
+.loveButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.loveButton svg {
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
 .spinner {
   display: inline-block;
   width: 14px;
@@ -330,6 +356,7 @@
 
   .dialogContainer {
     padding: 12px;
+    padding-bottom: 12px;
   }
 
   .dialogTitle {

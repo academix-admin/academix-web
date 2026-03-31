@@ -251,40 +251,54 @@
   color: #fff;
 }
 
-.loaderTrigger {
-  width: 1px;
-  height: 1px;
-  margin-left: 20px;
+.loadMoreSentinel {
+  height: 40px;
 }
 
-.loadingOverlay {
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  width: 100px;
+.moreSpinnerContainer {
   display: flex;
-  align-items: center;
   justify-content: center;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8));
+  margin-top: 16px;
 }
 
-.topicCard_dark + .loadingOverlay {
-  background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.3));
-}
-
-.loadingSpinner {
-  width: 20px;
-  height: 20px;
-  border: 2px solid #ccc;
-  border-top: 2px solid #667eea;
+.moreSpinner {
+  border: 3px solid #1D3D1E;
+  border-top: 3px solid white;
   border-radius: 50%;
+  width: 10px;
+  height: 10px;
   animation: spin 1s linear infinite;
+  display: inline-block;
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  to { transform: rotate(360deg); }
+}
+
+.refreshIcon_light svg {
+  stroke: #000;
+}
+
+.refreshIcon_dark svg {
+  stroke: #fff;
+}
+
+.refreshSpinner {
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  animation: spin 0.8s linear infinite;
+  display: inline-block;
+}
+
+.refreshSpinner_light {
+  border-top-color: #000;
+}
+
+.refreshSpinner_dark {
+  border-top-color: #fff;
 }
 
 /* Tablet Responsive */

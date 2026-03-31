@@ -153,16 +153,30 @@ export default function AvailableQuizTopics({ onStateChange, pType }: AvailableQ
   useEffect(() => {
     if (!userData) return;
     demandUserDisplayQuizTopicModel(async ({ get, set }) => {
-      setFirstLoaded(true);
       const quizzesModel = await fetchUserDisplayQuizTopicModel(userData, 10, new PaginateModel());
       extractLatest(quizzesModel);
       set(quizzesModel);
-      setFirstLoaded(false);
+      setFirstLoaded(true);
       onStateChange?.('data');
-      // Start the first call
       refreshData();
     });
   }, [demandUserDisplayQuizTopicModel, userData]);
+
+  useEffect(() => {
+    if (filteredQuizModels.length > 0) {
+      onStateChange?.('data');
+    }
+  }, [filteredQuizModels]);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
 
 
   const callPaginate = async () => {
@@ -175,11 +189,11 @@ export default function AvailableQuizTopics({ onStateChange, pType }: AvailableQ
       processUserDisplayQuizTopicModelPaginate(quizzesModel);
     }
   };
+
   const refreshData = async () => {
     if (!userData) return;
 
     try {
-      // Skip fetch if activeQuiz is present, but continue the refresh cycle
       if (activeQuiz) {
         return;
       }
@@ -188,13 +202,11 @@ export default function AvailableQuizTopics({ onStateChange, pType }: AvailableQ
       if (quizzesModel.length > 0) {
         extractLatest(quizzesModel);
 
-        // Only update if data actually changed - compare first 10 items
         const currentFirst10 = quizModels.slice(0, 10);
         const hasChanged = JSON.stringify(quizzesModel.map(q => q.topicsId)) !==
           JSON.stringify(currentFirst10.map(q => q.topicsId));
 
         if (hasChanged) {
-          // Replace first 10 items with fresh data, keep the rest
           const updatedModels = [...quizzesModel, ...quizModels.slice(10)];
           setUserDisplayQuizTopicModel(updatedModels);
         }
@@ -202,7 +214,6 @@ export default function AvailableQuizTopics({ onStateChange, pType }: AvailableQ
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
-      // Always schedule next call if component is still mounted
       if (isMountedRef.current) {
         timeoutRef.current = setTimeout(() => {
           refreshData();
@@ -211,16 +222,7 @@ export default function AvailableQuizTopics({ onStateChange, pType }: AvailableQ
     }
   };
 
-  useEffect(() => {
-    isMountedRef.current = true;
-    // Cleanup function
-    return () => {
-      isMountedRef.current = false;
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, []);
+
 
   const checkScrollButtons = () => {
     if (!scrollContainerRef.current) return;
@@ -369,6 +371,9 @@ export default function AvailableQuizTopics({ onStateChange, pType }: AvailableQ
           </button>
         )}
       </div>
+
+      {filteredQuizModels.length > 0 && <div ref={loaderRef} className={styles.loadMoreSentinel}></div>}
+      {quizLoading && <div className={styles.moreSpinnerContainer}><span className={styles.moreSpinner}></span></div>}
     </div>
   );
 }

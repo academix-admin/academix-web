@@ -254,7 +254,8 @@
   padding: 16px;
   display: flex;
   flex-direction: column;
-  padding-bottom: 40vh;
+  max-height: 80vh;
+  overflow-y: auto;
 }
 
 .dialogContainer_light {
@@ -423,6 +424,7 @@
 
   .dialogContainer {
     padding: 12px;
+    padding-bottom: 12px;
   }
 
   .dialogTitle {

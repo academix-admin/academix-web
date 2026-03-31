@@ -645,5 +645,8 @@
   "click_to_select_image": "Cliquez pour sélectionner une image",
   "image_upload_hint": "JPG, PNG, GIF jusqu'à 5 Mo",
   "invalid_image_file": "Veuillez sélectionner un fichier image valide",
-  "image_too_large": "La taille de l'image doit être inférieure à 5 Mo"
+  "image_too_large": "La taille de l'image doit être inférieure à 5 Mo",
+  "newsletter_subscribed": "Abonné avec succès à la newsletter !",
+  "newsletter_unsubscribed": "Désabonné avec succès de la newsletter",
+  "invalid_email": "Veuillez entrer une adresse e-mail valide"
 }

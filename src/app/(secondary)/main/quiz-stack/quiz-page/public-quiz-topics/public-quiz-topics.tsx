@@ -71,27 +71,47 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
   // Subscribe to changes
   const handlePoolChange = useCallback((event: PoolChangeEvent) => {
     const { eventType, newRecord: quizPool, oldRecordId: poolsId } = event;
+    
+    // Early return if no models to update
     if (!quizModels || quizModels.length === 0) return;
 
     if (eventType === 'DELETE' && poolsId) {
-      // 🔹 Remove deleted pool
+      // Remove deleted pool
       const updatedModels = quizModels.filter(
         (m) => m.quizPool?.poolsId !== poolsId
       );
-      setUserDisplayQuizTopicModel(updatedModels);
+      
+      // Only update if something was actually removed
+      if (updatedModels.length !== quizModels.length) {
+        setUserDisplayQuizTopicModel(updatedModels);
+      }
+      return;
+    }
 
-    } else if (quizPool) {
-      // 🔹 If this updated pool should be removed (e.g., already started, closed, or cancelled)
+    if (eventType === 'UPDATE' && quizPool) {
+      // Check if this pool exists in our current list
+      const poolExists = quizModels.some((m) => m.quizPool?.poolsId === quizPool.poolsId);
+      
+      if (!poolExists) {
+        // Pool doesn't belong to this list, ignore the update
+        return;
+      }
+
+      // Check if this pool should be removed
       if (shouldRemoveOtherQuizPool(quizPool)) {
         const updatedModels = quizModels.filter(
           (m) => m.quizPool?.poolsId !== quizPool.poolsId
         );
         setUserDisplayQuizTopicModel(updatedModels);
-        if (maybeActivePoolId.current != quizPool.poolsId) poolsSubscriptionManager.removeQuizTopicPool(quizPool.poolsId);
+        
+        // Only unsubscribe if it's not the active pool the user is viewing
+        if (maybeActivePoolId.current !== quizPool.poolsId) {
+          poolsSubscriptionManager.removeQuizTopicPool(quizPool.poolsId);
+        }
         return;
       }
 
-      // 🔹 Otherwise, update the pool normally
+      // Update the pool normally
       const updatedModels = quizModels.map((m) => {
         if (m.quizPool?.poolsId === quizPool.poolsId) {
           const topicModel = UserDisplayQuizTopicModel.from(m);
@@ -260,16 +280,20 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
   useEffect(() => {
     if (!userData) return;
     demandUserDisplayQuizTopicModel(async ({ get, set }) => {
-      setFirstLoaded(true);
       const quizzesModel = await fetchUserDisplayQuizTopicModel(userData, 10, new PaginateModel());
       extractLatest(quizzesModel);
       set(quizzesModel);
-      setFirstLoaded(false);
+      setFirstLoaded(true);
       onStateChange?.('data');
-      // Start the first call
       refreshData();
     });
   }, [demandUserDisplayQuizTopicModel, userData]);
+
+  useEffect(() => {
+    if (filteredQuizModels.length > 0) {
+      onStateChange?.('data');
+    }
+  }, [filteredQuizModels]);
 
 
   const callPaginate = async () => {
@@ -287,7 +311,6 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
     if (!userData) return;
 
     try {
-      // Skip fetch if activeQuiz is present, but continue the refresh cycle
       if (activeQuiz) {
         return;
       }
@@ -296,13 +319,11 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
       if (quizzesModel.length > 0) {
         extractLatest(quizzesModel);
 
-        // Only update if data actually changed - compare first 10 items
         const currentFirst10 = quizModels.slice(0, 10);
         const hasChanged = JSON.stringify(quizzesModel.map(q => q.quizPool?.poolsId)) !==
           JSON.stringify(currentFirst10.map(q => q.quizPool?.poolsId));
 
         if (hasChanged) {
-          // Replace first 10 items with fresh data, keep the rest
           const updatedModels = [...quizzesModel, ...quizModels.slice(10)];
           setUserDisplayQuizTopicModel(updatedModels);
         }
@@ -310,7 +331,6 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
-      // Always schedule next call if component is still mounted
       if (isMountedRef.current) {
         timeoutRef.current = setTimeout(() => {
           refreshData();
@@ -321,7 +341,6 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
 
   useEffect(() => {
     isMountedRef.current = true;
-    // Cleanup function
     return () => {
       isMountedRef.current = false;
       maybeActivePoolId.current = null;
@@ -459,6 +478,9 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
           </button>
         )}
       </div>
+
+      {filteredQuizModels.length > 0 && <div ref={loaderRef} className={styles.loadMoreSentinel}></div>}
+      {quizLoading && <div className={styles.moreSpinnerContainer}><span className={styles.moreSpinner}></span></div>}
     </div>
   );
 }
@@ -523,6 +545,12 @@ function OpenQuizCard({ topic, length, getInitials, onClick }: OpenQuizCardProps
 
     const endTime = new Date(topic.quizPool.poolsJobEndAt);
     const startTime = new Date();
+
+    // Check if endTime is valid and in the future
+    if (isNaN(endTime.getTime()) || startTime >= endTime) {
+      console.warn('Invalid or past endTime, skipping timer setup');
+      return;
+    }
 
     try {
 

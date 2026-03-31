@@ -26,6 +26,8 @@ export default function QuizDetailsViewer({ topicsModel }: QuizDetailsViewerProp
   const [userImageError, setUserImageError] = useState(false);
   const [isFollowed, setIsFollowed] = useState(topicsModel.creatorIsFollowed);
   const [isFollowLoading, setIsFollowLoading] = useState(false);
+  const [isPersonalised, setIsPersonalised] = useState(topicsModel.topicIsPersonalised);
+  const [isPersonalisedLoading, setIsPersonalisedLoading] = useState(false);
   const errorDialog = useDialog();
 
   const handleCopyCode = async () => {
@@ -70,6 +72,36 @@ export default function QuizDetailsViewer({ topicsModel }: QuizDetailsViewerProp
     }
   };
 
+  const handlePersonalisedToggle = async () => {
+    if (!userData?.usersId || isPersonalisedLoading) return;
+
+    setIsPersonalisedLoading(true);
+    try {
+      const { data, error } = await supabaseBrowser.rpc('change_topic_personalised_status', {
+        p_user_id: userData.usersId,
+        p_topic_id: topicsModel.topicsId
+      });
+      
+      if (error || data?.error) throw data?.error ?? error;
+
+      const status = data?.status;
+      if (status === 'PersonalisedStatus.added') {
+        setIsPersonalised(true);
+      } else if (status === 'PersonalisedStatus.removed') {
+        setIsPersonalised(false);
+      }
+    } catch (err) {
+      console.error('Failed to toggle personalised status:', err);
+      errorDialog.open(
+        <div style={{ textAlign: 'center' }}>
+          <p>{t('error_occurred')}</p>
+        </div>
+      );
+    } finally {
+      setIsPersonalisedLoading(false);
+    }
+  };
+
   const getInitials = (text: string): string => {
     if (!text) return '?';
     return text.split(' ')
@@ -84,6 +116,20 @@ export default function QuizDetailsViewer({ topicsModel }: QuizDetailsViewerProp
         <h2 className={`${styles.details} ${styles[`details_${theme}`]}`}>
           {topicsModel.topicsIdentity}
         </h2>
+        <button
+          className={styles.loveButton}
+          onClick={handlePersonalisedToggle}
+          disabled={isPersonalisedLoading}
+          aria-label={isPersonalised ? 'Remove from personalised' : 'Add to personalised'}
+        >
+          {isPersonalisedLoading ? (
+            <span className={styles.spinner}></span>
+          ) : (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill={isPersonalised ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+            </svg>
+          )}
+        </button>
         {topicsModel.quizPool?.poolsLocale && (
           <span style={{
             padding: '4px 8px',
