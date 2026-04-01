@@ -11,6 +11,7 @@
   grid-template-columns: repeat(2, 1fr);
   gap: 16px;
   padding: 24px;
+  overflow: auto;
 }
 
 .webGrid {

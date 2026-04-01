@@ -45,7 +45,7 @@ interface SubmissionState {
   status: SubmissionStatus;
   questionId: string;
   time?: number | null;
-  questionStatus?: string | null;
+  questionStatus?: string;
   options_selected: string[];
 }
 
@@ -74,6 +74,7 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
   const { theme } = useTheme();
   const { t, lang } = useLanguage();
   const { userData } = useUserData();
+  const isMountedRef = useRef(true);
   const { replaceAndWait, pushAndWait } = useAwaitableRouter();
 
   // Dialog for confirmations
@@ -114,12 +115,10 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
   // Refs
   const quizStreamRef = useRef<RealtimeChannel | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const submissionsRef = useRef<Map<string, SubmissionState>>(new Map());
-  const closedRef = useRef<boolean>(false);
 
   // Check if quiz has ended
   const checkEnd = useCallback((): boolean => {
-    if (closedRef.current) return true;
+    if (closed) return true;
     if (!quizModel) return false;
 
     // Quiz is closed if submissions are not allowed or pool status is closed
@@ -128,11 +127,10 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
 
     if (isClosed) {
       setClosed(true);
-      closedRef.current = true;
     }
 
     return isClosed;
-  }, [quizModel]);
+  }, [closed, quizModel]);
 
   // Check if a question is valid for submission but not yet submitted
   const validForNotSubmitted = useCallback((question: PoolQuestion): boolean => {
@@ -165,8 +163,8 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
         status: q.questionTime != null ? 'data' as SubmissionStatus : 'initial',
         questionId: q.poolsQuestionId,
         time: q.questionTime,
-        questionStatus: q.questionStatus,
-        options_selected: q.optionsSelected ?? []
+        questionStatus: undefined,
+        options_selected: []
       }])
     );
 
@@ -262,8 +260,7 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
   const submitQuestionToBackend = useCallback(async (question: PoolQuestion, timeTaken: number, override: boolean = false) => {
     if (!userData) throw new Error('User not authenticated');
 
-    // Use ref for stale-closure-safe duplicate check
-    const submission = submissionsRef.current.get(question.poolsQuestionId);
+    const submission = quizSession.submissions.get(question.poolsQuestionId);
     if ((submission?.status === 'loading' || submission?.status === 'data') && !override) {
       return;
     }
@@ -301,7 +298,6 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
         questionStatus: undefined,
         options_selected: prev.submissions.get(question.poolsQuestionId)?.options_selected ?? []
       });
-      submissionsRef.current = newSubmissions;
       return { ...prev, submissions: newSubmissions };
     });
 
@@ -320,7 +316,7 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
 
       if (data.status === 'Submission.success' || data.status === 'Submission.duplicate') {
         // Keep original questionStatus format from backend
-        const questionStatus = data.question_status;
+        const questionStatus = data.question_status || data.questionStatus;
         const options_selected: string[] = data.options_selected ?? [];
 
         // Update submission status to successful
@@ -344,7 +340,6 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
             questionStatus: questionStatus,
             options_selected
           });
-          submissionsRef.current = newSubmissions;
 
           return {
             ...prev,
@@ -367,7 +362,7 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
           return { ...prev, submissions: newSubmissions };
         });
         setClosed(true);
-        closedRef.current = true;
+        determineState();
       } else {
         setQuizSession(prev => {
           const newSubmissions = new Map(prev.submissions);
@@ -396,12 +391,7 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
         return { ...prev, submissions: newSubmissions };
       });
     }
-  }, [userData, lang]);
-
-  // Sync submissionsRef with quizSession.submissions
-  useEffect(() => {
-    submissionsRef.current = quizSession.submissions;
-  }, [quizSession.submissions]);
+  }, [userData, lang, quizSession]);
 
   // Handle question submission
   const handleSubmitQuestion = useCallback(
@@ -470,13 +460,13 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
 
   // Automatically submit questions that are valid but not submitted
   const automateSubmit = useCallback(async () => {
-    if (closedRef.current) return;
+    if (closed) return;
 
     // Find questions that are valid for submission but not yet submitted
     const questionsToSubmit = quizSession.completedQuestions.filter(validForNotSubmitted);
 
     for (const question of questionsToSubmit) {
-      if (closedRef.current) break;
+      if (closed) break;
 
       // Create PoolQuestion instance - this should never be null
       const poolQuestion = PoolQuestion.from(question);
@@ -486,7 +476,7 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
 
       submitQuestionToBackend(question, timeTaken);
     }
-  }, [quizSession.completedQuestions, validForNotSubmitted, submitQuestionToBackend]);
+  }, [quizSession.completedQuestions, validForNotSubmitted, submitQuestionToBackend, closed]);
 
   // Check if user can resubmit a question
   const canResubmit = useCallback((questionId: string): boolean => {
@@ -548,13 +538,10 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
             setQuizTimerValue(prev => {
               const newValue = prev - 1;
 
-              if (newValue <= 0 || closedRef.current) {
-                if (timerRef.current) {
-                  clearInterval(timerRef.current);
-                  timerRef.current = null;
-                }
-                setIsTimerActive(false);
-                if (newValue <= 0 && !closedRef.current) {
+              if (newValue <= 0 || closed) {
+                cleanUpQuizTimer();
+                // When timer reaches zero, mark as expired and capture end time
+                if (newValue <= 0 && !closed) {
                   setTimerExpired(true);
                   setActualEndTime(new Date().toISOString());
                 }
@@ -734,7 +721,7 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
       // Determine status based on both submission record AND question state
       let status: SubmissionStatus = 'initial';
       let time = 0;
-      let questionStatus: string | null | undefined = undefined;
+      let questionStatus: string | undefined = undefined;
 
       if (submission) {
         status = submission.status;
@@ -857,8 +844,13 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
   }, [cleanUpQuizTimer]);
 
   useEffect(() => {
+    isMountedRef.current = true;
+    // Cleanup function
     return () => {
-      StateStack.core.clearScope('quiz_pool_flow');
+      if (isMountedRef.current) {
+        StateStack.core.clearScope('quiz_pool_flow');
+      }
+      isMountedRef.current = false;
     };
   }, []);
 
@@ -918,13 +910,33 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
     }
   }, [replaceAndWait]);
 
-  const handleConfirmExit = useCallback(async () => {
+  const handleConfirmLeave = useCallback(async () => {
     setIsNavigating(true);
     try {
       setAllowNavigation(true);
       const result = await replaceAndWait('/main');
       if (!result.success) {
         console.error('Navigation failed:', result.error);
+        // Fallback to window.location if router fails
+        window.location.href = '/main';
+      }
+    } catch (error) {
+      console.error('Navigation error:', error);
+      window.location.href = '/main';
+    } finally {
+      closeDialog();
+      setIsNavigating(false);
+    }
+  }, [closeDialog, replaceAndWait]);
+
+  const handleConfirmBack = useCallback(async () => {
+    setIsNavigating(true);
+    try {
+      setAllowNavigation(true);
+      const result = await replaceAndWait('/main');
+      if (!result.success) {
+        console.error('Navigation failed:', result.error);
+        // Fallback to window.location if router fails
         window.location.href = '/main';
       }
     } catch (error) {
@@ -1012,7 +1024,7 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
             text: isNavigating ? '' : t('yes_text'),
             variant: 'danger' as const,
             loading: isNavigating,
-            onClick: handleConfirmExit
+            onClick: dialogType === 'exit' ? handleConfirmLeave : handleConfirmBack
           }
         ]}
         showCancel={true}

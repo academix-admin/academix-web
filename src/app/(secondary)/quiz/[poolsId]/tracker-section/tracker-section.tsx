@@ -43,7 +43,7 @@ const StatusBadge = ({ status, time, onRetry, canResubmit, questionId, questionS
   onRetry: (questionId: string) => void;
   canResubmit: boolean;
   questionId: string;
-  questionStatus?: string;
+  questionStatus?: string | null;
   options_selected: string[];
 }) => {
   const { theme } = useTheme();
@@ -141,7 +141,7 @@ const QuestionCard = ({
   onRetry: (questionId: string) => void;
   canResubmit: boolean;
   questionId: string;
-  questionStatus?: string;
+  questionStatus?: string | null;
   options_selected: string[];
 }) => {
   const { theme } = useTheme();

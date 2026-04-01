@@ -32,6 +32,8 @@ export interface BackendPoolTypeModel {
 export interface BackendPoolQuestion {
   pools_question_id: string;
   question_time?: number | null;
+  question_status?: string | null;
+  options_selected?: string[] | null;
   question_time_data: BackendPoolTimeModel;
   question_type_data: BackendPoolTypeModel;
   question_data: BackendQuestionModel;
@@ -215,6 +217,8 @@ export class PoolTypeModel {
 export class PoolQuestion {
   poolsQuestionId: string;
   questionTime?: number | null;
+  questionStatus?: string | null;
+  optionsSelected?: string[] | null;
   timeData: PoolTimeModel;
   typeData: PoolTypeModel;
   questionData: QuestionModel;
@@ -225,10 +229,12 @@ export class PoolQuestion {
   constructor(data?: BackendPoolQuestion | null) {
     this.poolsQuestionId = data?.pools_question_id ?? "";
     this.questionTime = data?.question_time ?? null;
+    this.questionStatus = data?.question_status ?? null;
+    this.optionsSelected = data?.options_selected ?? null;
     this.timeData = new PoolTimeModel(data?.question_time_data ?? null);
     this.typeData = new PoolTypeModel(data?.question_type_data ?? null);
     this.questionData = new QuestionModel(data?.question_data ?? null);
-    this.optionData = data?.options_data?.map(o => new OptionModel(o)) ?? [] ;
+    this.optionData = data?.options_data?.map(o => new OptionModel(o)) ?? [];
   }
 
   static from(data: any): PoolQuestion {
@@ -236,6 +242,8 @@ export class PoolQuestion {
     return new PoolQuestion({
       pools_question_id: data.poolsQuestionId,
       question_time: data.questionTime,
+      question_status: data.questionStatus,
+      options_selected: data.optionsSelected,
       question_time_data: PoolTimeModel.from(data.timeData).toBackend(),
       question_type_data: PoolTypeModel.from(data.typeData).toBackend(),
       question_data: QuestionModel.from(data.questionData).toBackend(),
@@ -247,6 +255,8 @@ export class PoolQuestion {
     return {
       pools_question_id: this.poolsQuestionId,
       question_time: this.questionTime ?? null,
+      question_status: this.questionStatus ?? null,
+      options_selected: this.optionsSelected ?? null,
       question_time_data: this.timeData.toBackend(),
       question_type_data: this.typeData.toBackend(),
       question_data: this.questionData.toBackend(),
@@ -258,6 +268,8 @@ export class PoolQuestion {
     return new PoolQuestion({
       pools_question_id: update.poolsQuestionId ?? this.poolsQuestionId,
       question_time: update.questionTime ?? this.questionTime,
+      question_status: update.questionStatus ?? this.questionStatus,
+      options_selected: update.optionsSelected ?? this.optionsSelected,
       question_time_data: (update.timeData ?? this.timeData).toBackend(),
       question_type_data: (update.typeData ?? this.typeData).toBackend(),
       question_data: (update.questionData ?? this.questionData).toBackend(),
