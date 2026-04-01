@@ -599,7 +599,9 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
     const isQuizClosed = checkEnd();
 
     if (isQuizClosed) {
-      if (quizState !== 'quizEnd') {
+      const isAfterClosed = quizState === 'quizReward';
+
+      if (quizState !== 'quizEnd' && !isAfterClosed) {
         setQuizState('quizEnd');
       }
       return;
@@ -774,18 +776,8 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
   ]);
 
 
-  const checkToRefreshOrResult = useCallback(async () => {
-    if (!quizModel || !userData) return;
-
-    if (quizModel.poolsCompletedAt) {
-      setQuizState('quizReward');
-    } else {
-      await callToRefreshQuizPool(userData, quizModel.poolsId);
-    }
-  }, [quizModel, userData]);
-
-  const callToRefreshQuizPool = async (userData: UserData, poolsId: string) => {
-    if (refreshLoading) return;
+  const callToRefreshQuizPool = useCallback(async () => {
+    if (refreshLoading || !userData || !quizModel) return;
 
     try {
       setRefreshLoading(true);
@@ -797,10 +789,7 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
         userData.usersDob
       );
 
-      if (!paramatical) {
-        setRefreshLoading(false);
-        return;
-      }
+      if (!paramatical) return;
 
       const { data, error } = await supabaseBrowser.rpc("result_quiz_pool_update", {
         p_user_id: userData.usersId,
@@ -808,29 +797,26 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
         p_country: paramatical.country,
         p_gender: paramatical.gender,
         p_age: paramatical.age,
-        p_pool_id: poolsId
+        p_pool_id: quizModel.poolsId
       });
 
-      if (error) {
-        setRefreshLoading(false);
-        return;
+      if (!error && data?.status === 'Pool.allowed') {
+        setQuizModel(new QuizPool(data.pools_quiz));
       }
-
-      if (!data) {
-        setRefreshLoading(false);
-        return;
-      }
-
-      if (data.status === 'Pool.allowed') {
-        const quizPool = new QuizPool(data.pools_quiz);
-        setQuizModel(quizPool);
-      }
-
-      setRefreshLoading(false);
-    } catch (err) {
+    } finally {
       setRefreshLoading(false);
     }
-  };
+  }, [refreshLoading, userData, lang, quizModel, setQuizModel]);
+
+  const checkToRefreshOrResult = useCallback(async () => {
+    if (!quizModel || !userData) return;
+
+    if (quizModel.poolsCompletedAt) {
+      setQuizState('quizReward');
+    } else {
+      await callToRefreshQuizPool();
+    }
+  }, [quizModel, userData, callToRefreshQuizPool]);
 
 
   // Reset timer expired state when quiz model changes or component mounts
