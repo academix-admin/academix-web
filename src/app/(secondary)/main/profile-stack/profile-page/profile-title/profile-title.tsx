@@ -83,14 +83,16 @@ export default function ProfileTitle({ onStateChange }: ComponentStateProps) {
     if (userData) {
       try {
         setSigningOut(true);
+        // console.log('Signing out user:', userData);
         await supabaseBrowser.auth.signOut();
-        await StateStack.core.clearScope('secondary_flow');
-        await StateStack.core.clearScope('mission_flow');
-        await StateStack.core.clearScope('achievements_flow');
-        await StateStack.core.clearScope('payment_flow');
-        sessionStorage.clear();
-        __meta.clear();
-        await replaceAndWait("/");
+        // console.log('User signed out successfully');
+        // await StateStack.core.clearScope('secondary_flow');
+        // await StateStack.core.clearScope('mission_flow');
+        // await StateStack.core.clearScope('achievements_flow');
+        // await StateStack.core.clearScope('payment_flow');
+        // sessionStorage.clear();
+        // __meta.clear();
+        // await replaceAndWait("/");
       } catch (error) {
         console.error('Sign out error:', error);
         setSigningOut(false);
