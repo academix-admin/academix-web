@@ -4,14 +4,10 @@ import { useEffect, useState } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import styles from './profile-title.module.css';
 import { useLanguage, SUPPORTED_LANGUAGES, LANGUAGE_NAMES, SupportedLang } from '@/context/LanguageContext';
-import { getLastNameOrSingle, capitalize } from '@/utils/textUtils';
 import { ComponentStateProps } from '@/hooks/use-component-state';
 import { useUserData } from '@/lib/stacks/user-stack';
-import { useAwaitableRouter } from "@/hooks/useAwaitableRouter";
 import { supabaseBrowser } from '@/lib/supabase/client';
-import { StateStack } from '@/lib/state-stack';
 import { useDialog } from '@/lib/DialogViewer';
-import { useRouter } from 'next/navigation';
 import { SelectionViewer, useSelectionController } from "@/lib/SelectionViewer";
 import DialogCancel from '@/components/DialogCancel';
 
@@ -37,9 +33,7 @@ const LanguageItem = ({ onClick, text }: { onClick: () => void; text: string }) 
 export default function ProfileTitle({ onStateChange }: ComponentStateProps) {
   const { theme, storedTheme, cycleTheme } = useTheme();
   const { t, lang, setLang } = useLanguage();
-  const { userData, userData$, __meta } = useUserData();
-  const { replaceAndWait } = useAwaitableRouter();
-  const router = useRouter();
+  const { userData } = useUserData();
   const signOutDialog = useDialog();
   const confirmDialog = useDialog();
   const [signingOut, setSigningOut] = useState(false);
@@ -83,16 +77,7 @@ export default function ProfileTitle({ onStateChange }: ComponentStateProps) {
     if (userData) {
       try {
         setSigningOut(true);
-        // console.log('Signing out user:', userData);
         await supabaseBrowser.auth.signOut();
-        // console.log('User signed out successfully');
-        // await StateStack.core.clearScope('secondary_flow');
-        // await StateStack.core.clearScope('mission_flow');
-        // await StateStack.core.clearScope('achievements_flow');
-        // await StateStack.core.clearScope('payment_flow');
-        // sessionStorage.clear();
-        // __meta.clear();
-        // await replaceAndWait("/");
       } catch (error) {
         console.error('Sign out error:', error);
         setSigningOut(false);

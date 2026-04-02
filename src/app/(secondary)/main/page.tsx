@@ -13,10 +13,7 @@ import { PaymentStack } from './payment-stack/payment-stack';
 import { ProfileStack } from './profile-stack/profile-stack';
 import { useLanguage } from '@/context/LanguageContext';
 import Image from 'next/image';
-import { UserData } from '@/models/user-data';
 import { useUserData } from '@/lib/stacks/user-stack';
-import { supabaseBrowser } from '@/lib/supabase/client';
-import { StateStack } from '@/lib/state-stack';
 
 const Main = () => {
   const { theme } = useTheme();
@@ -24,34 +21,6 @@ const Main = () => {
   const [active, setActive] = useState('home-stack');
   const { userData, userData$, __meta } = useUserData();
   const navBarScrollRef = useRef<(event: NavigationBarScrollEvent) => void>(null);
-
-  // useEffect(() => {
-
-  //   const handleSignOut = async () => {
-  //     if (!userData && __meta.isHydrated) {
-  //       try {
-  //         await supabaseBrowser.auth.signOut();
-  //         await StateStack.core.clearScope('secondary_flow');
-  //         await StateStack.core.clearScope('mission_flow');
-  //         await StateStack.core.clearScope('achievements_flow');
-  //         await StateStack.core.clearScope('payment_flow');
-  //         await StateStack.core.clearScope('top-up-flow'),
-  //         await StateStack.core.clearScope('withdraw-flow'),
-  //         await StateStack.core.clearScope('roles-flow'),
-  //         await StateStack.core.clearScope('redeem_code_flow')
-  //         sessionStorage.clear();
-  //       } catch (error) {
-  //         console.error('Sign out error:', error);
-  //       }
-  //     }
-  //   };
-
-  //   handleSignOut();
-  // }, [userData, __meta.isHydrated]);
-
-  // NOTE: NavigationBar will subscribe directly via the `onScroll` prop.
-  // We no longer forward events here to avoid ordering races and duplicated delivery.
-
 
   const navStackMap = new Map([
     ['home-stack', <HomeStack />],
