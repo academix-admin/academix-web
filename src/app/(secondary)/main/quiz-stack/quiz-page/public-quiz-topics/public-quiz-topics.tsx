@@ -464,6 +464,8 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
                   onClick={() => handleTopicClick(topic)}
                 />
               ))}
+              {filteredQuizModels.length > 1 && <div ref={loaderRef} className={styles.loadMoreSentinel}></div>}
+              {quizLoading && <div className={styles.moreSpinnerContainer}><span className={styles.moreSpinner}></span></div>}
             </div>
           </div>
         </div>
@@ -478,9 +480,6 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
           </button>
         )}
       </div>
-
-      {filteredQuizModels.length > 0 && <div ref={loaderRef} className={styles.loadMoreSentinel}></div>}
-      {quizLoading && <div className={styles.moreSpinnerContainer}><span className={styles.moreSpinner}></span></div>}
     </div>
   );
 }

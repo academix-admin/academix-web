@@ -357,6 +357,8 @@ export default function AvailableQuizTopics({ onStateChange, pType }: AvailableQ
                   ))}
                 </div>
               ))}
+              {filteredQuizModels.length > 2 && <div ref={loaderRef} className={styles.loadMoreSentinel}></div>}
+              {quizLoading && <div className={styles.moreSpinnerContainer}><span className={styles.moreSpinner}></span></div>}
             </div>
           </div>
         </div>
@@ -371,9 +373,6 @@ export default function AvailableQuizTopics({ onStateChange, pType }: AvailableQ
           </button>
         )}
       </div>
-
-      {filteredQuizModels.length > 0 && <div ref={loaderRef} className={styles.loadMoreSentinel}></div>}
-      {quizLoading && <div className={styles.moreSpinnerContainer}><span className={styles.moreSpinner}></span></div>}
     </div>
   );
 }

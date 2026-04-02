@@ -33,6 +33,7 @@ export default function PaymentAction({ onStateChange }: ComponentStateProps) {
         break;
       case 'statements':
         // Handle statements action
+        nav.push('statements_page');
         break;
       default:
         break;

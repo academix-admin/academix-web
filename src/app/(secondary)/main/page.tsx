@@ -25,29 +25,29 @@ const Main = () => {
   const { userData, userData$, __meta } = useUserData();
   const navBarScrollRef = useRef<(event: NavigationBarScrollEvent) => void>(null);
 
-  useEffect(() => {
+  // useEffect(() => {
 
-    const handleSignOut = async () => {
-      if (!userData && __meta.isHydrated) {
-        try {
-          await supabaseBrowser.auth.signOut();
-          await StateStack.core.clearScope('secondary_flow');
-          await StateStack.core.clearScope('mission_flow');
-          await StateStack.core.clearScope('achievements_flow');
-          await StateStack.core.clearScope('payment_flow');
-          await StateStack.core.clearScope('top-up-flow'),
-          await StateStack.core.clearScope('withdraw-flow'),
-          await StateStack.core.clearScope('roles-flow'),
-          await StateStack.core.clearScope('redeem_code_flow')
-          sessionStorage.clear();
-        } catch (error) {
-          console.error('Sign out error:', error);
-        }
-      }
-    };
+  //   const handleSignOut = async () => {
+  //     if (!userData && __meta.isHydrated) {
+  //       try {
+  //         await supabaseBrowser.auth.signOut();
+  //         await StateStack.core.clearScope('secondary_flow');
+  //         await StateStack.core.clearScope('mission_flow');
+  //         await StateStack.core.clearScope('achievements_flow');
+  //         await StateStack.core.clearScope('payment_flow');
+  //         await StateStack.core.clearScope('top-up-flow'),
+  //         await StateStack.core.clearScope('withdraw-flow'),
+  //         await StateStack.core.clearScope('roles-flow'),
+  //         await StateStack.core.clearScope('redeem_code_flow')
+  //         sessionStorage.clear();
+  //       } catch (error) {
+  //         console.error('Sign out error:', error);
+  //       }
+  //     }
+  //   };
 
-    handleSignOut();
-  }, [userData, __meta.isHydrated]);
+  //   handleSignOut();
+  // }, [userData, __meta.isHydrated]);
 
   // NOTE: NavigationBar will subscribe directly via the `onScroll` prop.
   // We no longer forward events here to avoid ordering races and duplicated delivery.

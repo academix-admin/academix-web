@@ -7,6 +7,7 @@ import NavigationStack from "@/lib/NavigationStack";
 import PaymentPage from "./payment-page/payment-page";
 import TopUpPage from "./top-up-page/top-up-page";
 import WithdrawPage from "./withdraw-page/withdraw-page";
+import StatementsPage from "./statements-page/statements-page";
 import ViewTransactionPage from "../shared/view-transaction-page/view-transaction-page";
 import NewProfilePage from "../shared/new-profile-page/new-profile-page";
 import RatesPage from "../shared/rates-page/rates-page";
@@ -19,7 +20,8 @@ const paymentStackNavLink = {
   new_profile: NewProfilePage,
   withdraw_page: WithdrawPage,
   rates_page: RatesPage,
-  pin: Pin
+  pin: Pin,
+  statements_page: StatementsPage
 };
 
 export const PaymentStack = () => (

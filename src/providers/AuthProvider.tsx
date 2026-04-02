@@ -35,20 +35,34 @@ function matchesRoutePattern(
   return patterns.some(pattern => {
     if (typeof pattern === 'string') {
       switch (matchType) {
-        case 'exact':
-          return pathname === pattern;
-        case 'startsWith':
-          return pathname.startsWith(pattern);
-        case 'endsWith':
-          return pathname.endsWith(pattern);
-        default:
-          return pathname === pattern;
+        case 'exact':     return pathname === pattern;
+        case 'startsWith': return pathname.startsWith(pattern);
+        case 'endsWith':  return pathname.endsWith(pattern);
+        default:          return pathname === pattern;
       }
-    } else if (pattern instanceof RegExp) {
-      return pattern.test(pathname);
     }
-    return false;
+    return pattern instanceof RegExp ? pattern.test(pathname) : false;
   });
+}
+
+// Lifted out — no need to recreate on every render
+function isSessionExpired(sess: Session | null): boolean {
+  if (!sess) return true;
+  if (!sess.expires_at) return false;
+  const now = Math.floor(Date.now() / 1000);
+  const expired = now > sess.expires_at;
+  if (expired) console.log('[AUTH] Session expired', { expiresAt: sess.expires_at, now });
+  return expired;
+}
+
+const FLOW_SCOPES = [
+  'mission_flow', 'achievements_flow', 'payment_flow', 'secondary_flow',
+  'top-up-flow', 'withdraw-flow', 'roles-flow', 'redeem_code_flow',
+] as const;
+
+async function clearAllScopes() {
+  await Promise.all(FLOW_SCOPES.map(s => StateStack.core.clearScope(s)));
+  sessionStorage.clear();
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -59,33 +73,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { userData, __meta } = useUserData();
   const { replaceAndWait } = useAwaitableRouter({ timeout: 8000, enableLogging: true });
 
-  const publicRoutes = ['/rules', '/payout', '/rewards', '/rates', '/about', '/help', '/instructions', /^\/redirect(\/[a-f0-9-]+)?$/];
-  const internalRoutes = ['/', '/login', '/signup', '/welcome'];
-  const protectedRoutes = ['/main', '/quiz', /^\/quiz\/[a-f0-9-]+$/];
+  const publicRoutes:   RoutePattern[] = ['/rules', '/payout', '/rewards', '/rates', '/about', '/help', '/instructions', /^\/redirect(\/[a-f0-9-]+)?$/];
+  const internalRoutes: RoutePattern[] = ['/', '/login', '/signup', '/welcome'];
+  const protectedRoutes: RoutePattern[] = ['/main', '/quiz', /^\/quiz\/[a-f0-9-]+$/];
 
-  const isSessionExpired = (sess: Session | null): boolean => {
-    if (!sess) return true;
-    const expiresAt = sess.expires_at;
-    if (!expiresAt) return false;
-    const now = Math.floor(Date.now() / 1000);
-    const isExpired = now > expiresAt;
-    if (isExpired) {
-      console.log('[AUTH] Session expired', { expiresAt, now, diff: now - expiresAt });
-    }
-    return isExpired;
-  };
-
+  // ─── Effect 1: auth init + subscription ───────────────────────────────────
+  // Runs once when hydrated. The subscription stays alive for the component's
+  // lifetime — never torn down by pathname or userData changes.
   useEffect(() => {
     const isPublicRoute = matchesRoutePattern(pathname, publicRoutes);
-    
-    if (isPublicRoute && typeof window !== "undefined") {
+
+    if (isPublicRoute) {
       setInitialized(true);
     }
 
-    if (!__meta.isHydrated || typeof window === "undefined") return;
+    if (!__meta.isHydrated || typeof window === 'undefined') return;
 
     let mounted = true;
-    let unsubscribe: (() => void) | undefined;
 
     const initializeAuth = async () => {
       try {
@@ -94,10 +98,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           supabaseBrowser.auth.getSession(),
         ]);
 
-        const initialUser = userResult.data.user;
-        const initialSession = sessionResult.data.session;
-
         if (!mounted) return;
+
+        const initialUser    = userResult.data.user;
+        const initialSession = sessionResult.data.session;
 
         if (isSessionExpired(initialSession)) {
           setUser(null);
@@ -107,79 +111,85 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setSession(initialSession);
         }
 
-        // Only redirect if not on public route
-        if (initialUser && userData && matchesRoutePattern(pathname, internalRoutes)) {
-           await replaceAndWait("/main");
-        }
-
+        // ─── Subscription ─────────────────────────────────────────────────
         const { data: { subscription } } = supabaseBrowser.auth.onAuthStateChange(
           async (event, newSession) => {
             if (!mounted) return;
+            console.log('[AUTH] onAuthStateChange', event);
 
-            if (isSessionExpired(newSession)) {
-              console.log('[AUTH] Received expired session, treating as logout');
+            if (!newSession || isSessionExpired(newSession)) {
               setSession(null);
               setUser(null);
-
-              await Promise.all([
-                StateStack.core.clearScope('mission_flow'),
-                StateStack.core.clearScope('achievements_flow'),
-                StateStack.core.clearScope('payment_flow'),
-                StateStack.core.clearScope('secondary_flow'),
-                StateStack.core.clearScope('top-up-flow'),
-                StateStack.core.clearScope('withdraw-flow'),
-                StateStack.core.clearScope('roles-flow'),
-                StateStack.core.clearScope('roles-flow'),
-                StateStack.core.clearScope('redeem_code_flow'),
-              ]);
-              sessionStorage.clear();
-              if (matchesRoutePattern(pathname, protectedRoutes)) {
-                await replaceAndWait("/");
-              }
+              await clearAllScopes();
             } else {
               setSession(newSession);
-              setUser(newSession?.user ?? null);
-
-              if (!newSession) {
-                await Promise.all([
-                  StateStack.core.clearScope('mission_flow'),
-                  StateStack.core.clearScope('achievements_flow'),
-                  StateStack.core.clearScope('payment_flow'),
-                  StateStack.core.clearScope('secondary_flow'),
-                  StateStack.core.clearScope('top-up-flow'),
-                  StateStack.core.clearScope('withdraw-flow'),
-                  StateStack.core.clearScope('roles-flow'),
-                  StateStack.core.clearScope('redeem_code_flow')
-                ]);
-                sessionStorage.clear();
-                if (matchesRoutePattern(pathname, protectedRoutes)) {
-                  await replaceAndWait("/");
-                }
-              }
+              setUser(newSession.user ?? null);
             }
           }
         );
 
-        unsubscribe = () => subscription.unsubscribe();
-
         if (mounted) setInitialized(true);
+
+        return () => subscription.unsubscribe();
       } catch (error) {
         console.error('[AUTH] Initialization error:', error);
         if (mounted) setInitialized(true);
       }
     };
 
-    initializeAuth();
+    const cleanup = initializeAuth();
+
+    // ─── Tab visibility: re-validate session on return from idle ──────────
+    const handleVisibilityChange = async () => {
+      if (document.visibilityState !== 'visible') return;
+      const { data: { session: freshSession } } = await supabaseBrowser.auth.getSession();
+      if (!mounted) return;
+      if (isSessionExpired(freshSession)) {
+        setSession(null);
+        setUser(null);
+        await clearAllScopes();
+      } else {
+        setSession(freshSession);
+        setUser(freshSession?.user ?? null);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
       mounted = false;
-      if (unsubscribe) unsubscribe();
+      cleanup?.then(unsub => unsub?.());
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [__meta.isHydrated, userData, pathname]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [__meta.isHydrated]); // ← Only re-init if hydration state changes
+
+  // ─── Effect 2: redirect guard ─────────────────────────────────────────────
+  // Decoupled from subscription setup. Runs whenever route, session, or
+  // userData changes — the fast reactive path.
+  useEffect(() => {
+    if (!initialized || typeof window === 'undefined') return;
+
+    const hasSession = !!session && !isSessionExpired(session);
+
+    if (hasSession && userData && matchesRoutePattern(pathname, internalRoutes)) {
+      replaceAndWait('/main');
+      return;
+    }
+
+    if (!hasSession && matchesRoutePattern(pathname, protectedRoutes)) {
+      replaceAndWait('/');
+    }
+  }, [initialized, session, userData, pathname]);
 
   return (
-    <AuthContext.Provider value={{ initialized, session, userData, hasValidSession: !!session && !isSessionExpired(session) }}>
-      <AuthBlocker children={children}/>
+    <AuthContext.Provider value={{
+      initialized,
+      session,
+      userData,
+      hasValidSession: !!session && !isSessionExpired(session),
+    }}>
+      <AuthBlocker children={children} />
     </AuthContext.Provider>
   );
 }
