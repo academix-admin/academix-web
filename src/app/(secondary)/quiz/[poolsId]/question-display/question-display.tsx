@@ -1007,6 +1007,18 @@ export default function QuestionDisplay({ question, onAnswer, onSubmit, getQuest
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Shuffle options once when question changes
+  const shuffledOptions = useMemo(() => {
+    if (!question) return [];
+    const options = [...question.optionData];
+    // Fisher-Yates shuffle algorithm
+    for (let i = options.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [options[i], options[j]] = [options[j], options[i]];
+    }
+    return options;
+  }, [question?.poolsQuestionId]); // Only reshuffle when question ID changes
+
   const {
     remainingTime,
     progress,
@@ -1047,7 +1059,7 @@ export default function QuestionDisplay({ question, onAnswer, onSubmit, getQuest
   const renderOptionType = (type: string,displayType: DisplayType = 'mobile') => {
     if (!question) return null;
     const commonProps = {
-      optionData: question.optionData,
+      optionData: shuffledOptions,
       displayType,
     };
 
