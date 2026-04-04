@@ -149,13 +149,19 @@ export default function PaymentWallet({ profileType, onWalletData, onWalletAmoun
         return;
       }
 
+      if (!userData.countryTable) {
+        console.error("[UserTopUpWallet] error: countryTable is null");
+        setUserWalletState('error');
+        return;
+      }
+
       const { data, error } = await supabaseBrowser.rpc(profileType === 'ProfileType.buy' ? "fetch_user_top_up_wallet" : "fetch_user_withdraw_wallets", {
         p_user_id: paramatical.usersId,
         p_locale: paramatical.locale,
         p_country: paramatical.country,
         p_gender: paramatical.gender,
         p_age: paramatical.age,
-        p_country_id: userData.countryId
+        p_country_id: userData.countryTable.countryId
       });
 
       if (error) {
