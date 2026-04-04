@@ -516,6 +516,29 @@
   opacity: 0.7;
 }
 
+.checkPoolDetailsButton {
+  width: 100%;
+  padding: 16px;
+  margin-top: 24px;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 16px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  box-sizing: border-box;
+}
+
+.checkPoolDetailsButton:hover {
+  background: #5a6fd8;
+}
+
+.checkPoolDetailsButton:active {
+  background: #4e5fc4;
+}
+
 
 
 @media screen and (min-width: 800px) {
@@ -526,6 +549,10 @@
   .detailsCard{
       width: 80vw;
       max-width: 60%;
+  }
+  .checkPoolDetailsButton {
+    width: 80vw;
+    max-width: 60%;
   }
 }
 
@@ -562,6 +589,11 @@
       .detailsCard{
           width: 80vw;
       }
+
+      .checkPoolDetailsButton {
+        width: 80vw;
+      }
+
 .statusRow {
   gap: 10px;
 }
@@ -611,11 +643,16 @@
     .detailsCard{
         width: 85vw;
     }
+
+    .checkPoolDetailsButton {
+      width: 85vw;
+      padding: 14px;
+      font-size: 15px;
+    }
+
 .statusRow {
   gap: 8px;
 }
-
-
 }
 
 

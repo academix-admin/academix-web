@@ -42,25 +42,30 @@ const getSpecialCharacters = (value: string): string[] => {
 };
 
 // Common edit button component
-const EditButton = ({ onClick }: { onClick: () => void }) => (
-  <svg
-    role="button"
-    onClick={onClick}
-    fill="none"
-    height="22"
-    viewBox="0 0 22 22"
-    width="22"
-    xmlns="http://www.w3.org/2000/svg"
-    className={styles.editButton}
-  >
-    <path
-      clipRule="evenodd"
-      d="M4.77514 0.342973C8.91238 -0.114324 13.0875 -0.114324 17.2248 0.342973C19.5155 0.599286 21.3635 2.40015 21.6323 4.69496C22.1226 8.88407 22.1226 13.1159 21.6323 17.305C21.3635 19.5998 19.5155 21.4007 17.2248 21.657C13.0875 22.1143 8.91238 22.1143 4.77514 21.657C2.48446 21.4007 0.636401 19.5998 0.367617 17.305C-0.122539 13.1164 -0.122539 8.88497 0.367617 4.69629C0.503571 3.58143 1.01267 2.54506 1.81241 1.75516C2.61215 0.965259 3.65565 0.468118 4.7738 0.344308M11 4.33452C11.266 4.33452 11.5211 4.44 11.7091 4.62777C11.8972 4.81554 12.0029 5.0702 12.0029 5.33574V9.99878H16.6738C16.9398 9.99878 17.1949 10.1043 17.383 10.292C17.5711 10.4798 17.6768 10.7345 17.6768 11C17.6768 11.2655 17.5711 11.5202 17.383 11.708C17.1949 11.8957 16.9398 12.0012 16.6738 12.0012H12.0029V16.6643C12.0029 16.9298 11.8972 17.1845 11.7091 17.3722C11.5211 17.56 11.266 17.6655 11 17.6655C10.734 17.6655 10.4789 17.56 10.2908 17.3722C10.1027 17.1845 9.99704 16.9298 9.99704 16.6643V12.0012H5.32608C5.06009 12.0012 4.80499 11.8957 4.6169 11.708C4.42882 11.5202 4.32315 11.2655 4.32315 11C4.32315 10.7345 4.42882 10.4798 4.6169 10.292C4.80499 10.1043 5.06009 9.99878 5.32608 9.99878H9.99704V5.33574C9.99704 5.0702 10.1027 4.81554 10.2908 4.62777C10.4789 4.44 10.734 4.33452 11 4.33452Z"
-      fill="#1C6B1E"
-      fillRule="evenodd"
-    />
-  </svg>
-);
+const EditButton = ({ onClick }: { onClick: () => void }) => {
+  const { theme } = useTheme();
+  
+  return (
+    <button
+      onClick={onClick}
+      className={styles.editButton}
+      aria-label="Edit"
+    >
+      <svg
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"
+          fill={theme === 'light' ? '#1C6B1E' : '#34D399'}
+        />
+      </svg>
+    </button>
+  );
+};
 
 // Common action buttons component
 const ActionButtons = ({
@@ -292,6 +297,151 @@ const UserNameView = ({ onEditing }: ViewProps) => {
         closeOnBackdrop={true}
         layoutProp={{ backgroundColor: theme === 'light' ? '#fff' : '#121212', margin: '16px 16px', titleColor: theme === 'light' ? '#1a1a1a' : '#fff' }}
       />
+    </div>
+  );
+};
+
+const LanguageView = () => {
+  const { theme } = useTheme();
+  const { t } = useLanguage();
+  const { userData, __meta } = useUserData();
+
+  if (!userData || !__meta.isHydrated || !userData.languageTable) return null;
+
+  return (
+    <div className={styles.profileField}>
+      <div className={styles.fieldContent}>
+        <div className={styles.fieldIcon}>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12.87 15.07L10.33 12.56L10.36 12.53C12.1 10.59 13.34 8.36 14.07 6H17V4H10V2H8V4H1V6H12.17C11.5 7.92 10.44 9.75 9 11.35C8.07 10.32 7.3 9.19 6.69 8H4.69C5.42 9.63 6.42 11.17 7.67 12.56L2.58 17.58L4 19L9 14L12.11 17.11L12.87 15.07ZM18.5 10H16.5L12 22H14L15.12 19H19.87L21 22H23L18.5 10ZM15.88 17L17.5 12.67L19.12 17H15.88Z" fill="currentColor"/>
+          </svg>
+        </div>
+        <div className={styles.fieldInfo}>
+          <span className={styles.fieldLabel}>{t('language_label') || 'Language'}</span>
+          <span className={styles.fieldValue}>{userData.languageTable.languageIdentity} ({userData.languageTable.languageCode})</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const CountryView = () => {
+  const { theme } = useTheme();
+  const { t } = useLanguage();
+  const { userData, __meta } = useUserData();
+
+  if (!userData || !__meta.isHydrated || !userData.countryTable) return null;
+
+  return (
+    <div className={styles.profileField}>
+      <div className={styles.fieldContent}>
+        <div className={styles.fieldIcon}>
+          {userData.countryTable.countryImage ? (
+            <Image
+              src={userData.countryTable.countryImage}
+              alt={userData.countryTable.countryIdentity}
+              width={24}
+              height={24}
+              style={{ borderRadius: '4px', objectFit: 'cover' }}
+            />
+          ) : (
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" fill="currentColor"/>
+            </svg>
+          )}
+        </div>
+        <div className={styles.fieldInfo}>
+          <span className={styles.fieldLabel}>{t('country_label') || 'Country'}</span>
+          <span className={styles.fieldValue}>{userData.countryTable.countryIdentity} ({userData.countryTable.countryTwoIsoCode})</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const ReferredByView = () => {
+  const { theme } = useTheme();
+  const { t } = useLanguage();
+  const { userData, __meta } = useUserData();
+
+  if (!userData || !__meta.isHydrated || !userData.usersReferredDetails) return null;
+
+  const getInitials = (text: string): string => {
+    const words = text.trim().split(' ');
+    if (words.length === 1) return words[0][0].toUpperCase();
+    return (words[0][0] + words[words.length - 1][0]).toUpperCase();
+  };
+
+  return (
+    <div className={styles.profileField}>
+      <div className={styles.fieldContent}>
+        <div className={styles.fieldIcon}>
+          {userData.usersReferredDetails.usersImage ? (
+            <Image
+              src={userData.usersReferredDetails.usersImage}
+              alt={userData.usersReferredDetails.usersNames}
+              width={24}
+              height={24}
+              style={{ borderRadius: '50%', objectFit: 'cover' }}
+            />
+          ) : (
+            <div style={{ 
+              width: '24px', 
+              height: '24px', 
+              borderRadius: '50%', 
+              backgroundColor: theme === 'light' ? '#1C6B1E' : '#34D399',
+              color: '#fff',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '10px',
+              fontWeight: 'bold'
+            }}>
+              {getInitials(userData.usersReferredDetails.usersNames)}
+            </div>
+          )}
+        </div>
+        <div className={styles.fieldInfo}>
+          <span className={styles.fieldLabel}>{t('referred_by_label') || 'Referred By'}</span>
+          <span className={styles.fieldValue}>
+            {userData.usersReferredDetails.usersNames} ({userData.usersReferredDetails.usersUsername})
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const TransactionView = () => {
+  const { theme } = useTheme();
+  const { t } = useLanguage();
+  const nav = useNav();
+  const { userData, __meta } = useUserData();
+
+  if (!userData || !__meta.isHydrated || !userData.transactionId) return null;
+
+  const handleViewTransaction = async () => {
+    await nav.push('view_transaction', { transactionId: userData.transactionId });
+  };
+
+  return (
+    <div className={styles.profileField}>
+      <div className={styles.fieldContent}>
+        <div className={styles.fieldIcon}>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M20 4H4C2.89 4 2.01 4.89 2.01 6L2 18C2 19.11 2.89 20 4 20H20C21.11 20 22 19.11 22 18V6C22 4.89 21.11 4 20 4ZM20 18H4V12H20V18ZM20 8H4V6H20V8Z" fill="currentColor"/>
+          </svg>
+        </div>
+        <div className={styles.fieldInfo}>
+          <span className={styles.fieldLabel}>{t('activation_transaction') || 'Activation Transaction'}</span>
+          <button
+            onClick={handleViewTransaction}
+            className={styles.viewTransactionButton}
+          >
+            {t('view_transaction') || 'View Transaction'}
+          </button>
+        </div>
+      </div>
     </div>
   );
 };
@@ -1130,7 +1280,7 @@ const ImageView = ({ onEditing }: ViewProps) => {
 
 export default function EditProfile() {
   const { theme } = useTheme();
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const nav = useNav();
   const { userData, userData$, __meta } = useUserData();
 
@@ -1148,7 +1298,8 @@ export default function EditProfile() {
       setError('');
 
       const { data, error } = await supabaseBrowser.rpc("get_user_record", {
-        p_user_id: userData.usersId
+        p_user_id: userData.usersId,
+        p_locale: lang
       });
 
       if (error) {
@@ -1167,7 +1318,7 @@ export default function EditProfile() {
       setFetchLoading(false);
       setError(t('error_occurred'));
     }
-  }, [userData, __meta.isHydrated, t, userData$]);
+  }, [userData, __meta.isHydrated, t, userData$, lang]);
 
   useEffect(() => {
     if (userData && __meta.isHydrated && !fetchedUserData) {
@@ -1223,6 +1374,10 @@ export default function EditProfile() {
               <EmailView onEditing={(id) => console.log(id)} />
               <PhoneNumberView onEditing={(id) => console.log(id)} />
               <UserNameView onEditing={(id) => console.log(id)} />
+              <LanguageView />
+              <CountryView />
+              <ReferredByView />
+              <TransactionView />
             </div>
           </div>
         )}

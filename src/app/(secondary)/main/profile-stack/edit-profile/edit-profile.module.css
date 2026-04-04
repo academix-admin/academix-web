@@ -192,13 +192,25 @@
 }
 
 .editButton {
+  background: none;
+  border: none;
   cursor: pointer;
-  transition: transform 0.2s;
+  padding: 8px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
   flex-shrink: 0;
 }
 
 .editButton:hover {
+  background-color: rgba(28, 107, 30, 0.1);
   transform: scale(1.1);
+}
+
+.container_dark .editButton:hover {
+  background-color: rgba(52, 211, 153, 0.1);
 }
 
 .editSection {
@@ -494,6 +506,23 @@
 
 .removeImageButton:hover {
   background-color: red;
+  color: white;
+}
+
+.viewTransactionButton {
+  background: none;
+  border: 1px solid #1C6B1E;
+  color: #1C6B1E;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+  font-weight: 500;
+}
+
+.viewTransactionButton:hover {
+  background-color: #1C6B1E;
   color: white;
 }
 

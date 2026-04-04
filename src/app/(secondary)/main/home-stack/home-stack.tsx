@@ -5,7 +5,7 @@ import {useNav } from "@/lib/NavigationStack";
 import NavigationStack from "@/lib/NavigationStack";
 import HomePage from "./home-page/home-page";
 import NotificationPage from "./notification-page/notification-page";
-import QuizResultPage from "./quiz-result-page/quiz-result-page";
+import QuizResultPage from "../shared/quiz-result-page/quiz-result-page";
 
 
 const homeStackNavLink = {

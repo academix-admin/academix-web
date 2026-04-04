@@ -14,6 +14,9 @@ import { PoolChangeEvent } from '@/lib/managers/PoolsQuizTopicSubscriptionManage
 import { PaymentDetails } from '@/models/payment-details';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useDialog } from '@/lib/DialogViewer';
+import { useUserData } from '@/lib/stacks/user-stack';
+import { getParamatical } from '@/utils/checkers';
+import LoadingView from '@/components/LoadingView/LoadingView';
 
 interface ViewTransactionProps {
   transactionId: string;
@@ -28,9 +31,72 @@ export default function ViewTransactionPage(props: ViewTransactionProps) {
   const getTransactionByIdObj = useObject<(id: string) => TransactionModel | undefined>('getTransactionById', { global: true, scope: 'payment-transactions' });
   const [transactionModels, , setTransactionModels] = useTransactionModel(lang);
 
+  const { userData } = useUserData();
   const [currentTransaction, setCurrentTransaction] = useState<TransactionModel | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const successDialog = useDialog();
+
+  // Fetch transaction from database as fallback
+  const fetchTransactionFromDB = useCallback(async () => {
+    if (!userData || isLoading) return;
+    
+    try {
+      setIsLoading(true);
+      const paramatical = await getParamatical(
+        userData.usersId,
+        lang,
+        userData.usersSex,
+        userData.usersDob
+      );
+
+      if (!paramatical) {
+        setIsLoading(false);
+        return;
+      }
+
+      const { data, error } = await supabaseBrowser.rpc('fetch_user_transaction_by_id', {
+        p_user_id: paramatical.usersId,
+        p_country: paramatical.country,
+        p_locale: paramatical.locale,
+        p_gender: paramatical.gender,
+        p_age: paramatical.age,
+        p_transaction_id: transactionId
+      });
+
+      if (error) {
+        console.error('[ViewTransaction] fetch error:', error);
+        setIsLoading(false);
+        return;
+      }
+
+      if (data) {
+        const transaction = new TransactionModel(data);
+        setCurrentTransaction(transaction);
+        
+        // Subscribe to transaction updates if it's pending
+        const senderStatus = transaction.transactionSenderStatus;
+        const receiverStatus = transaction.transactionReceiverStatus;
+
+        if (senderStatus === 'TransactionStatus.pending' || receiverStatus === 'TransactionStatus.pending') {
+          const added = transactionSubscriptionManager.addTransactionId(
+            transaction.transactionId,
+            {
+              override: false,
+              update: true
+            }
+          );
+          if (added) {
+            transactionSubscriptionManager.updateSubscription();
+          }
+        }
+      }
+      setIsLoading(false);
+    } catch (err) {
+      console.error('[ViewTransaction] fetch error:', err);
+      setIsLoading(false);
+    }
+  }, [userData, lang, transactionId, isLoading]);
 
   // Handle pool changes - if pool is removed, pop the page
   const handlePoolChange = useCallback((event: PoolChangeEvent) => {
@@ -178,10 +244,11 @@ export default function ViewTransactionPage(props: ViewTransactionProps) {
           transactionSubscriptionManager.updateSubscription();
         }
       }
-    } else if (isTop) {
-      nav.pop();
+    } else {
+      // Fallback: fetch from database if not in cache
+      fetchTransactionFromDB();
     }
-  }, [getTransactionByIdObj.isProvided, getTransactionByIdObj.getter, transactionId, isTop, nav]);
+  }, [getTransactionByIdObj.isProvided, getTransactionByIdObj.getter, transactionId, fetchTransactionFromDB]);
 
   /** back nav */
   const goBack = async () => {
@@ -469,7 +536,27 @@ export default function ViewTransactionPage(props: ViewTransactionProps) {
   if (!currentTransaction) {
     return (
       <main className={`${styles.container} ${styles[`container_${theme}`]}`}>
-        <div className={styles.loading}>Loading transaction details...</div>
+        <header className={`${styles.header} ${styles[`header_${theme}`]}`}>
+          <div className={styles.headerContent}>
+            <button
+              className={styles.backButton}
+              onClick={goBack}
+              aria-label="Go back"
+            >
+              <svg className={styles.backIcon} viewBox="0 0 16 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path
+                  d="M10.0424 0.908364L1.01887 8.84376C0.695893 9.12721 0.439655 9.46389 0.264823 9.83454C0.089992 10.2052 0 10.6025 0 11.0038C0 11.405 0.089992 11.8024 0.264823 12.173C0.439655 12.5437 0.695893 12.8803 1.01887 13.1638L10.0424 21.0992C12.2373 23.0294 16 21.6507 16 18.9239V3.05306C16 0.326231 12.2373 -1.02187 10.0424 0.908364Z"
+                  fill="currentColor"
+                />
+              </svg>
+            </button>
+            <h1 className={styles.title}>{t('transaction_text')}</h1>
+            <div style={{ width: '44px' }} />
+          </div>
+        </header>
+        <div className={styles.innerBody}>
+          {isLoading ? <LoadingView /> : <div className={styles.loading}>{t('loading_text')}</div>}
+        </div>
       </main>
     );
   }
@@ -564,7 +651,6 @@ export default function ViewTransactionPage(props: ViewTransactionProps) {
       </header>
 
       <div className={styles.innerBody}>
-
         {/* Transaction Card */}
         <div className={`${styles.transactionCard} ${styles[`transactionCard_${theme}`]}`}>
           <div className={`${styles.transactionTypeIcon} ${styles[`transactionTypeIcon_${theme}`]}`}>
@@ -681,7 +767,20 @@ export default function ViewTransactionPage(props: ViewTransactionProps) {
             </div>
           </div>
         </div>
+
+        {currentTransaction.poolsId && (
+          <button 
+            onClick={() => {
+              nav.push('quiz_result_page', { poolsId: currentTransaction.poolsId });
+            }} 
+            className={styles.checkPoolDetailsButton}
+          >
+            {t('check_pool_details')}
+          </button>
+        )}
       </div>
+
+      
 
       <successDialog.DialogViewer
         title={t('success_text')}

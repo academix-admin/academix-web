@@ -649,8 +649,14 @@
   "newsletter_subscribed": "Successfully subscribed to newsletter!",
   "newsletter_unsubscribed": "Successfully unsubscribed from newsletter",
   "invalid_email": "Please enter a valid email address",
+  "check_pool_details": "Check Pool Details",
   "loading_quiz": "Please wait while we load your quiz...",
   "exiting_quiz": "Exiting quiz...",
   "quiz_not_found": "The quiz you're looking for doesn't exist or you don't have access to it.",
-  "quiz_loading_error": "Something went wrong while loading the quiz."
+  "quiz_loading_error": "Something went wrong while loading the quiz.",
+  "language_label": "Language",
+  "country_label": "Country",
+  "referred_by_label": "Referred By",
+  "activation_transaction": "Activation Transaction",
+  "view_transaction": "View Transaction"
 }

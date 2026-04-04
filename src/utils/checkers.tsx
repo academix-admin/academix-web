@@ -157,9 +157,10 @@ const fetchUserDetails = async (loginModel: LoginModel): Promise<UserLoginAccoun
         return data;
 };
 
-const fetchUserData = async (usersId: string): Promise<UserData | null> => {
+const fetchUserData = async (usersId: string, locale: string): Promise<UserData | null> => {
         const { data: userData, error: userError } = await supabaseBrowser.rpc("get_user_record", {
-          p_user_id: usersId
+          p_user_id: usersId,
+          p_locale: locale
         });
 
         if (userError) throw userError;

@@ -327,7 +327,7 @@ export default function Otp(props: OtpProps) {
         if (verificationRequest === 'SignUp') {
 
           if (result?.data.user != null) {
-            const userObj: UserData | null = await fetchUserData(result?.data.user.id);
+            const userObj: UserData | null = await fetchUserData(result?.data.user.id, lang);
 
             if (userObj) {
               await StateStack.core.clearScope('secondary_flow');

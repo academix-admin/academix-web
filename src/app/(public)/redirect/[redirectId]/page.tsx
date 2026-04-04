@@ -10,7 +10,8 @@ import { supabaseBrowser } from "@/lib/supabase/client";
 import { fetchUserData } from "@/utils/checkers";
 
 import { useTheme } from "@/context/ThemeContext";
-import { useLanguage } from "@/context/LanguageContext";
+import { useLanguage, getSupportedLang } from "@/context/LanguageContext";
+import { useSearchParams } from 'next/navigation';
 
 type RedirectState =
   | "initial"
@@ -19,18 +20,55 @@ type RedirectState =
   | "invalid"
   | "error";
 
+type StringOrNull = string | null;
+
+interface Params {
+  col: StringOrNull;
+  lan: StringOrNull;
+  [key: string]: string | null;
+}
+
+const useAppParams = <T extends Record<string, StringOrNull> = Params>(
+  fallbackParams?: Partial<T>
+): T => {
+  const searchParams = useSearchParams();
+  const params: Record<string, StringOrNull> = {};
+
+  if (fallbackParams) {
+    for (const key in fallbackParams) {
+      const value = fallbackParams[key];
+      params[key] = value ?? null;
+    }
+  }
+
+  searchParams.forEach((value, key) => {
+    params[key] = value;
+  });
+
+  if (fallbackParams) {
+    for (const key of Object.keys(fallbackParams)) {
+      if (!(key in params)) params[key] = null;
+    }
+  }
+
+  return params as T;
+};
+
 export default function Redirect({
   params,
 }: {
   params: Promise<{ redirectId: string }>;
 }) {
   const { redirectId } = use(params);
+  const { col, lan } = useAppParams();
   const { userData$ } = useUserData();
   const { newWindowCloseCurrentWait, redirectSelfAndWait } = useAwaitableRouter();
 
   const { theme } = useTheme();
   const { t } = useLanguage();
-  const resolvedLang = 'en'; // Default for redirect page
+  
+  const resolvedTheme = col || theme;
+  const resolvedLang = getSupportedLang(lan);
 
   const [redirectState, setRedirectState] = useState<RedirectState>("initial");
   const [fallbackUrl, setFallbackUrl] = useState<string>("");
@@ -78,7 +116,7 @@ export default function Redirect({
       /** Clear stale state */
       await clearClientState();
 
-      const userObj = await fetchUserData(result.userId);
+      const userObj = await fetchUserData(result.userId, resolvedLang);
       await userData$.set(userObj);
 
       /**
@@ -160,7 +198,7 @@ export default function Redirect({
   };
 
   return (
-    <div className={`${styles.container} ${styles[`container_${theme}`]}`}>
+    <div className={`${styles.container} ${styles[`container_${resolvedTheme}`]}`}>
       {renderContent()}
     </div>
   );

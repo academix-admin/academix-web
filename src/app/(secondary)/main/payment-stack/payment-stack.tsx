@@ -12,6 +12,7 @@ import ViewTransactionPage from "../shared/view-transaction-page/view-transactio
 import NewProfilePage from "../shared/new-profile-page/new-profile-page";
 import RatesPage from "../shared/rates-page/rates-page";
 import Pin from "../shared/pin/pin";
+import QuizResultPage from "../shared/quiz-result-page/quiz-result-page";
 
 const paymentStackNavLink = {
   payment_page: PaymentPage,
@@ -21,7 +22,8 @@ const paymentStackNavLink = {
   withdraw_page: WithdrawPage,
   rates_page: RatesPage,
   pin: Pin,
-  statements_page: StatementsPage
+  statements_page: StatementsPage,
+  quiz_result_page: QuizResultPage
 };
 
 export const PaymentStack = () => (

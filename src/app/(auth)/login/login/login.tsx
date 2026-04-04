@@ -201,7 +201,7 @@ export default function LoginUser() {
       if (error) throw error;
 
       if (data.user != null) {
-        const userData: UserData | null = await fetchUserData(data.user.id);
+        const userData: UserData | null = await fetchUserData(data.user.id, lang);
         return userData;
       }
 
@@ -261,7 +261,7 @@ export default function LoginUser() {
       if (error) throw error;
 
       if (data.user != null) {
-        const userData: UserData | null = await fetchUserData(data.user.id);
+        const userData: UserData | null = await fetchUserData(data.user.id, lang);
         return userData;
       }
 
