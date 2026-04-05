@@ -658,5 +658,21 @@
   "country_label": "Country",
   "referred_by_label": "Referred By",
   "activation_transaction": "Activation Transaction",
-  "view_transaction": "View Transaction"
+  "view_transaction": "View Transaction",
+  "select_text": "Select",
+  "select_from_date_text": "SELECT FROM DATE",
+  "select_to_date_text": "SELECT TO DATE",
+  "select_date_text": "Select Date",
+  "yesterday_text": "Yesterday",
+  "select_period_text": "Select Period",
+  "from_date_text": "From Date",
+  "to_date_text": "To Date",
+  "format_text": "Format",
+  "pdf_desc_text": "Portable document format",
+  "csv_desc_text": "Comma-separated values",
+  "delivery_email_text": "Delivery Email",
+  "send_to_different_email_text": "Send to different email",
+  "invalid_email_text": "Invalid email address",
+  "send_statement_text": "Send Statement",
+  "statement_sent_message": "Your statement has been sent to {email}"
 }

@@ -658,5 +658,21 @@
   "country_label": "Pays",
   "referred_by_label": "Parrainé par",
   "activation_transaction": "Transaction d'activation",
-  "view_transaction": "Voir la transaction"
+  "view_transaction": "Voir la transaction",
+  "select_text": "Sélectionner",
+  "select_from_date_text": "SÉLECTIONNER LA DATE DE DÉBUT",
+  "select_to_date_text": "SÉLECTIONNER LA DATE DE FIN",
+  "select_date_text": "Sélectionner la date",
+  "yesterday_text": "Hier",
+  "select_period_text": "Sélectionner la période",
+  "from_date_text": "Date de début",
+  "to_date_text": "Date de fin",
+  "format_text": "Format",
+  "pdf_desc_text": "Format de document portable",
+  "csv_desc_text": "Valeurs séparées par des virgules",
+  "delivery_email_text": "E-mail de livraison",
+  "send_to_different_email_text": "Envoyer à un autre e-mail",
+  "invalid_email_text": "Adresse e-mail invalide",
+  "send_statement_text": "Envoyer le relevé",
+  "statement_sent_message": "Votre relevé a été envoyé à {email}"
 }

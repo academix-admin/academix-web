@@ -253,8 +253,8 @@ export default function SignUpStep4() {
             backgroundColor={theme === "light" ? "#f8f9fa" : "#1a1a1a"}
             primaryTextColor={theme === "light" ? "#2c3e50" : "#ecf0f1"}
             secondaryTextColor={theme === "light" ? "#7f8c8d" : "#bdc3c7"}
-            todayText="Today"
-            yesterdayText="Yesterday"
+            todayText={t('today_text')}
+            yesterdayText={t('yesterday_text')}
           />
           <div className={`${styles.dialogBottomContainer} ${styles[`dialogBottomContainer_${theme}`]}`}>
             <button className={`${styles.selectButton} ${styles[`selectButton_${theme}`]}`} onClick={birthdayViewerController.close}>Select Date</button>
