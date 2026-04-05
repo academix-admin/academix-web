@@ -18,7 +18,7 @@ import { AchievementsModel } from '@/models/achievements-model';
 import { RewardClaimModel } from '@/models/achievements-model';
 import { AchievementsProgressDetails } from '@/models/achievements-model';
 import { PaginateModel } from '@/models/paginate-model';
-import { getParamatical, ParamaticalData} from '@/utils/checkers';
+import { getParamatical, ParamaticalData } from '@/utils/checkers';
 import LoadingView from '@/components/LoadingView/LoadingView';
 import NoResultsView from '@/components/NoResultsView/NoResultsView';
 import ErrorView from '@/components/ErrorView/ErrorView';
@@ -71,208 +71,209 @@ const AchievementsCard: React.FC<{ achievements: AchievementsModel, tab: string,
     }
   };
 
- const handleCollect = async () => {
-   if (!userData) {
-     console.warn("User data not available");
-     return;
-   }
+  const handleCollect = async () => {
+    if (!userData) {
+      console.warn("User data not available");
+      return;
+    }
 
-   try {
-     setCollecting(true);
+    try {
+      setCollecting(true);
 
-     const paramatical = await getParamatical(
-       userData.usersId,
-       lang,
-       userData.usersSex,
-       userData.usersDob
-     );
+      const paramatical = await getParamatical(
+        userData.usersId,
+        lang,
+        userData.usersSex,
+        userData.usersDob
+      );
 
-     if (!paramatical) {
-       setCollecting(false);
-       errorDialog.open(<p>{t('error_occurred')}</p>);
-       return;
-     }
+      if (!paramatical) {
+        setCollecting(false);
+        errorDialog.open(<p>{t('error_occurred')}</p>);
+        return;
+      }
 
-     const { data, error } = await supabaseBrowser.rpc("claim_user_achievements", {
-       p_user_id: paramatical.usersId,
-       p_locale: paramatical.locale,
-       p_country: paramatical.country,
-       p_gender: paramatical.gender,
-       p_age: paramatical.age,
-       p_achievements_id: achievements.achievementsId
-     });
+      const { data, error } = await supabaseBrowser.rpc("claim_user_achievements", {
+        p_user_id: paramatical.usersId,
+        p_locale: paramatical.locale,
+        p_country: paramatical.country,
+        p_gender: paramatical.gender,
+        p_age: paramatical.age,
+        p_achievements_id: achievements.achievementsId
+      });
 
-     if (error) {
-       console.error("Failed to claim achievements:", error);
-       setCollecting(false);
-       errorDialog.open(<p>{t('error_occurred')}</p>);
-       return;
-     }
+      if (error) {
+        console.error("Failed to claim achievements:", error);
+        setCollecting(false);
+        errorDialog.open(<p>{t('error_occurred')}</p>);
+        return;
+      }
 
-     if (data.status === 'AchievementReward.success') {
-       const claimDetails = new RewardClaimModel(data.reward_claim_details);
+      if (data.status === 'AchievementReward.success') {
+        const claimDetails = new RewardClaimModel(data.reward_claim_details);
 
-       // 1. Find the achievements in achievementsModel
-       const achievementsIndex = achievementsModel.findIndex(item => {
-         const achievementsInstance = AchievementsModel.from(item);
-         return achievementsInstance.achievementsId === achievements.achievementsId;
-       });
+        // 1. Find the achievements in achievementsModel
+        const achievementsIndex = achievementsModel.findIndex(item => {
+          const achievementsInstance = AchievementsModel.from(item);
+          return achievementsInstance.achievementsId === achievements.achievementsId;
+        });
 
-       if (achievementsIndex === -1) {
-         console.error("Achievements not found in achievementsModel");
-         setCollecting(false);
-         return;
-       }
+        if (achievementsIndex === -1) {
+          console.error("Achievements not found in achievementsModel");
+          setCollecting(false);
+          return;
+        }
 
-       // 2. Remove it from achievementsModel and create updated version
-       const updatedAchievementsModel = [...achievementsModel];
-       const achievementsToUpdate = updatedAchievementsModel.splice(achievementsIndex, 1)[0];
+        // 2. Remove it from achievementsModel and create updated version
+        const updatedAchievementsModel = [...achievementsModel];
+        const achievementsToUpdate = updatedAchievementsModel.splice(achievementsIndex, 1)[0];
 
-       // 3. Update the achievements with rewarded status
-       const achievementsInstance = AchievementsModel.from(achievementsToUpdate);
-       const updatedAchievements = achievementsInstance.copyWith({
-         achievementsProgressDetails: achievementsInstance.achievementsProgressDetails.copyWithRewarded(
-           true,
-           claimDetails.redeemCode
-         )
-       });
+        // 3. Update the achievements with rewarded status
+        const achievementsInstance = AchievementsModel.from(achievementsToUpdate);
+        const updatedAchievements = achievementsInstance.copyWith({
+          achievementsProgressDetails: achievementsInstance.achievementsProgressDetails.copyWithRewarded(
+            true,
+            claimDetails.redeemCode
+          )
+        });
 
-       // 4. Add the updated achievements to collectAchievementsModel
-       setCollectAchievementsModel([updatedAchievements,...collectAchievementsModel]);
+        // 4. Add the updated achievements to collectAchievementsModel
+        setCollectAchievementsModel([updatedAchievements, ...collectAchievementsModel]);
 
-       setAchievementsModel(updatedAchievementsModel);
+        setAchievementsModel(updatedAchievementsModel);
 
-       // Update achievements count data
-       if (data.achievements_count_details) {
-         const achievementsCount = new AchievementsData(data.achievements_count_details);
-         setAchievementsData(achievementsCount);
-         handleCollected();
-       }
-     }
-   } catch (err) {
-     console.error("Unexpected error in handleCollect:", err);
-     errorDialog.open(<p>{t('error_occurred')}</p>);
-   } finally {
-     setCollecting(false);
-   }
- };
+        // Update achievements count data
+        if (data.achievements_count_details) {
+          const achievementsCount = new AchievementsData(data.achievements_count_details);
+          setAchievementsData(achievementsCount);
+          handleCollected();
+        }
+      }
+    } catch (err) {
+      console.error("Unexpected error in handleCollect:", err);
+      errorDialog.open(<p>{t('error_occurred')}</p>);
+    } finally {
+      setCollecting(false);
+    }
+  };
 
   const formattedExpiry = expires ? new Date(expires) : null;
-  const expiryText = formattedExpiry
+  const isExpired = formattedExpiry ? formattedExpiry < new Date() : false;
+  const expiryText = formattedExpiry && !isExpired
     ? formattedExpiry.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric' })
     : null;
 
   return (
     <>
-    <errorDialog.DialogViewer
-      title={t('error_text')}
-      buttons={[{ text: t('ok_text'), variant: 'primary', onClick: () => errorDialog.close() }]}
-      showCancel={false}
-      closeOnBackdrop={true}
-      layoutProp={{ backgroundColor: theme === 'light' ? '#fff' : '#121212', margin: '16px 16px', titleColor: theme === 'light' ? '#1a1a1a' : '#fff' }}
-    />
-    <div className={styles.achievementsCard} role="group" aria-labelledby={`achievements-${achievements.achievementsId}`}>
-      {/* TOP SECTION (lighter/green) */}
-      <div className={styles.achievementsCardTop}>
-        <div className={styles.achievementsHeader}>
-          <div className={styles.achievementsIcon}>
-            {achievements.achievementsImage ? (
-              <Image src={achievements.achievementsImage} alt={achievements.achievementsTitle} width={56} height={56} className={styles.iconImg}/>
-            ) : (
-              <div className={styles.placeholderIcon}>🎯</div>
-            )}
-          </div>
+      <errorDialog.DialogViewer
+        title={t('error_text')}
+        buttons={[{ text: t('ok_text'), variant: 'primary', onClick: () => errorDialog.close() }]}
+        showCancel={false}
+        closeOnBackdrop={true}
+        layoutProp={{ backgroundColor: theme === 'light' ? '#fff' : '#121212', margin: '16px 16px', titleColor: theme === 'light' ? '#1a1a1a' : '#fff' }}
+      />
+      <div className={styles.achievementsCard} role="group" aria-labelledby={`achievements-${achievements.achievementsId}`}>
+        {/* TOP SECTION (lighter/green) */}
+        <div className={styles.achievementsCardTop}>
+          <div className={styles.achievementsHeader}>
+            <div className={styles.achievementsIcon}>
+              {achievements.achievementsImage ? (
+                <Image src={achievements.achievementsImage} alt={achievements.achievementsTitle} width={56} height={56} className={styles.iconImg} />
+              ) : (
+                <div className={styles.placeholderIcon}>🎯</div>
+              )}
+            </div>
 
-          <div className={styles.achievementsInfo}>
-            <h3 id={`achievements-${achievements.achievementsId}`} className={styles.achievementsTitle}>
-              {achievements.achievementsTitle}
-            </h3>
-            <p className={styles.achievementsDescription}>
-              {achievements.achievementsDescription}
-            </p>
+            <div className={styles.achievementsInfo}>
+              <h3 id={`achievements-${achievements.achievementsId}`} className={styles.achievementsTitle}>
+                {achievements.achievementsTitle}
+              </h3>
+              <p className={styles.achievementsDescription}>
+                {achievements.achievementsDescription}
+              </p>
 
 
-                      <div className={styles.pointsWrap}>
-                        <div className={styles.pointsRow}>
-                          <svg viewBox="0 0 24 24" width="20" height="20" className={styles.coinSvg} aria-hidden>
-                            <circle cx="12" cy="12" r="10" fill="white" stroke="none" />
-                          </svg>
-                          <span className={styles.pointsText}>{rewardText}</span>
-                        </div>
+              <div className={styles.pointsWrap}>
+                <div className={styles.pointsRow}>
+                  <svg viewBox="0 0 24 24" width="20" height="20" className={styles.coinSvg} aria-hidden>
+                    <circle cx="12" cy="12" r="10" fill="white" stroke="none" />
+                  </svg>
+                  <span className={styles.pointsText}>{rewardText}</span>
+                </div>
 
-                        <div className={styles.progressCount}>
-                          {progressCount}/{progressRequired}
-                        </div>
-                      </div>
+                <div className={styles.progressCount}>
+                  {progressCount}/{progressRequired}
+                </div>
+              </div>
 
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* BOTTOM SECTION (darker) */}
-      <div className={styles.achievementsCardBottom}>
-        {/* If not yet rewarded: show Instructions heading (like Dart) */}
-        {!rewarded && (
-          <div className={styles.instructionsRow}>
-            <div className={styles.instructionsTitle}>{t('instructions_text')}</div>
-            <div className={styles.instructionsBody}>
-              {achievements.rewardDetails?.rewardInstruction ?? achievements.rewardDetails.rewardInstruction ?? t('no_instructions') ?? ''}
-            </div>
-          </div>
-        )}
-
-        {/* Expiry row (shown when there is an expiry — in Dart they show it when rewardRedeemCodeModel?.expires != null) */}
-        {expiryText && (
-          <div className={styles.expiresRow}>
-            <div className={styles.expiresText}>
-              {t('expires_text', { date: expiryText})}
-            </div>
-            {/* small copy icon next to expiry (like screenshot shows) - clicking should not copy code */}
-            {redeemCode && (
-              <button
-                className={styles.smallIconButton}
-                title={'copy'}
-                onClick={(e) => {
-                  handleCopy(redeemCode);
-                }}
-              >
-                {/* simple square icon */}
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
-                  <rect x="9" y="9" width="9" height="9" stroke="currentColor" strokeWidth="1.6" rx="1" />
-                  <rect x="4.5" y="4.5" width="9" height="9" stroke="currentColor" strokeWidth="1.2" rx="1" />
-                </svg>
-              </button>
-            )}
-          </div>
-        )}
-
-        {/* If rewarded: show code (centered) OR fallback to rewarded text */}
-        {rewarded ? (
-          <div className={styles.redeemBlock}>
-            {redeemCode ? (
-              <>
-                <div className={styles.redeemCodeLarge}>{redeemCode}</div>
-              </>
-            ) : (
-              <div className={styles.redeemedText}>
-                {t('rewarded_text')}
+        {/* BOTTOM SECTION (darker) */}
+        <div className={styles.achievementsCardBottom}>
+          {/* If not yet rewarded: show Instructions heading (like Dart) */}
+          {!rewarded && (
+            <div className={styles.instructionsRow}>
+              <div className={styles.instructionsTitle}>{t('instructions_text')}</div>
+              <div className={styles.instructionsBody}>
+                {achievements.rewardDetails?.rewardInstruction ?? achievements.rewardDetails.rewardInstruction ?? t('no_instructions') ?? ''}
               </div>
-            )}
-          </div>
-        ) : (
-          // Not rewarded: show collect button if progress complete, otherwise nothing
-          progressRequired === progressCount ? <div className={styles.actionRow}>
+            </div>
+          )}
+
+          {/* Expiry row (shown when there is an expiry — in Dart they show it when rewardRedeemCodeModel?.expires != null) */}
+          {(expiryText || isExpired) && (
+            <div className={styles.expiresRow}>
+              <div className={styles.expiresText}>
+                {isExpired ? t('expired_text') : t('expires_text', { date: expiryText! })}
+              </div>
+              {/* small copy icon next to expiry (like screenshot shows) - clicking should not copy code */}
+              {redeemCode && (
+                <button
+                  className={styles.smallIconButton}
+                  title={'copy'}
+                  onClick={(e) => {
+                    handleCopy(redeemCode);
+                  }}
+                >
+                  {/* simple square icon */}
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
+                    <rect x="9" y="9" width="9" height="9" stroke="currentColor" strokeWidth="1.6" rx="1" />
+                    <rect x="4.5" y="4.5" width="9" height="9" stroke="currentColor" strokeWidth="1.2" rx="1" />
+                  </svg>
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* If rewarded: show code (centered) OR fallback to rewarded text */}
+          {rewarded ? (
+            <div className={styles.redeemBlock}>
+              {redeemCode ? (
+                <>
+                  <div className={styles.redeemCodeLarge}>{redeemCode}</div>
+                </>
+              ) : (
+                <div className={styles.redeemedText}>
+                  {t('rewarded_text')}
+                </div>
+              )}
+            </div>
+          ) : (
+            // Not rewarded: show collect button if progress complete, otherwise nothing
+            progressRequired === progressCount ? <div className={styles.actionRow}>
               <button
                 className={styles.collectButton}
                 onClick={handleCollect}
                 disabled={collecting}
               >
-                {collecting ? <span className={styles.moreSpinner}></span> : t('collect_text') }
+                {collecting ? <span className={styles.moreSpinner}></span> : t('collect_text')}
               </button>
-          </div> : <></>
-        )}
+            </div> : <></>
+          )}
+        </div>
       </div>
-    </div>
     </>
   );
 }
@@ -371,7 +372,7 @@ const AchievementsContainer: React.FC<AchievementsContainerProps> = ({ tab, hand
   };
 
   useEffect(() => {
-      if (!userData) return;
+    if (!userData) return;
     demandAchievementsModel(async ({ get, set }) => {
       setAchievementsLoading(true);
       const achievementsModels = await fetchAchievementsModel(userData, 10, new PaginateModel());
@@ -410,13 +411,13 @@ const AchievementsContainer: React.FC<AchievementsContainerProps> = ({ tab, hand
   return (
     <div className={styles.achievementsList}>
       {achievementsModel.map((achievements) => (
-        <AchievementsCard key={achievements.achievementsId} achievements={achievements} tab={tab} handleCollected={handleCollected}/>
+        <AchievementsCard key={achievements.achievementsId} achievements={achievements} tab={tab} handleCollected={handleCollected} />
       ))}
 
-       {achievementsModel.length > 10 && <div ref={loaderRef} className={styles.loadMoreSentinel}></div>}
-       {achievementsLoading && achievementsModel.length === 0 && <LoadingView />}
-       {!achievementsLoading && achievementsModel.length === 0  && !error && (<NoResultsView text="No result" buttonText="Try Again" onButtonClick={refreshData} />)}
-       {!achievementsLoading && achievementsModel.length === 0 && error && (<ErrorView text="Error occurred." buttonText="Try Again" onButtonClick={refreshData} />)}
+      {achievementsModel.length > 10 && <div ref={loaderRef} className={styles.loadMoreSentinel}></div>}
+      {achievementsLoading && achievementsModel.length === 0 && <LoadingView />}
+      {!achievementsLoading && achievementsModel.length === 0 && !error && (<NoResultsView text="No result" buttonText="Try Again" onButtonClick={refreshData} />)}
+      {!achievementsLoading && achievementsModel.length === 0 && error && (<ErrorView text="Error occurred." buttonText="Try Again" onButtonClick={refreshData} />)}
 
 
     </div>
@@ -458,7 +459,7 @@ export default function AchievementsPage() {
   return (
     <main className={`${styles.container} ${styles[`container_${theme}`]}`}>
 
-   
+
       <header className={`${styles.header} ${styles[`header_${theme}`]}`}>
         <div className={styles.headerContent}>
           <button

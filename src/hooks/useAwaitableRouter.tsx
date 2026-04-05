@@ -58,11 +58,9 @@ export function useAwaitableRouter(options: UseAwaitableRouterOptions = {}) {
 
   const log = useCallback(
     (message: string, data?: any) => {
-      if (enableLogging) {
-        console.log(`[useAwaitableRouter] ${message}`, data ?? "");
-      }
+      // Logging disabled
     },
-    [enableLogging]
+    []
   );
 
   // ========================================================================

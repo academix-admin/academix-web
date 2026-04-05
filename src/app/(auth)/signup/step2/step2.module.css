@@ -161,6 +161,21 @@
     white-space: normal;      /* allow wrapping */
 }
 
+.fieldDescription {
+  font-size: 0.75rem;
+  text-align: left;
+  margin-top: -0.25rem;
+  line-height: 1.4;
+}
+
+.fieldDescription_light {
+  color: #6B7280;
+}
+
+.fieldDescription_dark {
+  color: #9CA3AF;
+}
+
 .select {
   padding: 0.75rem 1rem;
   border-radius: 8px;
@@ -255,6 +270,50 @@
 
 .item_dark{
   color: #fff;
+}
+
+.itemContent {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.itemText {
+  flex: 1;
+  font-size: 1rem;
+}
+
+.itemCode {
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.itemCode_light {
+  background-color: #F3F4F6;
+  color: #6B7280;
+}
+
+.itemCode_dark {
+  background-color: #374151;
+  color: #9CA3AF;
+}
+
+.countryImage {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.countryInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
 }
 
 /* Responsive styles */

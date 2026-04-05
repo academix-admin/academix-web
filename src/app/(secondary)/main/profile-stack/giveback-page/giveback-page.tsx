@@ -222,6 +222,7 @@ export default function GiveBackPage() {
   // Claim state
   const [claimingId, setClaimingId] = useState<string | null>(null);
   const [pendingClaimId, setPendingClaimId] = useState<string | null>(null);
+  const [showPasswordForId, setShowPasswordForId] = useState<string | null>(null);
   const [passwordValue, setPasswordValue] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const errorDialog = useDialog();
@@ -367,6 +368,7 @@ export default function GiveBackPage() {
           )
         );
         setPendingClaimId(null);
+        setShowPasswordForId(null);
         setPasswordValue('');
         setShowPassword(false);
         setActiveTab('claimed');
@@ -379,6 +381,7 @@ export default function GiveBackPage() {
             <p>{t('invalid_password_text')}</p>
           </div>
         );
+        setShowPasswordForId(null);
       } else if (status === 'Giveback.already_claimed') {
         console.warn('[GiveBacks] already claimed:', giveBack.giveBackCode);
         errorDialog.open(
@@ -436,25 +439,48 @@ export default function GiveBackPage() {
   };
 
   const handleClaim = (giveBack: GiveBackModel) => {
-    if (giveBack.hasPassword) {
-      setPendingClaimId(giveBack.giveBackId);
-      setPasswordValue('');
-      setShowPassword(false);
-    } else {
-      executeClaim(giveBack);
-    }
+    // Always show confirmation dialog first
+    errorDialog.open(
+      <div style={{ textAlign: 'center' }}>
+        <p>{t('confirm_claim_giveback', { code: giveBack.giveBackCode, amount: giveBack.giveBackAmount })}</p>
+      </div>
+    );
+    setPendingClaimId(giveBack.giveBackId);
+    setPasswordValue('');
+    setShowPassword(false);
   };
 
   const handlePasswordCancel = () => {
+    setShowPasswordForId(null);
     setPendingClaimId(null);
     setPasswordValue('');
     setShowPassword(false);
   };
 
   const handlePasswordSubmit = async () => {
-    const pending = giveBacks.find((g) => g.giveBackId === pendingClaimId);
+    const pending = giveBacks.find((g) => g.giveBackId === showPasswordForId);
     if (!pending) return;
     await executeClaim(pending, passwordValue);
+  };
+
+  const confirmClaim = async () => {
+    const pending = giveBacks.find((g) => g.giveBackId === pendingClaimId);
+    if (!pending) return;
+    errorDialog.close();
+    
+    // If has password, show password field
+    if (pending.hasPassword) {
+      setShowPasswordForId(pending.giveBackId);
+      return;
+    }
+    
+    // No password required, execute claim directly
+    await executeClaim(pending);
+    setPendingClaimId(null);
+    // Refresh redeem codes after successful claim
+    if (typeof window !== 'undefined') {
+      StateStack.core.clearScope('redeem_code_flow');
+    }
   };
 
   const togglePasswordVisibility = () => {
@@ -517,8 +543,8 @@ export default function GiveBackPage() {
             giveBack={giveBack}
             onClaim={handleClaim}
             claiming={claimingId === giveBack.giveBackId}
-            passwordMode={pendingClaimId === giveBack.giveBackId}
-            passwordValue={pendingClaimId === giveBack.giveBackId ? passwordValue : ''}
+            passwordMode={showPasswordForId === giveBack.giveBackId}
+            passwordValue={showPasswordForId === giveBack.giveBackId ? passwordValue : ''}
             onPasswordChange={setPasswordValue}
             onPasswordCancel={handlePasswordCancel}
             onPasswordSubmit={handlePasswordSubmit}
@@ -532,8 +558,15 @@ export default function GiveBackPage() {
       </div>
 
       <errorDialog.DialogViewer
-        title={t('error_text')}
-        buttons={[{ text: t('ok_text'), variant: 'primary', onClick: () => errorDialog.close() }]}
+        title={pendingClaimId ? t('claim_text') : t('error_text')}
+        buttons={[
+          pendingClaimId
+            ? { text: t('yes_text'), variant: 'primary', onClick: confirmClaim }
+            : { text: t('ok_text'), variant: 'primary', onClick: () => errorDialog.close() },
+          pendingClaimId
+            ? { text: t('no_text'), variant: 'secondary', onClick: () => { errorDialog.close(); setPendingClaimId(null); } }
+            : undefined
+        ].filter(Boolean) as any}
         showCancel={false}
         closeOnBackdrop={true}
         layoutProp={{

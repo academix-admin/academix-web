@@ -62,10 +62,10 @@
   "username_valid": "Nom d'utilisateur disponible",
   "birthday": "DATE DE NAISSANNCE",
   "gender": " GENRE",
-  "date_less": "La date de naissance remonte à moins de 5 ans.",
+  "date_less": "La date de naissance remonte à moins de 16 ans.",
   "choose_role": "Choisissez votre rôle",
   "referral_optional": "Parrainage (optionnel)",
-  "referral_reward_info": "Récompensez votre parrain avec {amount} lorsque votre premier dépôt est de {threshold} ou plus. Les retraits seront possibles une fois que vous aurez joué votre premier quiz ou après {hours} heures.",
+  "referral_reward_info": "Récompensez votre parrain avec {amount} lorsque votre premier dépôt est de {threshold} ou plus. Les retraits seront possibles une fois que vous aurez joué votre premier quiz.",
   "reward": "Récompense",
   "search": "Rechercher",
   "remove": "Supprimer",
@@ -230,6 +230,7 @@
   "pending_text": "En attente",
   "instructions_text": "Instructions",
   "expires_text": "Expire le {date}",
+  "expired_text": "Expiré",
   "collect_text": "Collecter",
   "rewarded_text": "Récompensé",
   "no_instructions": "Aucune instruction disponible",
@@ -674,5 +675,8 @@
   "send_to_different_email_text": "Envoyer à un autre e-mail",
   "invalid_email_text": "Adresse e-mail invalide",
   "send_statement_text": "Envoyer le relevé",
-  "statement_sent_message": "Votre relevé a été envoyé à {email}"
+  "statement_sent_message": "Votre relevé a été envoyé à {email}",
+  "language_description": "La langue principale dans laquelle vous contribuez du contenu",
+  "country_description": "Votre pays principal où nous traitons les paiements",
+  "confirm_claim_giveback": "Êtes-vous sûr de vouloir réclamer {code} pour {amount} ADC ?"
 }

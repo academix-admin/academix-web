@@ -68,9 +68,9 @@ export default function SignUpStep4() {
 
     if (!!dateObj) {
       const today = new Date();
-      const fiveYearsAgo = new Date();
-      fiveYearsAgo.setFullYear(today.getFullYear() - 5);
-      if (dateObj > fiveYearsAgo) {
+      const sixteenYearsAgo = new Date();
+      sixteenYearsAgo.setFullYear(today.getFullYear() - 16);
+      if (dateObj > sixteenYearsAgo) {
         setBirthdayState('less');
         setIsFormValid(false);
         return;
@@ -236,7 +236,6 @@ export default function SignUpStep4() {
         <div className={`${styles.dialogContainer} ${styles[`dialogContainer_${theme}`]}`}>
           <div className={`${styles.dialogHeaderContainer} ${styles[`dialogHeaderContainer_${theme}`]}`}>
             <h3 className={`${styles.dialogTitle} ${styles[`dialogTitle_${theme}`]}`}>SELECT BIRTHDAY DATE</h3>
-            <span className={`${styles.dialogDescription} ${styles[`dialogDescription_${theme}`]}`}>*Age Rating: <strong>5+</strong></span>
           </div>
 
           <CustomScrollDatePicker
@@ -248,8 +247,9 @@ export default function SignUpStep4() {
             useMagnifier={true}
             magnification={1.5}
             textSize={18}
-            height={100}
+            height={150}
             startFromDate={!!signup.birthday ? typeof signup.birthday === 'string' ? new Date(signup.birthday) : signup.birthday : null}
+            maxDate={new Date(new Date().setFullYear(new Date().getFullYear() - 16))}
             backgroundColor={theme === "light" ? "#f8f9fa" : "#1a1a1a"}
             primaryTextColor={theme === "light" ? "#2c3e50" : "#ecf0f1"}
             secondaryTextColor={theme === "light" ? "#7f8c8d" : "#bdc3c7"}

@@ -412,7 +412,6 @@ useEffect(() => {
                                                          {t('referral_reward_info_username', {
                                                            amount: '300',
                                                            threshold: '1000',
-                                                           hours: '24',
                                                            username: userData?.usersUsername || '@username'
                                                          })}
                                                          <div className={styles.refreshHint}>

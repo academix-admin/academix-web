@@ -20,6 +20,7 @@ interface CustomScrollDatePickerProps {
   formatMonthsNames?: ((monthIndex: number) => string) | string;
   minYear?: number;
   maxYear?: number;
+  maxDate?: Date;
 };
 
 interface WheelColumnProps {
@@ -250,19 +251,27 @@ const CustomScrollDatePicker : React.FC<CustomScrollDatePickerProps> =  ({
   formatMonthsNames ,
   minYear = 1900,
   maxYear = new Date().getFullYear() + 1,
+  maxDate,
 }) => {
   const [id] = useState(() => providedId || `datepicker-${Math.random().toString(36).substr(2, 9)}`);
   useInjectStyles(id);
 
   const today = useMemo(() => new Date(), []);
+  const effectiveMaxYear = useMemo(() => {
+    if (maxDate) {
+      return maxDate.getFullYear();
+    }
+    return maxYear;
+  }, [maxDate, maxYear]);
+  
   const initDate = useMemo(
     () => (defaultDate ? (startFromDate || today) : new Date(minYear, 0, 1)),
     [defaultDate, startFromDate, minYear]
   );
 
   const years = useMemo(
-    () => Array.from({ length: maxYear - minYear + 1 }, (_, i) => minYear + i),
-    [minYear, maxYear]
+    () => Array.from({ length: effectiveMaxYear - minYear + 1 }, (_, i) => minYear + i),
+    [minYear, effectiveMaxYear]
   );
 
   const [selectedDate, setSelectedDate] = useState(initDate);

@@ -94,7 +94,7 @@ const rewardData = {
       requirements: [
         "Friend registers with your @username",
         "Makes first deposit of 1000+",
-        "Plays at least one quiz or waits 24 hours"
+        "Plays at least one quiz"
       ],
       reward: "300 ADC per qualified friend",
       example: "Use friend's username as redeem code to claim"
@@ -145,7 +145,7 @@ const rewardData = {
       requirements: [
         "L'ami s'inscrit avec votre @nomutilisateur",
         "Effectue un premier dépôt de 1000+",
-        "Joue au moins un quiz ou attend 24 heures"
+        "Joue au moins un quiz"
       ],
       reward: "300 ADC par ami qualifié",
       example: "Utilisez le nom d'utilisateur de l'ami comme code de remboursement pour réclamer"

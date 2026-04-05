@@ -6,7 +6,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import Image from 'next/image';
 import styles from './redeem-codes.module.css';
 import { supabaseBrowser } from '@/lib/supabase/client';
-import { useNav } from "@/lib/NavigationStack";
+import { useNav, usePageLifecycle } from "@/lib/NavigationStack";
 import { capitalizeWords } from '@/utils/textUtils';
 import { getParamatical } from '@/utils/checkers';
 import { useUserData } from '@/lib/stacks/user-stack';
@@ -246,17 +246,24 @@ export default function RedeemCodes() {
     }
   };
 
-  const refreshData = async () => {
-    if (!userData || redeemCodes.length > 0) return;
+  const refreshData = useCallback(async () => {
+    if (!userData) return;
     setFetchLoading(true);
-    const redeemCodesModel = await fetchRedeemCodes(userData, 10, paginateModel);
+    const redeemCodesModel = await fetchRedeemCodes(userData, 10, new PaginateModel());
     setFetchLoading(false);
     setEmpty(redeemCodesModel.length === 0);
     if (redeemCodesModel.length > 0) {
       extractLatest(redeemCodesModel);
       setRedeemCodes(redeemCodesModel);
     }
-  };
+  }, [userData, fetchRedeemCodes, setRedeemCodes]);
+
+  // Page lifecycle - refresh on enter
+  usePageLifecycle(nav, {
+    onEnter: () => {
+      refreshData();
+    },
+  }, [refreshData]);
 
     const goBack = async () => {
       await nav.pop();

@@ -18,7 +18,7 @@ import { MissionModel } from '@/models/mission-model';
 import { RewardClaimModel } from '@/models/mission-model';
 import { MissionProgressDetails } from '@/models/mission-model';
 import { PaginateModel } from '@/models/paginate-model';
-import { getParamatical, ParamaticalData} from '@/utils/checkers';
+import { getParamatical, ParamaticalData } from '@/utils/checkers';
 import LoadingView from '@/components/LoadingView/LoadingView';
 import NoResultsView from '@/components/NoResultsView/NoResultsView';
 import ErrorView from '@/components/ErrorView/ErrorView';
@@ -71,208 +71,209 @@ const MissionCard: React.FC<{ mission: MissionModel, tab: string, handleCollecte
     }
   };
 
- const handleCollect = async () => {
-   if (!userData) {
-     console.warn("User data not available");
-     return;
-   }
+  const handleCollect = async () => {
+    if (!userData) {
+      console.warn("User data not available");
+      return;
+    }
 
-   try {
-     setCollecting(true);
+    try {
+      setCollecting(true);
 
-     const paramatical = await getParamatical(
-       userData.usersId,
-       lang,
-       userData.usersSex,
-       userData.usersDob
-     );
+      const paramatical = await getParamatical(
+        userData.usersId,
+        lang,
+        userData.usersSex,
+        userData.usersDob
+      );
 
-     if (!paramatical) {
-       setCollecting(false);
-       errorDialog.open(<p>{t('error_occurred')}</p>);
-       return;
-     }
+      if (!paramatical) {
+        setCollecting(false);
+        errorDialog.open(<p>{t('error_occurred')}</p>);
+        return;
+      }
 
-     const { data, error } = await supabaseBrowser.rpc("claim_user_mission", {
-       p_user_id: paramatical.usersId,
-       p_locale: paramatical.locale,
-       p_country: paramatical.country,
-       p_gender: paramatical.gender,
-       p_age: paramatical.age,
-       p_mission_id: mission.missionId
-     });
+      const { data, error } = await supabaseBrowser.rpc("claim_user_mission", {
+        p_user_id: paramatical.usersId,
+        p_locale: paramatical.locale,
+        p_country: paramatical.country,
+        p_gender: paramatical.gender,
+        p_age: paramatical.age,
+        p_mission_id: mission.missionId
+      });
 
-     if (error) {
-       console.error("Failed to claim mission:", error);
-       setCollecting(false);
-       errorDialog.open(<p>{t('error_occurred')}</p>);
-       return;
-     }
+      if (error) {
+        console.error("Failed to claim mission:", error);
+        setCollecting(false);
+        errorDialog.open(<p>{t('error_occurred')}</p>);
+        return;
+      }
 
-     if (data.status === 'MissionReward.success') {
-       const claimDetails = new RewardClaimModel(data.reward_claim_details);
+      if (data.status === 'MissionReward.success') {
+        const claimDetails = new RewardClaimModel(data.reward_claim_details);
 
-       // 1. Find the mission in missionModel
-       const missionIndex = missionModel.findIndex(item => {
-         const missionInstance = MissionModel.from(item);
-         return missionInstance.missionId === mission.missionId;
-       });
+        // 1. Find the mission in missionModel
+        const missionIndex = missionModel.findIndex(item => {
+          const missionInstance = MissionModel.from(item);
+          return missionInstance.missionId === mission.missionId;
+        });
 
-       if (missionIndex === -1) {
-         console.error("Mission not found in missionModel");
-         setCollecting(false);
-         return;
-       }
+        if (missionIndex === -1) {
+          console.error("Mission not found in missionModel");
+          setCollecting(false);
+          return;
+        }
 
-       // 2. Remove it from missionModel and create updated version
-       const updatedMissionModel = [...missionModel];
-       const missionToUpdate = updatedMissionModel.splice(missionIndex, 1)[0];
+        // 2. Remove it from missionModel and create updated version
+        const updatedMissionModel = [...missionModel];
+        const missionToUpdate = updatedMissionModel.splice(missionIndex, 1)[0];
 
-       // 3. Update the mission with rewarded status
-       const missionInstance = MissionModel.from(missionToUpdate);
-       const updatedMission = missionInstance.copyWith({
-         missionProgressDetails: missionInstance.missionProgressDetails.copyWithRewarded(
-           true,
-           claimDetails.redeemCode
-         )
-       });
+        // 3. Update the mission with rewarded status
+        const missionInstance = MissionModel.from(missionToUpdate);
+        const updatedMission = missionInstance.copyWith({
+          missionProgressDetails: missionInstance.missionProgressDetails.copyWithRewarded(
+            true,
+            claimDetails.redeemCode
+          )
+        });
 
-       // 4. Add the updated mission to collectMissionModel
-       setCollectMissionModel([updatedMission,...collectMissionModel]);
+        // 4. Add the updated mission to collectMissionModel
+        setCollectMissionModel([updatedMission, ...collectMissionModel]);
 
-       setMissionModel(updatedMissionModel);
+        setMissionModel(updatedMissionModel);
 
-       // Update mission count data
-       if (data.mission_count_details) {
-         const missionCount = new MissionData(data.mission_count_details);
-         setMissionData(missionCount);
-         handleCollected();
-       }
-     }
-   } catch (err) {
-     console.error("Unexpected error in handleCollect:", err);
-     errorDialog.open(<p>{t('error_occurred')}</p>);
-   } finally {
-     setCollecting(false);
-   }
- };
+        // Update mission count data
+        if (data.mission_count_details) {
+          const missionCount = new MissionData(data.mission_count_details);
+          setMissionData(missionCount);
+          handleCollected();
+        }
+      }
+    } catch (err) {
+      console.error("Unexpected error in handleCollect:", err);
+      errorDialog.open(<p>{t('error_occurred')}</p>);
+    } finally {
+      setCollecting(false);
+    }
+  };
 
   const formattedExpiry = expires ? new Date(expires) : null;
-  const expiryText = formattedExpiry
+  const isExpired = formattedExpiry ? formattedExpiry < new Date() : false;
+  const expiryText = formattedExpiry && !isExpired
     ? formattedExpiry.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric' })
     : null;
 
   return (
     <>
-    <errorDialog.DialogViewer
-      title={t('error_text')}
-      buttons={[{ text: t('ok_text'), variant: 'primary', onClick: () => errorDialog.close() }]}
-      showCancel={false}
-      closeOnBackdrop={true}
-      layoutProp={{ backgroundColor: theme === 'light' ? '#fff' : '#121212', margin: '16px 16px', titleColor: theme === 'light' ? '#1a1a1a' : '#fff' }}
-    />
-    <div className={styles.missionCard} role="group" aria-labelledby={`mission-${mission.missionId}`}>
-      {/* TOP SECTION (lighter/green) */}
-      <div className={styles.missionCardTop}>
-        <div className={styles.missionHeader}>
-          <div className={styles.missionIcon}>
-            {mission.missionImage ? (
-              <Image src={mission.missionImage} alt={mission.missionTitle} width={56} height={56} className={styles.iconImg}/>
-            ) : (
-              <div className={styles.placeholderIcon}>🎯</div>
-            )}
-          </div>
+      <errorDialog.DialogViewer
+        title={t('error_text')}
+        buttons={[{ text: t('ok_text'), variant: 'primary', onClick: () => errorDialog.close() }]}
+        showCancel={false}
+        closeOnBackdrop={true}
+        layoutProp={{ backgroundColor: theme === 'light' ? '#fff' : '#121212', margin: '16px 16px', titleColor: theme === 'light' ? '#1a1a1a' : '#fff' }}
+      />
+      <div className={styles.missionCard} role="group" aria-labelledby={`mission-${mission.missionId}`}>
+        {/* TOP SECTION (lighter/green) */}
+        <div className={styles.missionCardTop}>
+          <div className={styles.missionHeader}>
+            <div className={styles.missionIcon}>
+              {mission.missionImage ? (
+                <Image src={mission.missionImage} alt={mission.missionTitle} width={56} height={56} className={styles.iconImg} />
+              ) : (
+                <div className={styles.placeholderIcon}>🎯</div>
+              )}
+            </div>
 
-          <div className={styles.missionInfo}>
-            <h3 id={`mission-${mission.missionId}`} className={styles.missionTitle}>
-              {mission.missionTitle}
-            </h3>
-            <p className={styles.missionDescription}>
-              {mission.missionDescription}
-            </p>
+            <div className={styles.missionInfo}>
+              <h3 id={`mission-${mission.missionId}`} className={styles.missionTitle}>
+                {mission.missionTitle}
+              </h3>
+              <p className={styles.missionDescription}>
+                {mission.missionDescription}
+              </p>
 
 
-                      <div className={styles.pointsWrap}>
-                        <div className={styles.pointsRow}>
-                          <svg viewBox="0 0 24 24" width="20" height="20" className={styles.coinSvg} aria-hidden>
-                            <circle cx="12" cy="12" r="10" fill="white" stroke="none" />
-                          </svg>
-                          <span className={styles.pointsText}>{rewardText}</span>
-                        </div>
+              <div className={styles.pointsWrap}>
+                <div className={styles.pointsRow}>
+                  <svg viewBox="0 0 24 24" width="20" height="20" className={styles.coinSvg} aria-hidden>
+                    <circle cx="12" cy="12" r="10" fill="white" stroke="none" />
+                  </svg>
+                  <span className={styles.pointsText}>{rewardText}</span>
+                </div>
 
-                        <div className={styles.progressCount}>
-                          {progressCount}/{progressRequired}
-                        </div>
-                      </div>
+                <div className={styles.progressCount}>
+                  {progressCount}/{progressRequired}
+                </div>
+              </div>
 
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* BOTTOM SECTION (darker) */}
-      <div className={styles.missionCardBottom}>
-        {/* If not yet rewarded: show Instructions heading (like Dart) */}
-        {!rewarded && (
-          <div className={styles.instructionsRow}>
-            <div className={styles.instructionsTitle}>{t('instructions_text')}</div>
-            <div className={styles.instructionsBody}>
-              {mission.rewardDetails?.rewardInstruction ?? mission.rewardDetails.rewardInstruction ?? t('no_instructions') ?? ''}
-            </div>
-          </div>
-        )}
-
-        {/* Expiry row (shown when there is an expiry — in Dart they show it when rewardRedeemCodeModel?.expires != null) */}
-        {expiryText && (
-          <div className={styles.expiresRow}>
-            <div className={styles.expiresText}>
-              {t('expires_text', { date: expiryText})}
-            </div>
-            {/* small copy icon next to expiry (like screenshot shows) - clicking should not copy code */}
-            {redeemCode && (
-              <button
-                className={styles.smallIconButton}
-                title={'copy'}
-                onClick={(e) => {
-                  handleCopy(redeemCode);
-                }}
-              >
-                {/* simple square icon */}
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
-                  <rect x="9" y="9" width="9" height="9" stroke="currentColor" strokeWidth="1.6" rx="1" />
-                  <rect x="4.5" y="4.5" width="9" height="9" stroke="currentColor" strokeWidth="1.2" rx="1" />
-                </svg>
-              </button>
-            )}
-          </div>
-        )}
-
-        {/* If rewarded: show code (centered) OR fallback to rewarded text */}
-        {rewarded ? (
-          <div className={styles.redeemBlock}>
-            {redeemCode ? (
-              <>
-                <div className={styles.redeemCodeLarge}>{redeemCode}</div>
-              </>
-            ) : (
-              <div className={styles.redeemedText}>
-                {t('rewarded_text')}
+        {/* BOTTOM SECTION (darker) */}
+        <div className={styles.missionCardBottom}>
+          {/* If not yet rewarded: show Instructions heading (like Dart) */}
+          {!rewarded && (
+            <div className={styles.instructionsRow}>
+              <div className={styles.instructionsTitle}>{t('instructions_text')}</div>
+              <div className={styles.instructionsBody}>
+                {mission.rewardDetails?.rewardInstruction ?? mission.rewardDetails.rewardInstruction ?? t('no_instructions') ?? ''}
               </div>
-            )}
-          </div>
-        ) : (
-          // Not rewarded: show collect button if progress complete, otherwise nothing
-           progressRequired === progressCount ? <div className={styles.actionRow}>
+            </div>
+          )}
+
+          {/* Expiry row (shown when there is an expiry — in Dart they show it when rewardRedeemCodeModel?.expires != null) */}
+          {(expiryText || isExpired) && (
+            <div className={styles.expiresRow}>
+              <div className={styles.expiresText}>
+                {isExpired ? t('expired_text') : t('expires_text', { date: expiryText! })}
+              </div>
+              {/* small copy icon next to expiry (like screenshot shows) - clicking should not copy code */}
+              {redeemCode && (
+                <button
+                  className={styles.smallIconButton}
+                  title={'copy'}
+                  onClick={(e) => {
+                    handleCopy(redeemCode);
+                  }}
+                >
+                  {/* simple square icon */}
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
+                    <rect x="9" y="9" width="9" height="9" stroke="currentColor" strokeWidth="1.6" rx="1" />
+                    <rect x="4.5" y="4.5" width="9" height="9" stroke="currentColor" strokeWidth="1.2" rx="1" />
+                  </svg>
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* If rewarded: show code (centered) OR fallback to rewarded text */}
+          {rewarded ? (
+            <div className={styles.redeemBlock}>
+              {redeemCode ? (
+                <>
+                  <div className={styles.redeemCodeLarge}>{redeemCode}</div>
+                </>
+              ) : (
+                <div className={styles.redeemedText}>
+                  {t('rewarded_text')}
+                </div>
+              )}
+            </div>
+          ) : (
+            // Not rewarded: show collect button if progress complete, otherwise nothing
+            progressRequired === progressCount ? <div className={styles.actionRow}>
               <button
                 className={styles.collectButton}
                 onClick={handleCollect}
                 disabled={collecting}
               >
-                {collecting ? <span className={styles.moreSpinner}></span> : t('collect_text') }
+                {collecting ? <span className={styles.moreSpinner}></span> : t('collect_text')}
               </button>
-          </div> : <></>
-        )}
+            </div> : <></>
+          )}
+        </div>
       </div>
-    </div>
     </>
   );
 }
@@ -371,7 +372,7 @@ const MissionContainer: React.FC<MissionContainerProps> = ({ tab, handleCollecte
   };
 
   useEffect(() => {
-      if (!userData) return;
+    if (!userData) return;
     demandMissionModel(async ({ get, set }) => {
       setMissionLoading(true);
       const missionModels = await fetchMissionModel(userData, 10, new PaginateModel());
@@ -410,13 +411,13 @@ const MissionContainer: React.FC<MissionContainerProps> = ({ tab, handleCollecte
   return (
     <div className={styles.missionsList}>
       {missionModel.map((mission) => (
-        <MissionCard key={mission.missionId} mission={mission} tab={tab} handleCollected={handleCollected}/>
+        <MissionCard key={mission.missionId} mission={mission} tab={tab} handleCollected={handleCollected} />
       ))}
 
-       {missionModel.length > 10 && <div ref={loaderRef} className={styles.loadMoreSentinel}></div>}
-       {missionLoading && missionModel.length === 0 && <LoadingView />}
-       {!missionLoading && missionModel.length === 0 && !error && (<NoResultsView text="No result" buttonText="Try Again" onButtonClick={refreshData} />)}
-       {!missionLoading && missionModel.length === 0 && error && (<ErrorView text="Error occurred." buttonText="Try Again" onButtonClick={refreshData} />)}
+      {missionModel.length > 10 && <div ref={loaderRef} className={styles.loadMoreSentinel}></div>}
+      {missionLoading && missionModel.length === 0 && <LoadingView />}
+      {!missionLoading && missionModel.length === 0 && !error && (<NoResultsView text="No result" buttonText="Try Again" onButtonClick={refreshData} />)}
+      {!missionLoading && missionModel.length === 0 && error && (<ErrorView text="Error occurred." buttonText="Try Again" onButtonClick={refreshData} />)}
 
 
     </div>

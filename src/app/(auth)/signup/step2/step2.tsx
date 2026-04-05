@@ -21,9 +21,10 @@ import DialogCancel from '@/components/DialogCancel';
 interface LanguageItemProps {
   onClick: () => void;
   text: string;
+  code: string;
 }
 
-const LanguageItem = ({ onClick, text }: LanguageItemProps) => {
+const LanguageItem = ({ onClick, text, code }: LanguageItemProps) => {
   const { theme } = useTheme();
   return (
     <div
@@ -33,7 +34,10 @@ const LanguageItem = ({ onClick, text }: LanguageItemProps) => {
       role="button"
       tabIndex={0}
     >
-      {text}
+      <div className={styles.itemContent}>
+        <span className={styles.itemText}>{text}</span>
+        <span className={`${styles.itemCode} ${styles[`itemCode_${theme}`]}`}>{code}</span>
+      </div>
     </div>
   );
 };
@@ -41,9 +45,12 @@ const LanguageItem = ({ onClick, text }: LanguageItemProps) => {
 interface CountryItemProps {
   onClick: () => void;
   text: string;
+  image: string | null;
+  isoCode: string;
+  phoneCode: string;
 }
 
-const CountryItem = ({ onClick, text }: CountryItemProps) => {
+const CountryItem = ({ onClick, text, image, isoCode, phoneCode }: CountryItemProps) => {
   const { theme } = useTheme();
   return (
     <div
@@ -53,7 +60,21 @@ const CountryItem = ({ onClick, text }: CountryItemProps) => {
       role="button"
       tabIndex={0}
     >
-      {text}
+      <div className={styles.itemContent}>
+        {image && (
+          <Image
+            src={image}
+            alt={text}
+            width={24}
+            height={24}
+            className={styles.countryImage}
+          />
+        )}
+        <div className={styles.countryInfo}>
+          <span className={styles.itemText}>{text}</span>
+          <span className={`${styles.itemCode} ${styles[`itemCode_${theme}`]}`}>{isoCode} • {phoneCode}</span>
+        </div>
+      </div>
     </div>
   );
 };
@@ -261,12 +282,14 @@ export default function SignUpStep2() {
            <label htmlFor="language" className={styles.label}>
                         {t('language')}
             </label>
+            <p className={`${styles.fieldDescription} ${styles[`fieldDescription_${theme}`]}`}>{t('language_description')}</p>
             <button onClick={openLanguage} className={styles.select}> {signup.language?.language_identity || 'Select'} </button>
           </div>
           <div  className={styles.formGroup}>
            <label htmlFor="country" className={styles.label}>
                         {t('country')}
             </label>
+            <p className={`${styles.fieldDescription} ${styles[`fieldDescription_${theme}`]}`}>{t('country_description')}</p>
             <button onClick={openCountry} className={styles.select}> {signup.country?.country_identity || 'Select'} </button>
           </div>
           <button
@@ -336,6 +359,7 @@ export default function SignUpStep2() {
                           key={index}
                           onClick={() => handleLanguage(item)}
                           text={item.language_identity}
+                          code={item.language_code}
                         />
                       ))}
                     </SelectionViewer>
@@ -392,6 +416,9 @@ export default function SignUpStep2() {
                           key={index}
                           onClick={() => handleCountry(item)}
                           text={item.country_identity}
+                          image={item.country_image}
+                          isoCode={item.country_two_iso_code}
+                          phoneCode={item.country_phone_code}
                         />
                       ))}
                     </SelectionViewer>

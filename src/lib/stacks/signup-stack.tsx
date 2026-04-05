@@ -21,12 +21,14 @@ export type Country = {
   country_identity: string;
   country_image: string | null;
   country_phone_code: string;
-  country_phone_digit: number
+  country_phone_digit: number;
+  country_two_iso_code: string;
 };
 
 export type Language = {
   language_id: string;
-  language_identity: string
+  language_identity: string;
+  language_code: string;
 };
 
 export type Role = {

@@ -315,8 +315,7 @@ export default function SignUpStep6() {
           <div className={`${styles.rewardInfo} ${styles[`rewardInfo_${theme}`]}`}>
                 {tNode('referral_reward_info', {
                   amount: <strong>300</strong>,
-                  threshold: <strong>1000</strong>,
-                  hours: <strong>24</strong>
+                  threshold: <strong>1000</strong>
                 })}
           </div>
           </div>

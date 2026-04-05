@@ -43,7 +43,7 @@
   padding-bottom: 8px;
 }
 
-.innerBody{
+.innerBody {
   display: flex;
   max-width: 700px;
   flex-direction: column;
@@ -97,7 +97,7 @@
   box-sizing: border-box;
 }
 
-.logo{
+.logo {
   width: 35px;
   height: 35px;
 }
@@ -113,15 +113,18 @@
   border-color: #333;
 }
 
-.errorText, .validText {
+.errorText,
+.validText {
   font-size: 0.75rem;
   margin: 0px;
   margin-top: 0.15rem;
   text-align: left;
   font-weight: 500;
   line-height: 1.25;
-   word-break: break-word;   /* break long words */
-      white-space: normal;      /* allow wrapping */
+  word-break: break-word;
+  /* break long words */
+  white-space: normal;
+  /* allow wrapping */
 }
 
 .spinner {
@@ -135,7 +138,9 @@
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .loadingOverlay {
@@ -159,15 +164,17 @@
   display: flex;
   gap: 1rem;
   flex-wrap: nowrap;
-    overflow-x: auto;
-    scroll-behavior: smooth;
-    -webkit-overflow-scrolling: touch;
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-    padding: 0.25rem 2rem;
-    width: 100%; /* Add this */
-    max-width: 100%; /* Add this */
-    box-sizing: border-box;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  padding: 0.25rem 2rem;
+  width: 100%;
+  /* Add this */
+  max-width: 100%;
+  /* Add this */
+  box-sizing: border-box;
 }
 
 
@@ -180,7 +187,7 @@
   padding: 0.5rem 1rem;
   border-radius: 8px;
   cursor: pointer;
-    white-space: nowrap;
+  white-space: nowrap;
   font-weight: 600;
   transition: all 0.3s ease;
   border: 2px solid transparent;
@@ -230,7 +237,7 @@
   width: 100%;
   border-radius: 10px;
   overflow: hidden;
-  box-shadow: 0 6px 14px rgba(0,0,0,0.35);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35);
   transition: transform 0.18s ease, box-shadow 0.18s ease;
   cursor: pointer;
   margin-bottom: 1rem;
@@ -238,7 +245,8 @@
 
 /* --- TOP (lighter / green) --- */
 .achievementsCardTop {
-  background: linear-gradient(90deg, #176b2d 0%, #1e7a36 100%); /* green gradient */
+  background: linear-gradient(90deg, #176b2d 0%, #1e7a36 100%);
+  /* green gradient */
   padding: 12px;
   color: #fff;
 }
@@ -247,7 +255,7 @@
   display: flex;
   align-items: flex-start;
   gap: 12px;
-    align-items: center;
+  align-items: center;
 
 }
 
@@ -287,7 +295,7 @@
 
 .achievementsDescription {
   margin: 4px 0 0 0;
-  color: rgba(255,255,255,0.92);
+  color: rgba(255, 255, 255, 0.92);
   font-size: 14px;
   text-overflow: ellipsis;
 }
@@ -326,7 +334,8 @@
 
 /* --- BOTTOM (darker) --- */
 .achievementsCardBottom {
-  background: #0f3918; /* darker green */
+  background: #0f3918;
+  /* darker green */
   padding: 12px;
   color: #fff;
   display: flex;
@@ -350,7 +359,7 @@
 
 .instructionsBody {
   font-size: 13px;
-  color: rgba(255,255,255,0.9);
+  color: rgba(255, 255, 255, 0.9);
 }
 
 /* expiry line  */
@@ -392,7 +401,7 @@
   letter-spacing: 2px;
   color: #fff;
   padding: 8px 12px;
-  background: rgba(255,255,255,0.05);
+  background: rgba(255, 255, 255, 0.05);
   border-radius: 8px;
   max-width: 100%;
   text-align: center;
@@ -400,7 +409,7 @@
 
 .copyButton {
   background: transparent;
-  border: 1px solid rgba(255,255,255,0.12);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   color: #fff;
   padding: 8px 12px;
   border-radius: 8px;
@@ -427,7 +436,7 @@
 
 /* show in-progress label when not ready to collect */
 .statusPending {
-  color: rgba(255,255,255,0.9);
+  color: rgba(255, 255, 255, 0.9);
   font-weight: 700;
   align-self: flex-end;
 }
@@ -436,7 +445,7 @@
 .redeemedText {
   font-size: 15px;
   font-weight: 700;
-  color: rgba(255,255,255,0.95);
+  color: rgba(255, 255, 255, 0.95);
 }
 
 .moreSpinnerContainer {
@@ -456,52 +465,61 @@
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 
 /* Tablet */
 @media screen and (min-width: 500px) and (max-width: 800px) {
- .header {
-   left: 0;
+  .header {
+    left: 0;
   }
- .headerContent {
-   margin: 0 1rem;
-   padding-left: 16px;
-  padding-right: 16px;
-  padding-top: 8px;
-  padding-bottom: 8px;
- }
+
+  .headerContent {
+    margin: 0 1rem;
+    padding-left: 16px;
+    padding-right: 16px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+
   .logo {
-       width: 35px;
-       height: 35px;
-     }
+    width: 35px;
+    height: 35px;
+  }
+
   .innerBody {
     padding-top: 6rem;
-      max-width: 800px;
+    max-width: 800px;
   }
-      .tab_switcher,.achievementsList {
-             padding: 0.2rem 1.5rem;
-       }
+
+  .tab_switcher,
+  .achievementsList {
+    padding: 0.2rem 1.5rem;
+  }
 
 
 }
 
 /* Mobile */
 @media screen and (max-width: 500px) {
- .header {
-   left: 0;
+  .header {
+    left: 0;
   }
- .headerContent {
+
+  .headerContent {
     margin: 0;
-   padding-left: 16px;
-  padding-right: 16px;
-  padding-top: 8px;
-  padding-bottom: 8px;
- }
+    padding-left: 16px;
+    padding-right: 16px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+
   .innerBody {
     padding-top: 5rem;
-      max-width: 500px;
+    max-width: 500px;
   }
 
   .backIcon {
@@ -514,29 +532,34 @@
   }
 
   .logo {
-      width: 28px;
-      height: 28px;
-    }
+    width: 28px;
+    height: 28px;
+  }
 
-    .tab_switcher,.achievementsList {
-           padding: 0.15rem 1rem;
-     }
+  .tab_switcher,
+  .achievementsList {
+    padding: 0.15rem 1rem;
+  }
 
-       .achievementsHeader {
-           gap: 10px;
-         }
-         .achievementsIcon {
-           width: 56px;
-           height: 56px;
-         }
-         .pointsText {
-           font-size: 16px;
-         }
-         .achievementsTitle {
-           font-size: 16px;
-         }
-         .redeemCodeLarge {
-           font-size: 16px;
-         }
+  .achievementsHeader {
+    gap: 10px;
+  }
+
+  .achievementsIcon {
+    width: 56px;
+    height: 56px;
+  }
+
+  .pointsText {
+    font-size: 16px;
+  }
+
+  .achievementsTitle {
+    font-size: 16px;
+  }
+
+  .redeemCodeLarge {
+    font-size: 16px;
+  }
 
 }
