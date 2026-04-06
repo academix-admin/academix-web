@@ -1,336 +1,114 @@
-.container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  transition: all 0.3s ease;
-  box-sizing: border-box;
-  padding: 0 1rem;
-  width: 100%;
+.container {  display: flex;  flex-direction: column;  align-items: center;  transition: all 0.3s ease;  box-sizing: border-box;  padding: 0 1rem;  width: 100%;
 }
 
-.container_light {
-  background-color: #ffffff;
-  color: #000;
+.container_light {  background-color: #ffffff;  color: #000;
 }
 
-.container_dark {
-  background-color: #121212;
-  color: #ffffff;
+.container_dark {  background-color: #121212;  color: #ffffff;
 }
 
-.header {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  z-index: 10;
-  display: flex;
-  backdrop-filter: blur(8px);
-  box-sizing: border-box;
+.header {  position: fixed;  top: 0;  left: 0;  width: 100%;  z-index: 10;  display: flex;  backdrop-filter: blur(8px);  box-sizing: border-box;
 }
 
-.header_light {
-  background-color: rgba(255, 255, 255, 0.92);
-  border-bottom: 1px solid #E5E5E5;
+.header_light {  background-color: rgba(255, 255, 255, 0.92);  border-bottom: 1px solid #E5E5E5;
 }
 
-.header_dark {
-  background-color: rgba(18, 18, 18, 0.92);
-  border-bottom: 1px solid #333;
+.header_dark {  background-color: rgba(18, 18, 18, 0.92);  border-bottom: 1px solid #333;
 }
 
-.headerContent {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  gap: 1rem;
-  margin: 0 20%;
-  box-sizing: border-box;
-  min-width: 0;
-  padding-left: 16px;
-  padding-right: 16px;
-  padding-top: 8px;
-  padding-bottom: 8px;
+.headerContent {  display: flex;  align-items: center;  justify-content: space-between;  width: 100%;  gap: 1rem;  margin: 0 20%;  box-sizing: border-box;  min-width: 0;  padding-left: 16px;  padding-right: 16px;  padding-top: 8px;  padding-bottom: 8px;
 }
 
-.innerBody {
-  margin: 0 auto;
-  width: 60%;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-  border-radius: 12px;
-  transition: all 0.3s ease;
-  padding-bottom: var(--nav-height);
+.innerBody {  margin: 0 auto;  width: 60%;  display: flex;  flex-direction: column;  box-sizing: border-box;  border-radius: 12px;  transition: all 0.3s ease;  padding-bottom: var(--nav-height);
 }
 
-.innerBody_light {
-  border: 1px solid #e0e0e0;
-  background-color: #ffffff;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+.innerBody_light {  border: 1px solid #e0e0e0;  background-color: #ffffff;  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
-.innerBody_dark {
-  border: 1px solid #444444;
-  background-color: #2d2d2d;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+.innerBody_dark {  border: 1px solid #444444;  background-color: #2d2d2d;  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-.innerBody_profile {
-  border: none;
-  background-color: transparent;
-  box-shadow: none;
+.innerBody_profile {  border: none;  background-color: transparent;  box-shadow: none;
 }
 
-.container {
-  padding-top: 6rem;
-  padding-bottom: 4rem;
+.container {  padding-top: 6rem;  padding-bottom: 4rem;
 }
 
-.container_ios {
-  padding-top: 1rem;
-  padding-bottom: 1rem;
-  min-height: 100vh;
+.container_ios {  padding-top: 1rem;  padding-bottom: 1rem;  min-height: 100vh;
 }
 
-.container_android {
-  padding-top: 1rem;
-  padding-bottom: 1rem;
-  min-height: 100vh;
+.container_android {  padding-top: 1rem;  padding-bottom: 1rem;  min-height: 100vh;
 }
 
-.container_profile {
-  padding-top: 6rem;
+.container_profile {  padding-top: 6rem;
 }
 
-.backButton {
-  min-width: 44px;
-  min-height: 44px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: inherit;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  padding: 12px;
-  justify-content: center;
-  transition: background-color 0.2s ease;
+.backButton {  min-width: 44px;  min-height: 44px;  background: none;  border: none;  cursor: pointer;  color: inherit;  border-radius: 50%;  display: flex;  align-items: center;  padding: 12px;  justify-content: center;  transition: background-color 0.2s ease;
 }
 
-.backButton:hover {
-  background-color: rgba(0, 0, 0, 0.05);
+.backButton:hover {  background-color: rgba(0, 0, 0, 0.05);
 }
 
-.container_dark .backButton:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+.container_dark .backButton:hover {  background-color: rgba(255, 255, 255, 0.1);
 }
 
-.backIcon {
-  width: 20px;
-  height: 20px;
+.backIcon {  width: 20px;  height: 20px;
 }
 
-.title {
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin: 0;
-  flex-grow: 1;
-  text-align: start;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  box-sizing: border-box;
+.title {  font-size: 1.5rem;  font-weight: 600;  margin: 0;  flex-grow: 1;  text-align: start;  white-space: nowrap;  overflow: hidden;  text-overflow: ellipsis;  box-sizing: border-box;
 }
 
-.logoContainer {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  box-sizing: border-box;
-  transition: transform 0.2s ease;
+.logoContainer {  display: flex;  align-items: center;  justify-content: flex-end;  box-sizing: border-box;  transition: transform 0.2s ease;
 }
 
-.logoContainer:hover {
-  transform: scale(1.05);
+.logoContainer:hover {  transform: scale(1.05);
 }
 
-.logo {
-  width: 35px;
-  height: 35px;
-  border-radius: 8px;
+.logo {  width: 35px;  height: 35px;  border-radius: 8px;
 }
 
-.content {
-  width: 100%;
-  text-align: left;
+.content {  width: 100%;  text-align: left;
 }
 
-.sectionTitle {
-  font-size: 2rem;
-  font-weight: 700;
-  margin-bottom: 2rem;
+.sectionTitle {  font-size: 2rem;  font-weight: 700;  margin-bottom: 2rem;
 }
 
-.faqItem {
-  margin-bottom: 2rem;
-  padding-bottom: 1.5rem;
-  border-bottom: 1px solid;
+.faqItem {  margin-bottom: 2rem;  padding-bottom: 1.5rem;  border-bottom: 1px solid;
 }
 
-.container_light .faqItem {
-  border-bottom-color: #e0e0e0;
+.container_light .faqItem {  border-bottom-color: #e0e0e0;
 }
 
-.container_dark .faqItem {
-  border-bottom-color: #333;
+.container_dark .faqItem {  border-bottom-color: #333;
 }
 
-.faqQuestion {
-  font-size: 1.2rem;
-  font-weight: 600;
-  margin-bottom: 0.75rem;
+.faqQuestion {  font-size: 1.2rem;  font-weight: 600;  margin-bottom: 0.75rem;
 }
 
-.paragraph {
-  font-size: 1rem;
-  line-height: 1.6;
-  opacity: 0.9;
+.paragraph {  font-size: 1rem;  line-height: 1.6;  opacity: 0.9;
 }
 
-.contactSection {
-  margin-top: 3rem;
-  padding: 1.5rem;
-  border-radius: 12px;
+.contactSection {  margin-top: 3rem;  padding: 1.5rem;  border-radius: 12px;
 }
 
-.container_light .contactSection {
-  background-color: #f8f9fa;
+.container_light .contactSection {  background-color: #f8f9fa;
 }
 
-.container_dark .contactSection {
-  background-color: #1e1e1e;
+.container_dark .contactSection {  background-color: #1e1e1e;
 }
 
-.contactTitle {
-  font-size: 1.3rem;
-  font-weight: 600;
-  margin-bottom: 0.75rem;
+.contactTitle {  font-size: 1.3rem;  font-weight: 600;  margin-bottom: 0.75rem;
 }
 
-@media (max-width: 1024px) {
-  .innerBody {
-    width: 80%;
-  }
+@media (max-width: 1024px) {  .innerBody {  width: 80%;  }
 }
 
 @media screen and (min-width: 801px) {
 
 }
 
-@media screen and (min-width: 501px) and (max-width: 930px) {
-  .headerContent {
-    margin: 0 1rem;
-    padding-left: 16px;
-  padding-right: 16px;
-  padding-top: 8px;
-  padding-bottom: 8px;
-  }
-
-  .logo {
-    width: 35px;
-    height: 35px;
-  }
-
-  .container {
-    padding-top: 6rem;
-    padding-bottom: 2rem;
-    padding-bottom: var(--nav-height);
-  }
-
-  .container_ios {
-    padding-top: 1rem;
-    padding-bottom: 1rem;
-  }
-
-  .container_android {
-    padding-top: 1rem;
-    padding-bottom: 1rem;
-  }
-
-  .container_profile {
-    padding-top: 6rem;
-  }
-
-  .innerBody {
-    width: 100%;
-  }
+@media screen and (min-width: 501px) and (max-width: 930px) {  .headerContent {  padding-left: 16px;  padding-right: 16px;  padding-top: 8px;  padding-bottom: 8px;  }  .logo {  width: 35px;  height: 35px;  }  .container {  padding-top: 6rem;  padding-bottom: 2rem;  padding-bottom: var(--nav-height);  }  .container_ios {  padding-top: 1rem;  padding-bottom: 1rem;  }  .container_android {  padding-top: 1rem;  padding-bottom: 1rem;  }  .container_profile {  padding-top: 6rem;  }  .innerBody {  width: 100%;  }
 }
 
-@media screen and (max-width: 500px) {
-  .container {
-    padding-top: 6rem;
-    padding-bottom: 2rem;
-    padding-bottom: var(--nav-height);
-  }
-
-  .container_ios {
-    padding-top: 1rem;
-    padding-bottom: 1rem;
-  }
-
-  .container_android {
-    padding-top: 1rem;
-    padding-bottom: 1rem;
-  }
-
-  .container_profile {
-    padding: 16px;
-    padding-top: 5rem;
-    box-sizing: border-box;
-  }
-
-  .innerBody {
-    width: 100%;
-    padding: 1rem;
-  }
-
-  .headerContent {
-    margin: 0;
-    padding-left: 16px;
-  padding-right: 16px;
-  padding-top: 8px;
-  padding-bottom: 8px;
-  }
-
-  .backIcon {
-    width: 16px;
-    height: 16px;
-  }
-
-  .title {
-    font-size: 1.2rem;
-  }
-
-  .logo {
-    width: 28px;
-    height: 28px;
-  }
-
-  .sectionTitle {
-    font-size: 1.5rem;
-  }
-
-  .faqQuestion {
-    font-size: 1.1rem;
-  }
-
-  .paragraph {
-    font-size: 0.95rem;
-  }
-
-  .contactTitle {
-    font-size: 1.1rem;
-  }
+@media screen and (max-width: 500px) {  .container {  padding-top: 6rem;  padding-bottom: 2rem;  padding-bottom: var(--nav-height);  }  .container_ios {  padding-top: 1rem;  padding-bottom: 1rem;  }  .container_android {  padding-top: 1rem;  padding-bottom: 1rem;  }  .container_profile {  padding: 16px;  padding-top: 5rem;  box-sizing: border-box;  }  .innerBody {  width: 100%;  padding: 1rem;  }  .headerContent {  margin: 0;  padding-left: 16px;  padding-right: 16px;  padding-top: 8px;  padding-bottom: 8px;  }  .backIcon {  width: 16px;  height: 16px;  }  .title {  font-size: 1.2rem;  }  .logo {  width: 28px;  height: 28px;  }  .sectionTitle {  font-size: 1.5rem;  }  .faqQuestion {  font-size: 1.1rem;  }  .paragraph {  font-size: 0.95rem;  }  .contactTitle {  font-size: 1.1rem;  }
 }

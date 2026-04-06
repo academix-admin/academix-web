@@ -78,6 +78,41 @@
   box-sizing: border-box;
 }
 
+.refreshButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-color);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  flex-shrink: 0;
+  opacity: 1;
+  transition: opacity 0.2s;
+}
+
+.refreshButton:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.refreshSpinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid transparent;
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.headerSpacer {
+  width: 28px;
+  flex-shrink: 0;
+}
+
 .content {
   flex: 1;
   max-width: 800px;
@@ -559,7 +594,6 @@
      }
 
    .headerContent {
-     margin: 0 1rem;
      padding-left: 16px;
   padding-right: 16px;
   padding-top: 8px;

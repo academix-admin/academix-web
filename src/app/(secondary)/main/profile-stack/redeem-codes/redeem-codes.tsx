@@ -105,7 +105,7 @@ const RedeemCodeCard: React.FC<{ redeemCode: RedeemCodeModel }> = ({ redeemCode 
           <div className={styles.amountContent}>
             <div className={styles.currencyIcon}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.31-8.86c-1.77-.45-2.34-.94-2.34-1.67 0-.84.79-1.43 2.1-1.43 1.38 0 1.9.66 1.94 1.64h1.71c-.05-1.34-.87-2.57-2.49-2.97V5H10.9v1.69c-1.51.32-2.72 1.3-2.72 2.81 0 1.79 1.49 2.69 3.66 3.21 1.95.46 2.34 1.15 2.34 1.87 0 .53-.39 1.39-2.1 1.39-1.6 0-2.23-.72-2.32-1.64H8.32c.1 1.7 1.36 2.66 2.86 2.97V19h2.34v-1.67c1.52-.29 2.72-1.16 2.72-2.82 0-1.47-1.09-2.49-3.93-3.16z"/>
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.31-8.86c-1.77-.45-2.34-.94-2.34-1.67 0-.84.79-1.43 2.1-1.43 1.38 0 1.9.66 1.94 1.64h1.71c-.05-1.34-.87-2.57-2.49-2.97V5H10.9v1.69c-1.51.32-2.72 1.3-2.72 2.81 0 1.79 1.49 2.69 3.66 3.21 1.95.46 2.34 1.15 2.34 1.87 0 .53-.39 1.39-2.1 1.39-1.6 0-2.23-.72-2.32-1.64H8.32c.1 1.7 1.36 2.66 2.86 2.97V19h2.34v-1.67c1.52-.29 2.72-1.16 2.72-2.82 0-1.47-1.09-2.49-3.93-3.16z" />
               </svg>
             </div>
             <span className={styles.amountText}>{redeemCode.redeemCodeAmount}</span>
@@ -143,26 +143,27 @@ export default function RedeemCodes() {
 
 
   const [redeemCodes, demandRedeemCodes, setRedeemCodes] = useRedeemCodeModel(lang);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
 
   useEffect(() => {
-        if (!loaderRef.current) return;
+    if (!loaderRef.current) return;
 
-     const observer = new IntersectionObserver(
-        (entries) => {
-            if (entries[0].isIntersecting) {
-                callPaginate();
-            }
-        },
-        { threshold: 1.0 }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          callPaginate();
+        }
+      },
+      { threshold: 1.0 }
     );
 
     observer.observe(loaderRef.current);
 
-        return () => {
-            if (loaderRef.current) observer.unobserve(loaderRef.current);
-        };
-    }, [redeemCodes, paginateModel]);
+    return () => {
+      if (loaderRef.current) observer.unobserve(loaderRef.current);
+    };
+  }, [redeemCodes, paginateModel]);
 
   const fetchRedeemCodes = useCallback(async (userData: UserData, limitBy: number, paginateModel: PaginateModel): Promise<RedeemCodeModel[]> => {
     if (!userData) return [];
@@ -222,17 +223,17 @@ export default function RedeemCodes() {
   };
 
 
-  useEffect(() => {
-    demandRedeemCodes(async ({ get, set }) => {
-      if (!userData || redeemCodes.length > 0) return;
-      setFetchLoading(true);
-      const redeemCodesModel = await fetchRedeemCodes(userData, 10,  new PaginateModel());
-      extractLatest(redeemCodesModel);
-      set(redeemCodesModel);
-      setEmpty(redeemCodesModel.length === 0);
-      setFetchLoading(false);
-    });
-  }, [demandRedeemCodes]);
+  // useEffect(() => {
+  //   demandRedeemCodes(async ({ get, set }) => {
+  //     if (!userData || redeemCodes.length > 0) return;
+  //     setFetchLoading(true);
+  //     const redeemCodesModel = await fetchRedeemCodes(userData, 10, new PaginateModel());
+  //     extractLatest(redeemCodesModel);
+  //     set(redeemCodesModel);
+  //     setEmpty(redeemCodesModel.length === 0);
+  //     setFetchLoading(false);
+  //   });
+  // }, [demandRedeemCodes]);
 
 
   const callPaginate = async () => {
@@ -247,28 +248,39 @@ export default function RedeemCodes() {
   };
 
   const refreshData = useCallback(async () => {
-    if (!userData) return;
-    setFetchLoading(true);
+    if (!userData || isRefreshing) return;
+    setIsRefreshing(true);
     const redeemCodesModel = await fetchRedeemCodes(userData, 10, new PaginateModel());
-    setFetchLoading(false);
+    setIsRefreshing(false);
     setEmpty(redeemCodesModel.length === 0);
     if (redeemCodesModel.length > 0) {
       extractLatest(redeemCodesModel);
       setRedeemCodes(redeemCodesModel);
     }
-  }, [userData, fetchRedeemCodes, setRedeemCodes]);
+  }, [userData, fetchRedeemCodes, setRedeemCodes, isRefreshing]);
 
   // Page lifecycle - refresh on enter
   usePageLifecycle(nav, {
     onEnter: () => {
-      refreshData();
+      demandRedeemCodes(async ({ get, set }) => {
+        if (!userData || redeemCodes.length > 0) return;
+        setFetchLoading(true);
+        const redeemCodesModel = await fetchRedeemCodes(userData, 10, new PaginateModel());
+        extractLatest(redeemCodesModel);
+        set(redeemCodesModel);
+        setEmpty(redeemCodesModel.length === 0);
+        setFetchLoading(false);
+      });
     },
+    onResume: () => {
+      refreshData();
+    }
   }, [refreshData]);
 
-    const goBack = async () => {
-      await nav.pop();
-      StateStack.core.clearScope('redeem_code_flow');
-    };
+  const goBack = async () => {
+    await nav.pop();
+    StateStack.core.clearScope('redeem_code_flow');
+  };
 
   return (
     <main className={`${styles.container} ${styles[`container_${theme}`]}`}>
@@ -288,23 +300,37 @@ export default function RedeemCodes() {
           </button>
           <h1 className={styles.title}>{t('redeem_codes')}</h1>
           <button
+            className={styles.refreshButton}
+            onClick={refreshData}
+            disabled={isRefreshing}
+            aria-label="Refresh"
+          >
+            {isRefreshing ? (
+              <span className={styles.refreshSpinner} />
+            ) : (
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2" />
+              </svg>
+            )}
+          </button>
+          <button
             className={styles.backButton}
             onClick={() => nav.push('giveback_page')}
             aria-label="Give backs"
           >
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M20 12V22H4V12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M22 7H2V12H22V7Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M12 22V7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M12 7H7.5C6.83696 7 6.20107 6.73661 5.73223 6.26777C5.26339 5.79893 5 5.16304 5 4.5C5 3.83696 5.26339 3.20107 5.73223 2.73223C6.20107 2.26339 6.83696 2 7.5 2C11 2 12 7 12 7Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M12 7H16.5C17.163 7 17.7989 6.73661 18.2678 6.26777C18.7366 5.79893 19 5.16304 19 4.5C19 3.83696 18.7366 3.20107 18.2678 2.73223C17.7989 2.26339 17.163 2 16.5 2C13 2 12 7 12 7Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M20 12V22H4V12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M22 7H2V12H22V7Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M12 22V7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M12 7H7.5C6.83696 7 6.20107 6.73661 5.73223 6.26777C5.26339 5.79893 5 5.16304 5 4.5C5 3.83696 5.26339 3.20107 5.73223 2.73223C6.20107 2.26339 6.83696 2 7.5 2C11 2 12 7 12 7Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M12 7H16.5C17.163 7 17.7989 6.73661 18.2678 6.26777C18.7366 5.79893 19 5.16304 19 4.5C19 3.83696 18.7366 3.20107 18.2678 2.73223C17.7989 2.26339 17.163 2 16.5 2C13 2 12 7 12 7Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>
         </div>
       </header>
 
       <div className={styles.content}>
-        {redeemCodes.length === 0  && fetchLoading && <LoadingView />}
+        {redeemCodes.length === 0 && fetchLoading && <LoadingView />}
 
         {redeemCodes.length === 0 && error && (
           <ErrorView
@@ -322,10 +348,10 @@ export default function RedeemCodes() {
           />
         )}
 
-         {redeemCodes.map((redeemCode) => (
-                 <RedeemCodeCard key={redeemCode.redeemCodeId} redeemCode={redeemCode}/>
-         ))}
-         {redeemCodes.length > 0 && <div ref={loaderRef} className={styles.loadMoreSentinel}></div>}
+        {redeemCodes.map((redeemCode) => (
+          <RedeemCodeCard key={redeemCode.redeemCodeId} redeemCode={redeemCode} />
+        ))}
+        {redeemCodes.length > 0 && <div ref={loaderRef} className={styles.loadMoreSentinel}></div>}
       </div>
     </main>
   );

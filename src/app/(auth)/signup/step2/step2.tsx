@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback, useMemo,} from 'react';
+import { useEffect, useState, useCallback, useMemo, } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import Image from 'next/image';
@@ -9,7 +9,7 @@ import Link from 'next/link';
 import CachedLottie from '@/components/CachedLottie';
 import { getLastNameOrSingle, capitalize } from '@/utils/textUtils';
 import { supabaseBrowser } from '@/lib/supabase/client';
-import { useSignup , Country , Language} from '@/lib/stacks/signup-stack';
+import { useSignup, Country, Language } from '@/lib/stacks/signup-stack';
 import { useDemandState } from '@/lib/state-stack';
 import { useNav } from "@/lib/NavigationStack";
 import { SelectionViewer, useSelectionController } from "@/lib/SelectionViewer";
@@ -82,7 +82,7 @@ const CountryItem = ({ onClick, text, image, isoCode, phoneCode }: CountryItemPr
 export default function SignUpStep2() {
   const { theme } = useTheme();
   const { t, lang } = useLanguage();
-  const { signup, signup$, __meta  } = useSignup();
+  const { signup, signup$, __meta } = useSignup();
   const nav = useNav();
   const isTop = nav.isTop();
 
@@ -108,16 +108,16 @@ export default function SignUpStep2() {
   const [continueLoading, setContinueLoading] = useState(false);
   const [isFormValid, setIsFormValid] = useState(false);
 
- const [languageSelectId, languageSelectController, languageSelectIsOpen, languageSelectionState] = useSelectionController();
- const [searchLanguageQuery, setLanguageQuery] = useState('');
+  const [languageSelectId, languageSelectController, languageSelectIsOpen, languageSelectionState] = useSelectionController();
+  const [searchLanguageQuery, setLanguageQuery] = useState('');
 
- const [countrySelectId, countrySelectController, countrySelectIsOpen, countrySelectionState] = useSelectionController();
- const [searchCountryQuery, setCountryQuery] = useState('');
+  const [countrySelectId, countrySelectController, countrySelectIsOpen, countrySelectionState] = useSelectionController();
+  const [searchCountryQuery, setCountryQuery] = useState('');
 
   useEffect(() => {
-    if(!signup.fullName && __meta.isHydrated && isTop){nav.go('step1');}
+    if (!signup.fullName && __meta.isHydrated && isTop) { nav.go('step1'); }
     setFirstname(capitalize(getLastNameOrSingle(signup.fullName)));
-  }, [signup.fullName,__meta.isHydrated, isTop]);
+  }, [signup.fullName, __meta.isHydrated, isTop]);
 
   useEffect(() => {
     setCanGoBack(window.history.length > 1);
@@ -127,18 +127,18 @@ export default function SignUpStep2() {
   const loadCountries = useCallback(() => {
     demandCountries(async ({ set, get }) => {
       const check = get().length;
-            if(!check || check === 0)countrySelectController.setSelectionState("loading");
+      if (!check || check === 0) countrySelectController.setSelectionState("loading");
       try {
         const { data, error } = await supabaseBrowser.rpc('fetch_country', { p_locale: lang });
         if (error) throw error;
-        if(data.length > 0){
-                    set(data || []);
-                    countrySelectController.setSelectionState("data");
-                }else{
-                    countrySelectController.setSelectionState("empty");
-                }
+        if (data.length > 0) {
+          set(data || []);
+          countrySelectController.setSelectionState("data");
+        } else {
+          countrySelectController.setSelectionState("empty");
+        }
       } catch (err) {
-                  countrySelectController.setSelectionState("error");
+        countrySelectController.setSelectionState("error");
 
         console.error('Failed to fetch countries:', err);
       }
@@ -148,15 +148,15 @@ export default function SignUpStep2() {
   const loadLanguages = useCallback(() => {
     demandLanguages(async ({ set, get }) => {
       const check = get().length;
-      if(!check || check === 0)languageSelectController.setSelectionState("loading");
+      if (!check || check === 0) languageSelectController.setSelectionState("loading");
       try {
         const { data, error } = await supabaseBrowser.rpc('fetch_languages', { p_locale: lang });
         if (error) throw error;
-        if(data.length > 0){
-            set(data || []);
-            languageSelectController.setSelectionState("data");
-        }else{
-            languageSelectController.setSelectionState("empty");
+        if (data.length > 0) {
+          set(data || []);
+          languageSelectController.setSelectionState("data");
+        } else {
+          languageSelectController.setSelectionState("empty");
         }
       } catch (err) {
         languageSelectController.setSelectionState("error");
@@ -202,32 +202,32 @@ export default function SignUpStep2() {
   };
 
   const handleLanguageSearch = useCallback((query: string) => {
-      setLanguageQuery(query);
-    }, []);
+    setLanguageQuery(query);
+  }, []);
 
   const handleCountrySearch = useCallback((query: string) => {
-      setCountryQuery(query);
-    }, []);
+    setCountryQuery(query);
+  }, []);
 
-    // 🔹 Memoize filtered languages
-   const filteredLanguages = useMemo(() => {
-      if (!searchLanguageQuery) return languages;
-      const filters = languages.filter(item =>
-        item.language_identity.toLowerCase().includes(searchLanguageQuery.toLowerCase())
-      );
-      if(filters.length <= 0 && languages.length > 0){languageSelectController.setSelectionState("empty");}
-      return filters;
-    }, [languages, searchLanguageQuery]);
+  // 🔹 Memoize filtered languages
+  const filteredLanguages = useMemo(() => {
+    if (!searchLanguageQuery) return languages;
+    const filters = languages.filter(item =>
+      item.language_identity.toLowerCase().includes(searchLanguageQuery.toLowerCase())
+    );
+    if (filters.length <= 0 && languages.length > 0) { languageSelectController.setSelectionState("empty"); }
+    return filters;
+  }, [languages, searchLanguageQuery]);
 
-    // 🔹 Memoize filtered countries
-   const filteredCountries = useMemo(() => {
-      if (!searchCountryQuery) return countries;
-      const filters = countries.filter(item =>
-        item.country_identity.toLowerCase().includes(searchCountryQuery.toLowerCase())
-      );
-      if(filters.length <= 0 && countries.length > 0){countrySelectController.setSelectionState("empty");}
-      return filters;
-    }, [countries, searchCountryQuery]);
+  // 🔹 Memoize filtered countries
+  const filteredCountries = useMemo(() => {
+    if (!searchCountryQuery) return countries;
+    const filters = countries.filter(item =>
+      item.country_identity.toLowerCase().includes(searchCountryQuery.toLowerCase())
+    );
+    if (filters.length <= 0 && countries.length > 0) { countrySelectController.setSelectionState("empty"); }
+    return filters;
+  }, [countries, searchCountryQuery]);
 
   return (
     <main className={`${styles.container} ${styles[`container_${theme}`]}`}>
@@ -277,17 +277,17 @@ export default function SignUpStep2() {
         <h2 className={styles.stepTitle}>{t('hi_name', { name: firstname })}</h2>
         <p className={styles.stepSubtitle}>{t('step_x_of_y', { current: 2, total: 7 })}</p>
 
-        <div  className={styles.form}>
-          <div  className={styles.formGroup}>
-           <label htmlFor="language" className={styles.label}>
-                        {t('language')}
+        <div className={styles.form}>
+          <div className={styles.formGroup}>
+            <label htmlFor="language" className={styles.label}>
+              {t('language')}
             </label>
             <p className={`${styles.fieldDescription} ${styles[`fieldDescription_${theme}`]}`}>{t('language_description')}</p>
             <button onClick={openLanguage} className={styles.select}> {signup.language?.language_identity || 'Select'} </button>
           </div>
-          <div  className={styles.formGroup}>
-           <label htmlFor="country" className={styles.label}>
-                        {t('country')}
+          <div className={styles.formGroup}>
+            <label htmlFor="country" className={styles.label}>
+              {t('country')}
             </label>
             <p className={`${styles.fieldDescription} ${styles[`fieldDescription_${theme}`]}`}>{t('country_description')}</p>
             <button onClick={openCountry} className={styles.select}> {signup.country?.country_identity || 'Select'} </button>
@@ -299,7 +299,7 @@ export default function SignUpStep2() {
             aria-disabled={!isFormValid || continueLoading}
             onClick={handleSubmit}
           >
-                {continueLoading ? <span className={styles.spinner}></span> : t('continue')}
+            {continueLoading ? <span className={styles.spinner}></span> : t('continue')}
           </button>
         </div>
       </div>
@@ -307,121 +307,121 @@ export default function SignUpStep2() {
 
 
       <SelectionViewer
-                      id={languageSelectId}
-                      isOpen={languageSelectIsOpen}
-                      onClose={languageSelectController.close}
-                      titleProp={{
-                        text: t('language'),
-                        textColor: theme === 'light' ?  "#000" : "#fff"
-                      }}
-                      cancelButton={{
-                        position: "right",
-                        onClick: languageSelectController.close,
-                        view: <DialogCancel />
-                        }}
-                      searchProp={{
-                        text: "Search languages...",
-                        onChange: handleLanguageSearch,
-                        background: theme === 'light' ?  "#f5f5f5" : "#272727",
-                        textColor: theme === 'light' ?  "#000" : "#fff",
-                        padding: { l: "4px", r: "4px", t: "0px", b: "0px" },
-                        autoFocus: false,
-                      }}
-                      loadingProp={{
-                        view: <LoadingView text={t('loading')}/>,
-                      }}
-                      noResultProp={{
-                        view: <NoResultsView text="No results found." buttonText="Try Again" onButtonClick={loadLanguages} />,
-                      }}
-                      errorProp={{
-                        view: <ErrorView text="Error occurred." buttonText="Try Again" onButtonClick={loadLanguages} />,
-                      }}
-                      layoutProp={{
-                        gapBetweenHandleAndTitle: "16px",
-                        gapBetweenTitleAndSearch: "8px",
-                        gapBetweenSearchAndContent: "16px",
-                        backgroundColor:  theme === 'light' ?  "#fff" : "#121212",
-                        handleColor: "#888",
-                        handleWidth: "48px",
-                      }}
-                      childrenDirection="vertical"
-      //                 onPaginate={loadMore}
-                      snapPoints={[0, 1]}
-                      initialSnap={1}
-                      minHeight="65vh"
-                      maxHeight="90vh"
-                      closeThreshold={0.2}
-                      selectionState={languageSelectionState}
-                      zIndex={1000}
-                    >
-                      {filteredLanguages.map((item, index) => (
-                        <LanguageItem
-                          key={index}
-                          onClick={() => handleLanguage(item)}
-                          text={item.language_identity}
-                          code={item.language_code}
-                        />
-                      ))}
-                    </SelectionViewer>
+        id={languageSelectId}
+        isOpen={languageSelectIsOpen}
+        onClose={languageSelectController.close}
+        titleProp={{
+          text: t('language'),
+          textColor: theme === 'light' ? "#000" : "#fff"
+        }}
+        cancelButton={{
+          position: "right",
+          onClick: languageSelectController.close,
+          view: <DialogCancel />
+        }}
+        searchProp={{
+          text: "Search languages...",
+          onChange: handleLanguageSearch,
+          background: theme === 'light' ? "#f5f5f5" : "#272727",
+          textColor: theme === 'light' ? "#000" : "#fff",
+          padding: { l: "4px", r: "4px", t: "0px", b: "0px" },
+          autoFocus: false,
+        }}
+        loadingProp={{
+          view: <LoadingView text={t('loading')} />,
+        }}
+        noResultProp={{
+          view: <NoResultsView text="No results found." buttonText="Try Again" onButtonClick={loadLanguages} />,
+        }}
+        errorProp={{
+          view: <ErrorView text="Error occurred." buttonText="Try Again" onButtonClick={loadLanguages} />,
+        }}
+        layoutProp={{
+          gapBetweenHandleAndTitle: "16px",
+          gapBetweenTitleAndSearch: "8px",
+          gapBetweenSearchAndContent: "16px",
+          backgroundColor: theme === 'light' ? "#fff" : "#121212",
+          handleColor: "#888",
+          handleWidth: "48px",
+        }}
+        childrenDirection="vertical"
+        //                 onPaginate={loadMore}
+        snapPoints={[0, 1]}
+        initialSnap={1}
+        minHeight="65vh"
+        maxHeight="90vh"
+        closeThreshold={0.2}
+        selectionState={languageSelectionState}
+        zIndex={1000}
+      >
+        {filteredLanguages.map((item, index) => (
+          <LanguageItem
+            key={index}
+            onClick={() => handleLanguage(item)}
+            text={item.language_identity}
+            code={item.language_code}
+          />
+        ))}
+      </SelectionViewer>
 
       <SelectionViewer
-                      id={countrySelectId}
-                      isOpen={countrySelectIsOpen}
-                      onClose={countrySelectController.close}
-                      titleProp={{
-                        text: t('country'),
-                        textColor: theme === 'light' ?  "#000" : "#fff"
-                      }}
-                      cancelButton={{
-                        position: "right",
-                        onClick: countrySelectController.close,
-                        view: <DialogCancel />
-                        }}
-                      searchProp={{
-                        text: "Search countries...",
-                        onChange: handleCountrySearch,
-                        background: theme === 'light' ?  "#f5f5f5" : "#272727",
-                        textColor: theme === 'light' ?  "#000" : "#fff",
-                        padding: { l: "4px", r: "4px", t: "0px", b: "0px" },
-                        autoFocus: false,
-                      }}
-                      loadingProp={{
-                        view: <LoadingView text={t('loading')}/>,
-                      }}
-                      noResultProp={{
-                        view: <NoResultsView text="No results found." buttonText="Try Again" onButtonClick={loadCountries} />,
-                      }}
-                      errorProp={{
-                        view: <ErrorView text="Error occurred." buttonText="Try Again" onButtonClick={loadCountries} />,
-                      }}
-                      layoutProp={{
-                        gapBetweenHandleAndTitle: "16px",
-                        gapBetweenTitleAndSearch: "8px",
-                        gapBetweenSearchAndContent: "16px",
-                        backgroundColor:  theme === 'light' ?  "#fff" : "#121212",
-                        handleColor: "#888",
-                        handleWidth: "48px",
-                      }}
-                      childrenDirection="vertical"
-                      snapPoints={[0, 1]}
-                      initialSnap={1}
-                      minHeight="65vh"
-                      maxHeight="90vh"
-                      closeThreshold={0.2}
-                      selectionState={countrySelectionState}
-                      zIndex={1000}
-                    >
-                      {filteredCountries.map((item, index) => (
-                        <CountryItem
-                          key={index}
-                          onClick={() => handleCountry(item)}
-                          text={item.country_identity}
-                          image={item.country_image}
-                          isoCode={item.country_two_iso_code}
-                          phoneCode={item.country_phone_code}
-                        />
-                      ))}
-                    </SelectionViewer>
+        id={countrySelectId}
+        isOpen={countrySelectIsOpen}
+        onClose={countrySelectController.close}
+        titleProp={{
+          text: t('country'),
+          textColor: theme === 'light' ? "#000" : "#fff"
+        }}
+        cancelButton={{
+          position: "right",
+          onClick: countrySelectController.close,
+          view: <DialogCancel />
+        }}
+        searchProp={{
+          text: "Search countries...",
+          onChange: handleCountrySearch,
+          background: theme === 'light' ? "#f5f5f5" : "#272727",
+          textColor: theme === 'light' ? "#000" : "#fff",
+          padding: { l: "4px", r: "4px", t: "0px", b: "0px" },
+          autoFocus: false,
+        }}
+        loadingProp={{
+          view: <LoadingView text={t('loading')} />,
+        }}
+        noResultProp={{
+          view: <NoResultsView text="No results found." buttonText="Try Again" onButtonClick={loadCountries} />,
+        }}
+        errorProp={{
+          view: <ErrorView text="Error occurred." buttonText="Try Again" onButtonClick={loadCountries} />,
+        }}
+        layoutProp={{
+          gapBetweenHandleAndTitle: "16px",
+          gapBetweenTitleAndSearch: "8px",
+          gapBetweenSearchAndContent: "16px",
+          backgroundColor: theme === 'light' ? "#fff" : "#121212",
+          handleColor: "#888",
+          handleWidth: "48px",
+        }}
+        childrenDirection="vertical"
+        snapPoints={[0, 1]}
+        initialSnap={1}
+        minHeight="65vh"
+        maxHeight="90vh"
+        closeThreshold={0.2}
+        selectionState={countrySelectionState}
+        zIndex={1000}
+      >
+        {filteredCountries.map((item, index) => (
+          <CountryItem
+            key={index}
+            onClick={() => handleCountry(item)}
+            text={item.country_identity}
+            image={item.country_image}
+            isoCode={item.country_two_iso_code}
+            phoneCode={item.country_phone_code}
+          />
+        ))}
+      </SelectionViewer>
 
     </main>
   );

@@ -21,6 +21,7 @@ interface CustomScrollDatePickerProps {
   minYear?: number;
   maxYear?: number;
   maxDate?: Date;
+  minDate?: Date;
 };
 
 interface WheelColumnProps {
@@ -252,6 +253,7 @@ const CustomScrollDatePicker : React.FC<CustomScrollDatePickerProps> =  ({
   minYear = 1900,
   maxYear = new Date().getFullYear() + 1,
   maxDate,
+  minDate,
 }) => {
   const [id] = useState(() => providedId || `datepicker-${Math.random().toString(36).substr(2, 9)}`);
   useInjectStyles(id);
@@ -263,21 +265,28 @@ const CustomScrollDatePicker : React.FC<CustomScrollDatePickerProps> =  ({
     }
     return maxYear;
   }, [maxDate, maxYear]);
+
+  const effectiveMinYear = useMemo(() => {
+    if (minDate) {
+      return minDate.getFullYear();
+    }
+    return minYear;
+  }, [minDate, minYear]);
   
   const initDate = useMemo(
-    () => (defaultDate ? (startFromDate || today) : new Date(minYear, 0, 1)),
-    [defaultDate, startFromDate, minYear]
+    () => (defaultDate ? (startFromDate || today) : new Date(effectiveMinYear, 0, 1)),
+    [defaultDate, startFromDate, effectiveMinYear]
   );
 
   const years = useMemo(
-    () => Array.from({ length: effectiveMaxYear - minYear + 1 }, (_, i) => minYear + i),
-    [minYear, effectiveMaxYear]
+    () => Array.from({ length: effectiveMaxYear - effectiveMinYear + 1 }, (_, i) => effectiveMinYear + i),
+    [effectiveMinYear, effectiveMaxYear]
   );
 
   const [selectedDate, setSelectedDate] = useState(initDate);
   const [dayIndex, setDayIndex] = useState(initDate.getDate() - 1);
   const [monthIndex, setMonthIndex] = useState(initDate.getMonth());
-  const [yearIndex, setYearIndex] = useState(initDate.getFullYear() - minYear);
+  const [yearIndex, setYearIndex] = useState(initDate.getFullYear() - effectiveMinYear);
 
   const yesterday = new Date(today);
   yesterday.setDate(today.getDate() - 1);
@@ -337,7 +346,7 @@ const CustomScrollDatePicker : React.FC<CustomScrollDatePickerProps> =  ({
     const d = new Date();
     setDayIndex(d.getDate() - 1);
     setMonthIndex(d.getMonth());
-    setYearIndex(d.getFullYear() - minYear);
+    setYearIndex(d.getFullYear() - effectiveMinYear);
     updateDate(d.getDate(), d.getMonth(), d.getFullYear());
   };
 
@@ -346,7 +355,7 @@ const CustomScrollDatePicker : React.FC<CustomScrollDatePickerProps> =  ({
     d.setDate(d.getDate() - 1);
     setDayIndex(d.getDate() - 1);
     setMonthIndex(d.getMonth());
-    setYearIndex(d.getFullYear() - minYear);
+    setYearIndex(d.getFullYear() - effectiveMinYear);
     updateDate(d.getDate(), d.getMonth(), d.getFullYear());
   };
 

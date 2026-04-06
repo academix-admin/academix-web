@@ -1,672 +1,241 @@
-.container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  min-height: 100vh;
-}
-
-.container_light {
-  background-color: #ffffff;
-  color: #000;
+.container {  display: flex;  flex-direction: column;  align-items: center;  text-align: center;  min-height: 100vh;
 }
 
-.container_dark {
-  background-color: #121212;
-  color: #ffffff;
+.container_light {  background-color: #ffffff;  color: #000;
 }
 
-.header {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  z-index: 10;
-  display: flex;
-  backdrop-filter: blur(8px);
-  box-sizing: border-box;
-}
-
-.header_light {
-  background-color: rgba(255, 255, 255, 0.8);
-  border-bottom: 1px solid #C4C4C4;
-}
-
-.header_dark {
-  background-color: rgba(18, 18, 18, 0.8);
-  border-bottom: 1px solid #333;
-}
-
-.headerContent {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  gap: 1rem;
-  margin: 0 20%;
-  box-sizing: border-box;
-  min-width: 0;
-  padding-left: 16px;
-  padding-right: 16px;
-  padding-top: 8px;
-  padding-bottom: 8px;
-}
-
-.innerBody {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 2rem;
-  padding-top: 6rem;
-  max-width: 400px;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.backButton {
-  min-width: 44px;
-  min-height: 44px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: var(--text-color);
-  border-radius: 50%;
-  display: flex;
-  padding: 12px;
-  align-items: center;
-  justify-content: center;
-  margin-left: -8px;
-}
-
-.backButton:hover {
-  background-color: rgba(0, 0, 0, 0.05);
-}
-
-.backIcon {
-  width: 20px;
-  height: 20px;
+.container_dark {  background-color: #121212;  color: #ffffff;
 }
 
-.title {
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin: 0;
-  flex-grow: 1;
-  text-align: start;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.logoContainer {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
+.header {  position: fixed;  top: 0;  left: 0;  width: 100%;  z-index: 10;  display: flex;  backdrop-filter: blur(8px);  box-sizing: border-box;
 }
 
-.logo {
-  width: 35px;
-  height: 35px;
+.header_light {  background-color: rgba(255, 255, 255, 0.8);  border-bottom: 1px solid #C4C4C4;
 }
 
-.welcome_wrapper {
-  width: 65%;
+.header_dark {  background-color: rgba(18, 18, 18, 0.8);  border-bottom: 1px solid #333;
 }
 
-.stepTitle {
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin: 0;
-  margin-top: 2rem;
-  text-align: start;
-  align-self: flex-start;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  box-sizing: border-box;
-  word-break: break-word;
-  /* break long words */
-  white-space: normal;
-  /* allow wrapping */
+.headerContent {  display: flex;  align-items: center;  justify-content: space-between;  width: 100%;  gap: 1rem;  margin: 0 20%;  box-sizing: border-box;  min-width: 0;  padding-left: 16px;  padding-right: 16px;  padding-top: 8px;  padding-bottom: 8px;
 }
 
-.stepSubtitle {
-  font-size: 0.875rem;
-  color: #6B7280;
-  margin-bottom: 2rem;
-  align-self: flex-start;
-  word-break: break-word;
-  /* break long words */
-  white-space: normal;
-  /* allow wrapping */
+.innerBody {  display: flex;  flex-direction: column;  align-items: center;  padding: 2rem;  padding-top: 6rem;  max-width: 400px;  width: 100%;  box-sizing: border-box;
 }
 
-.form {
-  width: 100%;
-  max-width: 400px;
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
+.backButton {  min-width: 44px;  min-height: 44px;  background: none;  border: none;  cursor: pointer;  color: var(--text-color);  border-radius: 50%;  display: flex;  padding: 12px;  align-items: center;  justify-content: center;  margin-left: -8px;
 }
 
-.formGroup {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+.backButton:hover {  background-color: rgba(0, 0, 0, 0.05);
 }
 
-.label {
-  font-size: 0.875rem;
-  font-weight: 600;
-  text-align: left;
-  color: var(--text-color);
-  word-break: break-word;
-  /* break long words */
-  white-space: normal;
-  /* allow wrapping */
-}
-
-
-.container_dark .select {
-  background-color: #121212;
-  color: #ffffff;
-  background-image: url("data:image/svg+xml;utf8,<svg fill='%23fff' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'><path d='M5.5 7l4.5 4.5L14.5 7z'/></svg>");
+.backIcon {  width: 20px;  height: 20px;
 }
 
-.container_light .select {
-  background-color: #ffffff;
-  color: #000;
-  background-image: url("data:image/svg+xml;utf8,<svg fill='%23000' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'><path d='M5.5 7l4.5 4.5L14.5 7z'/></svg>");
+.title {  font-size: 1.5rem;  font-weight: 600;  margin: 0;  flex-grow: 1;  text-align: start;  white-space: nowrap;  overflow: hidden;  text-overflow: ellipsis;
 }
 
-.select:focus {
-  outline: none;
-  border-color: #6B7280;
+.logoContainer {  display: flex;  align-items: center;  justify-content: flex-end;
 }
 
-.continueButton {
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
-  background-color: #1C6B1E;
-  color: white;
-  font-size: 1rem;
-  font-weight: 600;
-  border: none;
-  cursor: pointer;
-  transition: background-color 0.2s;
-  margin-top: 1rem;
-  margin-bottom: 3rem;
+.logo {  width: 35px;  height: 35px;
 }
 
-.continueButton:hover {
-  background-color: #1D3D1E;
+.welcome_wrapper {  width: 65%;
 }
 
-.continueButton:disabled {
-  background-color: #9CA3AF;
-  cursor: not-allowed;
-  opacity: 0.7;
+.stepTitle {  font-size: 1.5rem;  font-weight: 600;  margin: 0;  margin-top: 2rem;  text-align: start;  align-self: flex-start;  white-space: nowrap;  overflow: hidden;  text-overflow: ellipsis;  box-sizing: border-box;  word-break: break-word;  /* break long words */  white-space: normal;  /* allow wrapping */
 }
 
-.spinner {
-  border: 3px solid rgba(255, 255, 255, 0.3);
-  border-top: 3px solid white;
-  border-radius: 50%;
-  width: 10px;
-  height: 10px;
-  animation: spin 1s linear infinite;
-  display: inline-block;
+.stepSubtitle {  font-size: 0.875rem;  color: #6B7280;  margin-bottom: 2rem;  align-self: flex-start;  word-break: break-word;  /* break long words */  white-space: normal;  /* allow wrapping */
 }
 
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
+.form {  width: 100%;  max-width: 400px;  display: flex;  flex-direction: column;  gap: 1.5rem;
 }
 
-.loadingOverlay {
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
+.formGroup {  display: flex;  flex-direction: column;  gap: 0.5rem;
 }
 
-.emptyState {
-  width: 100%;
-  box-sizing: border-box;
-  display: flex;
+.label {  font-size: 0.875rem;  font-weight: 600;  text-align: left;  color: var(--text-color);  word-break: break-word;  /* break long words */  white-space: normal;  /* allow wrapping */
+}  .container_dark .select {  background-color: #121212;  color: #ffffff;  background-image: url("data:image/svg+xml;utf8,<svg fill='%23fff' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'><path d='M5.5 7l4.5 4.5L14.5 7z'/></svg>");
 }
 
-.rolesGrid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  /* exactly 2 columns */
-  gap: 1rem;
-  width: 100%;
+.container_light .select {  background-color: #ffffff;  color: #000;  background-image: url("data:image/svg+xml;utf8,<svg fill='%23000' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'><path d='M5.5 7l4.5 4.5L14.5 7z'/></svg>");
 }
 
-.roleCard {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  /* pushes tier to bottom */
-  align-items: flex-start;
-  padding: 16px;
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  min-height: 140px;
-  /* ensures nice consistent height */
-  height: 100%;
-  /* let grid equalize row height */
-  box-sizing: border-box;
+.select:focus {  outline: none;  border-color: #6B7280;
 }
 
-.roleCardUnselected_light {
-  background-color: #f1f5f9;
-  color: #374151;
+.continueButton {  padding: 0.75rem 1rem;  border-radius: 8px;  background-color: #1C6B1E;  color: white;  font-size: 1rem;  font-weight: 600;  border: none;  cursor: pointer;  transition: background-color 0.2s;  margin-top: 1rem;  margin-bottom: 3rem;
 }
 
-.roleCardUnselected_dark {
-  background-color: #1a1a1a;
-  color: #fff;
+.continueButton:hover {  background-color: #1D3D1E;
 }
 
-.roleCardSelected {
-  background-color: #14532d;
-  color: #ffffff;
+.continueButton:disabled {  background-color: #9CA3AF;  cursor: not-allowed;  opacity: 0.7;
 }
 
-
-.roleCard_light {
-  border: 1px solid #d1d5db;
+.spinner {  border: 3px solid rgba(255, 255, 255, 0.3);  border-top: 3px solid white;  border-radius: 50%;  width: 10px;  height: 10px;  animation: spin 1s linear infinite;  display: inline-block;
 }
 
-.roleCard_dark {
-  border: 1px solid #333;
+@keyframes spin {  to {  transform: rotate(360deg);  }
 }
 
-.radioCircle {
-  width: 18px;
-  height: 18px;
-  border: 2px solid currentColor;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 0.5rem;
+.loadingOverlay {  position: fixed;  inset: 0;  z-index: 9999;
 }
 
-.radioDot {
-  width: 8px;
-  height: 8px;
-  background-color: currentColor;
-  border-radius: 50%;
+.emptyState {  width: 100%;  box-sizing: border-box;  display: flex;
 }
 
-.roleInfo {
-  display: flex;
-  flex-direction: column;
-  flex-grow: 1;
-  /* makes sure content stretches */
-  width: 100%;
-  justify-content: space-between;
+.rolesGrid {  display: grid;  grid-template-columns: repeat(2, 1fr);  /* exactly 2 columns */  gap: 1rem;  width: 100%;
 }
 
-.roleTitle {
-  font-weight: 600;
-  font-size: 1rem;
-  margin-bottom: 8px;
-  text-align: left;
-  word-break: break-word;
-  /* break long words */
-  white-space: normal;
-  /* allow wrapping */
+.roleCard {  display: flex;  flex-direction: column;  justify-content: space-between;  /* pushes tier to bottom */  align-items: flex-start;  padding: 16px;  border-radius: 12px;  cursor: pointer;  transition: all 0.2s ease;  min-height: 140px;  /* ensures nice consistent height */  height: 100%;  /* let grid equalize row height */  box-sizing: border-box;
 }
 
-.buyInContainer {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin-top: auto;
-  /* pushes it to the bottom */
+.roleCardUnselected_light {  background-color: #f1f5f9;  color: #374151;
 }
 
-.buyInLabel {
-  font-size: 0.7rem;
-  font-weight: 600;
-  opacity: 0.7;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  text-align: left;
+.roleCardUnselected_dark {  background-color: #1a1a1a;  color: #fff;
 }
 
-.roleTier {
-  font-size: 0.85rem;
-  font-weight: 600;
-  opacity: 0.9;
-  text-align: left;
+.roleCardSelected {  background-color: #14532d;  color: #ffffff;
+}  .roleCard_light {  border: 1px solid #d1d5db;
 }
 
-.acceptanceSection {
-  margin-top: 1.5rem;
-  width: 100%;
+.roleCard_dark {  border: 1px solid #333;
 }
 
-.checkboxLabel {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
-  cursor: pointer;
-  font-size: 0.875rem;
-  line-height: 1.4;
-  text-align: left;
+.radioCircle {  width: 18px;  height: 18px;  border: 2px solid currentColor;  border-radius: 50%;  display: flex;  align-items: center;  justify-content: center;  margin-bottom: 0.5rem;
 }
 
-.checkboxLabel_light {
-  color: #374151;
+.radioDot {  width: 8px;  height: 8px;  background-color: currentColor;  border-radius: 50%;
 }
 
-.checkboxLabel_dark {
-  color: #d1d5db;
+.roleInfo {  display: flex;  flex-direction: column;  flex-grow: 1;  /* makes sure content stretches */  width: 100%;  justify-content: space-between;
 }
 
-.checkbox {
-  display: none;
+.roleTitle {  font-weight: 600;  font-size: 1rem;  margin-bottom: 8px;  text-align: left;  word-break: break-word;  /* break long words */  white-space: normal;  /* allow wrapping */
 }
 
-.checkboxCustom {
-  width: 18px;
-  height: 18px;
-  border: 2px solid #6b7280;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-  flex-shrink: 0;
-  margin-top: 2px;
+.buyInContainer {  display: flex;  flex-direction: column;  gap: 4px;  margin-top: auto;  /* pushes it to the bottom */
 }
 
-.checkbox:checked+.checkboxCustom {
-  background-color: #1C6B1E;
-  border-color: #1C6B1E;
+.buyInLabel {  font-size: 0.7rem;  font-weight: 600;  opacity: 0.7;  text-transform: uppercase;  letter-spacing: 0.5px;  text-align: left;
 }
 
-.checkIcon {
-  width: 12px;
-  height: 12px;
-  color: white;
+.roleTier {  font-size: 0.85rem;  font-weight: 600;  opacity: 0.9;  text-align: left;
 }
 
-.checkboxText {
-  flex: 1;
-  word-break: break-word;
-  white-space: normal;
+.acceptanceSection {  margin-top: 1.5rem;  width: 100%;
 }
 
-.ratesLink {
-  color: #1C6B1E;
-  text-decoration: underline;
-  font-weight: 600;
+.checkboxLabel {  display: flex;  align-items: flex-start;  gap: 0.75rem;  cursor: pointer;  font-size: 0.875rem;  line-height: 1.4;  text-align: left;
 }
 
-.ratesLink:hover {
-  color: #1D3D1E;
+.checkboxLabel_light {  color: #374151;
 }
 
-.walletSelectionCard {
-  margin-top: 1rem;
-  width: 100%;
-  box-sizing: border-box;
+.checkboxLabel_dark {  color: #d1d5db;
 }
 
-.walletLabel {
-  font-size: 0.875rem;
-  font-weight: 600;
-  text-align: left;
-  color: var(--text-color);
-  margin-bottom: 0.5rem;
-  display: block;
+.checkbox {  display: none;
 }
 
-.walletButton {
-  width: 100%;
-  padding: 12px;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  background: transparent;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  transition: all 0.2s ease;
-  box-sizing: border-box;
+.checkboxCustom {  width: 18px;  height: 18px;  border: 2px solid #6b7280;  border-radius: 4px;  display: flex;  align-items: center;  justify-content: center;  transition: all 0.2s ease;  flex-shrink: 0;  margin-top: 2px;
 }
 
-.walletButton_light {
-  border-color: #d1d5db;
-  background: #fff;
+.checkbox:checked+.checkboxCustom {  background-color: #1C6B1E;  border-color: #1C6B1E;
 }
 
-.walletButton_dark {
-  border-color: #333;
-  background: #1a1a1a;
+.checkIcon {  width: 12px;  height: 12px;  color: white;
 }
 
-.walletButton:hover {
-  border-color: #1C6B1E;
+.checkboxText {  flex: 1;  word-break: break-word;  white-space: normal;
 }
 
-.selectedWallet {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex: 1;
+.ratesLink {  color: #1C6B1E;  text-decoration: underline;  font-weight: 600;
 }
 
-.walletImage {
-  width: 32px;
-  height: 32px;
-  border-radius: 6px;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.ratesLink:hover {  color: #1D3D1E;
 }
 
-.walletImage img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+.walletSelectionCard {  margin-top: 1rem;  width: 100%;  box-sizing: border-box;
 }
 
-.walletInitials {
-  width: 32px;
-  height: 32px;
-  background: #1C6B1E;
-  color: white;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  font-weight: 600;
+.walletLabel {  font-size: 0.875rem;  font-weight: 600;  text-align: left;  color: var(--text-color);  margin-bottom: 0.5rem;  display: block;
 }
 
-.walletInfo {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
+.walletButton {  width: 100%;  padding: 12px;  border: 1px solid #d1d5db;  border-radius: 8px;  background: transparent;  cursor: pointer;  display: flex;  align-items: center;  justify-content: space-between;  transition: all 0.2s ease;  box-sizing: border-box;
 }
 
-.walletName {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-color);
+.walletButton_light {  border-color: #d1d5db;  background: #fff;
 }
 
-.walletCurrency {
-  font-size: 12px;
-  color: #6b7280;
+.walletButton_dark {  border-color: #333;  background: #1a1a1a;
 }
 
-.walletPlaceholder {
-  color: #6b7280;
-  font-size: 14px;
+.walletButton:hover {  border-color: #1C6B1E;
 }
 
-.walletArrow {
-  width: 20px;
-  height: 20px;
-  color: #6b7280;
+.selectedWallet {  display: flex;  align-items: center;  gap: 12px;  flex: 1;
 }
 
-.walletItem {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  margin-bottom: 8px;
+.walletImage {  width: 32px;  height: 32px;  border-radius: 6px;  overflow: hidden;  display: flex;  align-items: center;  justify-content: center;
 }
-
 
-.walletItem:hover {
-  background: #f3f4f6;
+.walletImage img {  width: 100%;  height: 100%;  object-fit: cover;
 }
 
-.walletItem_dark:hover {
-  background: #374151;
+.walletInitials {  width: 32px;  height: 32px;  background: #1C6B1E;  color: white;  border-radius: 6px;  display: flex;  align-items: center;  justify-content: center;  font-size: 12px;  font-weight: 600;
 }
 
-.walletItemSelected {
-  border-color: #1C6B1E !important;
-  background: rgba(28, 107, 30, 0.1) !important;
+.walletInfo {  display: flex;  flex-direction: column;  align-items: flex-start;
 }
 
-.walletItemImage {
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.walletName {  font-size: 14px;  font-weight: 600;  color: var(--text-color);
 }
 
-.walletItemImage img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+.walletCurrency {  font-size: 12px;  color: #6b7280;
 }
 
-.walletItemInitials {
-  width: 40px;
-  height: 40px;
-  background: #1C6B1E;
-  color: white;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  font-weight: 600;
+.walletPlaceholder {  color: #6b7280;  font-size: 14px;
 }
 
-.walletItemInfo {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
+.walletArrow {  width: 20px;  height: 20px;  color: #6b7280;
 }
 
-.walletItemName {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--text-color);
-  margin-bottom: 2px;
+.walletItem {  display: flex;  align-items: center;  gap: 12px;  padding: 12px;  border-radius: 8px;  cursor: pointer;  transition: all 0.2s ease;  margin-bottom: 8px;
+}  .walletItem:hover {  background: #f3f4f6;
 }
 
-.walletItemCurrency {
-  font-size: 14px;
-  color: #6b7280;
+.walletItem_dark:hover {  background: #374151;
 }
 
-.walletItemCheckmark {
-  width: 24px;
-  height: 24px;
-  color: #1C6B1E;
+.walletItemSelected {  border-color: #1C6B1E !important;  background: rgba(28, 107, 30, 0.1) !important;
 }
-
-
-/* Responsive styles */
-@media screen and (max-width: 800px) {
-  .headerContent {
-    margin: 0 1rem;
-    padding-left: 16px;
-  padding-right: 16px;
-  padding-top: 8px;
-  padding-bottom: 8px;
-  }
-
-  .logo {
-    width: 35px;
-    height: 35px;
-  }
-
-  .innerBody {
-    padding: 1.5rem;
-    padding-top: 4rem;
-  }
 
-  .welcome_wrapper {
-    width: 75%;
-  }
-
-  .rolesGrid {
-    gap: 0.7rem;
-  }
+.walletItemImage {  width: 40px;  height: 40px;  border-radius: 8px;  overflow: hidden;  display: flex;  align-items: center;  justify-content: center;
 }
-
-@media screen and (max-width: 500px) {
-  .headerContent {
-    margin: 0;
-    padding-left: 16px;
-  padding-right: 16px;
-  padding-top: 8px;
-  padding-bottom: 8px;
-  }
 
-  .innerBody {
-    padding: 1rem;
-    padding-top: 5rem;
-  }
+.walletItemImage img {  width: 100%;  height: 100%;  object-fit: cover;
+}
 
-  .stepTitle {
-    font-size: 1.25rem;
-  }
+.walletItemInitials {  width: 40px;  height: 40px;  background: #1C6B1E;  color: white;  border-radius: 8px;  display: flex;  align-items: center;  justify-content: center;  font-size: 14px;  font-weight: 600;
+}
 
-  .backIcon {
-    width: 16px;
-    height: 16px;
-  }
+.walletItemInfo {  flex: 1;  display: flex;  flex-direction: column;  align-items: flex-start;
+}
 
-  .title {
-    font-size: 1.2rem;
-  }
+.walletItemName {  font-size: 16px;  font-weight: 600;  color: var(--text-color);  margin-bottom: 2px;
+}
 
-  .logo {
-    width: 28px;
-    height: 28px;
-  }
+.walletItemCurrency {  font-size: 14px;  color: #6b7280;
+}
 
-  .welcome_wrapper {
-    width: 80%;
-  }
+.walletItemCheckmark {  width: 24px;  height: 24px;  color: #1C6B1E;
+}  /* Responsive styles */
+@media screen and (max-width: 800px) {  .headerContent {  padding-left: 16px;  padding-right: 16px;  padding-top: 8px;  padding-bottom: 8px;  }  .logo {  width: 35px;  height: 35px;  }  .innerBody {  padding: 1.5rem;  padding-top: 4rem;  }  .welcome_wrapper {  width: 75%;  }  .rolesGrid {  gap: 0.7rem;  }
+}
 
-  .rolesGrid {
-    gap: 0.5rem;
-  }
+@media screen and (max-width: 500px) {  .headerContent {  margin: 0;  padding-left: 16px;  padding-right: 16px;  padding-top: 8px;  padding-bottom: 8px;  }  .innerBody {  padding: 1rem;  padding-top: 5rem;  }  .stepTitle {  font-size: 1.25rem;  }  .backIcon {  width: 16px;  height: 16px;  }  .title {  font-size: 1.2rem;  }  .logo {  width: 28px;  height: 28px;  }  .welcome_wrapper {  width: 80%;  }  .rolesGrid {  gap: 0.5rem;  }
 }

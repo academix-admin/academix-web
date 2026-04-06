@@ -523,6 +523,19 @@ export default function RolesPage() {
           </div>
         )}
 
+        {/* View Transaction Button */}
+        {pageState === 'data' && activation?.transactionId && (
+          <button 
+            onClick={async () => {
+              await nav.push('view_transaction', { transactionId: activation.transactionId });
+            }} 
+            className={styles.viewTransactionButton}
+          >
+            {t('view_transaction_text')}
+          </button>
+        )}
+
+        {}
         {pageState === 'data' && role && activation && (
           <>
             {/* Payment selection for paid roles */}

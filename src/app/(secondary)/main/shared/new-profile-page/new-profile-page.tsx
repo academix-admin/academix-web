@@ -666,7 +666,7 @@ export default function NewProfilePage(props: NewProfileProps) {
   }, [clearWallet, clearMethod]);
 
   useEffect(() => {
-    setWalletModify(selectedWalletData === null);
+    setWalletModify(propsProfileType ? selectedWalletData === null : true);
   }, [selectedWalletData]);
 
   useEffect(() => {

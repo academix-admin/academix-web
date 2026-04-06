@@ -1,465 +1,208 @@
-.container {
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  padding-bottom: var(--nav-height);
+.container {  display: flex;  flex-direction: column;  position: relative;  padding-bottom: var(--nav-height);
 }
 
-.header {
-  position: fixed;
-  top: 0;
-  left: var(--sidebar-width);
-  right: 0;
-  z-index: 10;
-  display: flex;
-  flex-direction: column;
-  backdrop-filter: blur(8px);
-  box-sizing: border-box;
+.header {  position: fixed;  top: 0;  left: var(--sidebar-width);  right: 0;  z-index: 10;  display: flex;  flex-direction: column;  backdrop-filter: blur(8px);  box-sizing: border-box;
 }
 
-.header_light {
-  background-color: rgba(255, 255, 255, 0.95);
-  border-bottom: 1px solid #E5E5E5;
+.header_light {  background-color: rgba(255, 255, 255, 0.95);  border-bottom: 1px solid #E5E5E5;
 }
 
-.header_dark {
-  background-color: rgba(18, 18, 18, 0.95);
-  border-bottom: 1px solid #333;
+.header_dark {  background-color: rgba(18, 18, 18, 0.95);  border-bottom: 1px solid #333;
 }
 
-.headerContent {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  gap: 1rem;
-  box-sizing: border-box;
-  min-width: 0;
-  padding-left: 16px;
-  padding-right: 16px;
-  padding-top: 8px;
-  padding-bottom: 8px;
+.headerContent {  display: flex;  align-items: center;  justify-content: space-between;  width: 100%;  gap: 1rem;  box-sizing: border-box;  min-width: 0;  padding-left: 16px;  padding-right: 16px;  padding-top: 8px;  padding-bottom: 8px;
 }
 
-.backButton {
-  min-width: 44px;
-  min-height: 44px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: var(--text-color);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  padding: 12px;
-  justify-content: center;
-  margin-left: -8px;
+.backButton {  min-width: 44px;  min-height: 44px;  background: none;  border: none;  cursor: pointer;  color: var(--text-color);  border-radius: 50%;  display: flex;  align-items: center;  padding: 12px;  justify-content: center;  margin-left: -8px;
 }
 
-.backButton:hover {
-  background-color: rgba(0, 0, 0, 0.05);
+.backButton:hover {  background-color: rgba(0, 0, 0, 0.05);
 }
 
-.backIcon {
-  width: 20px;
-  height: 20px;
+.backIcon {  width: 20px;  height: 20px;
 }
 
-.title {
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin: 0;
-  flex-grow: 1;
-  text-align: start;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  box-sizing: border-box;
+.title {  font-size: 1.5rem;  font-weight: 600;  margin: 0;  flex-grow: 1;  text-align: start;  white-space: nowrap;  overflow: hidden;  text-overflow: ellipsis;  box-sizing: border-box;
 }
 
-.headerSpacer {
-  width: 28px;
-  flex-shrink: 0;
+.refreshButton {  min-width: 44px;  min-height: 44px;  background: none;  border: none;  cursor: pointer;  color: var(--text-color);  border-radius: 50%;  display: flex;  align-items: center;  justify-content: center;  padding: 6px;  flex-shrink: 0;  opacity: 1;  transition: opacity 0.2s;
+}
+
+.refreshButton:hover {  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.refreshButton:disabled {  opacity: 0.5;  cursor: default;
+}
+
+.refreshSpinner {  display: inline-block;  width: 20px;  height: 20px;  border: 2px solid transparent;  border-top-color: currentColor;  border-radius: 50%;  animation: spin 0.8s linear infinite;
+}
+
+.headerSpacer {  width: 28px;  flex-shrink: 0;
 }
 
 /* Tab Bar */
-.tabBar {
-  display: flex;
-  padding: 0 2rem;
-  gap: 0;
-  box-sizing: border-box;
+.tabBar {  display: flex;  padding: 0 2rem;  gap: 0;  box-sizing: border-box;
 }
 
-.tabBar_light {
-  border-top: 1px solid #E5E5E5;
+.tabBar_light {  border-top: 1px solid #E5E5E5;
 }
 
-.tabBar_dark {
-  border-top: 1px solid #333;
+.tabBar_dark {  border-top: 1px solid #333;
 }
 
-.tab {
-  flex: 1;
-  padding: 10px 0;
-  background: none;
-  border: none;
-  border-bottom: 2px solid transparent;
-  cursor: pointer;
-  font-size: 0.95rem;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  transition: border-color 0.2s, color 0.2s;
+.tab {  flex: 1;  padding: 10px 0;  background: none;  border: none;  border-bottom: 2px solid transparent;  cursor: pointer;  font-size: 0.95rem;  font-weight: 500;  display: flex;  align-items: center;  justify-content: center;  gap: 6px;  transition: border-color 0.2s, color 0.2s;
 }
 
-.tab_light {
-  color: #888;
+.tab_light {  color: #888;
 }
 
-.tab_dark {
-  color: #888;
+.tab_dark {  color: #888;
 }
 
-.tabActive {
-  border-bottom-color: #1C6B1E;
-  color: #1C6B1E !important;
-  font-weight: 600;
+.tabActive {  border-bottom-color: #1C6B1E;  color: #1C6B1E !important;  font-weight: 600;
 }
 
-.tabBadge {
-  background-color: #1C6B1E;
-  color: white;
-  border-radius: 10px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  padding: 1px 7px;
-  line-height: 1.4;
+.tabBadge {  background-color: #1C6B1E;  color: white;  border-radius: 10px;  font-size: 0.75rem;  font-weight: 700;  padding: 1px 7px;  line-height: 1.4;
 }
 
 /* Content */
-.content {
-  flex: 1;
-  max-width: 800px;
-  margin: 0 auto;
-  width: 100%;
-  padding: 1rem 2.5rem;
-  padding-top: 8rem;
-  box-sizing: border-box;
+.content {  flex: 1;  max-width: 800px;  margin: 0 auto;  width: 100%;  padding: 1rem 2.5rem;  padding-top: 8rem;  box-sizing: border-box;
 }
 
 /* GiveBack Card */
-.giveBackCard {
-  background: linear-gradient(90deg, #176b2d 0%, #1e7a36 100%);
-  border-radius: 12px;
-  margin: 8px 16px 16px 16px;
-  overflow: hidden;
-  color: white;
+.giveBackCard {  background: linear-gradient(90deg, #176b2d 0%, #1e7a36 100%);  border-radius: 12px;  margin: 8px 16px 16px 16px;  overflow: hidden;  color: white;
 }
 
-.cardContent {
-  display: flex;
-  flex-direction: column;
+.cardContent {  display: flex;  flex-direction: column;
 }
 
-.cardHeader {
-  padding: 12px 12px 8px 12px;
+.cardHeader {  padding: 12px 12px 8px 12px;
 }
 
-.codeSection {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
+.codeSection {  display: flex;  justify-content: space-between;  align-items: flex-start;
 }
 
-.giveBackValue {
-  font-size: 15px;
-  font-weight: 700;
-  margin: 0;
-  color: white;
-  line-height: 1.2;
-  flex: 1;
+.giveBackValue {  font-size: 15px;  font-weight: 700;  margin: 0;  color: white;  line-height: 1.2;  flex: 1;
 }
 
-.copyButton {
-  background: rgba(255, 255, 255, 0.2);
-  border: none;
-  border-radius: 6px;
-  padding: 6px;
-  cursor: pointer;
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background-color 0.2s;
-  margin-left: 8px;
+.copyButton {  background: rgba(255, 255, 255, 0.2);  border: none;  border-radius: 6px;  padding: 6px;  cursor: pointer;  color: white;  display: flex;  align-items: center;  justify-content: center;  transition: background-color 0.2s;  margin-left: 8px;
 }
 
-.copyButton:hover {
-  background: rgba(255, 255, 255, 0.3);
+.copyButton:hover {  background: rgba(255, 255, 255, 0.3);
 }
 
-.amountSection {
-  padding: 0 12px 12px 12px;
+.amountSection {  padding: 0 12px 12px 12px;
 }
 
-.amountContent {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
+.amountContent {  display: flex;  align-items: center;  justify-content: center;  gap: 8px;
 }
 
-.currencyIcon {
-  opacity: 0.9;
+.currencyIcon {  opacity: 0.9;
 }
 
-.amountText {
-  font-size: 32px;
-  font-weight: 700;
-  line-height: 1;
+.amountText {  font-size: 32px;  font-weight: 700;  line-height: 1;
 }
 
-.cardFooter {
-  background: rgba(0, 0, 0, 0.2);
-  padding: 8px 12px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+.cardFooter {  background: rgba(0, 0, 0, 0.2);  padding: 8px 12px;  border-top: 1px solid rgba(255, 255, 255, 0.1);  display: flex;  flex-direction: column;  gap: 8px;
 }
 
-.rulesRow {
-  display: flex;
-  align-items: flex-start;
-  gap: 4px;
-  font-size: 14px;
-  line-height: 1.3;
+.rulesRow {  display: flex;  align-items: flex-start;  gap: 4px;  font-size: 14px;  line-height: 1.3;
 }
 
-.rulesLabel {
-  font-weight: 700;
-  white-space: nowrap;
+.rulesLabel {  font-weight: 700;  white-space: nowrap;
 }
 
-.rulesValue {
-  opacity: 0.95;
+.rulesValue {  opacity: 0.95;
 }
 
-.slotsRow {
-  display: flex;
-  align-items: center;
+.slotsRow {  display: flex;  align-items: center;
 }
 
-.slotsText {
-  font-size: 13px;
-  opacity: 0.85;
+.slotsText {  font-size: 13px;  opacity: 0.85;
 }
 
 /* Claim button */
-.claimButton {
-  width: 100%;
-  padding: 10px;
-  background: rgba(255, 255, 255, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  border-radius: 8px;
-  color: white;
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.2s;
-  min-height: 38px;
+.claimButton {  width: 100%;  padding: 10px;  background: rgba(255, 255, 255, 0.2);  border: 1px solid rgba(255, 255, 255, 0.4);  border-radius: 8px;  color: white;  font-size: 14px;  font-weight: 700;  cursor: pointer;  display: flex;  align-items: center;  justify-content: center;  transition: background 0.2s;  min-height: 38px;
 }
 
-.claimButton:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.3);
+.claimButton:hover:not(:disabled) {  background: rgba(255, 255, 255, 0.3);
 }
 
-.claimButton:disabled {
-  opacity: 0.6;
-  cursor: default;
+.claimButton:disabled {  opacity: 0.6;  cursor: default;
 }
 
-.claimSpinner {
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  border: 2px solid rgba(255, 255, 255, 0.4);
-  border-top-color: white;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+.claimSpinner {  display: inline-block;  width: 16px;  height: 16px;  border: 2px solid rgba(255, 255, 255, 0.4);  border-top-color: white;  border-radius: 50%;  animation: spin 0.8s linear infinite;
 }
 
-.passwordSection {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 12px;
-  border-radius: 10px;
-  background: rgba(0, 0, 0, 0.16);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+.passwordSection {  display: flex;  flex-direction: column;  gap: 10px;  padding: 12px;  border-radius: 10px;  background: rgba(0, 0, 0, 0.16);  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
-.passwordLabel {
-  font-size: 13px;
-  font-weight: 700;
-  opacity: 0.9;
+.passwordLabel {  font-size: 13px;  font-weight: 700;  opacity: 0.9;
 }
 
-.passwordRow {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  width: 100%;
+.passwordRow {  display: flex;  gap: 8px;  align-items: center;  width: 100%;
 }
 
-.passwordInputWrapper {
-  position: relative;
-  display: block;
-  width: 100%;
-  min-width: 0;
+.passwordInputWrapper {  position: relative;  display: block;  width: 100%;  min-width: 0;
 }
 
 .passwordCancelButton,
-.passwordSaveButton {
-  flex: 1;
-  min-height: 40px;
-  border-radius: 8px;
-  padding: 0 14px;
-  border: none;
-  font-weight: 700;
-  cursor: pointer;
+.passwordSaveButton {  flex: 1;  min-height: 40px;  border-radius: 8px;  padding: 0 14px;  border: none;  font-weight: 700;  cursor: pointer;
 }
 
-.passwordCancelButton {
-  background: rgba(255, 255, 255, 0.12);
-  color: inherit;
+.passwordCancelButton {  background: rgba(255, 255, 255, 0.12);  color: inherit;
 }
 
-.passwordSaveButton {
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
+.passwordSaveButton {  background: rgba(255, 255, 255, 0.2);  color: white;
 }
 
-.passwordSaveButton:disabled {
-  opacity: 0.6;
-  cursor: default;
+.passwordSaveButton:disabled {  opacity: 0.6;  cursor: default;
 }
 
-.eyeButton {
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  border: none;
-  background: transparent;
-  color: inherit;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  padding: 0;
-  transition: background-color 0.2s, color 0.2s;
+.eyeButton {  position: absolute;  right: 10px;  top: 50%;  transform: translateY(-50%);  border: none;  background: transparent;  color: inherit;  width: 30px;  height: 30px;  border-radius: 50%;  display: flex;  align-items: center;  justify-content: center;  cursor: pointer;  padding: 0;  transition: background-color 0.2s, color 0.2s;
 }
 
-.eyeButton:hover {
-  background: rgba(255, 255, 255, 0.08);
+.eyeButton:hover {  background: rgba(255, 255, 255, 0.08);
 }
 
-.eyeButton_light {
-  color: #475569;
+.eyeButton_light {  color: #475569;
 }
 
-.eyeButton_light:hover {
-  background: rgba(17, 24, 39, 0.08);
+.eyeButton_light:hover {  background: rgba(17, 24, 39, 0.08);
 }
 
-.eyeButton_dark {
-  color: #e2e8f0;
+.eyeButton_dark {  color: #e2e8f0;
 }
 
-.eyeButton_dark:hover {
-  background: rgba(255, 255, 255, 0.12);
+.eyeButton_dark:hover {  background: rgba(255, 255, 255, 0.12);
 }
 
-.eyeIcon {
-  width: 18px;
-  height: 18px;
-  display: block;
+.eyeIcon {  width: 18px;  height: 18px;  display: block;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
+@keyframes spin {  to {  transform: rotate(360deg);  }
 }
 
 /* Spent badge */
-.spentBadge {
-  text-align: center;
-  font-size: 12px;
-  font-weight: 700;
-  opacity: 0.7;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+.spentBadge {  text-align: center;  font-size: 12px;  font-weight: 700;  opacity: 0.7;  text-transform: uppercase;  letter-spacing: 0.05em;
 }
 
 /* Password input used inside DialogViewer customView */
-.passwordInput {
-  width: 100%;
-  padding: 12px 14px;
-  padding-right: 44px;
-  border-radius: 8px;
-  font-size: 16px;
-  outline: none;
-  box-sizing: border-box;
+.passwordInput {  width: 100%;  padding: 12px 14px;  padding-right: 44px;  border-radius: 8px;  font-size: 16px;  outline: none;  box-sizing: border-box;
 }
 
-.passwordInput_light {
-  border: 1px solid #d1d5db;
-  background: #f9fafb;
-  color: #1a1a1a;
+.passwordInput_light {  border: 1px solid #d1d5db;  background: #f9fafb;  color: #1a1a1a;
 }
 
-.passwordInput_dark {
-  border: 1px solid #444;
-  background: #2a2a2a;
-  color: #fff;
+.passwordInput_dark {  border: 1px solid #444;  background: #2a2a2a;  color: #fff;
 }
 
-.loadMoreSentinel {
-  height: 1px;
+.loadMoreSentinel {  height: 1px;
 }
 
 /* Responsive */
-@media screen and (max-width: 800px) {
-  .header { left: 0; }
-  .headerContent { margin: 0 1rem;   padding-left: 16px;
-   padding-right: 16px;
-  padding-top: 8px;
-  padding-bottom: 8px;
- }
-  .tabBar { padding: 0 1rem; }
-  .content { padding: 0; padding-top: 8rem; max-width: 800px; }
+@media screen and (max-width: 800px) {  .header {  left: 0;  }  .headerContent {  padding-left: 16px;  padding-right: 16px;  padding-top: 8px;  padding-bottom: 8px;  }  .tabBar {  padding: 0 1rem;  }  .content {  padding: 0;  padding-top: 8rem;  max-width: 800px;  }
 }
 
-@media screen and (max-width: 500px) {
-  .header { left: 0; }
-  .headerContent { margin: 0;   padding-left: 16px;
-   padding-right: 16px;
-  padding-top: 8px;
-  padding-bottom: 8px;
- }
-  .tabBar { padding: 0 0.5rem; }
-  .title { font-size: 1.2rem; }
-  .backIcon { width: 16px; height: 16px; }
-  .content { padding: 0; padding-top: 8rem; max-width: 500px; }
-  .giveBackCard { margin: 8px 12px 12px 12px; border-radius: 10px; }
-  .amountText { font-size: 28px; }
-  .giveBackValue { font-size: 14px; }
+@media screen and (max-width: 500px) {  .header {  left: 0;  }  .headerContent {  margin: 0;  padding-left: 16px;  padding-right: 16px;  padding-top: 8px;  padding-bottom: 8px;  }  .tabBar {  padding: 0 0.5rem;  }  .title {  font-size: 1.2rem;  }  .backIcon {  width: 16px;  height: 16px;  }  .content {  padding: 0;  padding-top: 8rem;  max-width: 500px;  }  .giveBackCard {  margin: 8px 12px 12px 12px;  border-radius: 10px;  }  .amountText {  font-size: 28px;  }  .giveBackValue {  font-size: 14px;  }
 }

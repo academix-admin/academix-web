@@ -1,132 +1,39 @@
-.container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  position: relative;
+.container {  display: flex;  flex-direction: column;  align-items: center;  justify-content: center;  position: relative;
 }
 
-.header {
-  position: fixed;
-  top: 0;
-  left: var(--sidebar-width);
-  right: 0;
-  z-index: 10;
-  display: flex;
-  backdrop-filter: blur(8px);
-  box-sizing: border-box;
+.header {  position: fixed;  top: 0;  left: var(--sidebar-width);  right: 0;  z-index: 10;  display: flex;  backdrop-filter: blur(8px);  box-sizing: border-box;
 }
 
-.header_light {
-  background-color: rgba(255, 255, 255, 0.8);
-  border-bottom: 1px solid #C4C4C4;
+.header_light {  background-color: rgba(255, 255, 255, 0.8);  border-bottom: 1px solid #C4C4C4;
 }
 
-.header_dark {
-  background-color: rgba(18, 18, 18, 0.8);
-  border-bottom: 1px solid #333;
+.header_dark {  background-color: rgba(18, 18, 18, 0.8);  border-bottom: 1px solid #333;
 }
 
-.headerContent {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  gap: 1rem;
-  box-sizing: border-box;
-  min-width: 0;
-  padding-left: 16px;
-  padding-right: 16px;
-  padding-top: 8px;
-  padding-bottom: 8px;
+.headerContent {  display: flex;  align-items: center;  justify-content: space-between;  width: 100%;  gap: 1rem;  box-sizing: border-box;  min-width: 0;  padding-left: 16px;  padding-right: 16px;  padding-top: 8px;  padding-bottom: 8px;
 }
 
-.innerBody {
-  display: flex;
-  max-width: 700px;
-  flex-direction: column;
-  width: 100%;
-  box-sizing: border-box;
-  text-align: left;
+.innerBody {  display: flex;  max-width: 700px;  flex-direction: column;  width: 100%;  box-sizing: border-box;  text-align: left;
 }
 
-.backButton {
-  min-width: 44px;
-  min-height: 44px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: var(--text-color);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  padding: 12px;
-  justify-content: center;
-  margin-left: -8px;
+.backButton {  min-width: 44px;  min-height: 44px;  background: none;  border: none;  cursor: pointer;  color: var(--text-color);  border-radius: 50%;  display: flex;  align-items: center;  padding: 12px;  justify-content: center;  margin-left: -8px;
 }
 
-.backButton:hover {
-  background-color: rgba(0, 0, 0, 0.05);
+.backButton:hover {  background-color: rgba(0, 0, 0, 0.05);
 }
 
-.backIcon {
-  width: 20px;
-  height: 20px;
+.backIcon {  width: 20px;  height: 20px;
 }
 
-.title {
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin: 0;
-  flex-grow: 1;
-  text-align: start;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  box-sizing: border-box;
+.title {  font-size: 1.5rem;  font-weight: 600;  margin: 0;  flex-grow: 1;  text-align: start;  white-space: nowrap;  overflow: hidden;  text-overflow: ellipsis;  box-sizing: border-box;
 }
 
 @media screen and (min-width: 801px) {
 
 }
 
-@media screen and (min-width: 500px) and (max-width: 800px) {
-  .header {
-    left: 0;
-  }
-  .headerContent {
-    margin: 0 1rem;
-    padding-left: 16px;
-  padding-right: 16px;
-  padding-top: 8px;
-  padding-bottom: 8px;
-  }
-  .innerBody {
-    max-width: 800px;
-  }
+@media screen and (min-width: 500px) and (max-width: 800px) {  .header {  left: 0;  }  .headerContent {  padding-left: 16px;  padding-right: 16px;  padding-top: 8px;  padding-bottom: 8px;  }  .innerBody {  max-width: 800px;  }
 }
 
-@media screen and (max-width: 500px) {
-  .header {
-    left: 0;
-  }
-  .headerContent {
-    margin: 0;
-    padding-left: 16px;
-  padding-right: 16px;
-  padding-top: 8px;
-  padding-bottom: 8px;
-  }
-  .innerBody {
-    max-width: 500px;
-  }
-
-  .backIcon {
-    width: 16px;
-    height: 16px;
-  }
-
-  .title {
-    font-size: 1.2rem;
-  }
+@media screen and (max-width: 500px) {  .header {  left: 0;  }  .headerContent {  margin: 0;  padding-left: 16px;  padding-right: 16px;  padding-top: 8px;  padding-bottom: 8px;  }  .innerBody {  max-width: 500px;  }  .backIcon {  width: 16px;  height: 16px;  }  .title {  font-size: 1.2rem;  }
 }

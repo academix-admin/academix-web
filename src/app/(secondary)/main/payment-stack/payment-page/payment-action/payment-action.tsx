@@ -27,7 +27,7 @@ export default function PaymentAction({ onStateChange }: ComponentStateProps) {
         // Handle withdraw action
         nav.push('withdraw_page');
         break;
-      case 'new_profile':
+      case 'payment_profile':
         // Handle new_profile action
         nav.push('new_profile', { scopeKey: 'new-profile-flow' });
         break;
@@ -70,7 +70,7 @@ export default function PaymentAction({ onStateChange }: ComponentStateProps) {
       text: t('withdraw_text')
     },
     {
-      id: 'new_profile',
+      id: 'payment_profile',
       icon: (
         <svg fill="none" height="20" viewBox="0 0 20 20" width="20" xmlns="http://www.w3.org/2000/svg">
           <path
@@ -81,7 +81,7 @@ export default function PaymentAction({ onStateChange }: ComponentStateProps) {
           <path d="M15 3V7M13 5H17" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
         </svg>
       ),
-      text: t('new_profile_text')
+      text: t('payment_profile_text')
     },
     {
       id: 'statements',

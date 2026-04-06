@@ -228,6 +228,7 @@ export default function GiveBackPage() {
   const errorDialog = useDialog();
 
   const [giveBacks, demandGiveBacks, setGiveBacks] = useGiveBackModel(lang);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // ── Derived lists ──────────────────────────────────────────────────────────
   const unclaimedList = giveBacks.filter(g => !g.hasClaimed);
@@ -323,10 +324,10 @@ export default function GiveBackPage() {
   };
 
   const refreshData = async () => {
-    if (!userData) return;
-    setFetchLoading(true);
+    if (!userData || isRefreshing) return;
+    setIsRefreshing(true);
     const items = await fetchGiveBacks(userData, 10, new PaginateModel());
-    setFetchLoading(false);
+    setIsRefreshing(false);
     setEmpty(items.length === 0);
     if (items.length > 0) {
       extractLatest(items);
@@ -477,10 +478,7 @@ export default function GiveBackPage() {
     // No password required, execute claim directly
     await executeClaim(pending);
     setPendingClaimId(null);
-    // Refresh redeem codes after successful claim
-    if (typeof window !== 'undefined') {
-      StateStack.core.clearScope('redeem_code_flow');
-    }
+
   };
 
   const togglePasswordVisibility = () => {
@@ -506,7 +504,20 @@ export default function GiveBackPage() {
             </svg>
           </button>
           <h1 className={styles.title}>{t('give_backs')}</h1>
-          <div className={styles.headerSpacer} />
+          <button
+            className={styles.refreshButton}
+            onClick={refreshData}
+            disabled={isRefreshing}
+            aria-label="Refresh"
+          >
+            {isRefreshing ? (
+              <span className={styles.refreshSpinner} />
+            ) : (
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2" />
+              </svg>
+            )}
+          </button>
         </div>
 
         {/* Tabs */}

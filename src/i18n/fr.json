@@ -678,5 +678,6 @@
   "statement_sent_message": "Votre relevé a été envoyé à {email}",
   "language_description": "La langue principale dans laquelle vous contribuez du contenu",
   "country_description": "Votre pays principal où nous traitons les paiements",
-  "confirm_claim_giveback": "Êtes-vous sûr de vouloir réclamer {code} pour {amount} ADC ?"
+  "confirm_claim_giveback": "Êtes-vous sûr de vouloir réclamer {code} pour {amount} ADC ?",
+  "view_transaction_text": "Voir la transaction"
 }

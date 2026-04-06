@@ -2658,19 +2658,18 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
           return false;
         }
         const top = regEntry.stack[regEntry.stack.length - 1];
-        const pageBelow = regEntry.stack[regEntry.stack.length - 2];
 
         await lifecycleManager.trigger('onBeforePop', {
           stack: regEntry.stack.slice(),
           current: top,
-          previous: pageBelow,
+          previous: regEntry.stack[regEntry.stack.length - 2],
           action: { type: 'pop', target: top }
         });
 
         const action = {
           type: "pop" as const,
           from: top,
-          to: pageBelow,
+          to: regEntry.stack[regEntry.stack.length - 2],
           stackSnapshot: regEntry.stack.slice()
         };
         const ok = await runGuards(action);
@@ -2681,7 +2680,6 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
         regEntry.stack.pop();
         runMiddlewares(action);
         emit(previousStack, { type: 'pop', target: top });
-        
         // After pop lifecycle
         lifecycleManager.trigger('onAfterPop', {
           stack: regEntry.stack.slice(),
@@ -2689,17 +2687,6 @@ function createApiFor(id: string, navLink: NavigationMap, syncHistory: boolean, 
           previous: top,
           action: { type: 'pop', target: top }
         });
-        
-        // Trigger onResume for the page we're returning to
-        if (pageBelow) {
-          lifecycleManager.trigger('onResume', {
-            stack: regEntry.stack.slice(),
-            current: pageBelow,
-            previous: top,
-            action: { type: 'pop', target: top }
-          });
-        }
-        
         return true;
       });
     },

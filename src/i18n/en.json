@@ -678,5 +678,6 @@
   "statement_sent_message": "Your statement has been sent to {email}",
   "language_description": "The primary locale you contribute content in",
   "country_description": "Your primary country we process payment",
-  "confirm_claim_giveback": "Are you sure you want to claim {code} for {amount} ADC?"
+  "confirm_claim_giveback": "Are you sure you want to claim {code} for {amount} ADC?",
+  "view_transaction_text": "View Transaction"
 }

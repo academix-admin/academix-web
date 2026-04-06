@@ -508,6 +508,7 @@ export default function StatementsPage() {
             textSize={18}
             height={100}
             startFromDate={customTo ? new Date(customTo) : null}
+            minDate={customFrom ? new Date(customFrom) : undefined}
             backgroundColor={theme === "light" ? "#f8f9fa" : "#1a1a1a"}
             primaryTextColor={theme === "light" ? "#2c3e50" : "#ecf0f1"}
             secondaryTextColor={theme === "light" ? "#7f8c8d" : "#bdc3c7"}

@@ -1343,7 +1343,15 @@ export default function EditProfile() {
             </svg>
           </button>
           <h1 className={styles.title}>{t('edit_profile')}</h1>
-          <div className={styles.headerSpacer} />
+          <button
+            className={styles.refreshButton}
+            onClick={fetchUserData}
+            aria-label="Refresh"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2" />
+            </svg>
+          </button>
         </div>
       </header>
 
@@ -1358,15 +1366,7 @@ export default function EditProfile() {
           />
         )}
 
-        {!fetchLoading && !error && !fetchedUserData && (
-          <NoResultsView
-            text={t('no_results')}
-            buttonText={t('try_again')}
-            onButtonClick={fetchUserData}
-          />
-        )}
-
-        {fetchedUserData && (
+        {!fetchLoading && !error && fetchedUserData && (
           <div className={styles.profileContent}>
             <ImageView onEditing={(id) => console.log(id)} />
             <div className={styles.profileFields}>
