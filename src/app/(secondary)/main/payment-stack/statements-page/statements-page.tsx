@@ -419,7 +419,6 @@ export default function StatementsPage() {
             variant: 'primary',
             onClick: async () => {
               successDialog.close();
-              await nav.pop();
             }
           }
         ]}
