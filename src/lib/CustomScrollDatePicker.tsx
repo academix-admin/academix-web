@@ -323,25 +323,37 @@ const CustomScrollDatePicker : React.FC<CustomScrollDatePickerProps> =  ({
   const isToday = selectedDate.toDateString() === today.toDateString();
   const isYesterday = selectedDate.toDateString() === yesterday.toDateString();
 
+  // Helper to get actual month index from filtered monthIndex
+  const getActualMonthIndex = useCallback(() => {
+    const currentYear = years[yearIndex];
+    let startMonth = 0;
+    
+    if (minDate && currentYear === minDate.getFullYear()) {
+      startMonth = minDate.getMonth();
+    }
+    
+    return startMonth + monthIndex;
+  }, [years, yearIndex, monthIndex, minDate]);
+
   const daysInMonth = getDaysInMonth(monthIndex, years[yearIndex]);
   const dayOptions = useMemo(() => {
     const currentYear = years[yearIndex];
-    const currentMonth = monthIndex;
-    let maxDay = daysInMonth;
+    const actualMonthIndex = getActualMonthIndex();
+    let maxDay = getDaysInMonth(actualMonthIndex, currentYear);
     let minDay = 1;
     
     // Constrain max day if we're in maxDate's month/year
-    if (maxDate && currentYear === maxDate.getFullYear() && currentMonth === maxDate.getMonth()) {
+    if (maxDate && currentYear === maxDate.getFullYear() && actualMonthIndex === maxDate.getMonth()) {
       maxDay = Math.min(maxDay, maxDate.getDate());
     }
     
     // Constrain min day if we're in minDate's month/year
-    if (minDate && currentYear === minDate.getFullYear() && currentMonth === minDate.getMonth()) {
+    if (minDate && currentYear === minDate.getFullYear() && actualMonthIndex === minDate.getMonth()) {
       minDay = Math.max(minDay, minDate.getDate());
     }
     
     return Array.from({ length: maxDay - minDay + 1 }, (_, i) => minDay + i);
-  }, [daysInMonth, years, yearIndex, monthIndex, maxDate, minDate]);
+  }, [years, yearIndex, monthIndex, maxDate, minDate, getActualMonthIndex]);
 
   const monthOptions = useMemo(() => {
     const currentYear = years[yearIndex];
@@ -404,17 +416,6 @@ const CustomScrollDatePicker : React.FC<CustomScrollDatePickerProps> =  ({
     setDayIndex(index);
     updateDate(proposedDay, currentMonth, currentYear);
   };
-  // Helper to get actual month index from filtered monthIndex
-  const getActualMonthIndex = useCallback(() => {
-    const currentYear = years[yearIndex];
-    let startMonth = 0;
-    
-    if (minDate && currentYear === minDate.getFullYear()) {
-      startMonth = minDate.getMonth();
-    }
-    
-    return startMonth + monthIndex;
-  }, [years, yearIndex, monthIndex, minDate]);
   
   const handleMonthChange = (index: number) => {
     const proposedYear = years[yearIndex];
