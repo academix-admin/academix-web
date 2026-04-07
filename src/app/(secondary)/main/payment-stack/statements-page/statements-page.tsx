@@ -22,11 +22,11 @@ interface PeriodOption {
 }
 
 const PERIOD_OPTIONS: PeriodOption[] = [
-  { value: '7d',    label: 'Last 7 days' },
-  { value: '30d',   label: 'Last 30 days' },
-  { value: '90d',   label: 'Last 3 months' },
-  { value: '180d',  label: 'Last 6 months' },
-  { value: '365d',  label: 'Last 12 months' },
+  { value: '7d', label: 'Last 7 days' },
+  { value: '30d', label: 'Last 30 days' },
+  { value: '90d', label: 'Last 3 months' },
+  { value: '180d', label: 'Last 6 months' },
+  { value: '365d', label: 'Last 12 months' },
   { value: 'custom', label: 'Custom range' },
 ];
 
@@ -35,9 +35,9 @@ function getDateRangeFromPeriod(period: StatementPeriod): { from: string; to: st
   const from = new Date();
 
   switch (period) {
-    case '7d':   from.setDate(to.getDate() - 7);   break;
-    case '30d':  from.setDate(to.getDate() - 30);  break;
-    case '90d':  from.setDate(to.getDate() - 90);  break;
+    case '7d': from.setDate(to.getDate() - 7); break;
+    case '30d': from.setDate(to.getDate() - 30); break;
+    case '90d': from.setDate(to.getDate() - 90); break;
     case '180d': from.setDate(to.getDate() - 180); break;
     case '365d': from.setDate(to.getDate() - 365); break;
     default: return { from: '', to: '' };
@@ -162,15 +162,15 @@ export default function StatementsPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          userId:    paramatical.usersId,
-          country:   paramatical.country,
-          locale:    paramatical.locale,
-          gender:    paramatical.gender,
-          age:       paramatical.age,
-          email:     resolvedEmail,
-          fromDate:  resolvedDateRange.from,
-          toDate:    resolvedDateRange.to,
-          format:    selectedFormat,
+          userId: paramatical.usersId,
+          country: paramatical.country,
+          locale: paramatical.locale,
+          gender: paramatical.gender,
+          age: paramatical.age,
+          email: resolvedEmail,
+          fromDate: resolvedDateRange.from,
+          toDate: resolvedDateRange.to,
+          format: selectedFormat,
         }),
       });
 
@@ -364,7 +364,8 @@ export default function StatementsPage() {
             ) : (
               <div className={`${styles.emailDisplay} ${styles[`emailDisplay_${theme}`]}`}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 9.5a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.62 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 8.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                  <polyline points="22,6 12,13 2,6" />
                 </svg>
                 <span>{userData?.usersEmail ?? '—'}</span>
               </div>
@@ -462,6 +463,7 @@ export default function StatementsPage() {
             magnification={1.5}
             textSize={18}
             height={150}
+            maxDate={new Date()}
             startFromDate={customFrom ? new Date(customFrom) : null}
             backgroundColor={theme === "light" ? "#f8f9fa" : "#1a1a1a"}
             primaryTextColor={theme === "light" ? "#2c3e50" : "#ecf0f1"}
@@ -508,6 +510,7 @@ export default function StatementsPage() {
             height={100}
             startFromDate={customTo ? new Date(customTo) : null}
             minDate={customFrom ? new Date(customFrom) : undefined}
+            maxDate={new Date()}
             backgroundColor={theme === "light" ? "#f8f9fa" : "#1a1a1a"}
             primaryTextColor={theme === "light" ? "#2c3e50" : "#ecf0f1"}
             secondaryTextColor={theme === "light" ? "#7f8c8d" : "#bdc3c7"}
