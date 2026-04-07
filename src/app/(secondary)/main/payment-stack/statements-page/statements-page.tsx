@@ -454,6 +454,7 @@ export default function StatementsPage() {
             <h3 className={`${styles.dialogTitle} ${styles[`dialogTitle_${theme}`]}`}>{t('select_from_date_text')}</h3>
           </div>
           <CustomScrollDatePicker
+            key={`from-date-${customTo || 'no-to'}`}
             onChange={handleFromDateChange}
             defaultDate={true}
             quickDate={true}
@@ -499,6 +500,7 @@ export default function StatementsPage() {
             <h3 className={`${styles.dialogTitle} ${styles[`dialogTitle_${theme}`]}`}>{t('select_to_date_text')}</h3>
           </div>
           <CustomScrollDatePicker
+            key={`to-date-${customFrom || 'no-from'}`}
             onChange={handleToDateChange}
             defaultDate={true}
             quickDate={true}
