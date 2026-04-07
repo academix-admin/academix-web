@@ -463,7 +463,7 @@ export default function StatementsPage() {
             magnification={1.5}
             textSize={18}
             height={150}
-            maxDate={new Date()}
+            maxDate={customTo ? new Date(customTo) : new Date()}
             startFromDate={customFrom ? new Date(customFrom) : null}
             backgroundColor={theme === "light" ? "#f8f9fa" : "#1a1a1a"}
             primaryTextColor={theme === "light" ? "#2c3e50" : "#ecf0f1"}

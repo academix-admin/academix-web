@@ -311,10 +311,21 @@ const CustomScrollDatePicker : React.FC<CustomScrollDatePickerProps> =  ({
 
   const updateDate = useCallback(
     (d: number, m: number, y: number) => {
-      const newDate = new Date(y, m, d);
+      let newDate = new Date(y, m, d);
+      
+      // Enforce maxDate constraint
+      if (maxDate && newDate > maxDate) {
+        newDate = new Date(maxDate);
+      }
+      
+      // Enforce minDate constraint
+      if (minDate && newDate < minDate) {
+        newDate = new Date(minDate);
+      }
+      
       setSelectedDate(newDate);
     },
-    [onChange]
+    [maxDate, minDate]
   );
 
   useEffect(() => {
@@ -322,22 +333,122 @@ const CustomScrollDatePicker : React.FC<CustomScrollDatePickerProps> =  ({
     }, [selectedDate]);
 
   const handleDayChange = (index: number) => {
+    const proposedDay = index + 1;
+    const proposedDate = new Date(years[yearIndex], monthIndex, proposedDay);
+    
+    // Check if proposed date exceeds maxDate
+    if (maxDate && proposedDate > maxDate) {
+      const maxDay = maxDate.getDate();
+      const maxMonth = maxDate.getMonth();
+      const maxYear = maxDate.getFullYear();
+      
+      if (years[yearIndex] === maxYear && monthIndex === maxMonth) {
+        // Same month and year as maxDate, cap at maxDate's day
+        setDayIndex(maxDay - 1);
+        updateDate(maxDay, monthIndex, years[yearIndex]);
+        return;
+      }
+    }
+    
+    // Check if proposed date is before minDate
+    if (minDate && proposedDate < minDate) {
+      const minDay = minDate.getDate();
+      const minMonth = minDate.getMonth();
+      const minYear = minDate.getFullYear();
+      
+      if (years[yearIndex] === minYear && monthIndex === minMonth) {
+        // Same month and year as minDate, cap at minDate's day
+        setDayIndex(minDay - 1);
+        updateDate(minDay, monthIndex, years[yearIndex]);
+        return;
+      }
+    }
+    
     setDayIndex(index);
-    updateDate(index + 1, monthIndex, years[yearIndex]);
+    updateDate(proposedDay, monthIndex, years[yearIndex]);
   };
   const handleMonthChange = (index: number) => {
+    const proposedYear = years[yearIndex];
+    const proposedDate = new Date(proposedYear, index, dayIndex + 1);
+    
+    // Check if proposed date exceeds maxDate
+    if (maxDate && proposedDate > maxDate) {
+      const maxMonth = maxDate.getMonth();
+      const maxYear = maxDate.getFullYear();
+      
+      if (proposedYear === maxYear && index > maxMonth) {
+        // Can't select a month beyond maxDate's month in the same year
+        return;
+      }
+    }
+    
+    // Check if proposed date is before minDate
+    if (minDate && proposedDate < minDate) {
+      const minMonth = minDate.getMonth();
+      const minYear = minDate.getFullYear();
+      
+      if (proposedYear === minYear && index < minMonth) {
+        // Can't select a month before minDate's month in the same year
+        return;
+      }
+    }
+    
     setMonthIndex(index);
-    const maxDay = getDaysInMonth(index, years[yearIndex]);
-    const day = Math.min(dayIndex + 1, maxDay);
-    updateDate(day, index, years[yearIndex]);
+    const maxDay = getDaysInMonth(index, proposedYear);
+    let day = Math.min(dayIndex + 1, maxDay);
+    
+    // Further constrain day if we're in maxDate's month/year
+    if (maxDate && proposedYear === maxDate.getFullYear() && index === maxDate.getMonth()) {
+      day = Math.min(day, maxDate.getDate());
+    }
+    
+    // Further constrain day if we're in minDate's month/year
+    if (minDate && proposedYear === minDate.getFullYear() && index === minDate.getMonth()) {
+      day = Math.max(day, minDate.getDate());
+    }
+    
+    updateDate(day, index, proposedYear);
     if (day !== dayIndex + 1) setDayIndex(day - 1);
   };
   const handleYearChange = (index: number) => {
+    const proposedYear = years[index];
+    const proposedDate = new Date(proposedYear, monthIndex, dayIndex + 1);
+    
+    // Check if proposed date exceeds maxDate
+    if (maxDate && proposedDate > maxDate) {
+      const maxYear = maxDate.getFullYear();
+      
+      if (proposedYear > maxYear) {
+        // Can't select a year beyond maxDate's year
+        return;
+      }
+    }
+    
+    // Check if proposed date is before minDate
+    if (minDate && proposedDate < minDate) {
+      const minYear = minDate.getFullYear();
+      
+      if (proposedYear < minYear) {
+        // Can't select a year before minDate's year
+        return;
+      }
+    }
+    
     setYearIndex(index);
-    const year = years[index];
-    const maxDay = getDaysInMonth(monthIndex, year);
-    const day = Math.min(dayIndex + 1, maxDay);
-    updateDate(day, monthIndex, year);
+    const maxDay = getDaysInMonth(monthIndex, proposedYear);
+    let day = Math.min(dayIndex + 1, maxDay);
+    
+    // Further constrain day if we're in maxDate's month/year
+    if (maxDate && proposedYear === maxDate.getFullYear() && monthIndex === maxDate.getMonth()) {
+      day = Math.min(day, maxDate.getDate());
+    }
+    
+    // Further constrain day if we're in minDate's month/year
+    if (minDate && proposedYear === minDate.getFullYear() && monthIndex === minDate.getMonth()) {
+      day = Math.max(day, minDate.getDate());
+    }
+    
+    updateDate(day, monthIndex, proposedYear);
     if (day !== dayIndex + 1) setDayIndex(day - 1);
   };
 
