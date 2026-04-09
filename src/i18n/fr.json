@@ -189,6 +189,8 @@
   "click_to_refresh": "Cliquez pour refresh",
   "refresh": "Actualiser",
   "friends_text": "Amis",
+  "search_by_name_or_username": "Rechercher par nom ou nom d'utilisateur",
+  "no_friends_found": "Aucun ami trouvé",
   "active_text": "ACTIF",
   "completed_text": "TERMINÉ",
   "correct_text": "CORRECT",

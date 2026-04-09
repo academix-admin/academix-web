@@ -190,6 +190,8 @@
   "click_to_refresh": "Click to refresh",
   "refresh": "Refresh",
   "friends_text": "Friends",
+  "search_by_name_or_username": "Search by name or username",
+  "no_friends_found": "No friends found",
   "active_text": "ACTIVE",
   "completed_text": "COMPLETED",
   "correct_text": "CORRECT",

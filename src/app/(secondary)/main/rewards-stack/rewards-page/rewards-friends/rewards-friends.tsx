@@ -5,7 +5,7 @@ import { useTheme } from '@/context/ThemeContext';
 import styles from './rewards-friends.module.css';
 import { useLanguage } from '@/context/LanguageContext';
 import { getLastNameOrSingle, capitalize } from '@/utils/textUtils';
-import { getParamatical, ParamaticalData} from '@/utils/checkers';
+import { getParamatical, ParamaticalData } from '@/utils/checkers';
 import { useUserData } from '@/lib/stacks/user-stack';
 import { useDemandState } from '@/lib/state-stack';
 import { supabaseBrowser } from '@/lib/supabase/client';
@@ -18,12 +18,17 @@ import { ComponentStateProps } from '@/hooks/use-component-state';
 import { usePinnedState } from '@/hooks/pinned-state-hook';
 import { friendsSubscriptionManager } from '@/lib/managers/FriendsSubscriptionManager';
 import { FriendsChangeEvent } from '@/lib/managers/FriendsSubscriptionManager';
+import { SearchViewer, useSearchController } from '@/lib/SearchViewer';
+import LoadingView from '@/components/LoadingView/LoadingView';
+import NoResultsView from '@/components/NoResultsView/NoResultsView';
+import ErrorView from '@/components/ErrorView/ErrorView';
+import type { SearchResult } from '@/lib/SearchViewer';
 
 
 export default function RewardsFriends({ onStateChange }: ComponentStateProps) {
   const { theme } = useTheme();
   const { t, lang, tNode } = useLanguage();
-  const { userData, userData$ } = useUserData();
+  const { userData } = useUserData();
   const loaderRef = useRef<HTMLDivElement | null>(null);
 
 
@@ -31,6 +36,9 @@ export default function RewardsFriends({ onStateChange }: ComponentStateProps) {
   const [firstLoaded, setFirstLoaded] = useState(false);
   const [friendsLoading, setFriendsLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [searchResults, setSearchResults] = useState<SearchResult<FriendsModel>[]>([]);
+
+  const [searchId, searchOps, isSearchOpen, searchState] = useSearchController();
 
 
   const [friendsModel, demandFriendsModel, setFriendsModel] = useDemandState<FriendsModel[]>(
@@ -38,7 +46,7 @@ export default function RewardsFriends({ onStateChange }: ComponentStateProps) {
     {
       key: "friendsModel",
       persist: true,
-//       ttl: 3600,
+      //       ttl: 3600,
       scope: "secondary_flow",
       deps: [lang],
     }
@@ -57,13 +65,13 @@ export default function RewardsFriends({ onStateChange }: ComponentStateProps) {
     } else if (friend) {
 
       if (friend.usersReferredStatus != 'Referral.active') {
-         friendsSubscriptionManager.removeFriendsId(friend.usersId);
+        friendsSubscriptionManager.removeFriendsId(friend.usersId);
       }
 
       const updatedModels = friendsModel.map((m) => {
         if (m.usersId === friend.usersId) {
           const friendModel = FriendsModel.from(m);
-          return friendModel.copyWith({ usersReferredStatus: friend.usersReferredStatus});
+          return friendModel.copyWith({ usersReferredStatus: friend.usersReferredStatus });
         }
         return m;
       });
@@ -86,7 +94,7 @@ export default function RewardsFriends({ onStateChange }: ComponentStateProps) {
     let shouldUpdate = false;
 
     for (const friend of friendsModel) {
-    const status = friend.usersReferredStatus;
+      const status = friend.usersReferredStatus;
 
       if (status === 'Referral.active') {
         const added = friendsSubscriptionManager.addFriendsId(
@@ -107,23 +115,23 @@ export default function RewardsFriends({ onStateChange }: ComponentStateProps) {
 
 
   useEffect(() => {
-        if (!loaderRef.current) return;
+    if (!loaderRef.current) return;
 
-     const observer = new IntersectionObserver(
-        (entries) => {
-            if (entries[0].isIntersecting) {
-                callPaginate();
-            }
-        },
-        { threshold: 1.0 }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          callPaginate();
+        }
+      },
+      { threshold: 1.0 }
     );
 
     observer.observe(loaderRef.current);
 
-        return () => {
-            if (loaderRef.current) observer.unobserve(loaderRef.current);
-        };
-    }, [friendsModel, paginateModel]);
+    return () => {
+      if (loaderRef.current) observer.unobserve(loaderRef.current);
+    };
+  }, [friendsModel, paginateModel]);
 
   const fetchFriendsModel = useCallback(async (userData: UserData, limitBy: number, paginateModel: PaginateModel): Promise<FriendsModel[]> => {
     if (!userData) return [];
@@ -183,14 +191,14 @@ export default function RewardsFriends({ onStateChange }: ComponentStateProps) {
 
 
   useEffect(() => {
-      if (!userData) return;
+    if (!userData) return;
     demandFriendsModel(async ({ get, set }) => {
-      const friendHistories = await fetchFriendsModel(userData, 10,  new PaginateModel());
+      const friendHistories = await fetchFriendsModel(userData, 10, new PaginateModel());
       extractLatest(friendHistories);
       set(friendHistories);
       setFirstLoaded(true);
     });
-  }, [demandFriendsModel,userData]);
+  }, [demandFriendsModel, userData]);
 
 
   const callPaginate = async () => {
@@ -205,7 +213,7 @@ export default function RewardsFriends({ onStateChange }: ComponentStateProps) {
   };
   const refreshData = async () => {
     if (!userData || isRefreshing) return;
-    try{
+    try {
       setIsRefreshing(true);
       const friendHistories = await fetchFriendsModel(userData, 10, new PaginateModel());
       setIsRefreshing(false);
@@ -214,10 +222,55 @@ export default function RewardsFriends({ onStateChange }: ComponentStateProps) {
         setFriendsModel(friendHistories);
       }
     } catch (error) {
-       console.error('Error fetching data:', error);
-       setIsRefreshing(false);
+      console.error('Error fetching data:', error);
+      setIsRefreshing(false);
     }
   };
+
+  // Query friends for SearchViewer
+  const queryFriends = useCallback(async (
+    cursor: PaginateModel | undefined,
+    text: string,
+    signal?: AbortSignal
+  ) => {
+    if (!userData) return { data: [] };
+
+    const paramatical = await getParamatical(
+      userData.usersId,
+      lang,
+      userData.usersSex,
+      userData.usersDob
+    );
+
+    if (!paramatical) return { data: [] };
+
+    const paginateModel = cursor ?? new PaginateModel();
+
+    const { data, error } = await supabaseBrowser.rpc('fetch_friends', {
+      p_user_id: paramatical.usersId,
+      p_locale: paramatical.locale,
+      p_country: paramatical.country,
+      p_gender: paramatical.gender,
+      p_age: paramatical.age,
+      p_limit_by: 20,
+      p_after_friends: paginateModel.toJson(),
+      p_search_key: text || null,
+    });
+
+    if (error || !data) return { data: [] };
+
+    const friends = data.map((row: BackendFriendsModel) => new FriendsModel(row));
+
+    const lastItem = friends[friends.length - 1];
+    const nextCursor = lastItem
+      ? new PaginateModel({ sortId: lastItem.sortCreatedId })
+      : undefined;
+
+    return {
+      data: friends,
+      cursor: nextCursor,
+    };
+  }, [userData, lang]);
 
 
 
@@ -289,16 +342,16 @@ export default function RewardsFriends({ onStateChange }: ComponentStateProps) {
     }
   };
 
-// ✅ After
-useEffect(() => {
+  // ✅ After
+  useEffect(() => {
 
-  if (friendsModel.length > 0) {
-    onStateChange?.("data");
-  }
+    if (friendsModel.length > 0) {
+      onStateChange?.("data");
+    }
 
-}, [friendsModel]);
+  }, [friendsModel]);
 
-  if(!firstLoaded && friendsModel.length <= 0) return null;
+  if (!firstLoaded && friendsModel.length <= 0) return null;
 
   return (
     <div className={styles.historyContainer}>
@@ -306,25 +359,21 @@ useEffect(() => {
         <h2 className={`${styles.historyTitle} ${styles[`historyTitle_${theme}`]}`} style={{ margin: 0 }}>
           {t('friends_text')}
         </h2>
-        <button
-          onClick={() => refreshData()}
-          className={`${styles[`refreshIcon_${theme}`]}`}
-          style={{
-            background: 'none',
-            border: 'none',
-            cursor: isRefreshing ? 'default' : 'pointer',
-            padding: '8px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            opacity: isRefreshing ? 0.6 : 1
-          }}
-          aria-label="Refresh friends"
-          disabled={isRefreshing}
-        >
-          {isRefreshing ? (
-            <span className={`${styles.refreshSpinner} ${styles[`refreshSpinner_${theme}`]}`}></span>
-          ) : (
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button
+            onClick={() => searchOps.open()}
+            className={`${styles[`refreshIcon_${theme}`]}`}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              padding: '8px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+            aria-label="Search friends"
+          >
             <svg
               width="20"
               height="20"
@@ -334,10 +383,43 @@ useEffect(() => {
               strokeLinecap="round"
               strokeLinejoin="round"
             >
-              <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2" />
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.35-4.35" />
             </svg>
-          )}
-        </button>
+          </button>
+          <button
+            onClick={() => refreshData()}
+            className={`${styles[`refreshIcon_${theme}`]}`}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: isRefreshing ? 'default' : 'pointer',
+              padding: '8px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              opacity: isRefreshing ? 0.6 : 1
+            }}
+            aria-label="Refresh friends"
+            disabled={isRefreshing}
+          >
+            {isRefreshing ? (
+              <span className={`${styles.refreshSpinner} ${styles[`refreshSpinner_${theme}`]}`}></span>
+            ) : (
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2" />
+              </svg>
+            )}
+          </button>
+        </div>
       </div>
 
       <div className={styles.historyList}>
@@ -366,42 +448,42 @@ useEffect(() => {
               </div>
               <div className={styles.historyContent}>
                 <div className={styles.historyDetails}>
-                    <span className={`${styles.historyDetail} ${styles[`historyDetails_${theme}`]}`}>
-                        {formatDate(friend.usersCreatedAt)}
-                    </span>
-                    <span className={`${styles.historyDetail} ${styles[`historyDetails_${theme}`]}`}>
-                        {friend.usersUsername}
-                    </span>
+                  <span className={`${styles.historyDetail} ${styles[`historyDetails_${theme}`]}`}>
+                    {formatDate(friend.usersCreatedAt)}
+                  </span>
+                  <span className={`${styles.historyDetail} ${styles[`historyDetails_${theme}`]}`}>
+                    {friend.usersUsername}
+                  </span>
                 </div>
-                              <button
-                                className={`${styles.copyButton}`}
-                                onClick={() => copyToClipboard(friend.usersUsername)}
-                                aria-label="Copy username"
-                              >
-                                <svg
-                                  width="16"
-                                  height="16"
-                                  viewBox="0 0 16 16"
-                                  fill="none"
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  className={styles.copyIcon}
-                                >
-                                  <path
-                                    d="M13.3333 6H7.33333C6.59695 6 6 6.59695 6 7.33333V13.3333C6 14.0697 6.59695 14.6667 7.33333 14.6667H13.3333C14.0697 14.6667 14.6667 14.0697 14.6667 13.3333V7.33333C14.6667 6.59695 14.0697 6 13.3333 6Z"
-                                    stroke="currentColor"
-                                    strokeWidth="1.5"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  />
-                                  <path
-                                    d="M10 6V4.66667C10 3.95942 9.71905 3.28115 9.21903 2.78105C8.71902 2.28104 8.04076 2 7.3335 2H4.00016C3.29291 2 2.61464 2.28104 2.11463 2.78105C1.61462 3.28115 1.3335 3.95942 1.3335 4.66667V8.66667C1.3335 9.37391 1.61462 10.0522 2.11463 10.5522C2.61464 11.0523 3.29291 11.3333 4.00016 11.3333H6.00016"
-                                    stroke="currentColor"
-                                    strokeWidth="1.5"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  />
-                                </svg>
-                              </button>
+                <button
+                  className={`${styles.copyButton}`}
+                  onClick={() => copyToClipboard(friend.usersUsername)}
+                  aria-label="Copy username"
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    className={styles.copyIcon}
+                  >
+                    <path
+                      d="M13.3333 6H7.33333C6.59695 6 6 6.59695 6 7.33333V13.3333C6 14.0697 6.59695 14.6667 7.33333 14.6667H13.3333C14.0697 14.6667 14.6667 14.0697 14.6667 13.3333V7.33333C14.6667 6.59695 14.0697 6 13.3333 6Z"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d="M10 6V4.66667C10 3.95942 9.71905 3.28115 9.21903 2.78105C8.71902 2.28104 8.04076 2 7.3335 2H4.00016C3.29291 2 2.61464 2.28104 2.11463 2.78105C1.61462 3.28115 1.3335 3.95942 1.3335 4.66667V8.66667C1.3335 9.37391 1.61462 10.0522 2.11463 10.5522C2.61464 11.0523 3.29291 11.3333 4.00016 11.3333H6.00016"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </button>
               </div>
             </div>
           </div>
@@ -409,25 +491,134 @@ useEffect(() => {
       </div>
 
       {!friendsLoading && friendsModel.length === 0 && <div className={`${styles.rewardInfo} ${styles[`rewardInfo_${theme}`]}`}>
-                                                         {t('referral_reward_info_username', {
-                                                           amount: '300',
-                                                           threshold: '1000',
-                                                           username: userData?.usersUsername || '@username'
-                                                         })}
-                                                         <div className={styles.refreshHint}>
-                                                           <span
-                                                                                                                                                            role="button"
-                                                                                                                                                            onClick={()=> refreshData()}
-                                                                                                                                                            className={`${styles.refreshText} ${styles[`refreshText_${theme}`]}`}
-                                                                                                                                                          >
-                                                                                                                                                            {t('click_to_refresh')}
-                                                                                                                                                          </span>
+        {t('referral_reward_info_username', {
+          amount: '300',
+          threshold: '1000',
+          username: userData?.usersUsername || '@username'
+        })}
+        <div className={styles.refreshHint}>
+          <span
+            role="button"
+            onClick={() => refreshData()}
+            className={`${styles.refreshText} ${styles[`refreshText_${theme}`]}`}
+          >
+            {t('click_to_refresh')}
+          </span>
 
-                                                         </div>
-                                                       </div>}
+        </div>
+      </div>}
       {friendsModel.length > 0 && <div ref={loaderRef} className={styles.loadMoreSentinel}></div>}
       {friendsLoading && <div className={styles.moreSpinnerContainer}><span className={styles.moreSpinner}></span></div>}
 
+      <SearchViewer<FriendsModel, PaginateModel>
+        id={searchId}
+        isOpen={isSearchOpen}
+        onClose={searchOps.close}
+        debounceMs={350}
+        onInitialData={(text) => {
+          if (!text) return friendsModel;
+          const searchLower = text.toLowerCase();
+          return friendsModel.filter(friend => 
+            friend.usersNames.toLowerCase().includes(searchLower) ||
+            friend.usersUsername.toLowerCase().includes(searchLower)
+          );
+        }}
+        queryData={queryFriends}
+        onRemoveDuplicateBy={(friend) => friend.usersId}
+        searchProp={{
+          text: t('search_by_name_or_username'),
+          textColor: theme === 'light' ? '#000' : '#fff',
+          autoFocus: true,
+          background: theme === 'light' ? '#f5f5f5' : '#272727',
+          padding: { l: '4px', r: '4px', t: '0px', b: '0px' },
+        }}
+        loadingProp={{
+          view: <LoadingView text={t('loading')} />,
+        }}
+        noResultProp={{
+          view: <NoResultsView text={t('no_friends_found')} />,
+        }}
+        errorProp={{
+          view: <ErrorView text={t('error_occurred')} />,
+        }}
+        layoutProp={{
+          gapBetweenSearchAndContent: '16px',
+          searchBackground: theme === 'light' ? '#fff' : '#121212',
+          maxWidth: '800px',
+        }}
+        childrenDirection="vertical"
+        zIndex={1000}
+        onResult={setSearchResults}
+      >
+        {searchResults.map((result) => {
+          const friend = result.data;
+          return (
+            <div key={friend.usersId} className={styles.historyItemContainer} style={{ padding: '0 16px' }}>
+              {friend.usersImage ? (
+                <Image
+                  className={styles.logo}
+                  src={friend.usersImage}
+                  alt="Friend"
+                  width={40}
+                  height={40}
+                />
+              ) : (
+                <div className={styles.initials}>{getInitials(friend.usersNames)}</div>
+              )}
+
+              <div className={styles.historyItem}>
+                <div className={styles.historyMain}>
+                  <span className={`${styles.topicName} ${styles[`topicName_${theme}`]}`}>
+                    {friend.usersNames}
+                  </span>
+                  <span className={`${styles.historyTime} ${getStatusClass(friend.usersReferredStatus)}`}>
+                    {getReferralStatus(friend.usersReferredStatus)}
+                  </span>
+                </div>
+                <div className={styles.historyContent}>
+                  <div className={styles.historyDetails}>
+                    <span className={`${styles.historyDetail} ${styles[`historyDetails_${theme}`]}`}>
+                      {formatDate(friend.usersCreatedAt)}
+                    </span>
+                    <span className={`${styles.historyDetail} ${styles[`historyDetails_${theme}`]}`}>
+                      {friend.usersUsername}
+                    </span>
+                  </div>
+                  <button
+                    className={`${styles.copyButton}`}
+                    onClick={() => copyToClipboard(friend.usersUsername)}
+                    aria-label="Copy username"
+                  >
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 16 16"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                      className={styles.copyIcon}
+                    >
+                      <path
+                        d="M13.3333 6H7.33333C6.59695 6 6 6.59695 6 7.33333V13.3333C6 14.0697 6.59695 14.6667 7.33333 14.6667H13.3333C14.0697 14.6667 14.6667 14.0697 14.6667 13.3333V7.33333C14.6667 6.59695 14.0697 6 13.3333 6Z"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <path
+                        d="M10 6V4.66667C10 3.95942 9.71905 3.28115 9.21903 2.78105C8.71902 2.28104 8.04076 2 7.3335 2H4.00016C3.29291 2 2.61464 2.28104 2.11463 2.78105C1.61462 3.28115 1.3335 3.95942 1.3335 4.66667V8.66667C1.3335 9.37391 1.61462 10.0522 2.11463 10.5522C2.61464 11.0523 3.29291 11.3333 4.00016 11.3333H6.00016"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </SearchViewer>
     </div>
   );
 }
