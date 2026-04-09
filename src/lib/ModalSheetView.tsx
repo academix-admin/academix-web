@@ -1,14 +1,5 @@
 'use client';
 
-/**
- * ModalSheetView — owned replica of react-modal-sheet.
- *
- * Key fix over the original: we wait for the container's real measured height
- * before starting the open animation, so the sheet never flashes full-screen.
- *
- * All defaults are exposed as props so callers control everything cleanly.
- */
-
 import React, {
   createContext,
   forwardRef,
