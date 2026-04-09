@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { Sheet } from "@/lib/ModalSheetView";
 
 // ==================== Types ====================
@@ -159,10 +159,10 @@ const getStyles = (id: string) => `
 }
 
 #${id} .selection-viewer-content {
-  height: 100%;
   overflow-y: auto;
-  padding: 0 0px 0px 0px;
   -webkit-overflow-scrolling: touch;
+  flex: 1;
+  min-height: 0;
 }
 
 #${id} .selection-viewer-content.vertical {
@@ -323,7 +323,7 @@ const SelectionViewer: React.FC<SelectionViewerProps> = ({
   selectionState = "initial",
   closeThreshold = 0.2,
 }) => {
-  const [id] = useState(() => providedId || `selection-${Math.random().toString(36).substr(2, 9)}`);
+  const [id] = useState(() => providedId || `selection-${Math.random().toString(36).substring(2, 11)}`);
   const [searchValue, setSearchValue] = useState("");
   const [activeSnap, setActiveSnap] = useState(initialSnap);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
@@ -331,6 +331,7 @@ const SelectionViewer: React.FC<SelectionViewerProps> = ({
   const isPaginating = useRef(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const sheetRef = useRef<any>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
 
   useInjectStyles(id);
 
@@ -339,11 +340,9 @@ const SelectionViewer: React.FC<SelectionViewerProps> = ({
     if (typeof window === 'undefined' || !window.visualViewport) return;
 
     const handleResize = () => {
-      const viewport = window.visualViewport;
-      if (!viewport) return;
-      
-      const keyboardHeight = window.innerHeight - viewport.height;
-      setKeyboardHeight(keyboardHeight > 0 ? keyboardHeight : 0);
+      const vp = window.visualViewport!;
+      const kbHeight = window.innerHeight - vp.height;
+      setKeyboardHeight(kbHeight > 0 ? kbHeight : 0);
     };
 
     window.visualViewport.addEventListener('resize', handleResize);
@@ -428,9 +427,9 @@ const SelectionViewer: React.FC<SelectionViewerProps> = ({
       <Sheet.Container
         id={id}
         style={{
-          maxHeight,
+          maxHeight: maxHeight,
           minHeight: isSearchFocused ? "100%" : minHeight,
-          maxWidth: layoutProp?.maxWidth || "800px",
+          maxWidth: layoutProp?.maxWidth ?? '800px',
           margin: "0 auto",
           width: "100%",
           left: 0,
@@ -622,13 +621,15 @@ const SelectionViewer: React.FC<SelectionViewerProps> = ({
           </Sheet.Header>
         )}
 
-        <Sheet.Content >
+        <Sheet.Content>
           <div
             className={`selection-viewer-content ${childrenDirection}`}
             onScroll={onPaginate ? handleScroll : undefined}
             style={{
               paddingTop: isSearchFocused ? layoutProp?.gapBetweenSearchAndContent : '0',
-              paddingBottom: isSearchFocused && keyboardHeight > 0 ? `${keyboardHeight}px` : '0'
+              paddingBottom: keyboardHeight > 0
+                ? `${keyboardHeight + 16}px`
+                : '16px',
             }}
           >
             {/* Show children first, then loading at bottom */}
@@ -718,15 +719,14 @@ const useSelectionController = (initialSelectionState?: SelectionState): [
 ] => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectionState, setSelectionState] = useState(initialSelectionState || 'initial');
-  const [empty, setEmpty] = useState(false);
-  const selectionId = `selection-${Math.random().toString(36).substr(2, 9)}`;
+  const [selectionId] = useState(() => `selection-${Math.random().toString(36).substring(2, 11)}`);
 
-  const operations: Operation = {
+  const operations = useMemo<Operation>(() => ({
     open: () => setIsOpen(true),
     close: () => setIsOpen(false),
     toggle: () => setIsOpen((prev) => !prev),
     setSelectionState
-  };
+  }), [setSelectionState]);
 
   return [selectionId, operations, isOpen, selectionState];
 };

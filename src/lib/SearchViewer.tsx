@@ -132,10 +132,10 @@ const getStyles = (id: string) => `
 #${id} .search-viewer-search {
   display: flex;
   align-items: center;
-  margin: 0px;
-  border-radius: 0px;
+  margin: 16px 16px 4px 16px;
+  border-radius: 12px;
   box-sizing: border-box;
-  border: none;
+  border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 #${id} .search-viewer-search-input {
@@ -149,10 +149,10 @@ const getStyles = (id: string) => `
 }
 
 #${id} .search-viewer-content {
-  height: 100%;
   overflow-y: auto;
-  padding: 0 0px 0px 0px;
   -webkit-overflow-scrolling: touch;
+  flex: 1;
+  min-height: 0;
 }
 
 #${id} .search-viewer-content.vertical {
@@ -323,6 +323,7 @@ function SearchViewer<T = any, C = any>({
   const isPaginating = useRef(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const sheetRef = useRef<any>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const searchAbortRef = useRef<AbortController | undefined>(undefined);
   const paginationAbortRef = useRef<AbortController | undefined>(undefined);
@@ -369,11 +370,9 @@ function SearchViewer<T = any, C = any>({
     if (typeof window === 'undefined' || !window.visualViewport) return;
 
     const handleResize = () => {
-      const viewport = window.visualViewport;
-      if (!viewport) return;
-      
-      const keyboardHeight = window.innerHeight - viewport.height;
-      setKeyboardHeight(keyboardHeight > 0 ? keyboardHeight : 0);
+      const vp = window.visualViewport!;
+      const kbHeight = window.innerHeight - vp.height;
+      setKeyboardHeight(kbHeight > 0 ? kbHeight : 0);
     };
 
     const viewport = window.visualViewport;
@@ -513,6 +512,7 @@ function SearchViewer<T = any, C = any>({
   const clearSearch = () => {
     setSearchValue("");
     searchProp?.onChange?.("");
+    executeSearch('');
     if (searchInputRef.current) {
       searchInputRef.current.focus();
     }
@@ -656,7 +656,7 @@ function SearchViewer<T = any, C = any>({
       <Sheet.Container
         id={id}
         style={{
-          maxHeight,
+          maxHeight: "100dvh",
           minHeight: "100%",
           maxWidth: layoutProp?.maxWidth || "800px",
           margin: "0 auto",
@@ -705,7 +705,7 @@ function SearchViewer<T = any, C = any>({
                     color: searchProp?.textColor,
                     ...searchProp?.inputStyle
                   }}
-                  autoFocus
+                  autoFocus={searchProp?.autoFocus}
                   onFocus={handleSearchFocus}
                   onBlur={handleSearchBlur}
                 />
@@ -727,13 +727,15 @@ function SearchViewer<T = any, C = any>({
             </div>
           </Sheet.Header>
 
-        <Sheet.Content >
+        <Sheet.Content>
           <div
             className={`search-viewer-content ${childrenDirection}`}
             onScroll={queryDataRef.current ? handleScroll : undefined}
             style={{
-              paddingTop: layoutProp?.gapBetweenSearchAndContent || '0px',
-              paddingBottom: keyboardHeight > 0 ? `${keyboardHeight}px` : '0'
+              paddingTop: layoutProp?.gapBetweenSearchAndContent,
+              paddingBottom: keyboardHeight > 0
+                ? `${keyboardHeight + 16}px`
+                : '16px',
             }}
           >
             {renderContent()}
