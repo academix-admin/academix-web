@@ -79,6 +79,7 @@ type LayoutProps = {
   handleWidth?: string;
   fullScreenSearchBackground?: string;
   fullScreenSearchHeaderStyle?: React.CSSProperties;
+  maxWidth?: string;
 };
 
 type SelectionViewerProps = {
@@ -141,7 +142,7 @@ const getStyles = (id: string) => `
 #${id} .selection-viewer-search {
   display: flex;
   align-items: center;
-  margin: 0 16px 0px 16px;
+  margin: 16px 16px 4px 16px;
   border-radius: 12px;
   box-sizing: border-box;
   border: 1px solid rgba(0, 0, 0, 0.1);
@@ -326,11 +327,33 @@ const SelectionViewer: React.FC<SelectionViewerProps> = ({
   const [searchValue, setSearchValue] = useState("");
   const [activeSnap, setActiveSnap] = useState(initialSnap);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
   const isPaginating = useRef(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const sheetRef = useRef<any>(null);
 
   useInjectStyles(id);
+
+  // Track keyboard height
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.visualViewport) return;
+
+    const handleResize = () => {
+      const viewport = window.visualViewport;
+      if (!viewport) return;
+      
+      const keyboardHeight = window.innerHeight - viewport.height;
+      setKeyboardHeight(keyboardHeight > 0 ? keyboardHeight : 0);
+    };
+
+    window.visualViewport.addEventListener('resize', handleResize);
+    window.visualViewport.addEventListener('scroll', handleResize);
+
+    return () => {
+      window.visualViewport?.removeEventListener('resize', handleResize);
+      window.visualViewport?.removeEventListener('scroll', handleResize);
+    };
+  }, []);
 
   // Auto-focus on search
   useEffect(() => {
@@ -407,7 +430,7 @@ const SelectionViewer: React.FC<SelectionViewerProps> = ({
         style={{
           maxHeight,
           minHeight: isSearchFocused ? "100%" : minHeight,
-          maxWidth: "500px",
+          maxWidth: layoutProp?.maxWidth || "800px",
           margin: "0 auto",
           width: "100%",
           left: 0,
@@ -416,6 +439,8 @@ const SelectionViewer: React.FC<SelectionViewerProps> = ({
           background: isSearchFocused
             ? layoutProp?.fullScreenSearchBackground || layoutProp?.backgroundColor
             : layoutProp?.backgroundColor,
+          borderTopLeftRadius: isSearchFocused ? "0px" : "16px",
+          borderTopRightRadius: isSearchFocused ? "0px" : "16px",
         }}
       >
         {isSearchFocused ? (
@@ -429,8 +454,7 @@ const SelectionViewer: React.FC<SelectionViewerProps> = ({
                 background: searchProp?.background,
                 padding: searchProp?.padding
                   ? `${searchProp.padding.t} ${searchProp.padding.r} ${searchProp.padding.b} ${searchProp.padding.l}`
-                  : "16px",
-                margin: 0,
+                  : "16px"
               }}>
                 <button
                   className="selection-viewer-search-back-button"
@@ -603,7 +627,8 @@ const SelectionViewer: React.FC<SelectionViewerProps> = ({
             className={`selection-viewer-content ${childrenDirection}`}
             onScroll={onPaginate ? handleScroll : undefined}
             style={{
-              paddingTop: isSearchFocused ? layoutProp?.gapBetweenSearchAndContent : '0'
+              paddingTop: isSearchFocused ? layoutProp?.gapBetweenSearchAndContent : '0',
+              paddingBottom: isSearchFocused && keyboardHeight > 0 ? `${keyboardHeight}px` : '0'
             }}
           >
             {/* Show children first, then loading at bottom */}

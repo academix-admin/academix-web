@@ -323,6 +323,39 @@ const CustomScrollDatePicker : React.FC<CustomScrollDatePickerProps> =  ({
   const isToday = selectedDate.toDateString() === today.toDateString();
   const isYesterday = selectedDate.toDateString() === yesterday.toDateString();
 
+  // Check if today and yesterday are within the allowed date range
+  const isTodayInRange = useMemo(() => {
+    if(maxDate) {
+      const maxDay = maxDate.getDate();
+      const maxMonth = maxDate.getMonth();
+      const maxYear = maxDate.getFullYear();
+      const todayDay = today.getDate();
+      const todayMonth = today.getMonth();
+      const todayYear = today.getFullYear();
+      
+      if(todayDay === maxDay && todayMonth === maxMonth && todayYear === maxYear) return true;
+    }
+    if (minDate && today < minDate) return false;
+    if (maxDate && today > maxDate) return false;
+    return true;
+  }, [minDate, maxDate, today]);
+
+  const isYesterdayInRange = useMemo(() => {
+    if(maxDate) {
+      const maxDay = maxDate.getDate();
+      const maxMonth = maxDate.getMonth();
+      const maxYear = maxDate.getFullYear();
+      const yesterdayDay = yesterday.getDate();
+      const yesterdayMonth = yesterday.getMonth();
+      const yesterdayYear = yesterday.getFullYear();
+      
+      if(yesterdayDay === maxDay && yesterdayMonth === maxMonth && yesterdayYear === maxYear) return true;
+    }
+    if (minDate && yesterday < minDate) return false;
+    if (maxDate && yesterday > maxDate) return false;
+    return true;
+  }, [minDate, maxDate, yesterday]);
+
   // Helper to get actual month index from filtered monthIndex
   const getActualMonthIndex = useCallback(() => {
     const currentYear = years[yearIndex];
@@ -615,28 +648,32 @@ const CustomScrollDatePicker : React.FC<CustomScrollDatePickerProps> =  ({
       </div>
 
       {/* Quick buttons */}
-      {quickDate && (
+      {quickDate && (isTodayInRange || isYesterdayInRange) && (
         <div className="quick-buttons">
-          <button
-            className="quick-button"
-            onClick={setToYesterday}
-            style={{
-              color: isYesterday ? primaryTextColor : secondaryTextColor,
-              fontSize: textSize * 0.8,
-            }}
-          >
-            {yesterdayText}
-          </button>
-          <button
-            className="quick-button"
-            onClick={setToToday}
-            style={{
-              color: isToday ? primaryTextColor : secondaryTextColor,
-              fontSize: textSize * 0.8,
-            }}
-          >
-            {todayText}
-          </button>
+          {isYesterdayInRange && (
+            <button
+              className="quick-button"
+              onClick={setToYesterday}
+              style={{
+                color: isYesterday ? primaryTextColor : secondaryTextColor,
+                fontSize: textSize * 0.8,
+              }}
+            >
+              {yesterdayText}
+            </button>
+          )}
+          {isTodayInRange && (
+            <button
+              className="quick-button"
+              onClick={setToToday}
+              style={{
+                color: isToday ? primaryTextColor : secondaryTextColor,
+                fontSize: textSize * 0.8,
+              }}
+            >
+              {todayText}
+            </button>
+          )}
         </div>
       )}
     </div>

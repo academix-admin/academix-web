@@ -4348,7 +4348,6 @@ export function usePageSpecificLifecycle(
 // ==================== Enhanced Object Hooks ====================
 
 interface UseObjectOptions {
-  stack?: boolean;
   scope?: string;
   global?: boolean;
 }
@@ -4371,7 +4370,7 @@ export function useProvideObject<T>(
     // If no scoping options specified, default to page scope
     const finalOptions = { ...objectOptions };
 
-    if (!finalOptions.stack && !finalOptions.scope && !finalOptions.global) {
+    if (!finalOptions.scope && !finalOptions.global) {
       // Default to page scope using current page UID
       if (currentPageUid) {
         finalOptions.scope = currentPageUid;
@@ -4500,7 +4499,7 @@ export function useProvideRequestHandler<TRequest = any, TResponse = any>(
     // If no scoping options specified, default to page scope
     const finalOptions = { ...objectOptions };
 
-    if (!finalOptions.stack && !finalOptions.scope && !finalOptions.global) {
+    if (!finalOptions.scope && !finalOptions.global) {
       // Default to page scope using current page UID
       if (currentPageUid) {
         finalOptions.scope = currentPageUid;
@@ -4588,7 +4587,6 @@ export function useObjectWithFallback<T>(
   key: string,
   fallbackStrategies: UseObjectOptions[] = [
     {}, // Try page scope
-    { stack: true }, // Try stack scope
     { global: true }, // Try global scope
   ]
 ): [T | undefined, boolean] {
@@ -4698,7 +4696,7 @@ export function useObjectSync<T>(
   const finalOptions = useMemo(() => {
     const opts = { ...options };
 
-    if (opts.stack && !opts.scope && !opts.global) {
+    if (!opts.scope && !opts.global) {
       opts.scope = nav.id;
     }
 
