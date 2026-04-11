@@ -318,8 +318,8 @@ const SelectionViewer: React.FC<SelectionViewerProps> = ({
   initialSnap = 1,
   unmountOnClose = true,
   zIndex = 1000,
-  maxHeight = "90vh",
-  minHeight = "65vh",
+  maxHeight = "90dvh",
+  minHeight = "65dvh",
   selectionState = "initial",
   closeThreshold = 0.2,
 }) => {
@@ -447,7 +447,7 @@ const SelectionViewer: React.FC<SelectionViewerProps> = ({
         id={id}
         style={{
           maxHeight: maxHeight,
-          minHeight: isSearchFocused ? "100%" : minHeight,
+          minHeight: isSearchFocused ? "100dvh" : minHeight,
           maxWidth: layoutProp?.maxWidth ?? '800px',
           margin: "0 auto",
           width: "100%",
