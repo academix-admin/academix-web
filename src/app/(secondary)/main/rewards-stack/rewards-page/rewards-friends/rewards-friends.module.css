@@ -29,9 +29,6 @@
   padding-bottom: 12px;
 }
 
-.historyItemContainer:not(:last-child) {
-  border-bottom: 1px solid #e0e0e0;
-}
 
 .logo,
 .initials {
@@ -88,15 +85,18 @@
 }
 
 .statusActive {
-  color: #4CAF50; /* Green for active */
+  color: #4CAF50;
+  /* Green for active */
 }
 
 .statusCompleted {
-  color: #2196F3; /* Blue for completed */
+  color: #2196F3;
+  /* Blue for completed */
 }
 
 .statusFailed {
-  color: #F44336; /* Red for failed */
+  color: #F44336;
+  /* Red for failed */
 }
 
 .historyDetails {
@@ -170,7 +170,9 @@
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .copyButton {
@@ -229,13 +231,24 @@
 }
 
 @keyframes fadeInOut {
-  0% { opacity: 0; }
-  10% { opacity: 1; }
-  90% { opacity: 1; }
-  100% { opacity: 0; }
+  0% {
+    opacity: 0;
+  }
+
+  10% {
+    opacity: 1;
+  }
+
+  90% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
 }
 
-.historyContent{
+.historyContent {
   display: flex;
   justify-content: space-between;
 }
@@ -245,20 +258,19 @@
   font-size: 0.875rem;
   line-height: 1.5;
   text-align: left;
-    border-radius: 8px;
-        padding: 16px;
+  border-radius: 8px;
+  padding: 16px;
 
 }
 
 .rewardInfo_light {
-  color: #F7E7B7B;
-    background-color: #F0EFEF;
-
+  color: #F7E7B7;
+  background-color: #F0EFEF;
 }
 
 .rewardInfo_dark {
   color: #fff;
-    background-color: #515151;
+  background-color: #515151;
 
 }
 
@@ -322,23 +334,23 @@
     margin-top: 16px;
   }
 
-    .copyButton {
-      padding: 5px;
-    }
+  .copyButton {
+    padding: 5px;
+  }
 
-    .copiedText {
-      font-size: 10px;
-      top: -22px;
-    }
+  .copiedText {
+    font-size: 10px;
+    top: -22px;
+  }
 
-      .rewardInfo {
-        font-size: 0.8rem;
-        padding: 14px;
-      }
+  .rewardInfo {
+    font-size: 0.8rem;
+    padding: 14px;
+  }
 
-      .refreshHint {
-        font-size: 0.75rem;
-      }
+  .refreshHint {
+    font-size: 0.75rem;
+  }
 
 }
 
@@ -384,33 +396,33 @@
     margin-top: 14px;
   }
 
-   .copyButton {
-      padding: 4px;
-    }
+  .copyButton {
+    padding: 4px;
+  }
 
-    .copyIcon {
-      width: 14px;
-      height: 14px;
-    }
+  .copyIcon {
+    width: 14px;
+    height: 14px;
+  }
 
-    .copiedText {
-      font-size: 9px;
-      top: -20px;
-      padding: 3px 6px;
-    }
+  .copiedText {
+    font-size: 9px;
+    top: -20px;
+    padding: 3px 6px;
+  }
 
-    .rewardInfo {
-        font-size: 0.75rem;
-        padding: 12px;
-        line-height: 1.4;
-      }
+  .rewardInfo {
+    font-size: 0.75rem;
+    padding: 12px;
+    line-height: 1.4;
+  }
 
-      .refreshHint {
-        font-size: 0.7rem;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 2px;
-      }
+  .refreshHint {
+    font-size: 0.7rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
 }
 
 .refreshIcon_light svg {

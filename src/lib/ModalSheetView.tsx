@@ -116,6 +116,8 @@ interface SheetContextType {
   sheetRef: React.RefObject<HTMLDivElement | null>;
   sheetBoundsRef: React.RefCallback<HTMLDivElement>;
   avoidKeyboard: boolean;
+  /** Live visual viewport height — shrinks when keyboard is up */
+  visualViewportHeight: number;
 }
 
 const SheetContext = createContext<SheetContextType | null>(null);
@@ -161,6 +163,32 @@ function useWindowHeight() {
   return h;
 }
 
+// ─── useVisualViewportHeight ──────────────────────────────────────────────────
+// Tracks the *visual* viewport height, which shrinks when the software keyboard
+// appears. Falls back to window.innerHeight when the API is unavailable.
+
+function useVisualViewportHeight() {
+  const [h, setH] = useState(() =>
+    IS_SSR ? 800 : (window.visualViewport?.height ?? window.innerHeight)
+  );
+
+  useIsoLayoutEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+
+    const handler = () => setH(vv.height);
+    handler();
+    vv.addEventListener('resize', handler);
+    vv.addEventListener('scroll', handler);
+    return () => {
+      vv.removeEventListener('resize', handler);
+      vv.removeEventListener('scroll', handler);
+    };
+  }, []);
+
+  return h;
+}
+
 // ─── usePreventScroll ─────────────────────────────────────────────────────────
 
 function usePreventScroll(isOpen: boolean) {
@@ -199,6 +227,7 @@ const SheetBase = forwardRef<any, SheetProps>(({
   const [sheetBoundsRef, sheetHeight] = useMeasureHeight();
   const sheetRef = useRef<HTMLDivElement>(null);
   const windowHeight = useWindowHeight();
+  const visualViewportHeight = useVisualViewportHeight();
 
   // Calculate effective max height immediately
   const effectiveMaxHeight = React.useMemo(() => {
@@ -235,8 +264,6 @@ const SheetBase = forwardRef<any, SheetProps>(({
   useEffect(() => {
     if (state !== 'opening' || sheetHeight <= 0) return;
     onOpenStart?.();
-    // Always use effectiveMaxHeight as the start position, not sheetHeight
-    // This prevents the jank where it briefly shows at full content height
     y.set(effectiveMaxHeight);
     (animate as any)(y, 0, {
       ...animOpts,
@@ -301,15 +328,25 @@ const SheetBase = forwardRef<any, SheetProps>(({
   const context: SheetContextType = {
     y, detent, disableDrag: disableDragProp, dragProps,
     sheetRef, sheetBoundsRef, avoidKeyboard,
+    visualViewportHeight,
   };
 
   const sheet = (
     <SheetContext.Provider value={context}>
-      <motion.div style={{
-        position: 'fixed', top: 0, bottom: 0, left: 0, right: 0,
-        overflow: 'hidden', pointerEvents: 'none',
-        zIndex, opacity, ...style,
-      }}>
+      <motion.div
+        style={{
+          position: 'fixed',
+          top: 0,
+          bottom: 0,
+          left: 0,
+          right: 0,
+          overflow: 'hidden',
+          pointerEvents: 'none',
+          zIndex,
+          opacity,
+          ...style,
+        }}
+      >
         {visible ? children : null}
       </motion.div>
     </SheetContext.Provider>
@@ -339,28 +376,6 @@ const SheetContainer = forwardRef<any, SheetContainerProps>(({
 }, ref) => {
   const { y, detent, sheetRef, sheetBoundsRef } = useSheetContext();
 
-  // Calculate effective max height in pixels
-  const effectiveMaxHeight = React.useMemo(() => {
-    if (!maxHeight) return undefined;
-    if (typeof maxHeight === 'number') return maxHeight;
-    if (typeof maxHeight === 'string' && maxHeight.includes('dvh')) {
-      const dvhValue = parseFloat(maxHeight);
-      return (window.innerHeight * dvhValue) / 100;
-    }
-    if (typeof maxHeight === 'string' && maxHeight.includes('vh')) {
-      const vhValue = parseFloat(maxHeight);
-      return (window.innerHeight * vhValue) / 100;
-    }
-    return undefined;
-  }, [maxHeight]);
-
-  // Expose effective height to parent context
-  React.useEffect(() => {
-    if (effectiveMaxHeight && sheetRef.current) {
-      (sheetRef.current as any).effectiveMaxHeight = effectiveMaxHeight;
-    }
-  }, [effectiveMaxHeight, sheetRef]);
-
   const containerStyle: MotionStyle = {
     zIndex: 2,
     position: 'absolute',
@@ -371,6 +386,7 @@ const SheetContainer = forwardRef<any, SheetContainerProps>(({
     margin: '0 auto',
     right: 0,
     pointerEvents: 'auto',
+    // ── KEY: flex column so header stays fixed and content fills remaining space
     display: 'flex',
     flexDirection: 'column',
     backgroundColor,
@@ -389,7 +405,6 @@ const SheetContainer = forwardRef<any, SheetContainerProps>(({
     containerStyle.height = '100%';
     containerStyle.maxHeight = '100%';
   } else {
-    // content — height driven by content, capped by maxHeight
     containerStyle.height = 'auto';
     if (maxHeight) containerStyle.maxHeight = maxHeight;
     if (minHeight) containerStyle.minHeight = minHeight;
@@ -402,11 +417,86 @@ const SheetContainer = forwardRef<any, SheetContainerProps>(({
     else if (ref) (ref as React.MutableRefObject<any>).current = node;
   }, [sheetRef, sheetBoundsRef, ref]);
 
+  // ── Block scroll bleed-through ────────────────────────────────────────────
+  // React synthetic onTouchMove cannot call preventDefault() because React
+  // registers its listeners as passive. We need a native non-passive listener
+  // on the container so we can preventDefault() when the touched scrollable
+  // child has no more room to scroll — preventing the browser from scrolling
+  // whatever sits behind the sheet.
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const onTouchMove = (e: TouchEvent) => {
+      // Walk up from the touch target to find the nearest scrollable ancestor
+      // inside our container.
+      let target = e.target as HTMLElement | null;
+      let scrollable: HTMLElement | null = null;
+
+      while (target && target !== el) {
+        const style = window.getComputedStyle(target);
+        const overflowY = style.overflowY;
+        const canScroll = overflowY === 'auto' || overflowY === 'scroll';
+        if (canScroll && target.scrollHeight > target.clientHeight) {
+          scrollable = target;
+          break;
+        }
+        target = target.parentElement;
+      }
+
+      if (!scrollable) {
+        // No scrollable child found — block the event entirely so it cannot
+        // reach content beneath the sheet.
+        e.preventDefault();
+        return;
+      }
+
+      // A scrollable child exists. Only block if it has hit its scroll boundary
+      // (top or bottom), otherwise let the child scroll naturally.
+      const { scrollTop, scrollHeight, clientHeight } = scrollable;
+      const touch = e.touches[0];
+      // We need the direction; store the last Y on the element itself.
+      const lastY = (scrollable as any).__lastTouchY ?? touch.clientY;
+      const dy = touch.clientY - lastY;
+      (scrollable as any).__lastTouchY = touch.clientY;
+
+      const atTop = scrollTop <= 0 && dy > 0;       // pulling down at top
+      const atBottom = scrollTop + clientHeight >= scrollHeight && dy < 0; // pulling up at bottom
+
+      if (atTop || atBottom) {
+        e.preventDefault();
+      }
+    };
+
+    const onTouchStart = (e: TouchEvent) => {
+      // Reset stored Y on every new touch
+      let target = e.target as HTMLElement | null;
+      while (target && target !== el) {
+        (target as any).__lastTouchY = e.touches[0].clientY;
+        target = target.parentElement;
+      }
+    };
+
+    // { passive: false } is required — without it preventDefault() is ignored.
+    el.addEventListener('touchmove', onTouchMove, { passive: false });
+    el.addEventListener('touchstart', onTouchStart, { passive: true });
+    return () => {
+      el.removeEventListener('touchmove', onTouchMove);
+      el.removeEventListener('touchstart', onTouchStart);
+    };
+  }, []);
+
+  const assignContainerRef = useCallback((node: HTMLDivElement | null) => {
+    containerRef.current = node;
+    mergedRef(node);
+  }, [mergedRef]);
+
   return (
     <motion.div
       {...rest}
       id={id}
-      ref={mergedRef}
+      ref={assignContainerRef}
       className={`react-modal-sheet-container ${className}`}
       style={containerStyle}
     >
@@ -429,7 +519,12 @@ const SheetHeader = forwardRef<any, SheetHeaderProps>(({
     <motion.div
       ref={ref}
       className={`react-modal-sheet-header-container ${className}`}
-      style={{ width: '100%', flexShrink: 0, ...style }}
+      style={{
+        width: '100%',
+        // ── Header must never shrink — it's the pinned element
+        flexShrink: 0,
+        ...style,
+      }}
       {...activeDragProps}
       dragConstraints={{ top: 0, bottom: 0, left: 0, right: 0 }}
     >
@@ -461,14 +556,27 @@ const SheetContent = forwardRef<any, SheetContentProps>(({
     <motion.div
       ref={ref}
       className={`react-modal-sheet-content ${className}`}
-      style={{ minHeight: 0, flexGrow: 1, display: 'flex', flexDirection: 'column', ...style }}
+      style={{
+        // ── Content fills all remaining vertical space after the header.
+        // min-height:0 is required for flex children to shrink below their
+        // intrinsic size, which is what allows the inner scroller to work.
+        minHeight: 0,
+        flexGrow: 1,
+        // overflow:hidden here — the inner scroller div handles scrolling.
+        // Without this the *container* would grow and push the header off-screen.
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
+        ...style,
+      }}
       {...activeDragProps}
       dragConstraints={{ top: 0, bottom: 0, left: 0, right: 0 }}
     >
       <div
         className="react-modal-sheet-content-scroller"
         style={{
-          height: '100%',
+          flex: 1,
+          minHeight: 0,
           overflowY: disableScroll ? 'hidden' : 'auto',
           overscrollBehaviorY: 'none',
           ...(avoidKeyboard ? {
@@ -476,6 +584,7 @@ const SheetContent = forwardRef<any, SheetContentProps>(({
           } : {}),
           ...scrollStyle,
         }}
+
       >
         {children}
       </div>
@@ -504,12 +613,17 @@ const SheetBackdrop = forwardRef<any, SheetBackdropProps>(({
         position: 'fixed',
         top: 0, left: 0,
         width: '100%', height: '100%',
+        // Always block touch/scroll — even when not tappable the backdrop
+        // must prevent scroll events leaking through to content behind the sheet.
         touchAction: 'none',
         userSelect: 'none',
         backgroundColor,
         border: 'none',
         WebkitTapHighlightColor: 'transparent',
-        pointerEvents: isClickable ? 'auto' : 'none',
+        // Always 'auto' so the element receives and swallows pointer/touch events.
+        // Previously 'none' when not clickable caused scroll bleed-through.
+        pointerEvents: 'auto',
+        cursor: isClickable ? 'pointer' : 'default',
         ...style,
       }}
       initial={{ opacity: 0 }}
@@ -518,6 +632,9 @@ const SheetBackdrop = forwardRef<any, SheetBackdropProps>(({
       transition={{ duration: fadeDuration }}
       onTap={onTap as any}
       onClick={onClick}
+      // Swallow wheel and touch scroll events so they cannot reach content below
+      onWheel={(e: React.WheelEvent) => e.stopPropagation()}
+      onTouchMove={(e: React.TouchEvent) => e.stopPropagation()}
     />
   );
 });

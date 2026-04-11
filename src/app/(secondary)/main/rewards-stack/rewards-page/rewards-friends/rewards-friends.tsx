@@ -528,7 +528,7 @@ export default function RewardsFriends({ onStateChange }: ComponentStateProps) {
         searchProp={{
           text: t('search_by_name_or_username'),
           textColor: theme === 'light' ? '#000' : '#fff',
-          autoFocus: false,
+          autoFocus: true,
           background: theme === 'light' ? '#f5f5f5' : '#272727',
           padding: { l: '4px', r: '4px', t: '0px', b: '0px' },
         }}

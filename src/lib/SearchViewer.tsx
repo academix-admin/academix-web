@@ -385,11 +385,22 @@ function SearchViewer<T = any, C = any>({
     };
   }, []);
 
-  // Auto-focus on search
+    // Auto-focus on search
   useEffect(() => {
-    if (isOpen && searchProp?.autoFocus && searchInputRef.current) {
-      setTimeout(() => searchInputRef.current?.focus(), 100);
+    if (!isOpen) {
+      // Blur and clear on close so keyboard is fully dismissed and search state
+      // is fresh on next open. Without blur, reopening re-triggers the keyboard
+      // before the sheet animation starts — causing layout scatter.
+      searchInputRef.current?.blur();
+      setSearchValue("");
+      searchProp?.onChange?.("");
+      return;
     }
+    if (!searchProp?.autoFocus) return;
+    // Delay focus until after the sheet open animation (duration ~220ms) so the
+    // keyboard doesn't pop up mid-animation and scatter the measured sheetHeight.
+    const t = setTimeout(() => searchInputRef.current?.focus(), 300);
+    return () => clearTimeout(t);
   }, [isOpen, searchProp?.autoFocus]);
 
   // Remove duplicates helper - prioritizes online results over local
@@ -705,7 +716,6 @@ function SearchViewer<T = any, C = any>({
                     color: searchProp?.textColor,
                     ...searchProp?.inputStyle
                   }}
-                  autoFocus={searchProp?.autoFocus}
                   onFocus={handleSearchFocus}
                   onBlur={handleSearchBlur}
                 />
