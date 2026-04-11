@@ -348,8 +348,8 @@ export default function SignUpStep2() {
         //                 onPaginate={loadMore}
         snapPoints={[0, 1]}
         initialSnap={1}
-        minHeight="65vh"
-        maxHeight="90vh"
+        minHeight="65dvh"
+        maxHeight="90dvh"
         closeThreshold={0.2}
         selectionState={languageSelectionState}
         zIndex={1000}
@@ -405,8 +405,8 @@ export default function SignUpStep2() {
         childrenDirection="vertical"
         snapPoints={[0, 1]}
         initialSnap={1}
-        minHeight="65vh"
-        maxHeight="90vh"
+        minHeight="65dvh"
+        maxHeight="90dvh"
         closeThreshold={0.2}
         selectionState={countrySelectionState}
         zIndex={1000}
