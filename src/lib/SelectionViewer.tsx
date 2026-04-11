@@ -328,6 +328,8 @@ const SelectionViewer: React.FC<SelectionViewerProps> = ({
   const [activeSnap, setActiveSnap] = useState(initialSnap);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const [inputKey, setInputKey] = useState(0);
+  const [shouldAutoFocus, setShouldAutoFocus] = useState(false);
   const isPaginating = useRef(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const sheetRef = useRef<any>(null);
@@ -357,20 +359,24 @@ const SelectionViewer: React.FC<SelectionViewerProps> = ({
   // Auto-focus on search
   useEffect(() => {
     if (!isOpen) {
-      // Blur and clear on close so keyboard is fully dismissed and search state
-      // is fresh on next open. Without blur, reopening re-triggers the keyboard
-      // before the sheet animation starts — causing layout scatter.
       searchInputRef.current?.blur();
       setSearchValue("");
       searchProp?.onChange?.("");
+      setShouldAutoFocus(false);
       return;
     }
-    if (!searchProp?.autoFocus) return;
-    // Delay focus until after the sheet open animation (duration ~220ms) so the
-    // keyboard doesn't pop up mid-animation and scatter the measured sheetHeight.
-    const t = setTimeout(() => searchInputRef.current?.focus(), 300);
-    return () => clearTimeout(t);
   }, [isOpen, searchProp?.autoFocus]);
+
+  const handleOpenEnd = useCallback(() => {
+    if (searchProp?.autoFocus) {
+      setInputKey(prev => prev + 1);
+      setShouldAutoFocus(true);
+      setTimeout(() => {
+        searchInputRef.current?.focus();
+        searchInputRef.current?.click();
+      }, 50);
+    }
+  }, [searchProp?.autoFocus]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -381,6 +387,9 @@ const SelectionViewer: React.FC<SelectionViewerProps> = ({
   const handleSearchFocus = () => {
     setIsSearchFocused(true);
     searchProp?.onFocus?.();
+    requestAnimationFrame(() => {
+      searchInputRef.current?.focus();
+    });
   };
 
   const handleSearchBlur = () => {
@@ -434,6 +443,7 @@ const SelectionViewer: React.FC<SelectionViewerProps> = ({
       detent="content"
       style={{ zIndex }}
       maxHeight={maxHeight}
+      onOpenEnd={handleOpenEnd}
     >
       <Sheet.Container
         id={id}
@@ -479,6 +489,7 @@ const SelectionViewer: React.FC<SelectionViewerProps> = ({
                 </button>
 
                 <input
+                  key={inputKey}
                   ref={searchInputRef}
                   type="text"
                   placeholder={searchProp?.text}
@@ -491,6 +502,7 @@ const SelectionViewer: React.FC<SelectionViewerProps> = ({
                   }}
                   onFocus={handleSearchFocus}
                   onBlur={handleSearchBlur}
+                  autoFocus={shouldAutoFocus}
                 />
 
                 {searchValue && (
@@ -593,6 +605,7 @@ const SelectionViewer: React.FC<SelectionViewerProps> = ({
                   </span>
                 )}
                 <input
+                  key={inputKey}
                   ref={searchInputRef}
                   type="text"
                   placeholder={searchProp.text}
@@ -605,6 +618,7 @@ const SelectionViewer: React.FC<SelectionViewerProps> = ({
                   }}
                   onFocus={handleSearchFocus}
                   onBlur={handleSearchBlur}
+                  autoFocus={shouldAutoFocus}
                 />
                 {searchValue && (
                   <button

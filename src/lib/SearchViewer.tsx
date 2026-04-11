@@ -320,6 +320,8 @@ function SearchViewer<T = any, C = any>({
   const [results, setResults] = useState<SearchResult<T>[]>([]);
   const [cursor, setCursor] = useState<C | undefined>(undefined);
   const [internalSearchState, setInternalSearchState] = useState<SearchState>(externalSearchState);
+  const [inputKey, setInputKey] = useState(0);
+  const [shouldAutoFocus, setShouldAutoFocus] = useState(false);
   const isPaginating = useRef(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const sheetRef = useRef<any>(null);
@@ -385,23 +387,27 @@ function SearchViewer<T = any, C = any>({
     };
   }, []);
 
-    // Auto-focus on search
+  // Auto-focus on search
   useEffect(() => {
     if (!isOpen) {
-      // Blur and clear on close so keyboard is fully dismissed and search state
-      // is fresh on next open. Without blur, reopening re-triggers the keyboard
-      // before the sheet animation starts — causing layout scatter.
       searchInputRef.current?.blur();
       setSearchValue("");
       searchProp?.onChange?.("");
+      setShouldAutoFocus(false);
       return;
     }
-    if (!searchProp?.autoFocus) return;
-    // Delay focus until after the sheet open animation (duration ~220ms) so the
-    // keyboard doesn't pop up mid-animation and scatter the measured sheetHeight.
-    const t = setTimeout(() => searchInputRef.current?.focus(), 300);
-    return () => clearTimeout(t);
-  }, [isOpen, searchProp?.autoFocus]);
+  }, [isOpen]);
+
+  const handleOpenEnd = useCallback(() => {
+    if (searchProp?.autoFocus) {
+      setInputKey(prev => prev + 1);
+      setShouldAutoFocus(true);
+      setTimeout(() => {
+        searchInputRef.current?.focus();
+        searchInputRef.current?.click();
+      }, 50);
+    }
+  }, [searchProp?.autoFocus]);
 
   // Remove duplicates helper - prioritizes online results over local
   const removeDuplicates = useCallback((items: SearchResult<T>[]): SearchResult<T>[] => {
@@ -663,6 +669,7 @@ function SearchViewer<T = any, C = any>({
       detent="content"
       style={{ zIndex }}
       maxHeight={maxHeight}
+      onOpenEnd={handleOpenEnd}
     >
       <Sheet.Container
         id={id}
@@ -706,6 +713,7 @@ function SearchViewer<T = any, C = any>({
                 </button>
 
                 <input
+                  key={inputKey}
                   ref={searchInputRef}
                   type="text"
                   placeholder={searchProp?.text}
@@ -718,6 +726,7 @@ function SearchViewer<T = any, C = any>({
                   }}
                   onFocus={handleSearchFocus}
                   onBlur={handleSearchBlur}
+                  autoFocus={shouldAutoFocus}
                 />
 
                 {searchValue && (
