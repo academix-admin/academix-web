@@ -478,8 +478,8 @@ const BankView = ({ onSubmit, methodId }: BankViewProps) => {
         childrenDirection="vertical"
         snapPoints={[0, 1]}
         initialSnap={1}
-        minHeight="65vh"
-        maxHeight="90vh"
+        minHeight="65dvh"
+        maxHeight="90dvh"
         closeThreshold={0.2}
         selectionState={bankSelectionState}
         zIndex={1000}

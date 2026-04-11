@@ -204,8 +204,8 @@ export default function ProfileTitle({ onStateChange }: ComponentStateProps) {
         childrenDirection="vertical"
         snapPoints={[0, 1]}
         initialSnap={1}
-        minHeight="40vh"
-        maxHeight="60vh"
+        minHeight="40dvh"
+        maxHeight="60dvh"
         closeThreshold={0.2}
         selectionState={languageSelectionState}
         zIndex={1000}
