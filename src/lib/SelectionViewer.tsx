@@ -368,13 +368,11 @@ const SelectionViewer: React.FC<SelectionViewerProps> = ({
   }, [isOpen, searchProp?.autoFocus]);
 
   const handleOpenEnd = useCallback(() => {
-    if (searchProp?.autoFocus) {
+    if (searchProp?.autoFocus && searchInputRef.current) {
       setInputKey(prev => prev + 1);
       setShouldAutoFocus(true);
-      setTimeout(() => {
-        searchInputRef.current?.focus();
-        searchInputRef.current?.click();
-      }, 50);
+      searchInputRef.current.focus();
+      searchInputRef.current.click();
     }
   }, [searchProp?.autoFocus]);
 
