@@ -1,16 +1,11 @@
 'use client';
 import styles from './LandingHeader.module.css';
 import { useTheme } from '@/context/ThemeContext';
-import { useLanguage, SUPPORTED_LANGUAGES, LANGUAGE_NAMES, SupportedLang } from '@/context/LanguageContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
-import Link from 'next/link'
-
-// Language options configuration using LANGUAGE_NAMES from context
-const LANGUAGE_OPTIONS = SUPPORTED_LANGUAGES.map(code => ({
-  value: code,
-  label: `${code === 'en' ? '🇺🇸' : '🇫🇷'} ${code.toUpperCase()}`
-}));
+import Link from 'next/link';
+import LanguageSelector from '@/components/LanguageSelector/LanguageSelector';
 
 // Navigation links configuration
 const NAV_LINKS = [
@@ -24,7 +19,7 @@ const NAV_LINKS = [
 
 export default function LandingHeader() {
   const { theme, storedTheme, cycleTheme } = useTheme();
-  const { lang, setLang, t } = useLanguage();
+  const { t } = useLanguage();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const headerRef = useRef<HTMLDivElement>(null);
   const mobileNavRef = useRef<HTMLDivElement>(null);
@@ -65,26 +60,6 @@ export default function LandingHeader() {
       document.removeEventListener('keydown', handleEscape);
     };
   }, [mobileMenuOpen]);
-
-  const renderLanguageSelector = (
-    <select
-      className={`${styles.lanSwitch} ${styles[`lanSwitch_${theme}`]}`}
-      onChange={(e) => {
-          const newLang = e.target.value as SupportedLang;
-          if (SUPPORTED_LANGUAGES.includes(newLang)) {
-            setLang(newLang);
-          }
-        }}
-      value={lang}
-      aria-label="Select language"
-    >
-      {LANGUAGE_OPTIONS.map((option) => (
-        <option key={option.value} value={option.value}>
-          {option.label}
-        </option>
-      ))}
-    </select>
-  );
 
   const renderNavLink = (link: typeof NAV_LINKS[0], isMobile = false) => {
     const className = isMobile
@@ -128,11 +103,11 @@ export default function LandingHeader() {
             <Link className={`${styles.startButton} ${styles[`startButton_${theme}`]}`} href='/welcome'>
               {t('start_text')}
             </Link>
-            {renderLanguageSelector}
+            <LanguageSelector />
           </div>
 
           <div className={styles.mobileMenu}>
-            {renderLanguageSelector}
+            <LanguageSelector />
             <button
               className={styles.themeSwitch}
               onClick={cycleTheme}

@@ -11,10 +11,13 @@ html::-webkit-scrollbar {
 html, body {
   margin: 0;
   padding: 0;
-  overflow-x: hidden;
   font-family: sans-serif;
   background-color: transparent;
   -webkit-overflow-scrolling: touch; /* smooth scroll on iOS */
+}
+
+body {
+  overflow-x: hidden;
 }
 
 body.light {
