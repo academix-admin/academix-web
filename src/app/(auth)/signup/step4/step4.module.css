@@ -265,7 +265,7 @@
 }
 
 .dialogTitle {
-  align-text: center;
+  text-align: center;
   margin: 0px;
 }
 
@@ -278,7 +278,7 @@
 }
 
 .dialogDescription {
-  align-text: center;
+  text-align: center;
   margin: 0px;
   margin-bottom: 32px;
 }
