@@ -970,7 +970,7 @@ export default function Rates({ searchParams }: RatesPageProps) {
         maxHeight="90dvh"
         closeThreshold={0.2}
         selectionState={walletSelectionState}
-        zIndex={1000}
+        zIndex={10000}
       >
         {filteredWallets.map((item) => (
           <WalletItem
@@ -1029,7 +1029,7 @@ export default function Rates({ searchParams }: RatesPageProps) {
         maxHeight="90dvh"
         closeThreshold={0.2}
         selectionState={methodSelectionState}
-        zIndex={1000}
+        zIndex={10000}
       >
         {filteredMethods.map((item) => (
           <MethodItem

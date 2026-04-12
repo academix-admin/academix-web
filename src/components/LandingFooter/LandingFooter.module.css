@@ -294,11 +294,12 @@
   }
 
   .footerBottom {
-    flex-direction: row;
+    flex-direction: column;
+    align-items: center;
   }
 
   .copyright {
-    margin-bottom: 0;
+    margin-bottom: 1rem;
   }
 }
 
