@@ -21,6 +21,8 @@ import ErrorView from '@/components/ErrorView/ErrorView';
 import DialogCancel from '@/components/DialogCancel';
 import { useRedeemCodeModel } from '@/lib/stacks/redeem-code-stack';
 import { useDialog } from '@/lib/DialogViewer';
+import { useTopViewer } from '@/lib/TopViewer';
+import { copyToClipboard } from '@/utils/clipboard';
 
 
 interface QuizRedeemCodeProps {
@@ -32,14 +34,15 @@ interface QuizRedeemCodeProps {
 const RedeemCodeCard: React.FC<{ redeemCode: RedeemCodeModel, onClick?: () => void, display?: boolean, onEdit?: () => void, onDelete?: () => void }> = ({ redeemCode, onClick, display = false, onEdit, onDelete }) => {
   const { t, lang } = useLanguage();
   const { theme } = useTheme();
+  const { showToast, ToastComponent } = useTopViewer();
 
   const handleCopy = async (code: RedeemCodeModel) => {
     try {
-      await navigator.clipboard.writeText(code.redeemCodeValue);
-      // You might want to add a toast notification here
-      console.log('Code copied to clipboard:', code.redeemCodeValue);
+      await copyToClipboard(code.redeemCodeValue);
+      showToast(t('code_copied') || 'Code copied to clipboard', 'success');
     } catch (err) {
-      console.error('Failed to copy code:', err);
+      console.error('Failed to copy:', err);
+      showToast(t('copy_failed') || 'Failed to copy code', 'error');
     }
   };
 
@@ -85,6 +88,7 @@ const RedeemCodeCard: React.FC<{ redeemCode: RedeemCodeModel, onClick?: () => vo
 
   return (
     <div role="button" onClick={onClick} className={`${styles.redeemCodeCard} ${display ? styles.removeMargin : ''}`} aria-labelledby={`redeemCode-${redeemCode.redeemCodeId}`}>
+      <ToastComponent />
       {/* Main Card Content */}
       <div className={styles.cardContent}>
         {/* Header with code and copy button */}

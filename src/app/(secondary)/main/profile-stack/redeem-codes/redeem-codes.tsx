@@ -21,19 +21,22 @@ import { useDemandState } from '@/lib/state-stack';
 import { PaginateModel } from '@/models/paginate-model';
 import { StateStack } from '@/lib/state-stack';
 import { useRedeemCodeModel } from '@/lib/stacks/redeem-code-stack';
+import { useTopViewer } from '@/lib/TopViewer';
+import { copyToClipboard } from '@/utils/clipboard';
 
 
 const RedeemCodeCard: React.FC<{ redeemCode: RedeemCodeModel }> = ({ redeemCode }) => {
   const { t, lang } = useLanguage();
   const { theme } = useTheme();
+  const { showToast, ToastComponent } = useTopViewer();
 
   const handleCopy = async (code: RedeemCodeModel) => {
     try {
-      await navigator.clipboard.writeText(code.redeemCodeValue);
-      // You might want to add a toast notification here
-      console.log('Code copied to clipboard:', code.redeemCodeValue);
+      await copyToClipboard(code.redeemCodeValue);
+      showToast(t('code_copied') || 'Code copied to clipboard', 'success');
     } catch (err) {
-      console.error('Failed to copy code:', err);
+      console.error('Failed to copy:', err);
+      showToast(t('copy_failed') || 'Failed to copy code', 'error');
     }
   };
 
@@ -79,6 +82,7 @@ const RedeemCodeCard: React.FC<{ redeemCode: RedeemCodeModel }> = ({ redeemCode 
 
   return (
     <div className={styles.redeemCodeCard} role="group" aria-labelledby={`redeemCode-${redeemCode.redeemCodeId}`}>
+      <ToastComponent />
       {/* Main Card Content */}
       <div className={styles.cardContent}>
         {/* Header with code and copy button */}

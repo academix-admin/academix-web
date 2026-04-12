@@ -17,6 +17,8 @@ import { PaginateModel } from '@/models/paginate-model';
 import { StateStack } from '@/lib/state-stack';
 import { useGiveBackModel } from '@/lib/stacks/redeem-code-stack';
 import { useDialog } from '@/lib/DialogViewer';
+import { useTopViewer } from '@/lib/TopViewer';
+import { copyToClipboard } from '@/utils/clipboard';
 
 type Tab = 'unclaimed' | 'claimed';
 
@@ -49,12 +51,15 @@ const GiveBackCard: React.FC<{
 }) => {
   const { t, lang } = useLanguage();
   const { theme } = useTheme();
+  const { showToast, ToastComponent } = useTopViewer();
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(giveBack.redeemCodeValue ?? giveBack.giveBackCode);
+      await copyToClipboard(giveBack.redeemCodeValue ?? giveBack.giveBackCode);
+      showToast(t('code_copied') || 'Code copied to clipboard', 'success');
     } catch (err) {
       console.error('Failed to copy code:', err);
+      showToast(t('copy_failed') || 'Failed to copy code', 'error');
     }
   };
 
@@ -79,6 +84,7 @@ const GiveBackCard: React.FC<{
 
   return (
     <div className={styles.giveBackCard} role="group">
+      <ToastComponent />
       <div className={styles.cardContent}>
         {/* Header */}
         <div className={styles.cardHeader}>
