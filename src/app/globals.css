@@ -16,6 +16,23 @@ html, body {
   -webkit-overflow-scrolling: touch; /* smooth scroll on iOS */
 }
 
+/* Prevent iOS zoom on input focus by ensuring minimum 16px font-size */
+input,
+select,
+textarea,
+button {
+  font-size: 16px !important;
+}
+
+/* Ensure input elements maintain at least 16px on mobile to prevent zoom */
+@media screen and (max-width: 500px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
 body {
   overflow-x: hidden;
 }
