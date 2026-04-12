@@ -154,7 +154,7 @@ const getStyles = (id: string) => `
   background: transparent;
   padding: 12px 8px;
   outline: none;
-  font-size: 16px;
+  font-size: 16px !important;
   width: 100%;
 }
 

@@ -968,7 +968,7 @@ export default function Payout({ searchParams }: PayoutPageProps) {
   if (req === 'landing' && !activeTab) return null;
 
   return (
-    <div className={getContainerClass()} style={getBackgroundStyle()}>
+    <main className={getContainerClass()} style={getBackgroundStyle()}>
       {config.showHeader && (
         <header className={`${styles.header} ${styles[`header_${resolvedTheme}`]}`}>
           <div className={styles.headerContent}>
@@ -1058,6 +1058,6 @@ export default function Payout({ searchParams }: PayoutPageProps) {
           onButtonClick={fetchPayoutData}
         />
       )}
-    </div>
+    </main>
   );
 }

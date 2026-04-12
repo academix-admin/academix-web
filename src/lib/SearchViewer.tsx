@@ -90,7 +90,27 @@ type SearchViewerProps<T = any, C = any> = {
   maxHeight?: string;
   minHeight?: string;
   searchState?: SearchState;
+  /**
+   * Called to filter local/cached data on each search query.
+   * Pass `localDataDeps` with the variables this function closes over
+   * instead of wrapping in `useCallback` — the lib handles stabilization internally.
+   *
+   * @example
+   * onInitialData={(text) => quizzes.filter(q => q.title.includes(text))}
+   * localDataDeps={[quizzes, activeCategory]}
+   */
   onInitialData?: (text: string) => T[];
+  /**
+   * Dependencies that, when changed, signal `onInitialData` would return
+   * different results. Works like `useEffect` deps — pass the variables
+   * your `onInitialData` closes over.
+   *
+   * If omitted, the effect only re-runs when the search text changes or
+   * the sheet opens/closes (safe default for stable data sources).
+   *
+   * @example localDataDeps={[quizzes, activeCategory]}
+   */
+  localDataDeps?: React.DependencyList;
   queryData?: (cursor: C | undefined, text: string, signal?: AbortSignal) => Promise<QueryResult<T, C>>;
   onResult?: (results: SearchResult<T>[]) => void;
   onRemoveDuplicateBy?: (item: T) => any;
@@ -125,8 +145,8 @@ const getStyles = (id: string) => `
   font-size: 18px;
   font-weight: 600;
   padding: 0px 16px 0px 16px;
-    word-break: break-word;   /* break long words */
-    white-space: normal;      /* allow wrapping */
+  word-break: break-word;
+  white-space: normal;
 }
 
 #${id} .search-viewer-search {
@@ -144,7 +164,7 @@ const getStyles = (id: string) => `
   background: transparent;
   padding: 12px 8px;
   outline: none;
-  font-size: 16px;
+  font-size: 16px !important;
   width: 100%;
 }
 
@@ -188,14 +208,11 @@ const getStyles = (id: string) => `
   font-size: 14px;
 }
 
-/* Full screen search mode */
 #${id} .search-viewer-fullscreen-search {
-//   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   z-index: 10;
-//   padding-top: env(safe-area-inset-top);
   width: 100%;
 }
 
@@ -231,7 +248,6 @@ const getStyles = (id: string) => `
   opacity: 0.7;
 }
 
-/* React Modal Sheet overrides */
 #${id} .react-modal-sheet-container {
   max-width: 500px;
   margin: 0 auto;
@@ -249,8 +265,6 @@ const getStyles = (id: string) => `
   height: 100%;
 }
 
-
-/* Mobile full-width behavior */
 @media (max-width: 500px) {
   #${id} .react-modal-sheet-container {
     max-width: 100%;
@@ -258,7 +272,6 @@ const getStyles = (id: string) => `
   }
 }
 
-/* Prevent iOS zooming */
 @media screen and (-webkit-min-device-pixel-ratio: 0) {
   #${id} .search-viewer-search-input {
     font-size: 16px !important;
@@ -279,7 +292,6 @@ const useInjectStyles = (id: string) => {
       document.head.appendChild(styleTag);
     }
 
-    // Cleanup on unmount
     return () => {
       if (styleTag && document.head.contains(styleTag)) {
         document.head.removeChild(styleTag);
@@ -290,7 +302,7 @@ const useInjectStyles = (id: string) => {
 
 const MAX_CACHE = 50;
 
-// ==================== Component ====================
+// ==================== SearchViewer Component ====================
 function SearchViewer<T = any, C = any>({
   id: providedId,
   isOpen,
@@ -309,6 +321,7 @@ function SearchViewer<T = any, C = any>({
   minHeight = "65dvh",
   searchState: externalSearchState = "initial",
   onInitialData,
+  localDataDeps,
   queryData,
   onResult,
   onRemoveDuplicateBy,
@@ -335,7 +348,7 @@ function SearchViewer<T = any, C = any>({
   const queryDataRef = useRef(queryData);
   const onRemoveDuplicateByRef = useRef(onRemoveDuplicateBy);
 
-  // Keep refs up to date
+  // Always keep refs current — identity changes on these never trigger effects
   onResultRef.current = onResult;
   onInitialDataRef.current = onInitialData;
   queryDataRef.current = queryData;
@@ -354,22 +367,22 @@ function SearchViewer<T = any, C = any>({
       setInternalSearchState("initial");
       clearTimeout(debounceRef.current);
       if (searchAbortRef.current) {
-        searchAbortRef.current.abort('Component closed');
+        searchAbortRef.current.abort("Component closed");
       }
       if (paginationAbortRef.current) {
-        paginationAbortRef.current.abort('Component closed');
+        paginationAbortRef.current.abort("Component closed");
       }
     }
   }, [isOpen]);
 
-  // Notify parent of results (using ref to avoid infinite loops)
+  // Notify parent of results
   useEffect(() => {
     onResultRef.current?.(results);
   }, [results]);
 
   // Track keyboard height
   useEffect(() => {
-    if (typeof window === 'undefined' || !window.visualViewport) return;
+    if (typeof window === "undefined" || !window.visualViewport) return;
 
     const handleResize = () => {
       const vp = window.visualViewport!;
@@ -378,132 +391,130 @@ function SearchViewer<T = any, C = any>({
     };
 
     const viewport = window.visualViewport;
-    viewport.addEventListener('resize', handleResize);
-    viewport.addEventListener('scroll', handleResize);
+    viewport.addEventListener("resize", handleResize);
+    viewport.addEventListener("scroll", handleResize);
 
     return () => {
-      viewport.removeEventListener('resize', handleResize);
-      viewport.removeEventListener('scroll', handleResize);
+      viewport.removeEventListener("resize", handleResize);
+      viewport.removeEventListener("scroll", handleResize);
     };
   }, []);
 
-  // Auto-focus on search
+  // Blur + reset on close
   useEffect(() => {
     if (!isOpen) {
       searchInputRef.current?.blur();
       setSearchValue("");
       searchProp?.onChange?.("");
       setShouldAutoFocus(false);
-      return;
     }
   }, [isOpen]);
 
+  const autoFocus = searchProp?.autoFocus;
   const handleOpenEnd = useCallback(() => {
-    if (searchProp?.autoFocus && searchInputRef.current) {
-      setInputKey(prev => prev + 1);
+    if (autoFocus && searchInputRef.current) {
+      setInputKey((prev) => prev + 1);
       setShouldAutoFocus(true);
       searchInputRef.current.focus();
       searchInputRef.current.click();
     }
-  }, [searchProp?.autoFocus]);
+  }, [autoFocus]);
 
-  // Remove duplicates helper - prioritizes online results over local
+  // Remove duplicates — prioritizes online over local
   const removeDuplicates = useCallback((items: SearchResult<T>[]): SearchResult<T>[] => {
     if (!onRemoveDuplicateByRef.current) return items;
-    
     const seen = new Map<any, SearchResult<T>>();
-    
-    items.forEach(item => {
+    items.forEach((item) => {
       const key = onRemoveDuplicateByRef.current!(item.data);
       const existing = seen.get(key);
-      
-      // Keep online result over local, or first occurrence if same type
       if (!existing || (!existing.isOnline && item.isOnline)) {
         seen.set(key, item);
       }
     });
-    
     return Array.from(seen.values());
   }, []);
 
-  // Execute search with caching and cancellation
-  const executeSearch = useCallback(async (value: string) => {
-    let localResults: SearchResult<T>[] = [];
-    let remoteResults: SearchResult<T>[] = [];
+  // Core search executor — reads from refs so it never goes stale
+  const executeSearch = useCallback(
+    async (value: string) => {
+      let localResults: SearchResult<T>[] = [];
+      let remoteResults: SearchResult<T>[] = [];
 
-    // Filter initial data locally
-    if (onInitialDataRef.current) {
-      const filtered = onInitialDataRef.current(value);
-      localResults = filtered.map(data => ({ isOnline: false, data }));
-    }
-
-    // Query remote data
-    if (queryDataRef.current) {
-      // Check cache first
-      const cached = cacheRef.current.get(value);
-      if (cached) {
-        remoteResults = cached.data.map(data => ({ isOnline: true, data }));
-        const deduplicated = removeDuplicates([...localResults, ...remoteResults]);
-        setResults(deduplicated);
-        setCursor(cached.cursor);
-        setInternalSearchState(deduplicated.length > 0 ? "data" : "empty");
-        return;
+      if (onInitialDataRef.current) {
+        const filtered = onInitialDataRef.current(value);
+        localResults = filtered.map((data) => ({ isOnline: false, data }));
       }
 
-      // Cancel previous request
-      if (searchAbortRef.current) {
-        searchAbortRef.current.abort('New search initiated');
-      }
-      searchAbortRef.current = new AbortController();
-
-      setInternalSearchState("loading");
-      setCursor(undefined);
-      
-      try {
-        const result = await queryDataRef.current(undefined, value, searchAbortRef.current.signal);
-        
-        // Cache the result with LRU eviction
-        cacheRef.current.set(value, result);
-        if (cacheRef.current.size > MAX_CACHE) {
-          const firstKey = cacheRef.current.keys().next().value;
-          if (firstKey !== undefined) {
-            cacheRef.current.delete(firstKey);
-          }
+      if (queryDataRef.current) {
+        const cached = cacheRef.current.get(value);
+        if (cached) {
+          remoteResults = cached.data.map((data) => ({ isOnline: true, data }));
+          const deduplicated = removeDuplicates([...localResults, ...remoteResults]);
+          setResults(deduplicated);
+          setCursor(cached.cursor);
+          setInternalSearchState(deduplicated.length > 0 ? "data" : "empty");
+          return;
         }
-        
-        remoteResults = result.data.map(data => ({ isOnline: true, data }));
-        const deduplicated = removeDuplicates([...localResults, ...remoteResults]);
-        setResults(deduplicated);
-        setCursor(result.cursor);
-        setInternalSearchState(deduplicated.length > 0 ? "data" : "empty");
-      } catch (error: any) {
-        if (error.name === 'AbortError') return; // Ignore cancelled requests
-        setInternalSearchState("error");
-      }
-    } else {
-      // Only local results
-      const deduplicated = removeDuplicates(localResults);
-      setResults(deduplicated);
-      setInternalSearchState(deduplicated.length > 0 ? "data" : "empty");
-    }
-  }, [removeDuplicates]);
 
-  // Execute initial search when opened
+        if (searchAbortRef.current) {
+          searchAbortRef.current.abort("New search initiated");
+        }
+        searchAbortRef.current = new AbortController();
+
+        setInternalSearchState("loading");
+        setCursor(undefined);
+
+        try {
+          const signal = searchAbortRef.current.signal;
+          const result = await queryDataRef.current(undefined, value, signal);
+          if (signal.aborted) return;
+
+          cacheRef.current.set(value, result);
+          if (cacheRef.current.size > MAX_CACHE) {
+            const firstKey = cacheRef.current.keys().next().value;
+            if (firstKey !== undefined) {
+              cacheRef.current.delete(firstKey);
+            }
+          }
+
+          remoteResults = result.data.map((data) => ({ isOnline: true, data }));
+          const deduplicated = removeDuplicates([...localResults, ...remoteResults]);
+          setResults(deduplicated);
+          setCursor(result.cursor);
+          setInternalSearchState(deduplicated.length > 0 ? "data" : "empty");
+        } catch (error: any) {
+          if (error.name === "AbortError") return;
+          setInternalSearchState("error");
+        }
+      } else {
+        const deduplicated = removeDuplicates(localResults);
+        setResults(deduplicated);
+        setInternalSearchState(deduplicated.length > 0 ? "data" : "empty");
+      }
+    },
+    [removeDuplicates]
+  );
+
+  // Re-run search when:
+  // - sheet opens/closes
+  // - search text changes
+  // - caller signals their local data changed via localDataDeps
+  //
+  // onInitialData is intentionally NOT in deps — it lives in a ref.
+  // Pass localDataDeps={[yourData, yourFilter]} to react to data changes
+  // without needing useCallback at the call site.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (isOpen && onInitialDataRef.current) {
-      executeSearch('');
+      executeSearch(searchValue);
     }
-  }, [isOpen, executeSearch]);
+  }, [isOpen, searchValue, executeSearch, ...(localDataDeps ?? [])]);
 
   const handleSearchChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchValue(value);
     searchProp?.onChange?.(value);
-
-    // Clear previous debounce
     clearTimeout(debounceRef.current);
-
-    // Debounce the search execution
     debounceRef.current = setTimeout(() => {
       executeSearch(value);
     }, debounceMs);
@@ -527,7 +538,7 @@ function SearchViewer<T = any, C = any>({
   const clearSearch = () => {
     setSearchValue("");
     searchProp?.onChange?.("");
-    executeSearch('');
+    executeSearch("");
     if (searchInputRef.current) {
       searchInputRef.current.focus();
     }
@@ -543,23 +554,23 @@ function SearchViewer<T = any, C = any>({
       if (isNearBottom) {
         isPaginating.current = true;
         setInternalSearchState("loading");
-        
-        // Cancel previous pagination request
+
         if (paginationAbortRef.current) {
-          paginationAbortRef.current.abort('New pagination request');
+          paginationAbortRef.current.abort("New pagination request");
         }
         paginationAbortRef.current = new AbortController();
-        
+
         try {
-          const result = await queryDataRef.current(cursor, searchValue, paginationAbortRef.current.signal);
-          const newResults = result.data.map(data => ({ isOnline: true, data }));
-          const combined = [...results, ...newResults];
-          const deduplicated = removeDuplicates(combined);
-          setResults(deduplicated);
+          const signal = paginationAbortRef.current.signal;
+          const result = await queryDataRef.current(cursor, searchValue, signal);
+          if (signal.aborted) return;
+          const newResults = result.data.map((data) => ({ isOnline: true, data }));
+          // Functional updater avoids stale closure on results
+          setResults((prev) => removeDuplicates([...prev, ...newResults]));
           setCursor(result.cursor);
           setInternalSearchState("data");
         } catch (error: any) {
-          if (error.name === 'AbortError') return; // Ignore cancelled requests
+          if (error.name === "AbortError") return;
           setInternalSearchState("error");
         } finally {
           setTimeout(() => {
@@ -568,12 +579,11 @@ function SearchViewer<T = any, C = any>({
         }
       }
     },
-    [cursor, searchValue, removeDuplicates, results]
+    [cursor, searchValue, removeDuplicates]
   );
 
   if (!isOpen && unmountOnClose) return null;
 
-  // Render content based on state
   const renderContent = () => {
     if (results.length > 0) {
       return (
@@ -586,7 +596,7 @@ function SearchViewer<T = any, C = any>({
                 padding: loadingProp?.padding
                   ? `${loadingProp.padding.t} ${loadingProp.padding.r} ${loadingProp.padding.b} ${loadingProp.padding.l}`
                   : "16px",
-                ...loadingProp?.style
+                ...loadingProp?.style,
               }}
             >
               {loadingProp?.view}
@@ -598,9 +608,8 @@ function SearchViewer<T = any, C = any>({
 
     switch (searchState) {
       case "initial":
-        // Show children even with no results on initial state (before any search)
         return children;
-      
+
       case "loading":
         return (
           <div
@@ -609,13 +618,13 @@ function SearchViewer<T = any, C = any>({
               padding: loadingProp?.padding
                 ? `${loadingProp.padding.t} ${loadingProp.padding.r} ${loadingProp.padding.b} ${loadingProp.padding.l}`
                 : "16px",
-              ...loadingProp?.style
+              ...loadingProp?.style,
             }}
           >
             {loadingProp?.view}
           </div>
         );
-      
+
       case "empty":
         return (
           <div
@@ -624,7 +633,7 @@ function SearchViewer<T = any, C = any>({
               padding: noResultProp?.padding
                 ? `${noResultProp.padding.t} ${noResultProp.padding.r} ${noResultProp.padding.b} ${noResultProp.padding.l}`
                 : "16px",
-              ...noResultProp?.style
+              ...noResultProp?.style,
             }}
           >
             {noResultProp?.view || (
@@ -634,7 +643,7 @@ function SearchViewer<T = any, C = any>({
             )}
           </div>
         );
-      
+
       case "error":
         return (
           <div
@@ -643,17 +652,17 @@ function SearchViewer<T = any, C = any>({
               padding: errorProp?.padding
                 ? `${errorProp.padding.t} ${errorProp.padding.r} ${errorProp.padding.b} ${errorProp.padding.l}`
                 : "16px",
-              ...errorProp?.style
+              ...errorProp?.style,
             }}
           >
             {errorProp?.view || (
               <div className="search-viewer-default-error">
-                {errorProp?.text || "No results found"}
+                {errorProp?.text || "Something went wrong"}
               </div>
             )}
           </div>
         );
-      
+
       default:
         return null;
     }
@@ -685,64 +694,78 @@ function SearchViewer<T = any, C = any>({
           borderTopRightRadius: "0px",
         }}
       >
-      
-          <Sheet.Header>
+        <Sheet.Header>
+          <div
+            className="search-viewer-fullscreen-search"
+            style={layoutProp?.searchHeaderStyle}
+          >
             <div
-              className="search-viewer-fullscreen-search"
-              style={layoutProp?.searchHeaderStyle}
-            >
-              <div className="search-viewer-search" style={{
+              className="search-viewer-search"
+              style={{
                 ...searchProp?.containerStyle,
                 background: searchProp?.background,
                 padding: searchProp?.padding
                   ? `${searchProp.padding.t} ${searchProp.padding.r} ${searchProp.padding.b} ${searchProp.padding.l}`
-                  : "16px"
-              }}>
+                  : "16px",
+              }}
+            >
+              <button
+                className="search-viewer-search-back-button"
+                onClick={handleBackFromSearch}
+                aria-label="Exit search mode"
+              >
+                {searchProp?.backIcon || (
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <path
+                      d="M15 18L9 12L15 6"
+                      stroke={searchProp?.textColor || "currentColor"}
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                )}
+              </button>
+
+              <input
+                key={inputKey}
+                ref={searchInputRef}
+                type="text"
+                placeholder={searchProp?.text}
+                value={searchValue}
+                onChange={handleSearchChange}
+                className={searchProp?.className || "search-viewer-search-input"}
+                style={{
+                  color: searchProp?.textColor,
+                  ...searchProp?.inputStyle,
+                }}
+                onFocus={handleSearchFocus}
+                onBlur={handleSearchBlur}
+                autoFocus={shouldAutoFocus}
+              />
+
+              {searchValue && (
                 <button
-                  className="search-viewer-search-back-button"
-                  onClick={handleBackFromSearch}
-                  aria-label="Exit search mode"
+                  className="search-viewer-search-clear-button"
+                  onClick={clearSearch}
+                  aria-label="Clear search"
                 >
-                  {searchProp?.backIcon || (
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M15 18L9 12L15 6" stroke={searchProp?.textColor || 'currentColor'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  {searchProp?.clearIcon || (
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                      <path
+                        d="M18 6L6 18M6 6L18 18"
+                        stroke={searchProp?.textColor || "currentColor"}
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
                     </svg>
                   )}
                 </button>
-
-                <input
-                  key={inputKey}
-                  ref={searchInputRef}
-                  type="text"
-                  placeholder={searchProp?.text}
-                  value={searchValue}
-                  onChange={handleSearchChange}
-                  className={searchProp?.className || "search-viewer-search-input"}
-                  style={{
-                    color: searchProp?.textColor,
-                    ...searchProp?.inputStyle
-                  }}
-                  onFocus={handleSearchFocus}
-                  onBlur={handleSearchBlur}
-                  autoFocus={shouldAutoFocus}
-                />
-
-                {searchValue && (
-                  <button
-                    className="search-viewer-search-clear-button"
-                    onClick={clearSearch}
-                    aria-label="Clear search"
-                  >
-                    {searchProp?.clearIcon || (
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M18 6L6 18M6 6L18 18" stroke={searchProp?.textColor || 'currentColor'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    )}
-                  </button>
-                )}
-              </div>
+              )}
             </div>
-          </Sheet.Header>
+          </div>
+        </Sheet.Header>
 
         <Sheet.Content>
           <div
@@ -750,9 +773,7 @@ function SearchViewer<T = any, C = any>({
             onScroll={queryDataRef.current ? handleScroll : undefined}
             style={{
               paddingTop: layoutProp?.gapBetweenSearchAndContent,
-              paddingBottom: keyboardHeight > 0
-                ? `${keyboardHeight + 16}px`
-                : '16px',
+              paddingBottom: keyboardHeight > 0 ? `${keyboardHeight + 16}px` : "16px",
             }}
           >
             {renderContent()}
@@ -772,25 +793,446 @@ type Operation = {
   setSearchState: (val: SearchState) => void;
 };
 
-const useSearchController = (initialSearchState?: SearchState): [
-  string,
-  Operation,
-  boolean,
-  SearchState
-] => {
+const useSearchController = (
+  initialSearchState?: SearchState
+): [string, Operation, boolean, SearchState] => {
   const [isOpen, setIsOpen] = useState(false);
-  const [searchState, setSearchState] = useState(initialSearchState || 'initial');
-  const [searchId] = useState(() => `search-${Math.random().toString(36).substring(2, 11)}`);
+  const [searchState, setSearchState] = useState<SearchState>(
+    initialSearchState ?? "initial"
+  );
+  const [searchId] = useState(
+    () => `search-${Math.random().toString(36).substring(2, 11)}`
+  );
 
-  const operations = useMemo<Operation>(() => ({
-    open: () => setIsOpen(true),
-    close: () => setIsOpen(false),
-    toggle: () => setIsOpen((prev) => !prev),
-    setSearchState,
-  }), [setSearchState]);
+  const operations = useMemo<Operation>(
+    () => ({
+      open: () => setIsOpen(true),
+      close: () => setIsOpen(false),
+      toggle: () => setIsOpen((prev) => !prev),
+      setSearchState,
+    }),
+    [setSearchState]
+  );
 
   return [searchId, operations, isOpen, searchState];
 };
 
 export { SearchViewer, useSearchController, type SearchResult };
 export default SearchViewer;
+
+// ==================== MultipleSearchViewer Types ====================
+type EachViewerProps<T = any, C = any> = {
+  /**
+   * Called to filter local/cached data on each search query.
+   * Pass `localDataDeps` with the variables this function closes over
+   * instead of wrapping in `useCallback` — the lib handles stabilization internally.
+   *
+   * @example
+   * onInitialData={(text) => topics.filter(t => t.name.includes(text))}
+   * localDataDeps={[topics, activeFilter]}
+   */
+  onInitialData?: (text: string) => T[];
+  /**
+   * Dependencies that, when changed, signal `onInitialData` would return
+   * different results. Works like `useEffect` deps — pass the variables
+   * your `onInitialData` closes over.
+   *
+   * If omitted, the effect only re-runs when the search text changes.
+   *
+   * @example localDataDeps={[topics, activeFilter]}
+   */
+  localDataDeps?: React.DependencyList;
+  queryData?: (
+    cursor: C | undefined,
+    text: string,
+    signal?: AbortSignal
+  ) => Promise<QueryResult<T, C>>;
+  onResult?: (results: SearchResult<T>[]) => void;
+  onRemoveDuplicateBy?: (item: T) => any;
+  childrenDirection?: "vertical" | "horizontal";
+  children?: React.ReactNode;
+};
+
+type MultipleSearchViewerProps = Omit<
+  SearchViewerProps,
+  | "children"
+  | "onInitialData"
+  | "localDataDeps"
+  | "queryData"
+  | "onResult"
+  | "onRemoveDuplicateBy"
+  | "childrenDirection"
+> & {
+  children:
+    | React.ReactElement<EachViewerProps>
+    | React.ReactElement<EachViewerProps>[];
+};
+
+// ==================== SearchTextContext ====================
+const SearchTextContext = React.createContext<string>("");
+
+// ==================== EachViewer Component ====================
+function EachViewer<T = any, C = any>({
+  onInitialData,
+  localDataDeps,
+  queryData,
+  onResult,
+  onRemoveDuplicateBy,
+  childrenDirection = "vertical",
+  children,
+}: EachViewerProps<T, C>) {
+  const searchText = React.useContext(SearchTextContext);
+  const [results, setResults] = useState<SearchResult<T>[]>([]);
+  const [cursor, setCursor] = useState<C | undefined>(undefined);
+  const [internalSearchState, setInternalSearchState] =
+    useState<SearchState>("initial");
+  const isPaginating = useRef(false);
+  const debounceRef = useRef<NodeJS.Timeout | undefined>(undefined);
+  const searchAbortRef = useRef<AbortController | undefined>(undefined);
+  const paginationAbortRef = useRef<AbortController | undefined>(undefined);
+  const cacheRef = useRef<Map<string, QueryResult<T, C>>>(new Map());
+  const onResultRef = useRef(onResult);
+  const onInitialDataRef = useRef(onInitialData);
+  const queryDataRef = useRef(queryData);
+  const onRemoveDuplicateByRef = useRef(onRemoveDuplicateBy);
+
+  // Always keep refs current — identity changes on these never trigger effects
+  onResultRef.current = onResult;
+  onInitialDataRef.current = onInitialData;
+  queryDataRef.current = queryData;
+  onRemoveDuplicateByRef.current = onRemoveDuplicateBy;
+
+  const removeDuplicates = useCallback(
+    (items: SearchResult<T>[]): SearchResult<T>[] => {
+      if (!onRemoveDuplicateByRef.current) return items;
+      const seen = new Map<any, SearchResult<T>>();
+      items.forEach((item) => {
+        const key = onRemoveDuplicateByRef.current!(item.data);
+        const existing = seen.get(key);
+        if (!existing || (!existing.isOnline && item.isOnline)) {
+          seen.set(key, item);
+        }
+      });
+      return Array.from(seen.values());
+    },
+    []
+  );
+
+  const executeSearch = useCallback(
+    async (value: string) => {
+      let localResults: SearchResult<T>[] = [];
+      let remoteResults: SearchResult<T>[] = [];
+
+      if (onInitialDataRef.current) {
+        const filtered = onInitialDataRef.current(value);
+        localResults = filtered.map((data) => ({ isOnline: false, data }));
+      }
+
+      if (queryDataRef.current) {
+        const cached = cacheRef.current.get(value);
+        if (cached) {
+          remoteResults = cached.data.map((data) => ({ isOnline: true, data }));
+          const deduplicated = removeDuplicates([...localResults, ...remoteResults]);
+          setResults(deduplicated);
+          setCursor(cached.cursor);
+          setInternalSearchState(deduplicated.length > 0 ? "data" : "empty");
+          return;
+        }
+
+        if (searchAbortRef.current) {
+          searchAbortRef.current.abort("New search initiated");
+        }
+        searchAbortRef.current = new AbortController();
+
+        setInternalSearchState("loading");
+        setCursor(undefined);
+
+        try {
+          const signal = searchAbortRef.current.signal;
+          const result = await queryDataRef.current(undefined, value, signal);
+          if (signal.aborted) return;
+
+          cacheRef.current.set(value, result);
+          if (cacheRef.current.size > MAX_CACHE) {
+            const firstKey = cacheRef.current.keys().next().value;
+            if (firstKey !== undefined) {
+              cacheRef.current.delete(firstKey);
+            }
+          }
+
+          remoteResults = result.data.map((data) => ({ isOnline: true, data }));
+          const deduplicated = removeDuplicates([...localResults, ...remoteResults]);
+          setResults(deduplicated);
+          setCursor(result.cursor);
+          setInternalSearchState(deduplicated.length > 0 ? "data" : "empty");
+        } catch (error: any) {
+          if (error.name === "AbortError") return;
+          setInternalSearchState("error");
+        }
+      } else {
+        const deduplicated = removeDuplicates(localResults);
+        setResults(deduplicated);
+        setInternalSearchState(deduplicated.length > 0 ? "data" : "empty");
+      }
+    },
+    [removeDuplicates]
+  );
+
+  // Re-run search when:
+  // - search text changes (user typed)
+  // - caller signals data changed via localDataDeps
+  //
+  // onInitialData and queryData are intentionally NOT in deps — they live in refs.
+  // Pass localDataDeps={[yourData, yourFilter]} to react to data changes
+  // without needing useCallback at the call site.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (onInitialDataRef.current || queryDataRef.current) {
+      clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => {
+        executeSearch(searchText);
+      }, 300);
+    }
+    return () => clearTimeout(debounceRef.current);
+  }, [searchText, executeSearch, ...(localDataDeps ?? [])]);
+
+  useEffect(() => {
+    onResultRef.current?.(results);
+  }, [results]);
+
+  return (
+    <div
+      className={`search-viewer-content ${childrenDirection}`}
+      style={{
+        display: "flex",
+        flexDirection: childrenDirection === "vertical" ? "column" : "row",
+        gap: "8px",
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+EachViewer.displayName = "EachViewer";
+
+// ==================== MultipleSearchViewer Component ====================
+function MultipleSearchViewer({
+  id: providedId,
+  isOpen,
+  backDrop = true,
+  onClose,
+  searchProp,
+  loadingProp,
+  noResultProp,
+  errorProp,
+  layoutProp,
+  children,
+  unmountOnClose = true,
+  zIndex = 1000,
+  maxHeight = "90dvh",
+  minHeight = "65dvh",
+  debounceMs = 300,
+}: MultipleSearchViewerProps) {
+  const [id] = useState(
+    () => providedId || `multi-search-${Math.random().toString(36).substring(2, 11)}`
+  );
+  const [searchValue, setSearchValue] = useState("");
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const [inputKey, setInputKey] = useState(0);
+  const [shouldAutoFocus, setShouldAutoFocus] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const sheetRef = useRef<any>(null);
+
+  useInjectStyles(id);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.visualViewport) return;
+
+    const handleResize = () => {
+      const vp = window.visualViewport!;
+      const kbHeight = window.innerHeight - vp.height;
+      setKeyboardHeight(kbHeight > 0 ? kbHeight : 0);
+    };
+
+    const viewport = window.visualViewport;
+    viewport.addEventListener("resize", handleResize);
+    viewport.addEventListener("scroll", handleResize);
+
+    return () => {
+      viewport.removeEventListener("resize", handleResize);
+      viewport.removeEventListener("scroll", handleResize);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen) {
+      searchInputRef.current?.blur();
+      setSearchValue("");
+      searchProp?.onChange?.("");
+      setShouldAutoFocus(false);
+    }
+  }, [isOpen]);
+
+  const autoFocus = searchProp?.autoFocus;
+  const handleOpenEnd = useCallback(() => {
+    if (autoFocus && searchInputRef.current) {
+      setInputKey((prev) => prev + 1);
+      setShouldAutoFocus(true);
+      searchInputRef.current.focus();
+      searchInputRef.current.click();
+    }
+  }, [autoFocus]);
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchValue(value);
+    searchProp?.onChange?.(value);
+  };
+
+  const handleSearchFocus = () => {
+    searchProp?.onFocus?.();
+  };
+
+  const handleSearchBlur = () => {
+    searchProp?.onBlur?.();
+  };
+
+  const handleBackFromSearch = () => {
+    onClose();
+    if (searchInputRef.current) {
+      searchInputRef.current.blur();
+    }
+  };
+
+  const clearSearch = () => {
+    setSearchValue("");
+    searchProp?.onChange?.("");
+    if (searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  };
+
+  if (!isOpen && unmountOnClose) return null;
+
+  return (
+    <Sheet
+      ref={sheetRef}
+      isOpen={isOpen}
+      onClose={onClose}
+      detent="content"
+      style={{ zIndex }}
+      maxHeight={maxHeight}
+      onOpenEnd={handleOpenEnd}
+    >
+      <Sheet.Container
+        id={id}
+        style={{
+          maxHeight: "100dvh",
+          minHeight: "100%",
+          maxWidth: layoutProp?.maxWidth || "800px",
+          margin: "0 auto",
+          width: "100%",
+          left: 0,
+          right: 0,
+          paddingBottom: "calc(0px + env(safe-area-inset-bottom))",
+          background: layoutProp?.searchBackground || layoutProp?.backgroundColor,
+          borderTopLeftRadius: "0px",
+          borderTopRightRadius: "0px",
+        }}
+      >
+        <Sheet.Header>
+          <div
+            className="search-viewer-fullscreen-search"
+            style={layoutProp?.searchHeaderStyle}
+          >
+            <div
+              className="search-viewer-search"
+              style={{
+                ...searchProp?.containerStyle,
+                background: searchProp?.background,
+                padding: searchProp?.padding
+                  ? `${searchProp.padding.t} ${searchProp.padding.r} ${searchProp.padding.b} ${searchProp.padding.l}`
+                  : "16px",
+              }}
+            >
+              <button
+                className="search-viewer-search-back-button"
+                onClick={handleBackFromSearch}
+                aria-label="Exit search mode"
+              >
+                {searchProp?.backIcon || (
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <path
+                      d="M15 18L9 12L15 6"
+                      stroke={searchProp?.textColor || "currentColor"}
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                )}
+              </button>
+
+              <input
+                key={inputKey}
+                ref={searchInputRef}
+                type="text"
+                placeholder={searchProp?.text}
+                value={searchValue}
+                onChange={handleSearchChange}
+                className={searchProp?.className || "search-viewer-search-input"}
+                style={{
+                  color: searchProp?.textColor,
+                  ...searchProp?.inputStyle,
+                }}
+                onFocus={handleSearchFocus}
+                onBlur={handleSearchBlur}
+                autoFocus={shouldAutoFocus}
+              />
+
+              {searchValue && (
+                <button
+                  className="search-viewer-search-clear-button"
+                  onClick={clearSearch}
+                  aria-label="Clear search"
+                >
+                  {searchProp?.clearIcon || (
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                      <path
+                        d="M18 6L6 18M6 6L18 18"
+                        stroke={searchProp?.textColor || "currentColor"}
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  )}
+                </button>
+              )}
+            </div>
+          </div>
+        </Sheet.Header>
+
+        <Sheet.Content>
+          <div
+            style={{
+              paddingTop: layoutProp?.gapBetweenSearchAndContent,
+              paddingBottom:
+                keyboardHeight > 0 ? `${keyboardHeight + 16}px` : "16px",
+            }}
+          >
+            <SearchTextContext.Provider value={searchValue}>
+              {children}
+            </SearchTextContext.Provider>
+          </div>
+        </Sheet.Content>
+      </Sheet.Container>
+      <Sheet.Backdrop onTap={backDrop ? onClose : undefined} />
+    </Sheet>
+  );
+}
+
+MultipleSearchViewer.displayName = "MultipleSearchViewer";
+
+export { MultipleSearchViewer, EachViewer };

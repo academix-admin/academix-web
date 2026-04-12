@@ -523,6 +523,7 @@ export default function RewardsFriends({ onStateChange }: ComponentStateProps) {
             friend.usersUsername.toLowerCase().includes(searchLower)
           );
         }}
+        localDataDeps={[friendsModel]}
         queryData={queryFriends}
         onRemoveDuplicateBy={(friend) => friend.usersId}
         searchProp={{

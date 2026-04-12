@@ -19,7 +19,7 @@
 .headerContent {  display: flex;  align-items: center;  justify-content: space-between;  width: 100%;  gap: 1rem;  margin: 0 20%;  box-sizing: border-box;  min-width: 0;  padding-left: 16px;  padding-right: 16px;  padding-top: 8px;  padding-bottom: 8px;
 }
 
-.innerBody{  display: flex;  flex-direction: column;  align-items: center;  padding: 2rem;  padding-top: 6rem;  max-width: 400px;  width: 100%;  box-sizing: border-box;
+.innerBody{  display: flex;  flex-direction: column;  align-items: center;  padding: 2rem;  padding-top: 6rem;  width: 100%;  box-sizing: border-box;
 }
 
 .backButton {  min-width: 44px;  min-height: 44px;  background: none;  border: none;  cursor: pointer;  color: var(--text-color);  border-radius: 50%;  display: flex;  padding: 12px;  align-items: center;  justify-content: center;  margin-left: -8px;
@@ -49,7 +49,7 @@
 .stepSubtitle {  font-size: 0.875rem;  color: #6B7280;  margin-bottom: 2rem;  align-self: flex-start;  word-break: break-word;  /* break long words */  white-space: normal;  /* allow wrapping */
 }
 
-.form {  width: 100%;  max-width: 400px;  display: flex;  flex-direction: column;  gap: 1.5rem;
+.form {  width: 100%;  display: flex;  flex-direction: column;  gap: 1.5rem;
 }
 
 .formGroup {  display: flex;  flex-direction: column;  gap: 0.5rem;
@@ -125,5 +125,12 @@
 @media screen and (max-width: 500px) {  .headerContent {  margin: 0;  padding-left: 16px;  padding-right: 16px;  padding-top: 8px;  padding-bottom: 8px;  }  .innerBody {  padding: 1rem;  padding-top: 5rem;  }  .stepTitle {  font-size: 1.25rem;  }  .backIcon {  width: 16px;  height: 16px;  }  .title {  font-size: 1.2rem;  }  .logo {  width: 28px;  height: 28px;  }  .welcome_wrapper{  width: 80%;  }
 .eyeIcon {  width: 18px;  height: 18px;  }  .input {  padding-right: 36px !important;  }
 
+}
+
+/* Web */
+@media screen and (min-width: 800px) {
+  .innerBody {
+    max-width: 800px;
+  }
 }
 
