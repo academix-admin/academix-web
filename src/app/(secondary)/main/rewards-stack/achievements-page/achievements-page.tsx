@@ -27,10 +27,17 @@ import { useAchievementsModel } from '@/lib/stacks/achievements-stack';
 import { AchievementsData } from '@/models/achievements-data';
 import { StateStack } from '@/lib/state-stack';
 import { useDialog } from '@/lib/DialogViewer';
+import { useTopViewer } from '@/lib/TopViewer';
+import { copyToClipboard } from '@/utils/clipboard';
 
 interface AchievementsContainerProps {
   tab: string;
-  handleCollected: () => void
+  achievementsModel: AchievementsModel[];
+  setAchievementsModel: (models: AchievementsModel[]) => void;
+  isLoading: boolean;
+  error: string;
+  handleCollected: () => void;
+  onLoadMore: () => void;
 }
 
 
@@ -39,6 +46,7 @@ const AchievementsCard: React.FC<{ achievements: AchievementsModel, tab: string,
   const { t, lang } = useLanguage();
   const { userData } = useUserData();
   const errorDialog = useDialog();
+  const { showToast, ToastComponent } = useTopViewer();
   const [collecting, setCollecting] = useState(false);
   const [achievementsModel, demandAchievementsModel, setAchievementsModel] = useAchievementsModel(lang, tab);
   const [collectAchievementsModel, demandCollectAchievementsModel, setCollectAchievementsModel] = useAchievementsModel(lang, 'AchievementTab.completed');
@@ -66,8 +74,11 @@ const AchievementsCard: React.FC<{ achievements: AchievementsModel, tab: string,
   const handleCopy = async (text?: string) => {
     if (!text) return;
     try {
-      await navigator.clipboard.writeText(text);
-    } catch (e) {
+      await copyToClipboard(text);
+      showToast(t('code_copied') || 'Code copied to clipboard', 'success');
+    } catch (err) {
+      console.error('Failed to copy:', err);
+      showToast(t('copy_failed') || 'Failed to copy code', 'error');
     }
   };
 
@@ -165,6 +176,7 @@ const AchievementsCard: React.FC<{ achievements: AchievementsModel, tab: string,
 
   return (
     <>
+      <ToastComponent />
       <errorDialog.DialogViewer
         title={t('error_text')}
         buttons={[{ text: t('ok_text'), variant: 'primary', onClick: () => errorDialog.close() }]}
@@ -279,26 +291,27 @@ const AchievementsCard: React.FC<{ achievements: AchievementsModel, tab: string,
 }
 
 
-const AchievementsContainer: React.FC<AchievementsContainerProps> = ({ tab, handleCollected }) => {
+const AchievementsContainer: React.FC<AchievementsContainerProps> = ({ 
+  tab, 
+  achievementsModel, 
+  setAchievementsModel,
+  isLoading, 
+  error, 
+  handleCollected,
+  onLoadMore 
+}) => {
   const { theme } = useTheme();
-  const { t, lang } = useLanguage();
-  const { userData } = useUserData();
+  const { t } = useLanguage();
 
   const loaderRef = useRef<HTMLDivElement | null>(null);
-  const [paginateModel, setPaginateModel] = useState<PaginateModel>(new PaginateModel());
-  const [firstLoaded, setFirstLoaded] = useState(false);
-  const [achievementsLoading, setAchievementsLoading] = useState(false);
-  const [error, setError] = useState('');
-
-  const [achievementsModel, demandAchievementsModel, setAchievementsModel] = useAchievementsModel(lang, tab);
 
   useEffect(() => {
     if (!loaderRef.current) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && achievementsModel.length > 0 && !achievementsLoading) {
-          callPaginate();
+        if (entries[0].isIntersecting && achievementsModel.length > 0 && !isLoading) {
+          onLoadMore();
         }
       },
       { threshold: 1.0 }
@@ -309,9 +322,74 @@ const AchievementsContainer: React.FC<AchievementsContainerProps> = ({ tab, hand
     return () => {
       if (loaderRef.current) observer.unobserve(loaderRef.current);
     };
-  }, [achievementsModel, paginateModel, achievementsLoading]);
+  }, [achievementsModel, isLoading, onLoadMore]);
 
-  const fetchAchievementsModel = useCallback(async (userData: UserData, limitBy: number, paginateModel: PaginateModel): Promise<AchievementsModel[]> => {
+  const refreshData = () => {
+    // Parent will handle refresh
+  };
+
+
+  return (
+    <div className={styles.achievementsList}>
+      {achievementsModel.map((achievements) => (
+        <AchievementsCard key={achievements.achievementsId} achievements={achievements} tab={tab} handleCollected={handleCollected} />
+      ))}
+
+      {achievementsModel.length > 10 && <div ref={loaderRef} className={styles.loadMoreSentinel}></div>}
+      {isLoading && achievementsModel.length === 0 && <LoadingView />}
+      {!isLoading && achievementsModel.length === 0 && !error && (<NoResultsView text="No result" buttonText="Try Again" onButtonClick={refreshData} />)}
+      {!isLoading && achievementsModel.length === 0 && error && (<ErrorView text="Error occurred." buttonText="Try Again" onButtonClick={refreshData} />)}
+
+
+    </div>
+  );
+};
+
+export default function AchievementsPage() {
+  const { theme } = useTheme();
+  const { t, lang } = useLanguage();
+  const nav = useNav();
+  const { userData } = useUserData();
+
+  const [activeTabs, setActiveTabs] = useState<TabMilestone[]>([
+    { id: 'AchievementTab.active', label: t('active_text'), active: true },
+    { id: 'AchievementTab.pending', label: t('pending_text'), active: false },
+    { id: 'AchievementTab.completed', label: t('completed_text'), active: false }
+  ]);
+
+  const [tabCounts, setTabCounts] = useState<Record<string, number>>({
+    'AchievementTab.active': 0,
+    'AchievementTab.pending': 0,
+    'AchievementTab.completed': 0
+  });
+
+  const [achievementsData, demandAchievementsData] = useAchievementsData(lang);
+  
+  // Store data for all tabs
+  const [activeModel, , setActiveModel] = useAchievementsModel(lang, 'AchievementTab.active');
+  const [pendingModel, , setPendingModel] = useAchievementsModel(lang, 'AchievementTab.pending');
+  const [completedModel, , setCompletedModel] = useAchievementsModel(lang, 'AchievementTab.completed');
+
+  const [paginateModels, setPaginateModels] = useState<Record<string, PaginateModel>>({
+    'AchievementTab.active': new PaginateModel(),
+    'AchievementTab.pending': new PaginateModel(),
+    'AchievementTab.completed': new PaginateModel()
+  });
+
+  const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>({
+    'AchievementTab.active': false,
+    'AchievementTab.pending': false,
+    'AchievementTab.completed': false
+  });
+
+  const [errorStates, setErrorStates] = useState<Record<string, string>>({
+    'AchievementTab.active': '',
+    'AchievementTab.pending': '',
+    'AchievementTab.completed': ''
+  });
+
+  // Fetch function for a specific tab
+  const fetchTabData = useCallback(async (tabId: string, limitBy: number, paginate: PaginateModel) => {
     if (!userData) return [];
 
     try {
@@ -331,112 +409,136 @@ const AchievementsContainer: React.FC<AchievementsContainerProps> = ({ tab, hand
         p_gender: paramatical.gender,
         p_age: paramatical.age,
         p_limit_by: limitBy,
-        p_achievement_tab: tab,
-        p_after_achievements: paginateModel.toJson(),
+        p_achievement_tab: tabId,
+        p_after_achievements: paginate.toJson(),
       });
 
       if (error) {
-        console.error("[AchievementsModel] error:", error);
-        setError(t('error_fetching_achievements'));
+        console.error(`[AchievementsPage] Error fetching ${tabId}:`, error);
+        setErrorStates(prev => ({ ...prev, [tabId]: t('error_fetching_achievements') }));
         return [];
       }
 
-      setError('');
+      setErrorStates(prev => ({ ...prev, [tabId]: '' }));
       return (data || []).map((row: BackendAchievementsModel) => new AchievementsModel(row));
     } catch (err) {
-      console.error("[AchievementsModel] error:", err);
-      setError(t('error_fetching_achievements'));
-      setAchievementsLoading(false);
+      console.error(`[AchievementsPage] Error fetching ${tabId}:`, err);
+      setErrorStates(prev => ({ ...prev, [tabId]: t('error_fetching_achievements') }));
       return [];
     }
-  }, [lang, tab, t]);
+  }, [userData, lang, t]);
 
-  const extractLatest = (userAchievementsModel: AchievementsModel[]) => {
-    if (userAchievementsModel.length > 0) {
-      const lastItem = userAchievementsModel[userAchievementsModel.length - 1];
-      setPaginateModel(new PaginateModel({ sortId: lastItem.sortCreatedId }));
-    }
-  };
-
-  const processAchievementsModelPaginate = (userAchievementsModel: AchievementsModel[]) => {
-    const oldAchievementsModelIds = achievementsModel.map((e) => e.achievementsId);
-    const newAchievementsModel = [...achievementsModel];
-
-    for (const achievements of userAchievementsModel) {
-      if (!oldAchievementsModelIds.includes(achievements.achievementsId)) {
-        newAchievementsModel.push(achievements);
-      }
-    }
-
-    setAchievementsModel(newAchievementsModel);
-  };
-
+  // Fetch all tabs in parallel on mount
   useEffect(() => {
     if (!userData) return;
-    demandAchievementsModel(async ({ get, set }) => {
-      setAchievementsLoading(true);
-      const achievementsModels = await fetchAchievementsModel(userData, 10, new PaginateModel());
-      extractLatest(achievementsModels);
-      set(achievementsModels);
-      setFirstLoaded(true);
-      setAchievementsLoading(false);
-    });
-  }, [demandAchievementsModel, userData]);
 
-  const callPaginate = async () => {
-    if (!userData || achievementsModel.length <= 0 || achievementsLoading) return;
-    setAchievementsLoading(true);
-    const achievementsModels = await fetchAchievementsModel(userData, 20, paginateModel);
-    setAchievementsLoading(false);
-    if (achievementsModels.length > 0) {
-      extractLatest(achievementsModels);
-      processAchievementsModelPaginate(achievementsModels);
+    const fetchAllTabs = async () => {
+      const tabs = ['AchievementTab.active', 'AchievementTab.pending', 'AchievementTab.completed'];
+      
+      setLoadingStates({
+        'AchievementTab.active': true,
+        'AchievementTab.pending': true,
+        'AchievementTab.completed': true
+      });
+
+      const results = await Promise.all(
+        tabs.map(async (tabId) => {
+          const models = await fetchTabData(tabId, 10, new PaginateModel());
+          return { tab: tabId, models };
+        })
+      );
+
+      results.forEach(({ tab, models }) => {
+        if (models.length > 0) {
+          const lastItem = models[models.length - 1];
+          setPaginateModels(prev => ({
+            ...prev,
+            [tab]: new PaginateModel({ sortId: lastItem.sortCreatedId })
+          }));
+        }
+
+        // Directly set the models without triggering hook demand
+        if (tab === 'AchievementTab.active') setActiveModel(models);
+        else if (tab === 'AchievementTab.pending') setPendingModel(models);
+        else if (tab === 'AchievementTab.completed') setCompletedModel(models);
+      });
+
+      setLoadingStates({
+        'AchievementTab.active': false,
+        'AchievementTab.pending': false,
+        'AchievementTab.completed': false
+      });
+    };
+
+    fetchAllTabs();
+  }, [userData, fetchTabData, setActiveModel, setPendingModel, setCompletedModel]);
+
+  // Update counts from models (only when models actually change)
+  useEffect(() => {
+    const newCounts = {
+      'AchievementTab.active': activeModel.length,
+      'AchievementTab.pending': pendingModel.length,
+      'AchievementTab.completed': completedModel.length
+    };
+    
+    // Only update if counts actually changed
+    if (JSON.stringify(newCounts) !== JSON.stringify(tabCounts)) {
+      setTabCounts(newCounts);
     }
-  };
+  }, [activeModel.length, pendingModel.length, completedModel.length]);
 
-  const refreshData = async () => {
-    if (!userData) return;
-    setAchievementsLoading(true);
-    setAchievementsModel([]);
-    setPaginateModel(new PaginateModel());
-    const achievementsModels = await fetchAchievementsModel(userData, 10, new PaginateModel());
-    setAchievementsLoading(false);
-    if (achievementsModels.length > 0) {
-      extractLatest(achievementsModels);
-      setAchievementsModel(achievementsModels);
+  // Update counts when achievementsData changes
+  useEffect(() => {
+    if (achievementsData) {
+      setTabCounts({
+        'AchievementTab.active': achievementsData.achievementsCount - achievementsData.achievementsFinished,
+        'AchievementTab.pending': achievementsData.achievementsNotRewarded,
+        'AchievementTab.completed': achievementsData.achievementsCompleted
+      });
     }
-  };
+  }, [achievementsData]);
 
+  // Load more for current tab
+  const handleLoadMore = useCallback(async () => {
+    const currentTab = activeTabs.find((tab: TabMilestone) => tab.active)?.id;
+    if (!currentTab || loadingStates[currentTab]) return;
 
-  return (
-    <div className={styles.achievementsList}>
-      {achievementsModel.map((achievements) => (
-        <AchievementsCard key={achievements.achievementsId} achievements={achievements} tab={tab} handleCollected={handleCollected} />
-      ))}
+    setLoadingStates(prev => ({ ...prev, [currentTab]: true }));
 
-      {achievementsModel.length > 10 && <div ref={loaderRef} className={styles.loadMoreSentinel}></div>}
-      {achievementsLoading && achievementsModel.length === 0 && <LoadingView />}
-      {!achievementsLoading && achievementsModel.length === 0 && !error && (<NoResultsView text="No result" buttonText="Try Again" onButtonClick={refreshData} />)}
-      {!achievementsLoading && achievementsModel.length === 0 && error && (<ErrorView text="Error occurred." buttonText="Try Again" onButtonClick={refreshData} />)}
+    const currentModel = currentTab === 'AchievementTab.active' ? activeModel :
+                         currentTab === 'AchievementTab.pending' ? pendingModel : completedModel;
+    
+    if (currentModel.length === 0) {
+      setLoadingStates(prev => ({ ...prev, [currentTab]: false }));
+      return;
+    }
 
+    const newModels = await fetchTabData(currentTab, 20, paginateModels[currentTab]);
+    
+    if (newModels.length > 0) {
+      const lastItem = newModels[newModels.length - 1];
+      setPaginateModels(prev => ({
+        ...prev,
+        [currentTab]: new PaginateModel({ sortId: lastItem.sortCreatedId })
+      }));
 
-    </div>
-  );
-};
+      const oldIds = currentModel.map((e: AchievementsModel) => e.achievementsId);
+      const merged = [...currentModel, ...newModels.filter((m: AchievementsModel) => !oldIds.includes(m.achievementsId))];
 
-export default function AchievementsPage() {
-  const { theme } = useTheme();
-  const { t, lang } = useLanguage();
-  const nav = useNav();
+      if (currentTab === 'AchievementTab.active') setActiveModel(merged);
+      else if (currentTab === 'AchievementTab.pending') setPendingModel(merged);
+      else if (currentTab === 'AchievementTab.completed') setCompletedModel(merged);
+    }
 
-  const [activeTabs, setActiveTabs] = useState<TabMilestone[]>([
-    { id: 'AchievementTab.active', label: t('active_text'), active: true },
-    { id: 'AchievementTab.pending', label: t('pending_text'), active: false },
-    { id: 'AchievementTab.completed', label: t('completed_text'), active: false }
-  ]);
+    setLoadingStates(prev => ({ ...prev, [currentTab]: false }));
+  }, [activeTabs, activeModel, pendingModel, completedModel, loadingStates, paginateModels, fetchTabData, setActiveModel, setPendingModel, setCompletedModel]);
 
   // Get active tab
-  const activeTab = activeTabs.find(tab => tab.active)?.id || 'AchievementsTab.active';
+  const activeTab = activeTabs.find(tab => tab.active)?.id || 'AchievementTab.active';
+  const currentModel = activeTab === 'AchievementTab.active' ? activeModel :
+                       activeTab === 'AchievementTab.pending' ? pendingModel : completedModel;
+  const currentSetModel = activeTab === 'AchievementTab.active' ? setActiveModel :
+                          activeTab === 'AchievementTab.pending' ? setPendingModel : setCompletedModel;
 
   // Set active tab
   const setActiveTab = (id: string) => {
@@ -487,11 +589,22 @@ export default function AchievementsPage() {
               onClick={() => setActiveTab(tab.id)}
             >
               {capitalize(tab.label)}
+              {tabCounts[tab.id] > 0 && (
+                <span className={styles.tabCount}> ({tabCounts[tab.id]})</span>
+              )}
             </button>
           ))}
         </div>
 
-        <AchievementsContainer tab={activeTab} handleCollected={handleCollected} />
+        <AchievementsContainer 
+          tab={activeTab} 
+          achievementsModel={currentModel}
+          setAchievementsModel={currentSetModel}
+          isLoading={loadingStates[activeTab]}
+          error={errorStates[activeTab]}
+          handleCollected={handleCollected}
+          onLoadMore={handleLoadMore}
+        />
       </div>
     </main>
   );

@@ -334,6 +334,8 @@
   "join_text": "Rejoindre",
   "leave_text": "Quitter",
   "scan_quiz_code": "Scanner le code du quiz",
+  "code_copied": "Code copié dans le presse-papiers",
+  "copy_failed": "Échec de la copie du code",
   "followed_creator": "Créateur suivi",
   "discovered_interest": "Intérêt découvert",
   "active_suggestions": "Suggestions actives",

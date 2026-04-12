@@ -32,6 +32,8 @@ import QuizStarter from '../quiz-starter/quiz-starter'
 import { useQuizDisplay } from "@/lib/stacks/quiz-display-stack";
 import { useDialog } from '@/lib/DialogViewer';
 import { refreshSessionIfNeeded } from '@/utils/sessionRefresh';
+import { useTopViewer } from '@/lib/TopViewer';
+import { copyToClipboard } from '@/utils/clipboard';
 
 interface LeaveQuizResponse {
   status: string;
@@ -411,6 +413,7 @@ function CurrentQuizCard({ topic, getInitials, onClick, onLeave, showContinue }:
   const [quizStarterBottomViewerId, quizStarterBottomController, quizStarterBottomIsOpen] = useBottomController();
   const [leaving, setLeaving] = useState(false);
   const leaveDialog = useDialog();
+  const { showToast, ToastComponent } = useTopViewer();
 
   const { userData, userData$, __meta } = useUserData();
 
@@ -520,12 +523,12 @@ function CurrentQuizCard({ topic, getInitials, onClick, onLeave, showContinue }:
     if (!topic.quizPool?.poolsCode) return;
 
     try {
-      await navigator.clipboard.writeText(topic.quizPool.poolsCode);
-      // Show toast notification (you'll need to implement this)
-      console.log('Copied to clipboard');
+      await copyToClipboard(topic.quizPool.poolsCode);
+      showToast(t('code_copied') || 'Code copied to clipboard', 'success');
       codeBottomController.close();
     } catch (err) {
       console.error('Failed to copy code:', err);
+      showToast(t('copy_failed') || 'Failed to copy code', 'error');
     }
   };
 
@@ -583,6 +586,7 @@ function CurrentQuizCard({ topic, getInitials, onClick, onLeave, showContinue }:
 
   return (
     <div className={`${styles.quizContainer} ${styles[`quizContainer_${theme}`]}`} >
+      <ToastComponent />
       <div className={`${styles.topicCard}`} onClick={onClick}>
         {/* Main Image with Overlay */}
         <div className={styles.imageContainer}>
@@ -758,7 +762,7 @@ function CurrentQuizCard({ topic, getInitials, onClick, onLeave, showContinue }:
           >
             <div className={styles.codeCopyIcon}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V8l8 5 8-5v10zm-8-7L4 6h16l-8 5z" />
+                <path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/>
               </svg>
             </div>
             <span className={styles.codeCopyText}>

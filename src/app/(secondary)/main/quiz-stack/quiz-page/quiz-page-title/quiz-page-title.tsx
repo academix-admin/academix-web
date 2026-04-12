@@ -149,7 +149,8 @@ export default function QuizPageTitle({ onStateChange }: ComponentStateProps) {
           backgroundColor: theme === 'light' ? "#fff" : "#121212",
           handleColor: "#888",
           handleWidth: "48px",
-          maxWidth: '800px'
+          maxWidth: '800px',
+          maxHeight: '90dvh',
         }}
         closeThreshold={0.2}
         zIndex={1000}
@@ -308,6 +309,7 @@ function QuizJoinContent({ theme, t, onClose, scannedQuizPool, setScannedQuizPoo
                     onChange={(e) => setCode(e.target.value.toUpperCase())}
                     onKeyPress={handleKeyPress}
                     maxLength={9}
+                    placeholder="XXXXXXXXX"
                     autoFocus
                     className={`${styles.codeInput} ${styles[`codeInput_${theme}`]}`}
                   />

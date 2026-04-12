@@ -13,6 +13,8 @@ import Image from 'next/image';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useUserData } from '@/lib/stacks/user-stack';
 import { useDialog } from '@/lib/DialogViewer';
+import { useTopViewer } from '@/lib/TopViewer';
+import { copyToClipboard } from '@/utils/clipboard';
 
 interface QuizDetailsViewerProps {
   topicsModel: UserDisplayQuizTopicModel;
@@ -29,16 +31,18 @@ export default function QuizDetailsViewer({ topicsModel }: QuizDetailsViewerProp
   const [isPersonalised, setIsPersonalised] = useState(topicsModel.topicIsPersonalised);
   const [isPersonalisedLoading, setIsPersonalisedLoading] = useState(false);
   const errorDialog = useDialog();
+  const { showToast, ToastComponent } = useTopViewer();
 
   const handleCopyCode = async () => {
     if (!topicsModel.quizPool?.poolsCode) return;
 
     try {
-      await navigator.clipboard.writeText(topicsModel.quizPool.poolsCode);
-      console.log('Copied to clipboard');
+      await copyToClipboard(topicsModel.quizPool.poolsCode);
+      showToast(t('code_copied') || 'Code copied to clipboard', 'success');
       codeBottomController.close();
     } catch (err) {
       console.error('Failed to copy code:', err);
+      showToast(t('copy_failed') || 'Failed to copy code', 'error');
     }
   };
 
@@ -112,6 +116,7 @@ export default function QuizDetailsViewer({ topicsModel }: QuizDetailsViewerProp
 
   return (
     <div className={styles.experienceContainer}>
+      <ToastComponent />
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
         <h2 className={`${styles.details} ${styles[`details_${theme}`]}`}>
           {topicsModel.topicsIdentity}
@@ -241,7 +246,7 @@ export default function QuizDetailsViewer({ topicsModel }: QuizDetailsViewerProp
           >
             <div className={styles.codeCopyIcon}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V8l8 5 8-5v10zm-8-7L4 6h16l-8 5z" />
+                <path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/>
               </svg>
             </div>
             <span className={styles.codeCopyText}>

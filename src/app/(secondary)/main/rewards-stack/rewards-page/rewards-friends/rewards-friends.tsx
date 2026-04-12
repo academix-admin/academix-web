@@ -23,6 +23,8 @@ import LoadingView from '@/components/LoadingView/LoadingView';
 import NoResultsView from '@/components/NoResultsView/NoResultsView';
 import ErrorView from '@/components/ErrorView/ErrorView';
 import type { SearchResult } from '@/lib/SearchViewer';
+import { useTopViewer } from '@/lib/TopViewer';
+import { copyToClipboard } from '@/utils/clipboard';
 
 
 export default function RewardsFriends({ onStateChange }: ComponentStateProps) {
@@ -30,6 +32,7 @@ export default function RewardsFriends({ onStateChange }: ComponentStateProps) {
   const { t, lang, tNode } = useLanguage();
   const { userData } = useUserData();
   const loaderRef = useRef<HTMLDivElement | null>(null);
+  const { showToast, ToastComponent } = useTopViewer();
 
 
   const [paginateModel, setPaginateModel] = useState<PaginateModel>(new PaginateModel());
@@ -328,6 +331,16 @@ export default function RewardsFriends({ onStateChange }: ComponentStateProps) {
     }
   };
 
+  const handleCopyUsername = async (text: string) => {
+    try {
+      await copyToClipboard(text);
+      showToast(t('code_copied') || 'Code copied to clipboard', 'success');
+    } catch (err) {
+      console.error('Failed to copy:', err);
+      showToast(t('copy_failed') || 'Failed to copy code', 'error');
+    }
+  };
+
   const copyToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
@@ -355,6 +368,7 @@ export default function RewardsFriends({ onStateChange }: ComponentStateProps) {
 
   return (
     <div className={styles.historyContainer}>
+      <ToastComponent />
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
         <h2 className={`${styles.historyTitle} ${styles[`historyTitle_${theme}`]}`} style={{ margin: 0 }}>
           {t('friends_text')}
@@ -457,7 +471,7 @@ export default function RewardsFriends({ onStateChange }: ComponentStateProps) {
                 </div>
                 <button
                   className={`${styles.copyButton}`}
-                  onClick={() => copyToClipboard(friend.usersUsername)}
+                  onClick={() => handleCopyUsername(friend.usersUsername)}
                   aria-label="Copy username"
                 >
                   <svg
@@ -587,7 +601,7 @@ export default function RewardsFriends({ onStateChange }: ComponentStateProps) {
                   </div>
                   <button
                     className={`${styles.copyButton}`}
-                    onClick={() => copyToClipboard(friend.usersUsername)}
+                    onClick={() => handleCopyUsername(friend.usersUsername)}
                     aria-label="Copy username"
                   >
                     <svg

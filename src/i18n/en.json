@@ -334,6 +334,8 @@
   "join_text": "Join",
   "leave_text": "Leave",
   "scan_quiz_code": "Scan Quiz Code",
+  "code_copied": "Code copied to clipboard",
+  "copy_failed": "Failed to copy code",
   "followed_creator": "Followed Creator",
   "discovered_interest": "Discovered Interest",
   "active_suggestions": "Active Suggestions",

@@ -26,6 +26,8 @@ import { TimelapseManager, useTimelapseManager, TimelapseType } from '@/lib/mana
 import DialogCancel from '@/components/DialogCancel';
 import { QRCodeSVG } from 'qrcode.react';
 import { useActiveQuiz } from "@/lib/stacks/active-quiz-stack";
+import { useTopViewer } from '@/lib/TopViewer';
+import { copyToClipboard } from '@/utils/clipboard';
 
 
 type PublicQuizTopicsProps = ComponentStateProps & {
@@ -499,6 +501,7 @@ function OpenQuizCard({ topic, length, getInitials, onClick }: OpenQuizCardProps
   const [imageError, setImageError] = useState(false);
   const timelapseManager = useTimelapseManager();
   const [codeBottomViewerId, codeBottomController, codeBottomIsOpen] = useBottomController();
+  const { showToast, ToastComponent } = useTopViewer();
 
   // Track previous values to detect changes
   const previousJobRef = useRef<string | null>(null);
@@ -578,12 +581,12 @@ function OpenQuizCard({ topic, length, getInitials, onClick }: OpenQuizCardProps
     if (!topic.quizPool?.poolsCode) return;
 
     try {
-      await navigator.clipboard.writeText(topic.quizPool.poolsCode);
-      // Show toast notification (you'll need to implement this)
-      console.log('Copied to clipboard');
+      await copyToClipboard(topic.quizPool.poolsCode);
+      showToast(t('code_copied') || 'Code copied to clipboard', 'success');
       codeBottomController.close();
     } catch (err) {
       console.error('Failed to copy code:', err);
+      showToast(t('copy_failed') || 'Failed to copy code', 'error');
     }
   };
 
@@ -593,6 +596,7 @@ function OpenQuizCard({ topic, length, getInitials, onClick }: OpenQuizCardProps
 
   return (
     <div className={`${styles.quizContainer} ${styles[`quizContainer_${theme}`]} ${length > 1 ? '' : styles.expanded}`}>
+      <ToastComponent />
       <div className={`${styles.topicCard} ${length > 1 ? '' : styles.expanded}`}>
         {/* Main Image with Overlay */}
         <div className={styles.imageContainer}>
@@ -709,7 +713,7 @@ function OpenQuizCard({ topic, length, getInitials, onClick }: OpenQuizCardProps
           >
             <div className={styles.codeCopyIcon}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V8l8 5 8-5v10zm-8-7L4 6h16l-8 5z" />
+                <path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/>
               </svg>
             </div>
             <span className={styles.codeCopyText}>

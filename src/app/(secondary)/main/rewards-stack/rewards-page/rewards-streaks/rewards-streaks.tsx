@@ -16,6 +16,8 @@ import { ComponentStateProps } from '@/hooks/use-component-state';
 import { useAcademixRatio } from '@/lib/stacks/academix-ratio-stack';
 import { useNav } from "@/lib/NavigationStack";
 import { useDialog } from '@/lib/DialogViewer';
+import { useTopViewer } from '@/lib/TopViewer';
+import { copyToClipboard } from '@/utils/clipboard';
 
 
 // Types
@@ -141,93 +143,112 @@ const DaysRow: React.FC<DaysRowProps> = ({ days, currentIndex, isContainerOpen, 
 
 // RewardView Component
 const RewardView: React.FC<RewardViewProps> = ({ streak, onClaim, isClaiming, claimingDate }) => {
-  const { t, tNode } = useLanguage();
+  const { t } = useLanguage();
+  const { showToast, ToastComponent } = useTopViewer();
   const isToday = streak.dailyStreaksStatus === 'today' && !streak.dailyStreaksCreatedAt;
   const isSaved = !!streak.dailyStreaksCreatedAt;
   const isMissed = streak.dailyStreaksStatus === 'missed';
   const isFuture = streak.dailyStreaksStatus === 'future';
 
+  const handleCopy = async () => {
+    try {
+      await copyToClipboard(streak.rewardRedeemCodeModel!.value!);
+      showToast(t('code_copied') || 'Code copied to clipboard', 'success');
+    } catch (err) {
+      console.error('Failed to copy:', err);
+      showToast(t('copy_failed') || 'Failed to copy code', 'error');
+    }
+  };
+
   if (isToday) {
     const isCurrentlyClaiming = isClaiming && claimingDate === streak.dailyStreaksDateNumber;
 
     return (
-      <button
-        className={styles.claimButton}
-        onClick={() => onClaim(streak.dailyStreaksDateNumber)}
-        disabled={isCurrentlyClaiming}
-      >
-        {isCurrentlyClaiming ? (
-          <div className={styles.loadingSpinner}></div>
-        ) : (
-          t('tap_to_reveal')
-        )}
-      </button>
+      <>
+        <ToastComponent />
+        <button
+          className={styles.claimButton}
+          onClick={() => onClaim(streak.dailyStreaksDateNumber)}
+          disabled={isCurrentlyClaiming}
+        >
+          {isCurrentlyClaiming ? (
+            <div className={styles.loadingSpinner}></div>
+          ) : (
+            t('tap_to_reveal')
+          )}
+        </button>
+      </>
     );
   }
 
   if (isMissed) {
     return (
-      <div className={styles.missedReward}>
-        {t('missed_text')}
-      </div>
+      <>
+        <ToastComponent />
+        <div className={styles.missedReward}>
+          {t('missed_text')}
+        </div>
+      </>
     );
   }
 
   if (isFuture) {
     return (
-      <div className={styles.futureReward}>
-        <span>🔒</span>
-      </div>
+      <>
+        <ToastComponent />
+        <div className={styles.futureReward}>
+          <span>🔒</span>
+        </div>
+      </>
     );
   }
 
   if (isSaved) {
     return (
-      <div className={styles.claimedReward}>
-        <div className={styles.rewardContent}>
-          {streak.dailyStreaksAwarded > 0 && (
-            <span className={styles.coinIcon}>🪙</span>
+      <>
+        <ToastComponent />
+        <div className={styles.claimedReward}>
+          <div className={styles.rewardContent}>
+            {streak.dailyStreaksAwarded > 0 && (
+              <span className={styles.coinIcon}>🪙</span>
+            )}
+            <span className={styles.rewardAmount}>
+              {streak.rewardRedeemCodeModel?.value
+                ? new Intl.NumberFormat().format(streak.dailyStreaksAwarded)
+                : t('streak_count', {
+                  current: streak.dailyStreaksCount,
+                  total: streak.dailyStreaksMax
+                })
+              }
+            </span>
+          </div>
+
+          {streak.rewardRedeemCodeModel?.value && (
+            <div className={styles.rewardCode}>
+              {streak.rewardRedeemCodeModel.value}
+            </div>
           )}
-          <span className={styles.rewardAmount}>
-            {streak.rewardRedeemCodeModel?.value
-              ? new Intl.NumberFormat().format(streak.dailyStreaksAwarded)
-              : t('streak_count', {
-                current: streak.dailyStreaksCount,
-                total: streak.dailyStreaksMax
-              })
-            }
-          </span>
+
+          {streak.rewardRedeemCodeModel?.expires && (
+            <div className={styles.rewardExpiry}>
+              {t('expires')} {new Date(streak.rewardRedeemCodeModel.expires).toLocaleDateString()}
+            </div>
+          )}
+
+          {streak.rewardRedeemCodeModel?.value && (
+            <button
+              className={styles.copyButton}
+              onClick={handleCopy}
+            >
+              📋
+            </button>
+          )}
         </div>
-
-        {streak.rewardRedeemCodeModel?.value && (
-          <div className={styles.rewardCode}>
-            {streak.rewardRedeemCodeModel.value}
-          </div>
-        )}
-
-        {streak.rewardRedeemCodeModel?.expires && (
-          <div className={styles.rewardExpiry}>
-            {t('expires')} {new Date(streak.rewardRedeemCodeModel.expires).toLocaleDateString()}
-          </div>
-        )}
-
-        {streak.rewardRedeemCodeModel?.value && (
-          <button
-            className={styles.copyButton}
-            onClick={() => {
-              navigator.clipboard.writeText(streak.rewardRedeemCodeModel!.value!);
-              // Show toast notification
-              alert(t('copied_to_clipboard'));
-            }}
-          >
-            📋
-          </button>
-        )}
-      </div>
+      </>
     );
   }
 
-  return <></>;
+  return <ToastComponent />;
 };
 
 // Main Component

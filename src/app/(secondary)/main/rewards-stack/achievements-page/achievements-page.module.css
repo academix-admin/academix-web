@@ -185,3 +185,9 @@
 @media screen and (max-width: 500px) {  .header {  left: 0;  }  .headerContent {  margin: 0;  padding-left: 16px;  padding-right: 16px;  padding-top: 8px;  padding-bottom: 8px;  }  .innerBody {  padding-top: 5rem;  max-width: 500px;  }  .backIcon {  width: 16px;  height: 16px;  }  .title {  font-size: 1.2rem;  }  .logo {  width: 28px;  height: 28px;  }  .tab_switcher,  .achievementsList {  padding: 0.15rem 1rem;  }  .achievementsHeader {  gap: 10px;  }  .achievementsIcon {  width: 56px;  height: 56px;  }  .pointsText {  font-size: 16px;  }  .achievementsTitle {  font-size: 16px;  }  .redeemCodeLarge {  font-size: 16px;  }
 
 }
+
+.tabCount {
+  font-size: 0.85em;
+  opacity: 0.8;
+  font-weight: 500;
+}

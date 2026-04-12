@@ -27,10 +27,17 @@ import { useMissionModel } from '@/lib/stacks/mission-stack';
 import { MissionData } from '@/models/mission-data';
 import { StateStack } from '@/lib/state-stack';
 import { useDialog } from '@/lib/DialogViewer';
+import { useTopViewer } from '@/lib/TopViewer';
+import { copyToClipboard } from '@/utils/clipboard';
 
 interface MissionContainerProps {
   tab: string;
-  handleCollected: () => void
+  missionModel: MissionModel[];
+  setMissionModel: (models: MissionModel[]) => void;
+  isLoading: boolean;
+  error: string;
+  handleCollected: () => void;
+  onLoadMore: () => void;
 }
 
 
@@ -39,6 +46,7 @@ const MissionCard: React.FC<{ mission: MissionModel, tab: string, handleCollecte
   const { t, lang } = useLanguage();
   const { userData } = useUserData();
   const errorDialog = useDialog();
+  const { showToast, ToastComponent } = useTopViewer();
   const [collecting, setCollecting] = useState(false);
   const [missionModel, demandMissionModel, setMissionModel] = useMissionModel(lang, tab);
   const [collectMissionModel, demandCollectMissionModel, setCollectMissionModel] = useMissionModel(lang, 'MissionTab.completed');
@@ -66,8 +74,11 @@ const MissionCard: React.FC<{ mission: MissionModel, tab: string, handleCollecte
   const handleCopy = async (text?: string) => {
     if (!text) return;
     try {
-      await navigator.clipboard.writeText(text);
-    } catch (e) {
+      await copyToClipboard(text);
+      showToast(t('code_copied') || 'Code copied to clipboard', 'success');
+    } catch (err) {
+      console.error('Failed to copy:', err);
+      showToast(t('copy_failed') || 'Failed to copy code', 'error');
     }
   };
 
@@ -165,6 +176,7 @@ const MissionCard: React.FC<{ mission: MissionModel, tab: string, handleCollecte
 
   return (
     <>
+      <ToastComponent />
       <errorDialog.DialogViewer
         title={t('error_text')}
         buttons={[{ text: t('ok_text'), variant: 'primary', onClick: () => errorDialog.close() }]}
@@ -279,26 +291,27 @@ const MissionCard: React.FC<{ mission: MissionModel, tab: string, handleCollecte
 }
 
 
-const MissionContainer: React.FC<MissionContainerProps> = ({ tab, handleCollected }) => {
+const MissionContainer: React.FC<MissionContainerProps> = ({ 
+  tab, 
+  missionModel, 
+  setMissionModel,
+  isLoading, 
+  error, 
+  handleCollected,
+  onLoadMore 
+}) => {
   const { theme } = useTheme();
-  const { t, lang } = useLanguage();
-  const { userData } = useUserData();
+  const { t } = useLanguage();
 
   const loaderRef = useRef<HTMLDivElement | null>(null);
-  const [paginateModel, setPaginateModel] = useState<PaginateModel>(new PaginateModel());
-  const [firstLoaded, setFirstLoaded] = useState(false);
-  const [missionLoading, setMissionLoading] = useState(false);
-  const [error, setError] = useState('');
-
-  const [missionModel, demandMissionModel, setMissionModel] = useMissionModel(lang, tab);
 
   useEffect(() => {
     if (!loaderRef.current) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && missionModel.length > 0 && !missionLoading) {
-          callPaginate();
+        if (entries[0].isIntersecting && missionModel.length > 0 && !isLoading) {
+          onLoadMore();
         }
       },
       { threshold: 1.0 }
@@ -309,9 +322,74 @@ const MissionContainer: React.FC<MissionContainerProps> = ({ tab, handleCollecte
     return () => {
       if (loaderRef.current) observer.unobserve(loaderRef.current);
     };
-  }, [missionModel, paginateModel, missionLoading]);
+  }, [missionModel, isLoading, onLoadMore]);
 
-  const fetchMissionModel = useCallback(async (userData: UserData, limitBy: number, paginateModel: PaginateModel): Promise<MissionModel[]> => {
+  const refreshData = () => {
+    // Parent will handle refresh
+  };
+
+
+  return (
+    <div className={styles.missionsList}>
+      {missionModel.map((mission) => (
+        <MissionCard key={mission.missionId} mission={mission} tab={tab} handleCollected={handleCollected} />
+      ))}
+
+      {missionModel.length > 10 && <div ref={loaderRef} className={styles.loadMoreSentinel}></div>}
+      {isLoading && missionModel.length === 0 && <LoadingView />}
+      {!isLoading && missionModel.length === 0 && !error && (<NoResultsView text="No result" buttonText="Try Again" onButtonClick={refreshData} />)}
+      {!isLoading && missionModel.length === 0 && error && (<ErrorView text="Error occurred." buttonText="Try Again" onButtonClick={refreshData} />)}
+
+
+    </div>
+  );
+};
+
+export default function MissionPage() {
+  const { theme } = useTheme();
+  const { t, lang } = useLanguage();
+  const nav = useNav();
+  const { userData } = useUserData();
+
+  const [activeTabs, setActiveTabs] = useState<TabMilestone[]>([
+    { id: 'MissionTab.active', label: t('active_text'), active: true },
+    { id: 'MissionTab.pending', label: t('pending_text'), active: false },
+    { id: 'MissionTab.completed', label: t('completed_text'), active: false }
+  ]);
+
+  const [tabCounts, setTabCounts] = useState<Record<string, number>>({
+    'MissionTab.active': 0,
+    'MissionTab.pending': 0,
+    'MissionTab.completed': 0
+  });
+
+  const [missionData, demandMissionData] = useMissionData(lang);
+  
+  // Store data for all tabs
+  const [activeModel, , setActiveModel] = useMissionModel(lang, 'MissionTab.active');
+  const [pendingModel, , setPendingModel] = useMissionModel(lang, 'MissionTab.pending');
+  const [completedModel, , setCompletedModel] = useMissionModel(lang, 'MissionTab.completed');
+
+  const [paginateModels, setPaginateModels] = useState<Record<string, PaginateModel>>({
+    'MissionTab.active': new PaginateModel(),
+    'MissionTab.pending': new PaginateModel(),
+    'MissionTab.completed': new PaginateModel()
+  });
+
+  const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>({
+    'MissionTab.active': false,
+    'MissionTab.pending': false,
+    'MissionTab.completed': false
+  });
+
+  const [errorStates, setErrorStates] = useState<Record<string, string>>({
+    'MissionTab.active': '',
+    'MissionTab.pending': '',
+    'MissionTab.completed': ''
+  });
+
+  // Fetch function for a specific tab
+  const fetchTabData = useCallback(async (tabId: string, limitBy: number, paginate: PaginateModel) => {
     if (!userData) return [];
 
     try {
@@ -331,112 +409,136 @@ const MissionContainer: React.FC<MissionContainerProps> = ({ tab, handleCollecte
         p_gender: paramatical.gender,
         p_age: paramatical.age,
         p_limit_by: limitBy,
-        p_mission_tab: tab,
-        p_after_missions: paginateModel.toJson(),
+        p_mission_tab: tabId,
+        p_after_missions: paginate.toJson(),
       });
 
       if (error) {
-        console.error("[MissionModel] error:", error);
-        setError(t('error_fetching_missions'));
+        console.error(`[MissionPage] Error fetching ${tabId}:`, error);
+        setErrorStates(prev => ({ ...prev, [tabId]: t('error_fetching_missions') }));
         return [];
       }
 
-      setError('');
+      setErrorStates(prev => ({ ...prev, [tabId]: '' }));
       return (data || []).map((row: BackendMissionModel) => new MissionModel(row));
     } catch (err) {
-      console.error("[MissionModel] error:", err);
-      setError(t('error_fetching_missions'));
-      setMissionLoading(false);
+      console.error(`[MissionPage] Error fetching ${tabId}:`, err);
+      setErrorStates(prev => ({ ...prev, [tabId]: t('error_fetching_missions') }));
       return [];
     }
-  }, [lang, tab, t]);
+  }, [userData, lang, t]);
 
-  const extractLatest = (userMissionModel: MissionModel[]) => {
-    if (userMissionModel.length > 0) {
-      const lastItem = userMissionModel[userMissionModel.length - 1];
-      setPaginateModel(new PaginateModel({ sortId: lastItem.sortCreatedId }));
-    }
-  };
-
-  const processMissionModelPaginate = (userMissionModel: MissionModel[]) => {
-    const oldMissionModelIds = missionModel.map((e) => e.missionId);
-    const newMissionModel = [...missionModel];
-
-    for (const mission of userMissionModel) {
-      if (!oldMissionModelIds.includes(mission.missionId)) {
-        newMissionModel.push(mission);
-      }
-    }
-
-    setMissionModel(newMissionModel);
-  };
-
+  // Fetch all tabs in parallel on mount
   useEffect(() => {
     if (!userData) return;
-    demandMissionModel(async ({ get, set }) => {
-      setMissionLoading(true);
-      const missionModels = await fetchMissionModel(userData, 10, new PaginateModel());
-      extractLatest(missionModels);
-      set(missionModels);
-      setFirstLoaded(true);
-      setMissionLoading(false);
-    });
-  }, [demandMissionModel, userData]);
 
-  const callPaginate = async () => {
-    if (!userData || missionModel.length <= 0 || missionLoading) return;
-    setMissionLoading(true);
-    const missionModels = await fetchMissionModel(userData, 20, paginateModel);
-    setMissionLoading(false);
-    if (missionModels.length > 0) {
-      extractLatest(missionModels);
-      processMissionModelPaginate(missionModels);
+    const fetchAllTabs = async () => {
+      const tabs = ['MissionTab.active', 'MissionTab.pending', 'MissionTab.completed'];
+      
+      setLoadingStates({
+        'MissionTab.active': true,
+        'MissionTab.pending': true,
+        'MissionTab.completed': true
+      });
+
+      const results = await Promise.all(
+        tabs.map(async (tabId) => {
+          const models = await fetchTabData(tabId, 10, new PaginateModel());
+          return { tab: tabId, models };
+        })
+      );
+
+      results.forEach(({ tab, models }) => {
+        if (models.length > 0) {
+          const lastItem = models[models.length - 1];
+          setPaginateModels(prev => ({
+            ...prev,
+            [tab]: new PaginateModel({ sortId: lastItem.sortCreatedId })
+          }));
+        }
+
+        // Directly set the models without triggering hook demand
+        if (tab === 'MissionTab.active') setActiveModel(models);
+        else if (tab === 'MissionTab.pending') setPendingModel(models);
+        else if (tab === 'MissionTab.completed') setCompletedModel(models);
+      });
+
+      setLoadingStates({
+        'MissionTab.active': false,
+        'MissionTab.pending': false,
+        'MissionTab.completed': false
+      });
+    };
+
+    fetchAllTabs();
+  }, [userData, fetchTabData, setActiveModel, setPendingModel, setCompletedModel]);
+
+  // Update counts from models (only when models actually change)
+  useEffect(() => {
+    const newCounts = {
+      'MissionTab.active': activeModel.length,
+      'MissionTab.pending': pendingModel.length,
+      'MissionTab.completed': completedModel.length
+    };
+    
+    // Only update if counts actually changed
+    if (JSON.stringify(newCounts) !== JSON.stringify(tabCounts)) {
+      setTabCounts(newCounts);
     }
-  };
+  }, [activeModel.length, pendingModel.length, completedModel.length]);
 
-  const refreshData = async () => {
-    if (!userData) return;
-    setMissionLoading(true);
-    setMissionModel([]);
-    setPaginateModel(new PaginateModel());
-    const missionModels = await fetchMissionModel(userData, 10, new PaginateModel());
-    setMissionLoading(false);
-    if (missionModels.length > 0) {
-      extractLatest(missionModels);
-      setMissionModel(missionModels);
+  // Update counts when missionData changes
+  useEffect(() => {
+    if (missionData) {
+      setTabCounts({
+        'MissionTab.active': missionData.missionCount - missionData.missionFinished,
+        'MissionTab.pending': missionData.missionNotRewarded,
+        'MissionTab.completed': missionData.missionCompleted
+      });
     }
-  };
+  }, [missionData]);
 
+  // Load more for current tab
+  const handleLoadMore = useCallback(async () => {
+    const currentTab = activeTabs.find(tab => tab.active)?.id;
+    if (!currentTab || loadingStates[currentTab]) return;
 
-  return (
-    <div className={styles.missionsList}>
-      {missionModel.map((mission) => (
-        <MissionCard key={mission.missionId} mission={mission} tab={tab} handleCollected={handleCollected} />
-      ))}
+    setLoadingStates(prev => ({ ...prev, [currentTab]: true }));
 
-      {missionModel.length > 10 && <div ref={loaderRef} className={styles.loadMoreSentinel}></div>}
-      {missionLoading && missionModel.length === 0 && <LoadingView />}
-      {!missionLoading && missionModel.length === 0 && !error && (<NoResultsView text="No result" buttonText="Try Again" onButtonClick={refreshData} />)}
-      {!missionLoading && missionModel.length === 0 && error && (<ErrorView text="Error occurred." buttonText="Try Again" onButtonClick={refreshData} />)}
+    const currentModel = currentTab === 'MissionTab.active' ? activeModel :
+                         currentTab === 'MissionTab.pending' ? pendingModel : completedModel;
+    
+    if (currentModel.length === 0) {
+      setLoadingStates(prev => ({ ...prev, [currentTab]: false }));
+      return;
+    }
 
+    const newModels = await fetchTabData(currentTab, 20, paginateModels[currentTab]);
+    
+    if (newModels.length > 0) {
+      const lastItem = newModels[newModels.length - 1];
+      setPaginateModels(prev => ({
+        ...prev,
+        [currentTab]: new PaginateModel({ sortId: lastItem.sortCreatedId })
+      }));
 
-    </div>
-  );
-};
+      const oldIds = currentModel.map((e: MissionModel) => e.missionId);
+      const merged = [...currentModel, ...newModels.filter((m: MissionModel) => !oldIds.includes(m.missionId))];
 
-export default function MissionPage() {
-  const { theme } = useTheme();
-  const { t, lang } = useLanguage();
-  const nav = useNav();
+      if (currentTab === 'MissionTab.active') setActiveModel(merged);
+      else if (currentTab === 'MissionTab.pending') setPendingModel(merged);
+      else if (currentTab === 'MissionTab.completed') setCompletedModel(merged);
+    }
 
-  const [activeTabs, setActiveTabs] = useState<TabMilestone[]>([
-    { id: 'MissionTab.active', label: t('active_text'), active: true },
-    { id: 'MissionTab.pending', label: t('pending_text'), active: false },
-    { id: 'MissionTab.completed', label: t('completed_text'), active: false }
-  ]);
+    setLoadingStates(prev => ({ ...prev, [currentTab]: false }));
+  }, [activeTabs, activeModel, pendingModel, completedModel, loadingStates, paginateModels, fetchTabData, setActiveModel, setPendingModel, setCompletedModel]);
 
   // Get active tab
   const activeTab = activeTabs.find(tab => tab.active)?.id || 'MissionTab.active';
+  const currentModel = activeTab === 'MissionTab.active' ? activeModel :
+                       activeTab === 'MissionTab.pending' ? pendingModel : completedModel;
+  const currentSetModel = activeTab === 'MissionTab.active' ? setActiveModel :
+                          activeTab === 'MissionTab.pending' ? setPendingModel : setCompletedModel;
 
   // Set active tab
   const setActiveTab = (id: string) => {
@@ -487,11 +589,22 @@ export default function MissionPage() {
               onClick={() => setActiveTab(tab.id)}
             >
               {capitalize(tab.label)}
+              {tabCounts[tab.id] > 0 && (
+                <span className={styles.tabCount}> ({tabCounts[tab.id]})</span>
+              )}
             </button>
           ))}
         </div>
 
-        <MissionContainer tab={activeTab} handleCollected={handleCollected} />
+        <MissionContainer 
+          tab={activeTab} 
+          missionModel={currentModel}
+          setMissionModel={currentSetModel}
+          isLoading={loadingStates[activeTab]}
+          error={errorStates[activeTab]}
+          handleCollected={handleCollected}
+          onLoadMore={handleLoadMore}
+        />
       </div>
     </main>
   );
