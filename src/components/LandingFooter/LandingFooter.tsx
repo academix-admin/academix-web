@@ -57,8 +57,8 @@ const FOOTER_NAV_LINKS = [
 ];
 
 const LEGAL_LINKS = [
-  { key: 'privacy_policy', href: '#' },
-  { key: 'terms_of_service', href: '#' },
+  { key: 'privacy_policy', href: '/privacy' },
+  { key: 'terms_of_service', href: '/terms' },
   { key: 'help_text', href: '/help' },
 ];
 
