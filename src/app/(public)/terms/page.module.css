@@ -333,12 +333,9 @@
 }
 
 @media screen and (min-width: 501px) and (max-width: 930px) {
-    .headerContent {
-        padding-left: 16px;
-        padding-right: 16px;
-        padding-top: 8px;
-        padding-bottom: 8px;
-    }
+  .headerContent {
+    margin: 0;
+  }
 
     .logo {
         width: 35px;
@@ -374,7 +371,7 @@
     }
 }
 
-@media screen and (max-width: 700px) {
+@media screen and (max-width: 500px) {
     .container {
         padding-top: 6rem;
         padding-bottom: 2rem;
@@ -401,13 +398,9 @@
         width: 100%;
     }
 
-    .headerContent {
-        margin: 0;
-        padding-left: 16px;
-        padding-right: 16px;
-        padding-top: 8px;
-        padding-bottom: 8px;
-    }
+  .headerContent {
+    margin: 0;
+  }
 
     .backIcon {
         width: 16px;
