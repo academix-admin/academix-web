@@ -1,0 +1,16 @@
+# AWS export may contain secrets (Lambda env vars, SES creds, API keys).
+# Ignore the sensitive config by default; source code under code/ is kept.
+config.json
+resource-policy.json
+event-source-mappings.json
+apigateway/apis.json
+cloudwatch/
+ses/
+sqs/
+sns/
+eventbridge/
+package.zip
+**/package.zip
+
+# If you deliberately want to track a sanitized version, force-add with:
+#   git add -f <path>

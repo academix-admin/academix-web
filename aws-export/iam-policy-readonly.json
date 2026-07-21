@@ -1,0 +1,86 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "LambdaRead",
+      "Effect": "Allow",
+      "Action": [
+        "lambda:ListFunctions",
+        "lambda:GetFunction",
+        "lambda:GetFunctionConfiguration",
+        "lambda:ListEventSourceMappings",
+        "lambda:GetPolicy",
+        "lambda:ListLayers",
+        "lambda:GetLayerVersion",
+        "lambda:ListTags"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "SqsRead",
+      "Effect": "Allow",
+      "Action": ["sqs:ListQueues", "sqs:GetQueueAttributes", "sqs:ListQueueTags"],
+      "Resource": "*"
+    },
+    {
+      "Sid": "SnsRead",
+      "Effect": "Allow",
+      "Action": [
+        "sns:ListTopics",
+        "sns:GetTopicAttributes",
+        "sns:ListSubscriptions",
+        "sns:ListSubscriptionsByTopic",
+        "sns:ListTagsForResource"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "EventBridgeRead",
+      "Effect": "Allow",
+      "Action": [
+        "events:ListRules",
+        "events:DescribeRule",
+        "events:ListTargetsByRule",
+        "events:ListEventBuses",
+        "events:ListTagsForResource"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "ApiGatewayRead",
+      "Effect": "Allow",
+      "Action": ["apigateway:GET"],
+      "Resource": "*"
+    },
+    {
+      "Sid": "CloudWatchRead",
+      "Effect": "Allow",
+      "Action": [
+        "cloudwatch:DescribeAlarms",
+        "cloudwatch:ListMetrics",
+        "cloudwatch:ListTagsForResource",
+        "logs:DescribeLogGroups",
+        "logs:DescribeMetricFilters",
+        "logs:DescribeSubscriptionFilters",
+        "logs:ListTagsForResource"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "SesRead",
+      "Effect": "Allow",
+      "Action": [
+        "ses:GetAccount",
+        "ses:ListEmailIdentities",
+        "ses:GetEmailIdentity",
+        "ses:ListConfigurationSets",
+        "ses:GetConfigurationSet",
+        "ses:ListEmailTemplates",
+        "ses:GetEmailTemplate",
+        "ses:ListIdentities",
+        "ses:GetIdentityVerificationAttributes"
+      ],
+      "Resource": "*"
+    }
+  ]
+}

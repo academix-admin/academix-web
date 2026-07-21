@@ -1,0 +1,18 @@
+{
+  "Version": "2012-10-17",
+  "Comment": "Attach this IN ADDITION to iam-policy-readonly.json when you want to deploy code/config changes from local. Lambda write only. Add other services later as needed.",
+  "Statement": [
+    {
+      "Sid": "LambdaDeploy",
+      "Effect": "Allow",
+      "Action": [
+        "lambda:UpdateFunctionCode",
+        "lambda:UpdateFunctionConfiguration",
+        "lambda:PublishVersion",
+        "lambda:GetFunction",
+        "lambda:GetFunctionConfiguration"
+      ],
+      "Resource": "arn:aws:lambda:eu-north-1:495599741675:function:*"
+    }
+  ]
+}
