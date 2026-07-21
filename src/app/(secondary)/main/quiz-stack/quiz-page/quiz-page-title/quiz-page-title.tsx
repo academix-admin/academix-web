@@ -6,14 +6,14 @@ import styles from './quiz-page-title.module.css';
 import { useLanguage } from '@/context/LanguageContext';
 import { getLastNameOrSingle, capitalize } from '@/utils/textUtils';
 import { ComponentStateProps } from '@/hooks/use-component-state';
-import { BottomViewer, useBottomController } from "@/lib/BottomViewer";
+import { BottomViewer, useBottomController } from "@academix-admin/bottom-viewer";
 import DialogCancel from '@/components/DialogCancel';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useUserData } from '@/lib/stacks/user-stack';
 import { getParamatical } from '@/utils/checkers';
 import { UserDisplayQuizTopicModel } from '@/models/user-display-quiz-topic-model';
 import dynamic from 'next/dynamic';
-import { useNav, useProvideObject } from "@/lib/NavigationStack";
+import { useNav, useProvideObject } from "@academix-admin/navigation-stack";
 
 const Scanner = dynamic(() => import('@yudiel/react-qr-scanner').then(mod => ({ default: mod.Scanner })), { ssr: false });
 

@@ -10,7 +10,7 @@ import CachedLottie from '@/components/CachedLottie';
 import { getLastNameOrSingle, capitalize } from '@/utils/textUtils';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useSignup } from '@/lib/stacks/signup-stack';
-import { useNav } from "@/lib/NavigationStack";
+import { useNav } from "@academix-admin/navigation-stack";
 
 export default function SignUpStep3() {
   const { theme } = useTheme();

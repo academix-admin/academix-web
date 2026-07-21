@@ -1,6 +1,6 @@
 'use client';
 
-import NavigationStack from "@/lib/NavigationStack";
+import NavigationStack from "@academix-admin/navigation-stack";
 import SignUpStep1 from './step1/step1';
 import SignUpStep2 from './step2/step2';
 import SignUpStep3 from './step3/step3';

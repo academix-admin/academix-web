@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import styles from './quiz_rule-acceptance.module.css';
 import { useLanguage } from '@/context/LanguageContext';
-import { BottomViewer, useBottomController } from "@/lib/BottomViewer";
+import { BottomViewer, useBottomController } from "@academix-admin/bottom-viewer";
 import Rules from '@/app/(public)/rules/page';
 import DialogCancel from '@/components/DialogCancel';
 

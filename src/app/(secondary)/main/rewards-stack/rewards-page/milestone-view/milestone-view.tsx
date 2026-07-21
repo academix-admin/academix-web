@@ -7,12 +7,12 @@ import { useLanguage } from '@/context/LanguageContext';
 import { getLastNameOrSingle, capitalize } from '@/utils/textUtils';
 import { getParamatical, ParamaticalData} from '@/utils/checkers';
 import { useUserData } from '@/lib/stacks/user-stack';
-import { useDemandState } from '@/lib/state-stack';
+import { useDemandState } from '@academix-admin/state-stack';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { MissionData } from '@/models/mission-data';
 import { AchievementsData } from '@/models/achievements-data';
 import { ComponentStateProps } from '@/hooks/use-component-state';
-import { useNav } from "@/lib/NavigationStack";
+import { useNav } from "@academix-admin/navigation-stack";
 import { useMissionData } from '@/lib/stacks/milestone-stack';
 import { useAchievementsData } from '@/lib/stacks/milestone-stack';
 

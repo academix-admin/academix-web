@@ -4,7 +4,7 @@
 // import { useTheme } from '@/context/ThemeContext';
 // import { useLanguage } from '@/context/LanguageContext';
 // import styles from './payment-type.module.css';
-// import { useNav } from "@/lib/NavigationStack";
+// import { useNav } from "@academix-admin/navigation-stack";
 //
 //
 // interface PaymentTypeProps {
@@ -63,7 +63,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import styles from './payment-type.module.css';
-import { useNav } from "@/lib/NavigationStack";
+import { useNav } from "@academix-admin/navigation-stack";
 
 interface PaymentTypeProps {
   onTopUp: (value: boolean) => void;

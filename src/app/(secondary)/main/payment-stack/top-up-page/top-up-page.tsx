@@ -4,8 +4,8 @@ import { useState, useCallback } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import styles from './top-up-page.module.css';
-import { useNav, useProvideObject } from "@/lib/NavigationStack";
-import { StateStack } from '@/lib/state-stack';
+import { useNav, useProvideObject } from "@academix-admin/navigation-stack";
+import { StateStack } from '@academix-admin/state-stack';
 import { getParamatical } from '@/utils/checkers';
 import { checkLocation, checkFeatures } from '@/utils/checkers';
 import { supabaseBrowser } from '@/lib/supabase/client';
@@ -21,7 +21,7 @@ import { usePaymentWalletModel } from '@/lib/stacks/payment-wallet-stack';
 import { usePaymentMethodModel } from '@/lib/stacks/payment-method-stack';
 import { usePaymentProfileModel } from '@/lib/stacks/payment-profile-stack';
 import { useUserBalance } from '@/lib/stacks/user-balance-stack';
-import { BottomViewer, useBottomController } from "@/lib/BottomViewer";
+import { BottomViewer, useBottomController } from "@academix-admin/bottom-viewer";
 import DialogCancel from '@/components/DialogCancel';
 import LoadingView from '@/components/LoadingView/LoadingView';
 import ErrorView from '@/components/ErrorView/ErrorView';
@@ -30,7 +30,7 @@ import { useTransactionModel } from '@/lib/stacks/transactions-stack';
 import { PaymentCompletionData } from '@/models/completion-data';
 import { PinData } from '@/models/pin-data';
 import CurrencySymbol from '@/components/CurrencySymbol/CurrencySymbol';
-import { useDialog } from '@/lib/DialogViewer';
+import { useDialog } from '@academix-admin/dialog-viewer';
 
 
 interface PaymentResponse {

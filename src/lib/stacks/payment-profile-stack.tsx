@@ -1,4 +1,4 @@
-import { useDemandState } from '../state-stack';
+import { useDemandState } from '@academix-admin/state-stack';
 import { PaymentProfileModel } from '@/models/payment-profile-model';
 
 export const usePaymentProfileModel = (lang: string, scopeKey: string = 'payment_flow') => {

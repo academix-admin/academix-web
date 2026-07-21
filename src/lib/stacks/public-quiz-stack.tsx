@@ -1,4 +1,4 @@
-import { useDemandState } from '../state-stack';
+import { useDemandState } from '@academix-admin/state-stack';
 import { UserDisplayQuizTopicModel } from '@/models/user-display-quiz-topic-model';
 
 export const usePublicQuiz = (lang: string, pType: string) => {

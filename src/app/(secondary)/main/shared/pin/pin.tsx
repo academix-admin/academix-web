@@ -6,7 +6,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import Image from 'next/image';
 import styles from './pin.module.css';
 import Link from 'next/link';
-import { useNav, useObject } from "@/lib/NavigationStack";
+import { useNav, useObject } from "@academix-admin/navigation-stack";
 import { PinData } from '@/models/pin-data';
 
 // Define types for PinInput props

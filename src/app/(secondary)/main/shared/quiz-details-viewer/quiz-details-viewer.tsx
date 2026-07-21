@@ -6,13 +6,13 @@ import styles from './quiz-details-viewer.module.css';
 import { useLanguage } from '@/context/LanguageContext';
 import { getLastNameOrSingle, capitalize } from '@/utils/textUtils';
 import { UserDisplayQuizTopicModel } from '@/models/user-display-quiz-topic-model';
-import { BottomViewer, useBottomController } from "@/lib/BottomViewer";
+import { BottomViewer, useBottomController } from "@academix-admin/bottom-viewer";
 import DialogCancel from '@/components/DialogCancel';
 import { QRCodeSVG } from 'qrcode.react';
 import Image from 'next/image';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useUserData } from '@/lib/stacks/user-stack';
-import { useDialog } from '@/lib/DialogViewer';
+import { useDialog } from '@academix-admin/dialog-viewer';
 import { useTopViewer } from '@/lib/TopViewer';
 import { copyToClipboard } from '@/utils/clipboard';
 

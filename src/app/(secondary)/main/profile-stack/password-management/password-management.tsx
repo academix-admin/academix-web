@@ -6,7 +6,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import styles from './password-management.module.css';
 import CachedLottie from '@/components/CachedLottie';
 import { supabaseBrowser } from '@/lib/supabase/client';
-import { useNav } from "@/lib/NavigationStack";
+import { useNav } from "@academix-admin/navigation-stack";
 import { useUserData } from '@/lib/stacks/user-stack';
 
 const validatePassword = (value: string) => {

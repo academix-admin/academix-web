@@ -1,4 +1,4 @@
-import { useDemandState } from '../state-stack';
+import { useDemandState } from '@academix-admin/state-stack';
 import { UserData } from '@/models/user-data';
 
 export const useAcademixRatio = (lang: string) => {

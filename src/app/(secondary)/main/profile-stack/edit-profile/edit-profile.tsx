@@ -6,7 +6,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import Image from 'next/image';
 import styles from './edit-profile.module.css';
 import { supabaseBrowser } from '@/lib/supabase/client';
-import { useNav } from "@/lib/NavigationStack";
+import { useNav } from "@academix-admin/navigation-stack";
 import { capitalizeWords } from '@/utils/textUtils';
 import { getParamatical } from '@/utils/checkers';
 import { useUserData } from '@/lib/stacks/user-stack';
@@ -14,7 +14,7 @@ import { UserData } from '@/models/user-data';
 import LoadingView from '@/components/LoadingView/LoadingView';
 import NoResultsView from '@/components/NoResultsView/NoResultsView';
 import ErrorView from '@/components/ErrorView/ErrorView';
-import { useDialog } from '@/lib/DialogViewer';
+import { useDialog } from '@academix-admin/dialog-viewer';
 
 interface ViewProps {
   onEditing: (id: string | null) => void;

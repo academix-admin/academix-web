@@ -1,6 +1,6 @@
 'use client';
 
-import NavigationStack from "@/lib/NavigationStack";
+import NavigationStack from "@academix-admin/navigation-stack";
 import LoginUser from './login/login';
 import ForgotPassword from './forgot-password/forgot-password';
 import Recovery from './recovery/recovery';

@@ -1,4 +1,4 @@
-import { useDemandState } from '../state-stack';
+import { useDemandState } from '@academix-admin/state-stack';
 import { PoolMemberModel } from '@/models/pool-member';
 
 export const usePoolMemberModel = (lang: string) => {

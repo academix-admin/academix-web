@@ -7,7 +7,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { getLastNameOrSingle, capitalize } from '@/utils/textUtils';
 import { getParamatical, ParamaticalData } from '@/utils/checkers';
 import { useUserData } from '@/lib/stacks/user-stack';
-import { useDemandState } from '@/lib/state-stack';
+import { useDemandState } from '@academix-admin/state-stack';
 import { UserData } from '@/models/user-data';
 import Image from 'next/image';
 import { PoolQuestion, OptionModel } from '@/models/pool-question-model';

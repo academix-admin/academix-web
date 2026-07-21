@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { Sheet } from "@/lib/ModalSheetView";
+import { Sheet } from "@academix-admin/modal-sheet";
 
 // ==================== Types ====================
 interface LayoutProps {

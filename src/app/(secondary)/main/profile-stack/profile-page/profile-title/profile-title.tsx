@@ -7,7 +7,7 @@ import { useLanguage, SUPPORTED_LANGUAGES, LANGUAGE_NAMES, SupportedLang } from 
 import { ComponentStateProps } from '@/hooks/use-component-state';
 import { useUserData } from '@/lib/stacks/user-stack';
 import { supabaseBrowser } from '@/lib/supabase/client';
-import { useDialog } from '@/lib/DialogViewer';
+import { useDialog } from '@academix-admin/dialog-viewer';
 import { SelectionViewer, useSelectionController } from "@/lib/SelectionViewer";
 import DialogCancel from '@/components/DialogCancel';
 

@@ -1,4 +1,4 @@
-import { useDemandState } from '../state-stack';
+import { useDemandState } from '@academix-admin/state-stack';
 import { AchievementsModel } from '@/models/achievements-model';
 
 export const useAchievementsModel = (lang: string, tab: string) => {

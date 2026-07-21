@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import Lottie, { LottieRefCurrentProps } from 'lottie-react';
-import { preloadLottie, getCachedLottie } from '@/lib/lottieCache';
+import { preloadLottie, getCachedLottie } from '@academix-admin/lottie-cache';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 

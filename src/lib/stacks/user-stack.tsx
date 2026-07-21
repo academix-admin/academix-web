@@ -1,4 +1,4 @@
-import { createStateStack, StackConfig } from '../state-stack';
+import { createStateStack, StackConfig } from '@academix-admin/state-stack';
 import { UserData } from '@/models/user-data';
 
 const methods = {

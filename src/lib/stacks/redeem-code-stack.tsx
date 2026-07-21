@@ -1,4 +1,4 @@
-import { useDemandState } from '../state-stack';
+import { useDemandState } from '@academix-admin/state-stack';
 import { RedeemCodeModel } from '@/models/redeem-code-model';
 import { GiveBackModel } from '@/models/redeem-code-model';
 

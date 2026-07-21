@@ -8,10 +8,10 @@ import { getLastNameOrSingle, capitalize } from '@/utils/textUtils';
 import { getParamatical, ParamaticalData} from '@/utils/checkers';
 import { useUserData } from '@/lib/stacks/user-stack';
 import { useAcademixRatio } from '@/lib/stacks/academix-ratio-stack';
-import { useDemandState } from '@/lib/state-stack';
+import { useDemandState } from '@academix-admin/state-stack';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { ComponentStateProps } from '@/hooks/use-component-state';
-import { useNav } from "@/lib/NavigationStack";
+import { useNav } from "@academix-admin/navigation-stack";
 
 export default function AcademixRatio({ onStateChange }: ComponentStateProps) {
   const { theme } = useTheme();

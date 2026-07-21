@@ -8,7 +8,7 @@ import styles from './pin-management.module.css';
 import Link from 'next/link';
 import CachedLottie from '@/components/CachedLottie';
 import { supabaseBrowser } from '@/lib/supabase/client';
-import { useNav } from "@/lib/NavigationStack";
+import { useNav } from "@academix-admin/navigation-stack";
 import { useOtp } from '@/lib/stacks/otp-stack';
 import { useUserData } from '@/lib/stacks/user-stack';
 

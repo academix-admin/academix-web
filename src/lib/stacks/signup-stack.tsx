@@ -1,4 +1,4 @@
-import { createStateStack } from '../state-stack';
+import { createStateStack } from '@academix-admin/state-stack';
 
 export type UserRegistrationData = {
   users_email: string;

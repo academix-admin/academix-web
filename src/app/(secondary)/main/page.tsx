@@ -3,9 +3,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import styles from './page.module.css';
-import { GroupNavigationStack, scrollBroadcaster } from "@/lib/NavigationStack";
-import NavigationBar, { NavigationBarScrollEvent } from "@/lib/NavigationBar";
-import SideBar from "@/lib/SideBar";
+import { GroupNavigationStack, scrollBroadcaster } from "@academix-admin/navigation-stack";
+import NavigationBar, { NavigationBarScrollEvent } from "@academix-admin/navigation-bar";
+import SideBar from "@academix-admin/sidebar";
 import { HomeStack } from './home-stack/home-stack';
 import { RewardsStack } from './rewards-stack/rewards-stack';
 import { QuizStack } from './quiz-stack/quiz-stack';

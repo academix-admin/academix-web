@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import styles from './quiz_payout-acceptance.module.css';
 import { useLanguage } from '@/context/LanguageContext';
-import { BottomViewer, useBottomController } from "@/lib/BottomViewer";
+import { BottomViewer, useBottomController } from "@academix-admin/bottom-viewer";
 import Payout from '@/app/(public)/payout/page';
 import DialogCancel from '@/components/DialogCancel';
 

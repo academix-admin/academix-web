@@ -9,7 +9,7 @@ import Link from 'next/link';
 import CachedLottie from '@/components/CachedLottie';
 import { getLastNameOrSingle, capitalize } from '@/utils/textUtils';
 import { supabaseBrowser } from '@/lib/supabase/client';
-import { useNav } from "@/lib/NavigationStack";
+import { useNav } from "@academix-admin/navigation-stack";
 import RewardsTitle from "./rewards-title/rewards-title";
 import AcademixRatio from "./academix-ratio/academix-ratio";
 import RewardsStreaks from "./rewards-streaks/rewards-streaks";

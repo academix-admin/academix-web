@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
-import { Sheet } from "@/lib/ModalSheetView";
+import { Sheet } from "@academix-admin/modal-sheet";
 
 // ==================== Types ====================
 type Padding = {

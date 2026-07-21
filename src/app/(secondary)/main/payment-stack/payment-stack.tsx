@@ -2,8 +2,8 @@
 
 
 import styles from './payment-stack.module.css';
-import {useNav } from "@/lib/NavigationStack";
-import NavigationStack from "@/lib/NavigationStack";
+import {useNav } from "@academix-admin/navigation-stack";
+import NavigationStack from "@academix-admin/navigation-stack";
 import PaymentPage from "./payment-page/payment-page";
 import TopUpPage from "./top-up-page/top-up-page";
 import WithdrawPage from "./withdraw-page/withdraw-page";

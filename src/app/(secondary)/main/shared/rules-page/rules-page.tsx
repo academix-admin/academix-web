@@ -6,7 +6,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import Image from 'next/image';
 import styles from './rules-page.module.css';
-import { useNav } from "@/lib/NavigationStack";
+import { useNav } from "@academix-admin/navigation-stack";
 import { capitalize } from '@/utils/textUtils';
 import Rules from '@/app/(public)/rules/page';
 

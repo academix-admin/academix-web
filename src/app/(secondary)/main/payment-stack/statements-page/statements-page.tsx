@@ -4,13 +4,13 @@ import { useState, useCallback } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import styles from './statements-page.module.css';
-import { useNav } from "@/lib/NavigationStack";
+import { useNav } from "@academix-admin/navigation-stack";
 import { useUserData } from '@/lib/stacks/user-stack';
 import { getParamatical } from '@/utils/checkers';
 import { supabaseBrowser } from '@/lib/supabase/client';
-import { useDialog } from '@/lib/DialogViewer';
-import { BottomViewer, useBottomController } from "@/lib/BottomViewer";
-import CustomScrollDatePicker from "@/lib/CustomScrollDatePicker";
+import { useDialog } from '@academix-admin/dialog-viewer';
+import { BottomViewer, useBottomController } from "@academix-admin/bottom-viewer";
+import CustomScrollDatePicker from "@academix-admin/scroll-date-picker";
 import DialogCancel from '@/components/DialogCancel';
 
 type StatementFormat = 'pdf' | 'csv';

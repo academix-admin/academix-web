@@ -1,8 +1,8 @@
 'use client';
 
 import styles from './profile-stack.module.css';
-import { useNav } from "@/lib/NavigationStack";
-import NavigationStack from "@/lib/NavigationStack";
+import { useNav } from "@academix-admin/navigation-stack";
+import NavigationStack from "@academix-admin/navigation-stack";
 import ProfilePage from "./profile-page/profile-page";
 import EditProfile from "./edit-profile/edit-profile";
 import SecurityPage from "./security-page/security-page";

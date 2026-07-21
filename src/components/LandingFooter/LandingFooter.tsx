@@ -6,7 +6,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import Image from 'next/image';
 import Link from 'next/link';
 import { supabaseBrowser } from '@/lib/supabase/client';
-import { useDialog } from '@/lib/DialogViewer';
+import { useDialog } from '@academix-admin/dialog-viewer';
 
 const SOCIAL_LINKS = [
   {

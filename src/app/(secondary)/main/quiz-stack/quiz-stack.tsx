@@ -1,8 +1,8 @@
 'use client';
 
 import styles from './quiz-stack.module.css';
-import {useNav } from "@/lib/NavigationStack";
-import NavigationStack from "@/lib/NavigationStack";
+import {useNav } from "@academix-admin/navigation-stack";
+import NavigationStack from "@academix-admin/navigation-stack";
 import QuizPage from "./quiz-page/quiz-page";
 import QuizChallenge from "./quiz-challenge/quiz-challenge";
 import QuizCommitment from "./quiz-commitment/quiz-commitment";

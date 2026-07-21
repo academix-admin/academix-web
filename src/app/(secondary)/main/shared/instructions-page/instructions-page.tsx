@@ -4,7 +4,7 @@ import CachedSuspense from '@/components/CachedSuspense';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import styles from './instructions-page.module.css';
-import { useNav } from "@/lib/NavigationStack";
+import { useNav } from "@academix-admin/navigation-stack";
 import Instructions from '@/app/(public)/instructions/page';
 
 export default function InstructionsPage() {

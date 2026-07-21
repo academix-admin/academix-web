@@ -9,6 +9,18 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@academix-admin/bottom-viewer": "^0.1.0",
+    "@academix-admin/dialog-viewer": "^0.1.0",
+    "@academix-admin/lottie-cache": "^0.1.0",
+    "@academix-admin/modal-sheet": "^0.1.0",
+    "@academix-admin/navigation-bar": "^0.1.0",
+    "@academix-admin/navigation-stack": "^0.1.0",
+    "@academix-admin/side-drawer": "^0.1.0",
+    "@academix-admin/sidebar": "^0.1.0",
+    "@academix-admin/scroll-date-picker": "^0.1.0",
+    "@academix-admin/search-viewer": "^0.1.0",
+    "@academix-admin/state-stack": "^0.1.0",
+    "motion": "^12.23.24",
     "@supabase/auth-helpers-nextjs": "^0.10.0",
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.53.0",

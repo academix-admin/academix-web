@@ -8,13 +8,13 @@ import { useLanguage } from '@/context/LanguageContext';
 import { getLastNameOrSingle, capitalize } from '@/utils/textUtils';
 import { getParamatical, ParamaticalData } from '@/utils/checkers';
 import { useUserData } from '@/lib/stacks/user-stack';
-import { useDemandState } from '@/lib/state-stack';
+import { useDemandState } from '@academix-admin/state-stack';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { ComponentStateProps } from '@/hooks/use-component-state';
 import Image from 'next/image';
-import { useNav } from "@/lib/NavigationStack";
+import { useNav } from "@academix-admin/navigation-stack";
 import { QRCodeSVG } from 'qrcode.react';
-import { useDialog } from '@/lib/DialogViewer';
+import { useDialog } from '@academix-admin/dialog-viewer';
 
 export default function ProfileOverview({ onStateChange }: ComponentStateProps) {
   const { theme } = useTheme();

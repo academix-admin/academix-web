@@ -1,4 +1,4 @@
-import { useDemandState } from '../state-stack';
+import { useDemandState } from '@academix-admin/state-stack';
 import { MissionModel } from '@/models/mission-model';
 
 export const useMissionModel = (lang: string, tab: string) => {

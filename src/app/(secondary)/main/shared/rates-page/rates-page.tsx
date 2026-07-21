@@ -6,7 +6,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import Image from 'next/image';
 import styles from './rates-page.module.css';
-import { useNav } from "@/lib/NavigationStack";
+import { useNav } from "@academix-admin/navigation-stack";
 import { capitalize } from '@/utils/textUtils';
 import Rates from '@/app/(public)/rates/page';
 

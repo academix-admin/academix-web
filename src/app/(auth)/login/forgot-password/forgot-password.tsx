@@ -9,8 +9,8 @@ import Link from 'next/link'
 import CachedLottie from '@/components/CachedLottie';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useAccountDetails, VerificationMethodModel } from '@/lib/stacks/login-stack';
-import { StateStack } from '@/lib/state-stack';
-import { useNav } from "@/lib/NavigationStack";
+import { StateStack } from '@academix-admin/state-stack';
+import { useNav } from "@academix-admin/navigation-stack";
 import { checkLocation, checkFeatures, fetchUserPartialDetails, fetchUserDetails } from '@/utils/checkers';
 import { LoginModel } from '@/models/user-data';
 import { UserLoginAccount } from '@/models/user-data';

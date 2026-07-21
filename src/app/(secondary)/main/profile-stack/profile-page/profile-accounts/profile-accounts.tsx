@@ -5,7 +5,7 @@ import { useTheme } from '@/context/ThemeContext';
 import styles from './profile-accounts.module.css';
 import { useLanguage } from '@/context/LanguageContext';
 import { ComponentStateProps } from '@/hooks/use-component-state';
-import { useNav } from "@/lib/NavigationStack";
+import { useNav } from "@academix-admin/navigation-stack";
 
 export default function ProfileAccounts({ onStateChange }: ComponentStateProps) {
   const { theme } = useTheme();

@@ -6,7 +6,7 @@ import styles from './payment-title.module.css';
 import { useLanguage } from '@/context/LanguageContext';
 import { getLastNameOrSingle, capitalize } from '@/utils/textUtils';
 import { ComponentStateProps } from '@/hooks/use-component-state';
-import { useNav } from "@/lib/NavigationStack";
+import { useNav } from "@academix-admin/navigation-stack";
 
 export default function PaymentTitle({ onStateChange }: ComponentStateProps) {
   const { theme } = useTheme();

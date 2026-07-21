@@ -6,10 +6,10 @@ import { useLanguage } from '@/context/LanguageContext';
 import Image from 'next/image';
 import styles from './notification-page.module.css';
 import { supabaseBrowser } from '@/lib/supabase/client';
-import { useNav } from "@/lib/NavigationStack";
+import { useNav } from "@academix-admin/navigation-stack";
 import { capitalize } from '@/utils/textUtils';
 import { checkLocation, checkFeatures, fetchUserPartialDetails, fetchUserDetails } from '@/utils/checkers';
-import { useDemandState } from '@/lib/state-stack';
+import { useDemandState } from '@academix-admin/state-stack';
 import { useUserData } from '@/lib/stacks/user-stack';
 import { UserData } from '@/models/user-data';
 import { PaginateModel } from '@/models/paginate-model';
@@ -17,7 +17,7 @@ import { getParamatical, ParamaticalData} from '@/utils/checkers';
 import LoadingView from '@/components/LoadingView/LoadingView';
 import NoResultsView from '@/components/NoResultsView/NoResultsView';
 import ErrorView from '@/components/ErrorView/ErrorView';
-import { StateStack } from '@/lib/state-stack';
+import { StateStack } from '@academix-admin/state-stack';
 
 
 

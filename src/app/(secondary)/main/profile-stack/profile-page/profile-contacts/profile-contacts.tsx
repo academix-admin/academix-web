@@ -5,7 +5,7 @@ import { useTheme } from '@/context/ThemeContext';
 import styles from './profile-contacts.module.css';
 import { useLanguage } from '@/context/LanguageContext';
 import { ComponentStateProps } from '@/hooks/use-component-state';
-import { useNav } from "@/lib/NavigationStack";
+import { useNav } from "@academix-admin/navigation-stack";
 
 export default function ProfileContacts({ onStateChange }: ComponentStateProps) {
   const { theme } = useTheme();

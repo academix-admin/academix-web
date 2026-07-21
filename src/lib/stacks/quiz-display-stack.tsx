@@ -1,4 +1,4 @@
-import { useAtom } from '../state-stack';
+import { useAtom } from '@academix-admin/state-stack';
 
 export interface QuizDisplayEvent {
   isOpen: boolean;

@@ -10,9 +10,9 @@ import CachedLottie from '@/components/CachedLottie';
 import { getLastNameOrSingle, capitalize } from '@/utils/textUtils';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useSignup } from '@/lib/stacks/signup-stack';
-import { useNav } from "@/lib/NavigationStack";
-import { BottomViewer, useBottomController } from "@/lib/BottomViewer";
-import CustomScrollDatePicker from "@/lib/CustomScrollDatePicker";
+import { useNav } from "@academix-admin/navigation-stack";
+import { BottomViewer, useBottomController } from "@academix-admin/bottom-viewer";
+import CustomScrollDatePicker from "@academix-admin/scroll-date-picker";
 import DialogCancel from '@/components/DialogCancel';
 
 interface GenderItemProps {

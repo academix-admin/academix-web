@@ -1,4 +1,4 @@
-import { useDemandState } from '../state-stack';
+import { useDemandState } from '@academix-admin/state-stack';
 import { MissionData } from '@/models/mission-data';
 import { AchievementsData } from '@/models/achievements-data';
 

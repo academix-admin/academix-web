@@ -1,4 +1,4 @@
-import { useDemandState } from '../state-stack';
+import { useDemandState } from '@academix-admin/state-stack';
 import { UserBalanceModel } from '@/models/user-balance';
 
 export const useUserBalance = (lang: string) => {

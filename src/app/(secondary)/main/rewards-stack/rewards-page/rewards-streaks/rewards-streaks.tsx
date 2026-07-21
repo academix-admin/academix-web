@@ -8,14 +8,14 @@ import { useLanguage } from '@/context/LanguageContext';
 import { getLastNameOrSingle, capitalize } from '@/utils/textUtils';
 import { getParamatical, ParamaticalData } from '@/utils/checkers';
 import { useUserData } from '@/lib/stacks/user-stack';
-import { useDemandState } from '@/lib/state-stack';
+import { useDemandState } from '@academix-admin/state-stack';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { BackendDailyStreaksModel } from '@/models/daily-streaks';
 import { DailyStreaksModel } from '@/models/daily-streaks';
 import { ComponentStateProps } from '@/hooks/use-component-state';
 import { useAcademixRatio } from '@/lib/stacks/academix-ratio-stack';
-import { useNav } from "@/lib/NavigationStack";
-import { useDialog } from '@/lib/DialogViewer';
+import { useNav } from "@academix-admin/navigation-stack";
+import { useDialog } from '@academix-admin/dialog-viewer';
 import { useTopViewer } from '@/lib/TopViewer';
 import { copyToClipboard } from '@/utils/clipboard';
 

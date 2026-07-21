@@ -8,7 +8,7 @@ import { useAwaitableRouter } from "@/hooks/useAwaitableRouter";
 import AuthBlocker from '@/components/AuthBlocker/AuthBlocker';
 import { UserData } from '@/models/user-data';
 import { useUserData } from '@/lib/stacks/user-stack';
-import { StateStack } from '@/lib/state-stack';
+import { StateStack } from '@academix-admin/state-stack';
 
 export type RoutePattern = string | RegExp;
 

@@ -7,13 +7,13 @@ import { useLanguage } from '@/context/LanguageContext';
 import { getLastNameOrSingle, capitalize } from '@/utils/textUtils';
 import { getParamatical, ParamaticalData } from '@/utils/checkers';
 import { useUserData } from '@/lib/stacks/user-stack';
-import { useDemandState } from '@/lib/state-stack';
+import { useDemandState } from '@academix-admin/state-stack';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { UserData } from '@/models/user-data';
 import { checkLocation, checkFeatures, fetchUserPartialDetails, fetchUserDetails } from '@/utils/checkers';
 import { QuizPool, BackendQuizPool } from '@/models/user-display-quiz-topic-model';
 import { BackendPoolQuestion, PoolQuestion } from '@/models/pool-question-model';
-import { StateStack } from '@/lib/state-stack';
+import { StateStack } from '@academix-admin/state-stack';
 import { RealtimeChannel, RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 import LoadingView from '@/components/LoadingView/LoadingView'
 import NoResultsView from '@/components/NoResultsView/NoResultsView';
@@ -22,11 +22,11 @@ import QuestionDisplay from './question-display/question-display'
 import QuizTimer from './quiz-timer/quiz-timer'
 import QuizCompletion from './quiz-completion/quiz-completion'
 import QuizTracker from './quiz-tracker/quiz-tracker'
-import SideDrawer from '@/lib/SideDrawer';
+import SideDrawer from '@academix-admin/side-drawer';
 import SideTracker from './side-tracker/side-tracker'
 import QuizResults from './quiz-results/quiz-results'
 import { useAwaitableRouter } from "@/hooks/useAwaitableRouter";
-import { useDialog, createConfirmDialog } from '@/lib/DialogViewer';
+import { useDialog, createConfirmDialog } from '@academix-admin/dialog-viewer';
 
 // Quiz state types
 type QuizState =

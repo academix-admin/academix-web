@@ -5,7 +5,7 @@ import styles from "./page.module.css";
 
 import { useUserData } from "@/lib/stacks/user-stack";
 import { useAwaitableRouter } from "@/hooks/useAwaitableRouter";
-import { StateStack } from "@/lib/state-stack";
+import { StateStack } from "@academix-admin/state-stack";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { fetchUserData } from "@/utils/checkers";
 

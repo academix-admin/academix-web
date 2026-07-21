@@ -9,8 +9,8 @@ import Link from 'next/link'
 import CachedLottie from '@/components/CachedLottie';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useSignup } from '@/lib/stacks/signup-stack';
-import { StateStack } from '@/lib/state-stack';
-import { useNav } from "@/lib/NavigationStack";
+import { StateStack } from '@academix-admin/state-stack';
+import { useNav } from "@academix-admin/navigation-stack";
 import { capitalizeWords } from '@/utils/textUtils';
 
 export default function SignUpStep1() {

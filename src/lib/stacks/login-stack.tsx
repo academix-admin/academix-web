@@ -1,4 +1,4 @@
-import { createStateStack } from '../state-stack';
+import { createStateStack } from '@academix-admin/state-stack';
 import { LoginModel } from '@/models/user-data';
 import { UserLoginAccount } from '@/models/user-data';
 

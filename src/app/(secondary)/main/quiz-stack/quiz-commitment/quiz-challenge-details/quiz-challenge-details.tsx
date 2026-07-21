@@ -5,7 +5,7 @@ import { useTheme } from '@/context/ThemeContext';
 import styles from './quiz-challenge-details.module.css';
 import { useLanguage } from '@/context/LanguageContext';
 import { TimelapseManager, useTimelapseManager, TimelapseType } from '@/lib/managers/TimelapseManager';
-import { useNav } from "@/lib/NavigationStack";
+import { useNav } from "@academix-admin/navigation-stack";
 import { useQuizDisplay } from "@/lib/stacks/quiz-display-stack";
 
 interface QuizChallengeDetailsProps {

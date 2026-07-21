@@ -7,7 +7,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { getLastNameOrSingle, capitalize } from '@/utils/textUtils';
 import { getParamatical, ParamaticalData} from '@/utils/checkers';
 import { useUserData } from '@/lib/stacks/user-stack';
-import { useDemandState } from '@/lib/state-stack';
+import { useDemandState } from '@academix-admin/state-stack';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { UserData } from '@/models/user-data';
 import { BackendQuizHistory } from '@/models/quiz-history';
@@ -16,7 +16,7 @@ import { PaginateModel } from '@/models/paginate-model';
 import Image from 'next/image';
 import { ComponentStateProps } from '@/hooks/use-component-state';
 import { usePinnedState } from '@/hooks/pinned-state-hook';
-import { useNav } from '@/lib/NavigationStack';
+import { useNav } from '@academix-admin/navigation-stack';
 
 export default function HomeQuizHistory({ onStateChange }: ComponentStateProps) {
   const { theme } = useTheme();

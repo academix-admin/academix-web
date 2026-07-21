@@ -9,7 +9,7 @@ import Link from 'next/link';
 import CachedLottie from '@/components/CachedLottie';
 import { getLastNameOrSingle, capitalize } from '@/utils/textUtils';
 import { useResetPassword } from '@/lib/stacks/login-stack';
-import { useNav } from "@/lib/NavigationStack";
+import { useNav } from "@academix-admin/navigation-stack";
 import { supabaseBrowser } from '@/lib/supabase/client';
 
 const validatePassword = (value: string) => {

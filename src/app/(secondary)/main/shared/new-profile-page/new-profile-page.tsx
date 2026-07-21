@@ -4,8 +4,8 @@ import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import styles from './new-profile-page.module.css';
-import { useNav } from "@/lib/NavigationStack";
-import { StateStack } from '@/lib/state-stack';
+import { useNav } from "@academix-admin/navigation-stack";
+import { StateStack } from '@academix-admin/state-stack';
 import { getParamatical } from '@/utils/checkers';
 import { checkLocation, checkFeatures } from '@/utils/checkers';
 import { supabaseBrowser } from '@/lib/supabase/client';
@@ -30,8 +30,8 @@ import LoadingView from '@/components/LoadingView/LoadingView';
 import ErrorView from '@/components/ErrorView/ErrorView';
 import NoResultsView from '@/components/NoResultsView/NoResultsView';
 import { SelectionViewer, useSelectionController } from "@/lib/SelectionViewer";
-import { useDemandState } from '@/lib/state-stack';
-import { useDialog } from '@/lib/DialogViewer';
+import { useDemandState } from '@academix-admin/state-stack';
+import { useDialog } from '@academix-admin/dialog-viewer';
 
 
 interface BankModel {

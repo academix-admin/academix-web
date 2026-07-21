@@ -1,8 +1,8 @@
 'use client';
 
 import styles from './home-stack.module.css';
-import {useNav } from "@/lib/NavigationStack";
-import NavigationStack from "@/lib/NavigationStack";
+import {useNav } from "@academix-admin/navigation-stack";
+import NavigationStack from "@academix-admin/navigation-stack";
 import HomePage from "./home-page/home-page";
 import NotificationPage from "./notification-page/notification-page";
 import QuizResultPage from "../shared/quiz-result-page/quiz-result-page";

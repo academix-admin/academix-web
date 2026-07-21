@@ -9,7 +9,7 @@ import Link from 'next/link';
 import CachedLottie from '@/components/CachedLottie';
 import { getLastNameOrSingle, capitalize } from '@/utils/textUtils';
 import { supabaseBrowser } from '@/lib/supabase/client';
-import { useNav } from "@/lib/NavigationStack";
+import { useNav } from "@academix-admin/navigation-stack";
 import PaymentTitle from './payment-title/payment-title'
 import UserBalance from './user-balance/user-balance'
 import PaymentAction from './payment-action/payment-action'

@@ -1,4 +1,4 @@
-import { createStateStack } from '../state-stack';
+import { createStateStack } from '@academix-admin/state-stack';
 
 // Create OTP
   const { useStack } = createStateStack({

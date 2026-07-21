@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import styles from './view-transaction-page.module.css';
-import { useNav, usePageLifecycle, useObject } from "@/lib/NavigationStack";
+import { useNav, usePageLifecycle, useObject } from "@academix-admin/navigation-stack";
 import { TransactionModel } from '@/models/transaction-model';
 import { useTransactionModel } from '@/lib/stacks/transactions-stack';
 import { transactionSubscriptionManager } from '@/lib/managers/TransactionSubscriptionManager';
@@ -13,7 +13,7 @@ import { poolsSubscriptionManager } from '@/lib/managers/PoolsQuizTopicSubscript
 import { PoolChangeEvent } from '@/lib/managers/PoolsQuizTopicSubscriptionManager';
 import { PaymentDetails } from '@/models/payment-details';
 import { supabaseBrowser } from '@/lib/supabase/client';
-import { useDialog } from '@/lib/DialogViewer';
+import { useDialog } from '@academix-admin/dialog-viewer';
 import { useUserData } from '@/lib/stacks/user-stack';
 import { getParamatical } from '@/utils/checkers';
 import LoadingView from '@/components/LoadingView/LoadingView';
