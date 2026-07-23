@@ -17,6 +17,7 @@ import { useDialog } from '@academix-admin/dialog-viewer';
 import { useUserData } from '@/lib/stacks/user-stack';
 import { getParamatical } from '@/utils/checkers';
 import LoadingView from '@/components/LoadingView/LoadingView';
+import { Header } from '@academix-admin/header';
 
 interface ViewTransactionProps {
   transactionId: string;
@@ -536,24 +537,7 @@ export default function ViewTransactionPage(props: ViewTransactionProps) {
   if (!currentTransaction) {
     return (
       <main className={`${applyTheme(styles, 'container')}`}>
-        <header className={`${applyTheme(styles, 'header')}`}>
-          <div className={styles.headerContent}>
-            <button
-              className={styles.backButton}
-              onClick={goBack}
-              aria-label="Go back"
-            >
-              <svg className={styles.backIcon} viewBox="0 0 16 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path
-                  d="M10.0424 0.908364L1.01887 8.84376C0.695893 9.12721 0.439655 9.46389 0.264823 9.83454C0.089992 10.2052 0 10.6025 0 11.0038C0 11.405 0.089992 11.8024 0.264823 12.173C0.439655 12.5437 0.695893 12.8803 1.01887 13.1638L10.0424 21.0992C12.2373 23.0294 16 21.6507 16 18.9239V3.05306C16 0.326231 12.2373 -1.02187 10.0424 0.908364Z"
-                  fill="currentColor"
-                />
-              </svg>
-            </button>
-            <h1 className={styles.title}>{t('transaction_text')}</h1>
-            <div style={{ width: '44px' }} />
-          </div>
-        </header>
+        <Header title={t('transaction_text')} theme={theme} onBack={goBack} />
         <div className={styles.innerBody}>
           {isLoading ? <LoadingView /> : <div className={styles.loading}>{t('loading_text')}</div>}
         </div>
@@ -618,37 +602,24 @@ export default function ViewTransactionPage(props: ViewTransactionProps) {
 
   return (
     <main className={`${applyTheme(styles, 'container')}`}>
-      <header className={`${applyTheme(styles, 'header')}`}>
-        <div className={styles.headerContent}>
-          <button
-            className={styles.backButton}
-            onClick={goBack}
-            aria-label="Go back"
-          >
-            <svg className={styles.backIcon} viewBox="0 0 16 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path
-                d="M10.0424 0.908364L1.01887 8.84376C0.695893 9.12721 0.439655 9.46389 0.264823 9.83454C0.089992 10.2052 0 10.6025 0 11.0038C0 11.405 0.089992 11.8024 0.264823 12.173C0.439655 12.5437 0.695893 12.8803 1.01887 13.1638L10.0424 21.0992C12.2373 23.0294 16 21.6507 16 18.9239V3.05306C16 0.326231 12.2373 -1.02187 10.0424 0.908364Z"
-                fill="currentColor"
-              />
-            </svg>
-          </button>
-          <h1 className={styles.title}>{t('transaction_text')}</h1>
-          <button
-            className={styles.refreshButton}
-            onClick={() => currentTransaction && refreshTransaction(currentTransaction)}
-            disabled={isRefreshing}
-            aria-label="Refresh transaction"
-          >
-            {isRefreshing ? (
-              <span className={`${applyTheme(styles, 'refreshSpinner')}`} />
-            ) : (
+      <Header
+        title={t('transaction_text')}
+        theme={theme}
+        onBack={goBack}
+        actions={[
+          {
+            key: 'refresh',
+            icon: (
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2" />
               </svg>
-            )}
-          </button>
-        </div>
-      </header>
+            ),
+            onClick: () => { if (currentTransaction) refreshTransaction(currentTransaction); },
+            loading: isRefreshing,
+            ariaLabel: 'Refresh transaction',
+          },
+        ]}
+      />
 
       <div className={styles.innerBody}>
         {/* Transaction Card */}
