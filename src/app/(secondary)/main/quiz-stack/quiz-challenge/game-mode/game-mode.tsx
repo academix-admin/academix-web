@@ -28,7 +28,7 @@ interface GameModeItemProps {
 }
 
 const GameModeItem = ({ onClick, gameMode, isSelected }: GameModeItemProps) => {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const getInitials = (text: string): string => {
     const words = text.trim().split(' ');
     if (words.length === 1) return words[0][0].toUpperCase();
@@ -37,7 +37,7 @@ const GameModeItem = ({ onClick, gameMode, isSelected }: GameModeItemProps) => {
 
   return (
     <div
-      className={`${styles.gameModeItem} ${styles[`gameModeItem_${theme}`]} ${isSelected ? styles.selected : ''}`}
+      className={`${applyTheme(styles, 'gameModeItem')} ${isSelected ? styles.selected : ''}`}
       onClick={onClick}
       aria-label={`Select ${gameMode.gameModeIdentity}`}
       role="button"
@@ -50,7 +50,7 @@ const GameModeItem = ({ onClick, gameMode, isSelected }: GameModeItemProps) => {
 
 
 export default function GameMode({ onModeSelect, topicsId }: GameModeProps) {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t, lang } = useLanguage();
   const { userData } = useUserData();
 
@@ -180,10 +180,10 @@ export default function GameMode({ onModeSelect, topicsId }: GameModeProps) {
 
   return (
     <div className={styles.experienceContainer}>
-      <h2 className={`${styles.experienceTitle} ${styles[`experienceTitle_${theme}`]}`}>
+      <h2 className={`${applyTheme(styles, 'experienceTitle')}`}>
         {t('select_a_game_mode')}
       </h2>
-      <h3 className={`${styles.experienceDesc} ${styles[`experienceDesc_${theme}`]}`}>
+      <h3 className={`${applyTheme(styles, 'experienceDesc')}`}>
         {t('click_to_select')}
       </h3>
 

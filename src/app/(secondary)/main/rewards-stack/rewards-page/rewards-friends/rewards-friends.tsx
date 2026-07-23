@@ -28,7 +28,7 @@ import { copyToClipboard } from '@/utils/clipboard';
 
 
 export default function RewardsFriends({ onStateChange }: ComponentStateProps) {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t, lang, tNode } = useLanguage();
   const { userData } = useUserData();
   const loaderRef = useRef<HTMLDivElement | null>(null);
@@ -370,7 +370,7 @@ export default function RewardsFriends({ onStateChange }: ComponentStateProps) {
     <div className={styles.historyContainer}>
       <ToastComponent />
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-        <h2 className={`${styles.historyTitle} ${styles[`historyTitle_${theme}`]}`} style={{ margin: 0 }}>
+        <h2 className={`${applyTheme(styles, 'historyTitle')}`} style={{ margin: 0 }}>
           {t('friends_text')}
         </h2>
         <div style={{ display: 'flex', gap: '8px' }}>
@@ -418,7 +418,7 @@ export default function RewardsFriends({ onStateChange }: ComponentStateProps) {
             disabled={isRefreshing}
           >
             {isRefreshing ? (
-              <span className={`${styles.refreshSpinner} ${styles[`refreshSpinner_${theme}`]}`}></span>
+              <span className={`${applyTheme(styles, 'refreshSpinner')}`}></span>
             ) : (
               <svg
                 width="20"
@@ -453,7 +453,7 @@ export default function RewardsFriends({ onStateChange }: ComponentStateProps) {
 
             <div className={styles.historyItem}>
               <div className={styles.historyMain}>
-                <span className={`${styles.topicName} ${styles[`topicName_${theme}`]}`}>
+                <span className={`${applyTheme(styles, 'topicName')}`}>
                   {friend.usersNames}
                 </span>
                 <span className={`${styles.historyTime} ${getStatusClass(friend.usersReferredStatus)}`}>
@@ -504,7 +504,7 @@ export default function RewardsFriends({ onStateChange }: ComponentStateProps) {
         ))}
       </div>
 
-      {!friendsLoading && friendsModel.length === 0 && <div className={`${styles.rewardInfo} ${styles[`rewardInfo_${theme}`]}`}>
+      {!friendsLoading && friendsModel.length === 0 && <div className={`${applyTheme(styles, 'rewardInfo')}`}>
         {t('referral_reward_info_username', {
           amount: '300',
           threshold: '1000',
@@ -514,7 +514,7 @@ export default function RewardsFriends({ onStateChange }: ComponentStateProps) {
           <span
             role="button"
             onClick={() => refreshData()}
-            className={`${styles.refreshText} ${styles[`refreshText_${theme}`]}`}
+            className={`${applyTheme(styles, 'refreshText')}`}
           >
             {t('click_to_refresh')}
           </span>
@@ -583,7 +583,7 @@ export default function RewardsFriends({ onStateChange }: ComponentStateProps) {
 
               <div className={styles.historyItem}>
                 <div className={styles.historyMain}>
-                  <span className={`${styles.topicName} ${styles[`topicName_${theme}`]}`}>
+                  <span className={`${applyTheme(styles, 'topicName')}`}>
                     {friend.usersNames}
                   </span>
                   <span className={`${styles.historyTime} ${getStatusClass(friend.usersReferredStatus)}`}>

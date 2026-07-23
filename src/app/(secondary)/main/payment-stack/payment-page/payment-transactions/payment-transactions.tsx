@@ -27,7 +27,7 @@ import CurrencySymbol from '@/components/CurrencySymbol/CurrencySymbol';
 
 
 export default function PaymentTransactions({ onStateChange }: ComponentStateProps) {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t, lang, tNode } = useLanguage();
   const { userData } = useUserData();
   const loaderRef = useRef<HTMLDivElement | null>(null);
@@ -421,7 +421,7 @@ export default function PaymentTransactions({ onStateChange }: ComponentStatePro
   return (
     <div className={styles.historyContainer}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-        <h2 className={`${styles.historyTitle} ${styles[`historyTitle_${theme}`]}`} style={{ margin: 0 }}>
+        <h2 className={`${applyTheme(styles, 'historyTitle')}`} style={{ margin: 0 }}>
           {t('transactions_text')}
         </h2>
         <button
@@ -441,7 +441,7 @@ export default function PaymentTransactions({ onStateChange }: ComponentStatePro
           disabled={isRefreshing}
         >
           {isRefreshing ? (
-            <span className={`${styles.refreshSpinner} ${styles[`refreshSpinner_${theme}`]}`}></span>
+            <span className={`${applyTheme(styles, 'refreshSpinner')}`}></span>
           ) : (
             <svg
               width="20"
@@ -471,7 +471,7 @@ export default function PaymentTransactions({ onStateChange }: ComponentStatePro
               </div>
               <div className={styles.historyItem}>
                 <div className={styles.historyMain}>
-                  <span className={`${styles.topicName} ${styles[`topicName_${theme}`]}`}>
+                  <span className={`${applyTheme(styles, 'topicName')}`}>
                     {getPaymentMethodName(transaction.paymentProfileSenderDetails?.paymentMethodDetails.paymentMethodChecker)}
                     {' '}
                     {getTransactionTypeText(transaction.transactionType)}
@@ -506,16 +506,16 @@ export default function PaymentTransactions({ onStateChange }: ComponentStatePro
             </div>
 
             {index < transactionModels.length - 1 && (
-              <div className={`${styles.divider} ${styles[`divider_${theme}`]}`}></div>
+              <div className={`${applyTheme(styles, 'divider')}`}></div>
             )}
           </div>
         ))}
       </div>
 
       {!transactionsLoading && transactionModels.length === 0 &&
-        <span className={`${styles.refreshContainer} ${styles[`refreshContainer_${theme}`]}`}>
+        <span className={`${applyTheme(styles, 'refreshContainer')}`}>
           {t('transaction_empty')}
-          <span role="button" onClick={() => refreshData()} className={`${styles.refreshButton} ${styles[`refreshButton_${theme}`]}`}>
+          <span role="button" onClick={() => refreshData()} className={`${applyTheme(styles, 'refreshButton')}`}>
             {t('refresh')}
           </span>
         </span>

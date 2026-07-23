@@ -96,7 +96,7 @@ interface BankTransferProps {
 }
 
 const BankTransfer = ({ onSubmit, methodId, errorDialog }: BankTransferProps) => {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t, lang } = useLanguage();
 
   const [bankData, setBankData] = useState<BankModel | null>(null);
@@ -259,7 +259,7 @@ const BankTransfer = ({ onSubmit, methodId, errorDialog }: BankTransferProps) =>
 
 
 const BankItem = ({ onClick, bank, isSelected }: BankItemProps) => {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const getInitials = (text: string): string => {
     const words = text.trim().split(' ');
     if (words.length === 1) return words[0][0].toUpperCase();
@@ -267,7 +267,7 @@ const BankItem = ({ onClick, bank, isSelected }: BankItemProps) => {
   };
   return (
     <div
-      className={`${styles.bankItem} ${styles[`bankItem_${theme}`]} ${isSelected ? styles.selected : ''}`}
+      className={`${applyTheme(styles, 'bankItem')} ${isSelected ? styles.selected : ''}`}
       onClick={onClick}
       aria-label={`Select ${bank.name}`}
       role="button"
@@ -289,7 +289,7 @@ const BankItem = ({ onClick, bank, isSelected }: BankItemProps) => {
 };
 
 const BankView = ({ onSubmit, methodId }: BankViewProps) => {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t, lang } = useLanguage();
 
   const [bankData, setBankData] = useState<BankModel | null>(null);
@@ -419,7 +419,7 @@ const BankView = ({ onSubmit, methodId }: BankViewProps) => {
   return (
     <div className={styles.formGroup}>
       <label htmlFor="activate" className={styles.label}>{t('bank_label')}</label>
-      <button onClick={openBank} className={`${styles.selectButton} ${styles[`selectButton_${theme}`]}`}>
+      <button onClick={openBank} className={`${applyTheme(styles, 'selectButton')}`}>
         {bankData ? (
           <div className={styles.selectedBank}>
             <div className={`${styles.bankInfo} ${styles[`methodInfo_${theme}`]}`}>
@@ -500,7 +500,7 @@ const BankView = ({ onSubmit, methodId }: BankViewProps) => {
 
 
 const AccountActivate = ({ onSubmit, purpose }: AccountActivateProps) => {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t, lang } = useLanguage();
 
   const [value, setValue] = useState(false);
@@ -514,13 +514,13 @@ const AccountActivate = ({ onSubmit, purpose }: AccountActivateProps) => {
     <div className={styles.formGroup}>
       <label htmlFor="activate" className={styles.label}>{t('activate_label')}</label>
       <div
-        className={`${styles.selectButton} ${styles[`selectButton_${theme}`]} ${value ? styles.selectButton_active : ''}`}
+        className={`${applyTheme(styles, 'selectButton')} ${value ? styles.selectButton_active : ''}`}
         onClick={changeValue}
       >
         <div className={`${styles.switch} ${value ? styles.switch_active : ''} ${styles[`switch_${theme}`]}`}>
           <div className={`${styles.switchHandle} ${value ? styles.switchHandle_active : ''} ${styles[`switchHandle_${theme}`]}`} />
         </div>
-        <span className={`${styles.optionText} ${styles[`optionText_${theme}`]}`}>
+        <span className={`${applyTheme(styles, 'optionText')}`}>
           {purpose}
         </span>
 
@@ -531,7 +531,7 @@ const AccountActivate = ({ onSubmit, purpose }: AccountActivateProps) => {
 
 const MobileMoney = ({ onSubmit, prefix, length }: MobileMoneyProps) => {
 
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t, lang } = useLanguage();
   const [phoneInputValue, setPhoneInputValue] = useState('');
   const [phoneNumberState, setPhoneNumberState] = useState('initial');
@@ -591,11 +591,11 @@ const MobileMoney = ({ onSubmit, prefix, length }: MobileMoneyProps) => {
 
 
 const TabSwitcher = ({ profileType, setProfileType }: TabSwitcherProps) => {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t } = useLanguage();
 
   return (
-    <div className={`${styles.tabSwitcher} ${styles[`tabSwitcher_${theme}`]}`}>
+    <div className={`${applyTheme(styles, 'tabSwitcher')}`}>
       <button
         className={`${styles.tab} ${profileType === 'ProfileType.buy' ? styles.tabActive : ''} ${styles[`tab_${theme}`]}`}
         onClick={() => setProfileType('ProfileType.buy')}
@@ -614,7 +614,7 @@ const TabSwitcher = ({ profileType, setProfileType }: TabSwitcherProps) => {
 
 
 export default function NewProfilePage(props: NewProfileProps) {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t, lang } = useLanguage();
   const nav = useNav();
   const { userData } = useUserData();
@@ -899,9 +899,9 @@ export default function NewProfilePage(props: NewProfileProps) {
   const showInput = !!selectedNetworkData || (selectedMethodData && selectedMethodData.paymentMethodNetwork.length <= 0);
 
   return (
-    <main className={`${styles.container} ${styles[`container_${theme}`]}`}>
+    <main className={`${applyTheme(styles, 'container')}`}>
 
-      <header className={`${styles.header} ${styles[`header_${theme}`]}`}>
+      <header className={`${applyTheme(styles, 'header')}`}>
         <div className={styles.headerContent}>
           <button
             className={styles.backButton}

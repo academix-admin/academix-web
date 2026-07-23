@@ -36,7 +36,7 @@ interface MethodItemProps {
 }
 
 const MethodItem = ({ onClick, method, isSelected }: MethodItemProps) => {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const getInitials = (text: string): string => {
     const words = text.trim().split(' ');
     if (words.length === 1) return words[0][0].toUpperCase();
@@ -45,7 +45,7 @@ const MethodItem = ({ onClick, method, isSelected }: MethodItemProps) => {
 
   return (
     <div
-      className={`${styles.methodItem} ${styles[`methodItem_${theme}`]} ${isSelected ? styles.selected : ''}`}
+      className={`${applyTheme(styles, 'methodItem')} ${isSelected ? styles.selected : ''}`}
       onClick={onClick}
       aria-label={`Select ${method.paymentMethodIdentity}`}
       role="button"
@@ -74,7 +74,7 @@ const MethodItem = ({ onClick, method, isSelected }: MethodItemProps) => {
 };
 
 export default function PaymentMethod({ profileType, walletId, onMethodSelect, paymentMethodId, modify = true, scopeKey = 'payment_flow' }: PaymentMethodProps) {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t, lang } = useLanguage();
   const { userData } = useUserData();
 
@@ -258,12 +258,12 @@ export default function PaymentMethod({ profileType, walletId, onMethodSelect, p
 
   return (
     <div className={styles.experienceContainer}>
-      <h2 className={`${styles.experienceTitle} ${styles[`experienceTitle_${theme}`]}`}>
+      <h2 className={`${applyTheme(styles, 'experienceTitle')}`}>
         {t('payment_method_text')}
       </h2>
 
       <div className={styles.formGroup}>
-        <button onClick={openMethod} className={`${styles.selectButton} ${styles[`selectButton_${theme}`]}`}>
+        <button onClick={openMethod} className={`${applyTheme(styles, 'selectButton')}`}>
           {methodData ? (
             <div className={styles.selectedMethod}>
               <div className={styles.methodImage}>
@@ -273,7 +273,7 @@ export default function PaymentMethod({ profileType, walletId, onMethodSelect, p
                   <div className={styles.methodInitials}>{getInitials(methodData.paymentMethodIdentity)}</div>
                 )}
               </div>
-              <div className={`${styles.methodInfo} ${styles[`methodInfo_${theme}`]}`}>
+              <div className={`${applyTheme(styles, 'methodInfo')}`}>
                 <div className={styles.methodName}>{methodData.paymentMethodIdentity}</div>
                 <div className={styles.methodCountry}>{methodData.countryIdentity}</div>
               </div>

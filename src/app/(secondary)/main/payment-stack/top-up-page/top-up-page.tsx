@@ -45,7 +45,7 @@ interface PaymentResponse {
 }
 
 export default function TopUpPage() {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t, lang } = useLanguage();
   const nav = useNav();
   const { userData } = useUserData();
@@ -508,9 +508,9 @@ export default function TopUpPage() {
   const balance = userBalance?.usersBalanceAmount ?? 0;
 
   return (
-    <main className={`${styles.container} ${styles[`container_${theme}`]}`}>
+    <main className={`${applyTheme(styles, 'container')}`}>
 
-      <header className={`${styles.header} ${styles[`header_${theme}`]}`}>
+      <header className={`${applyTheme(styles, 'header')}`}>
         <div className={styles.headerContent}>
           <button
             className={styles.backButton}
@@ -601,7 +601,7 @@ export default function TopUpPage() {
         closeThreshold={0.2}
         zIndex={1000}
       >
-        <div className={`${styles.dialogContainer} ${styles[`dialogContainer_${theme}`]}`}>
+        <div className={`${applyTheme(styles, 'dialogContainer')}`}>
           {(!academixProfileData && continueState === 'error_occurred') && (
             <ErrorView text="Error occurred." buttonText="Try Again" onButtonClick={handleSubmit} />
           )}

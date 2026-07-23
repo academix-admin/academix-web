@@ -59,7 +59,7 @@ const normalizeLoginInputValue = (loginModel: LoginModel | null): string => {
 
 
 export default function LoginUser() {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t, lang } = useLanguage();
   const { login, login$, __meta } = useLogin();
   const { userData, userData$ } = useUserData();
@@ -417,10 +417,10 @@ export default function LoginUser() {
   };
 
   return (
-    <main className={`${styles.container} ${styles[`container_${theme}`]}`}>
+    <main className={`${applyTheme(styles, 'container')}`}>
       {loginLoading && <div className={styles.loginLoadingOverlay} aria-hidden="true" />}
 
-      <header className={`${styles.header} ${styles[`header_${theme}`]}`}>
+      <header className={`${applyTheme(styles, 'header')}`}>
         <div className={styles.headerContent}>
           {canGoBack && (
             <button

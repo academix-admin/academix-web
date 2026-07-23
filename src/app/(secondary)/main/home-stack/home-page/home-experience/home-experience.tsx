@@ -13,7 +13,7 @@ import { UserEngagementModel } from '@/models/user-engagement';
 import { ComponentStateProps } from '@/hooks/use-component-state';
 
 export default function HomeExperience({ onStateChange }: ComponentStateProps) {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t, lang, tNode } = useLanguage();
   const { userData, userData$ } = useUserData();
 
@@ -75,7 +75,7 @@ export default function HomeExperience({ onStateChange }: ComponentStateProps) {
 
   return (
     <div className={styles.experienceContainer}>
-      <h2 className={`${styles.experienceTitle} ${styles[`experienceTitle_${theme}`]}`}>
+      <h2 className={`${applyTheme(styles, 'experienceTitle')}`}>
         {t('experience_points')}
       </h2>
       <div className={styles.experienceSection}>

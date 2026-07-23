@@ -208,7 +208,7 @@ interface OtpProps {
 }
 
 export default function Otp(props: OtpProps) {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t, tNode, lang } = useLanguage();
   const { otpTimer, otpTimer$, __meta } = useOtp();
   const { userData, userData$ } = useUserData();
@@ -446,10 +446,10 @@ export default function Otp(props: OtpProps) {
   };
 
   return (
-    <main className={`${styles.container} ${styles[`container_${theme}`]}`}>
+    <main className={`${applyTheme(styles, 'container')}`}>
       {(isRequesting || isLoading) && <div className={styles.loadingOverlay} aria-hidden="true" />}
 
-      <header className={`${styles.header} ${styles[`header_${theme}`]}`}>
+      <header className={`${applyTheme(styles, 'header')}`}>
         <div className={styles.headerContent}>
           {canGoBack && (
             <button

@@ -7,14 +7,14 @@
 // import { useAuthContext } from '@/providers/AuthProvider'
 
 // export default function AuthBlocker({ children }: { children: React.ReactNode }) {
-//   const { theme } = useTheme();
+//   const { theme, applyTheme } = useTheme();
 //   const { t } = useLanguage();
 //   const { initialized } = useAuthContext();
 
 //   return (
 //     <div className={styles.ab_span} >
 //        <div className={!initialized ? styles.hide : '' }>{children}</div>
-//        <div className={!initialized ?  `${styles.overlay} ${styles[`overlay_${theme}`]}` : styles.hide}>
+//        <div className={!initialized ?  `${applyTheme(styles, 'overlay')}` : styles.hide}>
 //           <LoadingView text={t('loading')} />
 //        </div>
 //     </div>
@@ -30,13 +30,13 @@ import LoadingView from '@/components/LoadingView/LoadingView';
 import { useAuthContext } from '@/providers/AuthProvider';
 
 export default function AuthBlocker({ children }: { children: React.ReactNode }) {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t } = useLanguage();
   const { initialized } = useAuthContext();
 
   if (!initialized) {
     return (
-      <div className={`${styles.overlay} ${styles[`overlay_${theme}`]}`}>
+      <div className={`${applyTheme(styles, 'overlay')}`}>
         <LoadingView text={t('loading')} />
       </div>
     );

@@ -23,7 +23,7 @@ interface VerificationSelection {
 }
 
 export default function SecurityVerification(props: SecurityVerificationProps) {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t, tNode } = useLanguage();
   const nav = useNav();
   const { userData } = useUserData();
@@ -101,8 +101,8 @@ export default function SecurityVerification(props: SecurityVerificationProps) {
   }
 
   return (
-    <main className={`${styles.container} ${styles[`container_${theme}`]}`}>
-      <header className={`${styles.header} ${styles[`header_${theme}`]}`}>
+    <main className={`${applyTheme(styles, 'container')}`}>
+      <header className={`${applyTheme(styles, 'header')}`}>
         <div className={styles.headerContent}>
           <button
             className={styles.backButton}

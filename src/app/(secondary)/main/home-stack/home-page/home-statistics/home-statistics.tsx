@@ -14,7 +14,7 @@ import CachedLottie from '@/components/CachedLottie';
 import { ComponentStateProps } from '@/hooks/use-component-state';
 
 export default function HomeStatistics({ onStateChange }: ComponentStateProps) {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t, lang, tNode } = useLanguage();
   const { userData, userData$ } = useUserData();
 
@@ -84,7 +84,7 @@ export default function HomeStatistics({ onStateChange }: ComponentStateProps) {
 
   return (
     <div className={styles.statisticsContainer}>
-      <h2 className={`${styles.statisticsTitle} ${styles[`statisticsTitle_${theme}`]}`}>
+      <h2 className={`${applyTheme(styles, 'statisticsTitle')}`}>
         {t('statistics_text')}
       </h2>
 

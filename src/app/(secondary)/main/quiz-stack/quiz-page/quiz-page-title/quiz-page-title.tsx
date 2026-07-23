@@ -19,7 +19,7 @@ import { Header } from '@academix-admin/header';
 const Scanner = dynamic(() => import('@yudiel/react-qr-scanner').then(mod => ({ default: mod.Scanner })), { ssr: false });
 
 export default function QuizPageTitle({ onStateChange }: ComponentStateProps) {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t } = useLanguage();
   const [bottomViewerId, bottomController, bottomIsOpen] = useBottomController();
   const [scannedQuizPool, setScannedQuizPool] = useState<UserDisplayQuizTopicModel | null>(null);
@@ -164,6 +164,7 @@ function QuizJoinContent({ theme, t, onClose, scannedQuizPool, setScannedQuizPoo
   scannedQuizPool: UserDisplayQuizTopicModel | null;
   setScannedQuizPool: (quiz: UserDisplayQuizTopicModel | null) => void;
 }) {
+  const { applyTheme } = useTheme();
   const [activeTab, setActiveTab] = useState(0);
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
@@ -254,23 +255,23 @@ function QuizJoinContent({ theme, t, onClose, scannedQuizPool, setScannedQuizPoo
   }, [code]);
 
   return (
-    <div className={`${styles.joinContainer} ${styles[`joinContainer_${theme}`]}`}>
-      <div className={`${styles.joinHeader} ${styles[`joinHeader_${theme}`]}`}>
-        <h2 className={`${styles.joinTitle} ${styles[`joinTitle_${theme}`]}`}>
+    <div className={`${applyTheme(styles, 'joinContainer')}`}>
+      <div className={`${applyTheme(styles, 'joinHeader')}`}>
+        <h2 className={`${applyTheme(styles, 'joinTitle')}`}>
           {t('join_quiz_pool')}
         </h2>
       </div>
 
       {loading && (
         <div className={styles.joinContent}>
-          <div className={`${styles.loadingText} ${styles[`loadingText_${theme}`]}`}>{t('loading')}</div>
+          <div className={`${applyTheme(styles, 'loadingText')}`}>{t('loading')}</div>
         </div>
       )}
 
       {error && (
         <div className={styles.errorContainer}>
-          <p className={`${styles.errorText} ${styles[`errorText_${theme}`]}`}>{t('no_result_text')}</p>
-          <button onClick={() => setError(false)} className={`${styles.errorButton} ${styles[`errorButton_${theme}`]}`}>
+          <p className={`${applyTheme(styles, 'errorText')}`}>{t('no_result_text')}</p>
+          <button onClick={() => setError(false)} className={`${applyTheme(styles, 'errorButton')}`}>
             {t('continue')}
           </button>
         </div>
@@ -281,7 +282,7 @@ function QuizJoinContent({ theme, t, onClose, scannedQuizPool, setScannedQuizPoo
           <div className={styles.joinContent}>
             {activeTab === 0 ? (
               <div className={styles.cameraContainer}>
-                <div className={`${styles.cameraBox} ${styles[`cameraBox_${theme}`]}`}>
+                <div className={`${applyTheme(styles, 'cameraBox')}`}>
                   {Scanner && (
                     <Scanner
                       onScan={handleScanResult}
@@ -295,7 +296,7 @@ function QuizJoinContent({ theme, t, onClose, scannedQuizPool, setScannedQuizPoo
               </div>
             ) : (
               <div className={styles.codeContainer}>
-                <div className={`${styles.codeLabel} ${styles[`codeLabel_${theme}`]}`}>
+                <div className={`${applyTheme(styles, 'codeLabel')}`}>
                   {t('code_placeholder')}
                 </div>
                 <div className={styles.codeInputWrapper}>
@@ -307,9 +308,9 @@ function QuizJoinContent({ theme, t, onClose, scannedQuizPool, setScannedQuizPoo
                     maxLength={9}
                     placeholder="XXXXXXXXX"
                     autoFocus
-                    className={`${styles.codeInput} ${styles[`codeInput_${theme}`]}`}
+                    className={`${applyTheme(styles, 'codeInput')}`}
                   />
-                  <div className={`${styles.codeCounter} ${styles[`codeCounter_${theme}`]}`}>
+                  <div className={`${applyTheme(styles, 'codeCounter')}`}>
                     {code.length}/9
                   </div>
                 </div>
@@ -317,17 +318,17 @@ function QuizJoinContent({ theme, t, onClose, scannedQuizPool, setScannedQuizPoo
             )}
           </div>
 
-          <div className={`${styles.tabSwitcher} ${styles[`tabSwitcher_${theme}`]}`}>
-            <div className={`${styles.tabContainer} ${styles[`tabContainer_${theme}`]}`}>
+          <div className={`${applyTheme(styles, 'tabSwitcher')}`}>
+            <div className={`${applyTheme(styles, 'tabContainer')}`}>
               <button
                 onClick={() => setActiveTab(0)}
-                className={`${styles.tabButton} ${styles[`tabButton_${theme}`]} ${activeTab === 0 ? styles[`tabButton_active_${theme}`] : styles.tabButton_inactive}`}
+                className={`${applyTheme(styles, 'tabButton')} ${activeTab === 0 ? styles[`tabButton_active_${theme}`] : styles.tabButton_inactive}`}
               >
                 {t('qr_code')}
               </button>
               <button
                 onClick={() => setActiveTab(1)}
-                className={`${styles.tabButton} ${styles[`tabButton_${theme}`]} ${activeTab === 1 ? styles[`tabButton_active_${theme}`] : styles.tabButton_inactive}`}
+                className={`${applyTheme(styles, 'tabButton')} ${activeTab === 1 ? styles[`tabButton_active_${theme}`] : styles.tabButton_inactive}`}
               >
                 {t('enter_text')}
               </button>

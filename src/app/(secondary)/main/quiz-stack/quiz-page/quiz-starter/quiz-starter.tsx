@@ -25,7 +25,7 @@ export default function QuizStarter({
   isLoading,
   onContinueClick
 }: QuizStarterProps) {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t } = useLanguage();
   const [remainingTime, setRemainingTime] = useState<number>(0);
   const timelapseManager = useTimelapseManager();
@@ -117,42 +117,42 @@ export default function QuizStarter({
     <div className={styles.quizStarterCard}>
       {/* Title Section */}
       <div className={styles.titleSection}>
-        <h1 className={`${styles.title} ${styles[`title_${theme}`]}`}>
+        <h1 className={`${applyTheme(styles, 'title')}`}>
           {title}
         </h1>
       </div>
 
       {/* Challenge Section */}
       <div className={styles.challengeSection}>
-        <span className={`${styles.challenge} ${styles[`challenge_${theme}`]}`}>
+        <span className={`${applyTheme(styles, 'challenge')}`}>
           {challenge}
         </span>
       </div>
 
       {/* Mode Section */}
       <div className={styles.modeSection}>
-        <span className={`${styles.mode} ${styles[`mode_${theme}`]}`}>
+        <span className={`${applyTheme(styles, 'mode')}`}>
           {mode}
         </span>
       </div>
 
       {/* Timer Section */}
       <div className={styles.timerSection}>
-        <div className={`${styles.timerContainer} ${styles[`timerContainer_${theme}`]}`}>
+        <div className={`${applyTheme(styles, 'timerContainer')}`}>
           <div className={styles.timerContent}>
             {/* Status Row */}
             <div className={styles.statusRow}>
-              <span className={`${styles.status} ${styles[`status_${theme}`]}`}>
+              <span className={`${applyTheme(styles, 'status')}`}>
                 {formatStatus(status)}
               </span>
             </div>
 
             {/* Timer Display */}
             <div className={styles.timerDisplay}>
-              <div className={`${styles.timerValue} ${styles[`timerValue_${theme}`]}`}>
+              <div className={`${applyTheme(styles, 'timerValue')}`}>
                 {formatPlainTime(remainingTime)}
               </div>
-              <div className={`${styles.remainingLabel} ${styles[`remainingLabel_${theme}`]}`}>
+              <div className={`${applyTheme(styles, 'remainingLabel')}`}>
                 {t('remaining')}
               </div>
             </div>

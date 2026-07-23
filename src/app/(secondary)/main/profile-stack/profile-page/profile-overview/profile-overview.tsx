@@ -17,7 +17,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { useDialog } from '@academix-admin/dialog-viewer';
 
 export default function ProfileOverview({ onStateChange }: ComponentStateProps) {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t, lang, tNode } = useLanguage();
   const { userData, userData$ } = useUserData();
   const nav = useNav();
@@ -136,11 +136,11 @@ export default function ProfileOverview({ onStateChange }: ComponentStateProps) 
 
   return (
     <div className={styles.container}>
-      <h2 className={`${styles.title} ${styles[`title_${theme}`]}`}>
+      <h2 className={`${applyTheme(styles, 'title')}`}>
         {t('overview_text')}
       </h2>
 
-      <div className={`${styles.card} ${styles[`card_${theme}`]}`}>
+      <div className={`${applyTheme(styles, 'card')}`}>
         {/* Top Section - Lighter Gradient */}
         <div role="button" onClick={() => nav.push('edit_profile')} className={styles.topSection}>
           <div className={styles.profileInfo}>

@@ -21,7 +21,7 @@ interface QuizDetailsViewerProps {
 }
 
 export default function QuizDetailsViewer({ topicsModel }: QuizDetailsViewerProps) {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t } = useLanguage();
   const { userData } = useUserData();
   const [codeBottomViewerId, codeBottomController, codeBottomIsOpen] = useBottomController();
@@ -118,7 +118,7 @@ export default function QuizDetailsViewer({ topicsModel }: QuizDetailsViewerProp
     <div className={styles.experienceContainer}>
       <ToastComponent />
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-        <h2 className={`${styles.details} ${styles[`details_${theme}`]}`}>
+        <h2 className={`${applyTheme(styles, 'details')}`}>
           {topicsModel.topicsIdentity}
         </h2>
         <button
@@ -159,9 +159,9 @@ export default function QuizDetailsViewer({ topicsModel }: QuizDetailsViewerProp
         </span>
       </div>)}
 
-      <div className={`${styles.performanceItem} ${styles[`performanceItem_${theme}`]}`}>
+      <div className={`${applyTheme(styles, 'performanceItem')}`}>
 
-        <h2 className={`${styles.itemTitle} ${styles[`itemTitle_${theme}`]}`}>
+        <h2 className={`${applyTheme(styles, 'itemTitle')}`}>
           {t('topic_creator')}
         </h2>
         {/* Creator Info */}
@@ -184,7 +184,7 @@ export default function QuizDetailsViewer({ topicsModel }: QuizDetailsViewerProp
           </div>
 
           <div className={styles.creatorDetails}>
-            <span className={`${styles.creatorName} ${styles[`creatorName_${theme}`]}`}>
+            <span className={`${applyTheme(styles, 'creatorName')}`}>
               {topicsModel.usernameText}
             </span>
           </div>
@@ -220,8 +220,8 @@ export default function QuizDetailsViewer({ topicsModel }: QuizDetailsViewerProp
         closeThreshold={0.2}
         zIndex={1000}
       >
-        <div className={`${styles.dialogContainer} ${styles[`dialogContainer_${theme}`]}`}>
-          <h3 className={`${styles.dialogTitle} ${styles[`dialogTitle_${theme}`]}`}>
+        <div className={`${applyTheme(styles, 'dialogContainer')}`}>
+          <h3 className={`${applyTheme(styles, 'dialogTitle')}`}>
             {t('scan_quiz_code')}
           </h3>
 

@@ -18,7 +18,7 @@ const NAV_LINKS = [
 ];
 
 export default function LandingHeader() {
-  const { theme, storedTheme, cycleTheme } = useTheme();
+  const { theme, storedTheme, cycleTheme, applyTheme } = useTheme();
   const { t } = useLanguage();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const headerRef = useRef<HTMLDivElement>(null);
@@ -63,8 +63,8 @@ export default function LandingHeader() {
 
   const renderNavLink = (link: typeof NAV_LINKS[0], isMobile = false) => {
     const className = isMobile
-      ? `${styles.mobileLink} ${styles[`mobileLink_${theme}`]}`
-      : `${styles.link} ${styles[`link_${theme}`]}`;
+      ? `${applyTheme(styles, 'mobileLink')}`
+      : `${applyTheme(styles, 'link')}`;
 
     return (
       <a
@@ -100,7 +100,7 @@ export default function LandingHeader() {
             >
               {storedTheme === 'light' ? '🌞' : storedTheme === 'dark' ? '🌙' : '💻'}
             </button>
-            <Link className={`${styles.startButton} ${styles[`startButton_${theme}`]}`} href='/welcome'>
+            <Link className={`${applyTheme(styles, 'startButton')}`} href='/welcome'>
               {t('start_text')}
             </Link>
             <LanguageSelector />
@@ -116,15 +116,15 @@ export default function LandingHeader() {
               {storedTheme === 'light' ? '🌞' : storedTheme === 'dark' ? '🌙' : '💻'}
             </button>
             <button
-              className={`${styles.menuButton} ${styles[`menuButton_${theme}`]}`}
+              className={`${applyTheme(styles, 'menuButton')}`}
               onClick={toggleMobileMenu}
               aria-label="Toggle mobile menu"
               aria-expanded={mobileMenuOpen}
             >
               <div className={`${styles.menuIcon} ${mobileMenuOpen ? styles.menuIconOpen : ''}`}>
-                <span className={`${styles.menuLine} ${styles[`menuLine_${theme}`]}`}></span>
-                <span className={`${styles.menuLine} ${styles[`menuLine_${theme}`]}`}></span>
-                <span className={`${styles.menuLine} ${styles[`menuLine_${theme}`]}`}></span>
+                <span className={`${applyTheme(styles, 'menuLine')}`}></span>
+                <span className={`${applyTheme(styles, 'menuLine')}`}></span>
+                <span className={`${applyTheme(styles, 'menuLine')}`}></span>
               </div>
             </button>
           </div>
@@ -146,7 +146,7 @@ export default function LandingHeader() {
         ></div>
 
         <div
-          className={`${styles.mobileNav} ${styles[`mobileNav_${theme}`]} ${
+          className={`${applyTheme(styles, 'mobileNav')} ${
             mobileMenuOpen ? styles.mobileNavOpen : styles.mobileNavClosed
           }`}
         >
@@ -156,7 +156,7 @@ export default function LandingHeader() {
 
           <div className={styles.mobileFooter}>
             <Link
-              className={`${styles.startButton} ${styles[`startButton_${theme}`]}`}
+              className={`${applyTheme(styles, 'startButton')}`}
               href="/welcome"
             >
               {t('start_text')}

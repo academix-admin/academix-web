@@ -26,7 +26,7 @@ interface ThemeContextProps {
    * Compose a CSS-module class with its themed variant in one call:
    *
    *   className={applyTheme(styles, 'mainSection')}
-   *   // === `${styles.mainSection} ${styles[`mainSection_${theme}`]}`
+   *   // === styles.mainSection + ' ' + styles['mainSection_' + theme]
    *
    * Pass a theme to override the current one: `applyTheme(styles, 'mainSection', 'light')`.
    * Missing base or variant classes resolve to '' (never the string "undefined").

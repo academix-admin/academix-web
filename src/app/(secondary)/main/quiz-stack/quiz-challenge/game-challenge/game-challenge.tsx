@@ -26,7 +26,7 @@ interface GameChallengeProps {
 }
 
 export default function GameChallenge({ onChallengeSelect, topicsId, gameModeId }: GameChallengeProps) {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t, lang } = useLanguage();
   const { userData } = useUserData();
 
@@ -159,10 +159,10 @@ export default function GameChallenge({ onChallengeSelect, topicsId, gameModeId 
 
   return (
     <div className={styles.experienceContainer}>
-      <h2 className={`${styles.experienceTitle} ${styles[`experienceTitle_${theme}`]}`}>
+      <h2 className={`${applyTheme(styles, 'experienceTitle')}`}>
         {t('select_a_challenge')}
       </h2>
-      <h3 className={`${styles.experienceDesc} ${styles[`experienceDesc_${theme}`]}`}>
+      <h3 className={`${applyTheme(styles, 'experienceDesc')}`}>
         {t('swipe_to_select')}
       </h3>
 
@@ -235,7 +235,7 @@ interface ChallengeCardProps {
 }
 
 function ChallengeCard({ challenge, isSelected, onClick }: ChallengeCardProps) {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t } = useLanguage();
 
   const formatNumber = (num: number): string => {
@@ -278,7 +278,7 @@ function ChallengeCard({ challenge, isSelected, onClick }: ChallengeCardProps) {
 
   return (
     <div
-      className={`${styles.challengeCard} ${styles[`challengeCard_${theme}`]} ${isSelected ? styles.selected : ''
+      className={`${applyTheme(styles, 'challengeCard')} ${isSelected ? styles.selected : ''
         }`}
       onClick={onClick}
       role="button"

@@ -14,7 +14,7 @@ import { ComponentStateProps } from '@/hooks/use-component-state';
 import { useNav } from "@academix-admin/navigation-stack";
 
 export default function AcademixRatio({ onStateChange }: ComponentStateProps) {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t, lang, tNode } = useLanguage();
   const { userData, userData$ } = useUserData();
   const nav = useNav();
@@ -73,7 +73,7 @@ export default function AcademixRatio({ onStateChange }: ComponentStateProps) {
  return (
   <div className={styles.academixRatioContainer}>
     <h2
-      className={`${styles.academixRatioTitle} ${styles[`academixRatioTitle_${theme}`]}`}
+      className={`${applyTheme(styles, 'academixRatioTitle')}`}
     >
       {t('academix_ratio')}
     </h2>
@@ -103,7 +103,7 @@ export default function AcademixRatio({ onStateChange }: ComponentStateProps) {
       </div>
 
       <svg
-        className={`${styles.academixRatioArrow} ${styles[`academixRatioArrow_${theme}`]}`}
+        className={`${applyTheme(styles, 'academixRatioArrow')}`}
         xmlns="http://www.w3.org/2000/svg"
         width="9"
         height="15"

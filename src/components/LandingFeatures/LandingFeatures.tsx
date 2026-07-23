@@ -4,7 +4,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 
 export default function LandingFeatures() {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t } = useLanguage();
 
 
@@ -139,8 +139,8 @@ interface FeaturesColors {
   return (
     <div className={styles.lsf_span}>
       <div className={styles.badge}>Features</div>
-      <h1 className={`${styles.title} ${styles[`title_${theme}`]}`}>{t('laas_platform')}</h1>
-      <h4 className={`${styles.description} ${styles[`description_${theme}`]}`}>
+      <h1 className={`${applyTheme(styles, 'title')}`}>{t('laas_platform')}</h1>
+      <h4 className={`${applyTheme(styles, 'description')}`}>
         {t('laas_plat_desc')}
       </h4>
 

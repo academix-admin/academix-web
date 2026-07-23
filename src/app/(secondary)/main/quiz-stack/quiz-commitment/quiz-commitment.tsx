@@ -68,7 +68,7 @@ interface EngageQuizResponse {
 
 
 export default function QuizCommitment(props: QuizChallengeProps) {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t, tNode, lang } = useLanguage();
   const nav = useNav();
   const { poolsId, action } = props;
@@ -632,8 +632,8 @@ export default function QuizCommitment(props: QuizChallengeProps) {
 
 
   return (
-    <main className={`${styles.container} ${styles[`container_${theme}`]}`}>
-      <header className={`${styles.header} ${styles[`header_${theme}`]}`}>
+    <main className={`${applyTheme(styles, 'container')}`}>
+      <header className={`${applyTheme(styles, 'header')}`}>
         <div className={styles.headerContent}>
           <button
             className={styles.backButton}
@@ -743,7 +743,7 @@ export default function QuizCommitment(props: QuizChallengeProps) {
         closeThreshold={0.2}
         zIndex={1000}
       >
-        <div className={`${styles.dialogContainer} ${styles[`dialogContainer_${theme}`]}`}>
+        <div className={`${applyTheme(styles, 'dialogContainer')}`}>
           <div className={styles.paymentConfirmation}>
             {/* Amount */}
             <div className={styles.amountSection}>
@@ -896,12 +896,12 @@ export default function QuizCommitment(props: QuizChallengeProps) {
         closeThreshold={0.2}
         zIndex={1000}
       >
-        <div className={`${styles.dialogContainer} ${styles[`dialogContainer_${theme}`]}`}>
+        <div className={`${applyTheme(styles, 'dialogContainer')}`}>
           <div className={styles.poolInfoContainer}>
-            <h3 className={`${styles.dialogTitle} ${styles[`dialogTitle_${theme}`]}`}>
+            <h3 className={`${applyTheme(styles, 'dialogTitle')}`}>
               {t('pool_closed')}
             </h3>
-            <h3 className={`${styles.dialogBody} ${styles[`dialogBody_${theme}`]}`}>
+            <h3 className={`${applyTheme(styles, 'dialogBody')}`}>
               {infoState === 'deleted' && tNode('pool_info_reason', { topic: <strong>{currentQuiz?.topicsIdentity || ''}</strong> })}
               {infoState === 'left' && t('user_left_pool')}
               {infoState === 'closed' && tNode('pool_already_ended', { topic: <strong>{currentQuiz?.topicsIdentity || ''}</strong> })}

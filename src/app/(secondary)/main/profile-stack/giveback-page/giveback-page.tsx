@@ -50,7 +50,7 @@ const GiveBackCard: React.FC<{
   passwordSaving,
 }) => {
   const { t, lang } = useLanguage();
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { showToast, ToastComponent } = useTopViewer();
 
   const handleCopy = async () => {
@@ -150,7 +150,7 @@ const GiveBackCard: React.FC<{
                   <input
                     id={`giveback-password-${giveBack.giveBackId}`}
                     type={showPassword ? 'text' : 'password'}
-                    className={`${styles.passwordInput} ${styles[`passwordInput_${theme}`]}`}
+                    className={`${applyTheme(styles, 'passwordInput')}`}
                     value={passwordValue}
                     onChange={(e) => onPasswordChange(e.target.value)}
                     onKeyDown={(e) => { if (e.key === 'Enter') onPasswordSubmit(); }}
@@ -158,7 +158,7 @@ const GiveBackCard: React.FC<{
                   />
                   <button
                     type="button"
-                    className={`${styles.eyeButton} ${styles[`eyeButton_${theme}`]}`}
+                    className={`${applyTheme(styles, 'eyeButton')}`}
                     onClick={onTogglePasswordVisibility}
                     aria-label={showPassword ? 'Hide password' : 'Show password'}
                   >
@@ -213,7 +213,7 @@ const GiveBackCard: React.FC<{
 // ── Page ─────────────────────────────────────────────────────────────────────
 
 export default function GiveBackPage() {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t, lang } = useLanguage();
   const nav = useNav();
   const { userData, __meta } = useUserData();
@@ -498,8 +498,8 @@ export default function GiveBackPage() {
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
-    <main className={`${styles.container} ${styles[`container_${theme}`]}`}>
-      <header className={`${styles.header} ${styles[`header_${theme}`]}`}>
+    <main className={`${applyTheme(styles, 'container')}`}>
+      <header className={`${applyTheme(styles, 'header')}`}>
         <div className={styles.headerContent}>
           <button className={styles.backButton} onClick={goBack} aria-label="Go back">
             <svg className={styles.backIcon} viewBox="0 0 16 22" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -527,7 +527,7 @@ export default function GiveBackPage() {
         </div>
 
         {/* Tabs */}
-        <div className={`${styles.tabBar} ${styles[`tabBar_${theme}`]}`}>
+        <div className={`${applyTheme(styles, 'tabBar')}`}>
           <button
             className={`${styles.tab} ${activeTab === 'unclaimed' ? styles.tabActive : ''} ${styles[`tab_${theme}`]}`}
             onClick={() => setActiveTab('unclaimed')}

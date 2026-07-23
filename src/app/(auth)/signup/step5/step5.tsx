@@ -29,7 +29,7 @@ interface RoleItemProps {
 }
 
 const RoleItem = ({ onClick, role, selected }: RoleItemProps) => {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t } = useLanguage();
 
   return (
@@ -37,7 +37,7 @@ const RoleItem = ({ onClick, role, selected }: RoleItemProps) => {
       onClick={onClick}
       className={`
         ${styles.roleCard}
-        ${selected ? styles.roleCardSelected : `${styles.roleCardUnselected} ${styles[`roleCardUnselected_${theme}`]}`}
+        ${selected ? styles.roleCardSelected : `${applyTheme(styles, 'roleCardUnselected')}`}
         ${styles[`roleCard_${theme}`]}
       `}
       role="button"
@@ -60,7 +60,7 @@ const RoleItem = ({ onClick, role, selected }: RoleItemProps) => {
 
 
 export default function SignUpStep5() {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t, lang, tNode } = useLanguage();
   const { signup, signup$, __meta } = useSignup();
   const nav = useNav();
@@ -251,10 +251,10 @@ export default function SignUpStep5() {
 
 
   return (
-    <main className={`${styles.container} ${styles[`container_${theme}`]}`}>
+    <main className={`${applyTheme(styles, 'container')}`}>
       {continueLoading && <div className={styles.continueLoadingOverlay} aria-hidden="true" />}
 
-      <header className={`${styles.header} ${styles[`header_${theme}`]}`}>
+      <header className={`${applyTheme(styles, 'header')}`}>
         <div className={styles.headerContent}>
           {canGoBack && (
             <button
@@ -327,7 +327,7 @@ export default function SignUpStep5() {
                 <div className={styles.walletSelectionCard}>
                   <label className={styles.walletLabel}>{t('select_payment_wallet')}</label>
                   <div
-                    className={`${styles.walletButton} ${styles[`walletButton_${theme}`]}`}
+                    className={`${applyTheme(styles, 'walletButton')}`}
                     onClick={openWalletSelector}
                   >
                     {walletData ? (
@@ -362,7 +362,7 @@ export default function SignUpStep5() {
                 {/* Acceptance Notice */}
                 {walletData && (
                   <div className={styles.acceptanceSection}>
-                    <label className={`${styles.checkboxLabel} ${styles[`checkboxLabel_${theme}`]}`}>
+                    <label className={`${applyTheme(styles, 'checkboxLabel')}`}>
                       <input
                         type="checkbox"
                         checked={acceptedTerms}
@@ -475,7 +475,7 @@ interface WalletItemProps {
 }
 
 const WalletItem = ({ onClick, wallet, isSelected }: WalletItemProps) => {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
 
   const getInitials = (text: string): string => {
     const words = text.trim().split(' ');
@@ -485,7 +485,7 @@ const WalletItem = ({ onClick, wallet, isSelected }: WalletItemProps) => {
 
   return (
     <div
-      className={`${styles.walletItem} ${styles[`walletItem_${theme}`]} ${isSelected ? styles.walletItemSelected : ''}`}
+      className={`${applyTheme(styles, 'walletItem')} ${isSelected ? styles.walletItemSelected : ''}`}
       onClick={onClick}
       role="button"
       tabIndex={0}

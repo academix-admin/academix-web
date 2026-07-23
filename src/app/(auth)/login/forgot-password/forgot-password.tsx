@@ -37,7 +37,7 @@ const normalizeLoginInputValue = (accountDetailsModel: LoginModel | null): strin
 };
 
 export default function ForgotPassword() {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t, lang } = useLanguage();
   const { accountDetails, accountDetails$, __meta } = useAccountDetails();
   const nav = useNav();
@@ -225,10 +225,10 @@ export default function ForgotPassword() {
 
 
   return (
-    <main className={`${styles.container} ${styles[`container_${theme}`]}`}>
+    <main className={`${applyTheme(styles, 'container')}`}>
       {accountDetailsLoading && <div className={styles.accountDetailsLoadingOverlay} aria-hidden="true" />}
 
-      <header className={`${styles.header} ${styles[`header_${theme}`]}`}>
+      <header className={`${applyTheme(styles, 'header')}`}>
         <div className={styles.headerContent}>
           {canGoBack && (
             <button
@@ -271,8 +271,8 @@ export default function ForgotPassword() {
         <form className={styles.form}>
 
           <div className={styles.formGroup}>
-            <div className={`${styles.instructionSection} ${styles[`instructionSection_${theme}`]}`}>
-              <div className={`${styles.instructionInfo} ${styles[`instructionInfo_${theme}`]}`}>
+            <div className={`${applyTheme(styles, 'instructionSection')}`}>
+              <div className={`${applyTheme(styles, 'instructionInfo')}`}>
                 {t('forgot_password_instruction')}
               </div>
             </div>

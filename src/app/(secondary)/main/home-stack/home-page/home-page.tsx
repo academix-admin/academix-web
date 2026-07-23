@@ -23,7 +23,7 @@ import { useComponentState, ComponentStateProps, getComponentStatus } from '@/ho
 
 
 export default function HomePage() {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t } = useLanguage();
   const { compState, handleStateChange, getComponentState, resetComponentState } = useComponentState();
 
@@ -46,7 +46,7 @@ export default function HomePage() {
   const show = true;
 
   return (
-    <div  className={`${styles.mainContainer} ${styles[`mainContainer_${theme}`]}`}>
+    <div  className={`${applyTheme(styles, 'mainContainer')}`}>
       {show && (<HomeTitle onStateChange={(state) => handleStateChange('homeTitle', state)}/>)}
       {show && (<HomeExperience onStateChange={(state) => handleStateChange('homeExperience', state)}/>)}
       {show && (<HomePerformance onStateChange={(state) => handleStateChange('homePerformance', state)}/>)}

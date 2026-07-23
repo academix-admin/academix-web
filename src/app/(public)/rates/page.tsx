@@ -125,7 +125,7 @@ interface WalletItemProps {
 }
 
 const WalletItem = ({ onClick, wallet, isSelected }: WalletItemProps) => {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
 
   const getInitials = (text: string): string => {
     const words = text.trim().split(' ');
@@ -135,7 +135,7 @@ const WalletItem = ({ onClick, wallet, isSelected }: WalletItemProps) => {
 
   return (
     <div
-      className={`${styles.walletItem} ${styles[`walletItem_${theme}`]} ${isSelected ? styles.selected : ''}`}
+      className={`${applyTheme(styles, 'walletItem')} ${isSelected ? styles.selected : ''}`}
       onClick={onClick}
       aria-label={`Select ${wallet.paymentWalletIdentity}`}
       role="button"
@@ -170,7 +170,7 @@ interface MethodItemProps {
 }
 
 const MethodItem = ({ onClick, method, isSelected }: MethodItemProps) => {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const getInitials = (text: string): string => {
     const words = text.trim().split(' ');
     if (words.length === 1) return words[0][0].toUpperCase();
@@ -179,7 +179,7 @@ const MethodItem = ({ onClick, method, isSelected }: MethodItemProps) => {
 
   return (
     <div
-      className={`${styles.methodItem} ${styles[`methodItem_${theme}`]} ${isSelected ? styles.selected : ''}`}
+      className={`${applyTheme(styles, 'methodItem')} ${isSelected ? styles.selected : ''}`}
       onClick={onClick}
       aria-label={`Select ${method.paymentMethodIdentity}`}
       role="button"
@@ -221,7 +221,7 @@ const MethodItem = ({ onClick, method, isSelected }: MethodItemProps) => {
 export default function Rates({ searchParams }: RatesPageProps) {
   const resolvedSearchParams = use(searchParams);
   const { col, lan, req, to } = useAppParams(resolvedSearchParams);
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t, tNode, lang } = useLanguage();
   const { initialized, hasValidSession } = useAuthContext();
   const router = useRouter();

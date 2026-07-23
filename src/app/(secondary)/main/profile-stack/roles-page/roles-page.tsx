@@ -57,7 +57,7 @@ function getRoleIcon(checker: string): React.JSX.Element {
 }
 
 export default function RolesPage() {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t, lang } = useLanguage();
   const nav = useNav();
   const { userData } = useUserData();
@@ -451,8 +451,8 @@ export default function RolesPage() {
   const goBack = async () => { await nav.pop(); };
 
   return (
-    <main className={`${styles.container} ${styles[`container_${theme}`]}`}>
-      <header className={`${styles.header} ${styles[`header_${theme}`]}`}>
+    <main className={`${applyTheme(styles, 'container')}`}>
+      <header className={`${applyTheme(styles, 'header')}`}>
         <div className={styles.headerContent}>
           <button className={styles.backButton} onClick={goBack} aria-label="Go back">
             <svg className={styles.backIcon} viewBox="0 0 16 22" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -474,7 +474,7 @@ export default function RolesPage() {
         )}
 
         {pageState === 'data' && role && activation && (
-          <div className={`${styles.roleCard} ${styles[`roleCard_${theme}`]}`}>
+          <div className={`${applyTheme(styles, 'roleCard')}`}>
             {/* Icon + Identity */}
             <div className={styles.roleHeader}>
               <div className={styles.roleIconWrapper}>
@@ -504,7 +504,7 @@ export default function RolesPage() {
               </span>
             </div>
 
-            <div className={`${styles.divider} ${styles[`divider_${theme}`]}`} />
+            <div className={`${applyTheme(styles, 'divider')}`} />
 
             {/* Perks */}
             {role.roles_perks.length > 0 && (
@@ -617,7 +617,7 @@ export default function RolesPage() {
         closeThreshold={0.2}
         zIndex={1000}
       >
-        <div className={`${styles.dialogContainer} ${styles[`dialogContainer_${theme}`]}`}>
+        <div className={`${applyTheme(styles, 'dialogContainer')}`}>
           {!academixProfileData && continueState === 'error_occurred' && (
             <ErrorView text={t('error_occurred')} buttonText={t('try_again')} onButtonClick={handleSubmit} />
           )}

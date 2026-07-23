@@ -13,7 +13,7 @@ import { useSignup } from '@/lib/stacks/signup-stack';
 import { useNav } from "@academix-admin/navigation-stack";
 
 export default function SignUpStep3() {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t } = useLanguage();
   const { signup, signup$, __meta } = useSignup();
   const nav = useNav();
@@ -236,10 +236,10 @@ export default function SignUpStep3() {
   }, []);
 
   return (
-    <main className={`${styles.container} ${styles[`container_${theme}`]}`}>
+    <main className={`${applyTheme(styles, 'container')}`}>
       {continueLoading && <div className={styles.continueLoadingOverlay} aria-hidden="true" />}
 
-      <header className={`${styles.header} ${styles[`header_${theme}`]}`}>
+      <header className={`${applyTheme(styles, 'header')}`}>
         <div className={styles.headerContent}>
           {canGoBack && (
             <button

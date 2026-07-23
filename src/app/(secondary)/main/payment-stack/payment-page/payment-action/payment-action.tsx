@@ -8,7 +8,7 @@ import { ComponentStateProps } from '@/hooks/use-component-state';
 import { useNav } from "@academix-admin/navigation-stack";
 
 export default function PaymentAction({ onStateChange }: ComponentStateProps) {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t } = useLanguage();
   const nav = useNav();
   const isTop = nav.isTop();
@@ -99,7 +99,7 @@ export default function PaymentAction({ onStateChange }: ComponentStateProps) {
 
   return (
     <div className={styles.experienceContainer}>
-      <h2 className={`${styles.experienceTitle} ${styles[`experienceTitle_${theme}`]}`}>
+      <h2 className={`${applyTheme(styles, 'experienceTitle')}`}>
         {t('actions_text')}
       </h2>
 
@@ -110,10 +110,10 @@ export default function PaymentAction({ onStateChange }: ComponentStateProps) {
             className={styles.actionItem}
             onClick={() => handleActionClick(action.id)}
           >
-            <div className={`${styles.actionIcon} ${styles[`actionIcon_${theme}`]}`}>
+            <div className={`${applyTheme(styles, 'actionIcon')}`}>
               {action.icon}
             </div>
-            <span className={`${styles.actionText} ${styles[`actionText_${theme}`]}`}>
+            <span className={`${applyTheme(styles, 'actionText')}`}>
               {action.text}
             </span>
           </button>

@@ -27,7 +27,7 @@ export default function QuizChallengeDetails({
   status,
   jobEndAt
 }: QuizChallengeDetailsProps) {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t } = useLanguage();
   const [remainingTime, setRemainingTime] = useState<number>(0);
   const timelapseManager = useTimelapseManager();
@@ -123,8 +123,8 @@ export default function QuizChallengeDetails({
 
   return (
     <div className={styles.performanceCard}>
-    <div className={`${styles.performanceItem} ${styles[`performanceItem_${theme}`]}`}>
-      <h2 className={`${styles.details} ${styles[`details_${theme}`]}`}>
+    <div className={`${applyTheme(styles, 'performanceItem')}`}>
+      <h2 className={`${applyTheme(styles, 'details')}`}>
         {t('details_text')}
       </h2>
 

@@ -6,7 +6,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import CachedLottie from '@/components/CachedLottie';
 
 export default function LoadingView({text = null }: { text?: string | null;}) {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t } = useLanguage();
 
   return (
@@ -19,7 +19,7 @@ export default function LoadingView({text = null }: { text?: string | null;}) {
           restoreProgress
         />
       </div>
-      {text && <p className={`${styles.loading_text} ${styles[`loading_text_${theme}`]}`}>{text}</p>}
+      {text && <p className={`${applyTheme(styles, 'loading_text')}`}>{text}</p>}
     </div>
   );
 }

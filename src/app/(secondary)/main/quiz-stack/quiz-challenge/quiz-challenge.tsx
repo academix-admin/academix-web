@@ -59,7 +59,7 @@ interface EngageQuizResponse {
 
 
 export default function QuizChallenge(props: QuizChallengeProps) {
-    const { theme } = useTheme();
+    const { theme, applyTheme } = useTheme();
     const { t, lang } = useLanguage();
     const nav = useNav();
     const { topicsId, pType } = props;
@@ -330,8 +330,8 @@ export default function QuizChallenge(props: QuizChallengeProps) {
     const showBottom = currentQuiz && selectedChallengeModel && (selectedSkip || selectedRedeemCodeModel);
 
     return (
-        <main className={`${styles.container} ${styles[`container_${theme}`]}`}>
-            <header className={`${styles.header} ${styles[`header_${theme}`]}`}>
+        <main className={`${applyTheme(styles, 'container')}`}>
+            <header className={`${applyTheme(styles, 'header')}`}>
                 <div className={styles.headerContent}>
                     <button
                         className={styles.backButton}
@@ -403,7 +403,7 @@ export default function QuizChallenge(props: QuizChallengeProps) {
                 closeThreshold={0.2}
                 zIndex={1000}
             >
-                <div className={`${styles.dialogContainer} ${styles[`dialogContainer_${theme}`]}`}>
+                <div className={`${applyTheme(styles, 'dialogContainer')}`}>
                     <div className={styles.paymentConfirmation}>
                         {/* Amount */}
                         <div className={styles.amountSection}>

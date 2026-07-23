@@ -20,22 +20,22 @@ const WebView = ({
   onRetry,
   onExitClick
 }: SideTrackerProps) => {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t } = useLanguage();
 
   if (!trackerState) return null;
 
   return (
-    <div className={`${styles.webQuizContainer} ${styles[`webQuizContainer_${theme}`]}`}>
+    <div className={`${applyTheme(styles, 'webQuizContainer')}`}>
       {/* Header */}
-      <div className={`${styles.webQuizHeader} ${styles[`webQuizHeader_${theme}`]}`}>
+      <div className={`${applyTheme(styles, 'webQuizHeader')}`}>
         <div className={styles.trackerTextContainer}>
-          <span className={`${styles.trackerText} ${styles[`trackerText_${theme}`]}`}>
+          <span className={`${applyTheme(styles, 'trackerText')}`}>
             {t('tracker_text')}
           </span>
         </div>
 
-        <button onClick={onExitClick} className={`${styles.webExitButton} ${styles[`webExitButton_${theme}`]}`}>
+        <button onClick={onExitClick} className={`${applyTheme(styles, 'webExitButton')}`}>
           <svg
             width="24"
             height="24"
@@ -66,22 +66,22 @@ const TabletView = ({
   onRetry,
   onExitClick
 }: SideTrackerProps) => {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t } = useLanguage();
 
   if (!trackerState) return null;
 
   return (
-    <div className={`${styles.tabletQuizContainer} ${styles[`tabletQuizContainer_${theme}`]}`}>
+    <div className={`${applyTheme(styles, 'tabletQuizContainer')}`}>
       {/* Header */}
-      <div className={`${styles.tabletQuizHeader} ${styles[`tabletQuizHeader_${theme}`]}`}>
+      <div className={`${applyTheme(styles, 'tabletQuizHeader')}`}>
         <div className={styles.trackerTextContainer}>
-          <span className={`${styles.trackerText} ${styles[`trackerText_${theme}`]}`}>
+          <span className={`${applyTheme(styles, 'trackerText')}`}>
             {t('tracker_text')}
           </span>
         </div>
 
-        <button onClick={onExitClick} className={`${styles.tabletExitButton} ${styles[`tabletExitButton_${theme}`]}`}>
+        <button onClick={onExitClick} className={`${applyTheme(styles, 'tabletExitButton')}`}>
           <svg
             width="24"
             height="24"
@@ -112,7 +112,7 @@ const MobileView = ({
   onRetry,
   onExitClick
 }: SideTrackerProps) => {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t } = useLanguage();
 
   if (!trackerState) return null;
@@ -122,12 +122,12 @@ const MobileView = ({
       {/* Header */}
       <div className={styles.mobileQuizHeader}>
         <div className={styles.trackerTextContainer}>
-          <span className={`${styles.trackerText} ${styles[`trackerText_${theme}`]}`}>
+          <span className={`${applyTheme(styles, 'trackerText')}`}>
             {t('tracker_text')}
           </span>
         </div>
 
-        <button onClick={onExitClick} className={`${styles.mobileExitButton} ${styles[`mobileExitButton_${theme}`]}`}>
+        <button onClick={onExitClick} className={`${applyTheme(styles, 'mobileExitButton')}`}>
           <svg
             width="24"
             height="24"

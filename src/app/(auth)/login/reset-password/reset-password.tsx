@@ -35,7 +35,7 @@ interface ResetPasswordProps {
 
 // ================== Component ==================
 export default function ResetPassword(props: ResetPasswordProps) {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t } = useLanguage();
   const { resetPassword, resetPassword$, __meta } = useResetPassword();
   const nav = useNav();
@@ -194,10 +194,10 @@ export default function ResetPassword(props: ResetPasswordProps) {
 
   // ================== Render ==================
   return (
-    <main className={`${styles.container} ${styles[`container_${theme}`]}`}>
+    <main className={`${applyTheme(styles, 'container')}`}>
       {resetLoading && <div className={styles.resetLoadingOverlay} aria-hidden="true" />}
 
-      <header className={`${styles.header} ${styles[`header_${theme}`]}`}>
+      <header className={`${applyTheme(styles, 'header')}`}>
         <div className={styles.headerContent}>
           {canGoBack && (
             <button

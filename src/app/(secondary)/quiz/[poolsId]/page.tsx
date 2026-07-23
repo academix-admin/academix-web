@@ -71,7 +71,7 @@ type PendingSubmission = {
 // Main Quiz Component
 export default function Quiz({ params }: { params: Promise<{ poolsId: string }> }) {
   const { poolsId } = use(params);
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t, lang } = useLanguage();
   const { userData } = useUserData();
   const { replaceAndWait, pushAndWait } = useAwaitableRouter();
@@ -984,7 +984,7 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
           desktop: "750px"
         }}
         backdropOpacity={0.7}
-        className={`${styles.sideDrawer} ${styles[`sideDrawer_${theme}`]}`}
+        className={`${applyTheme(styles, 'sideDrawer')}`}
       >
         <SideTracker trackerState={getQuestionTrackers()} onRetry={handleRetry} onExitClick={() => setDrawerIsOpen(false)} />
       </SideDrawer>}

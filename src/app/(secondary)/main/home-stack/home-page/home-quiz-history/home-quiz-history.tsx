@@ -19,7 +19,7 @@ import { usePinnedState } from '@/hooks/pinned-state-hook';
 import { useNav } from '@academix-admin/navigation-stack';
 
 export default function HomeQuizHistory({ onStateChange }: ComponentStateProps) {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t, lang, tNode } = useLanguage();
   const nav = useNav();
   const { userData, userData$ } = useUserData();
@@ -246,7 +246,7 @@ useEffect(() => {
     <div className={styles.historyContainer}>
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-        <h2 ref={pinnedRef} className={`${styles.historyTitle} ${styles[`historyTitle_${theme}`]}`} style={{ margin: 0 }}>
+        <h2 ref={pinnedRef} className={`${applyTheme(styles, 'historyTitle')}`} style={{ margin: 0 }}>
           {t('history_text')}
         </h2>
         <button
@@ -266,7 +266,7 @@ useEffect(() => {
           disabled={isRefreshing}
         >
           {isRefreshing ? (
-            <span className={`${styles.refreshSpinner} ${styles[`refreshSpinner_${theme}`]}`}></span>
+            <span className={`${applyTheme(styles, 'refreshSpinner')}`}></span>
           ) : (
             <svg
               width="20"
@@ -304,18 +304,18 @@ useEffect(() => {
 
             <div className={styles.historyItem}>
               <div className={styles.historyMain}>
-                <span className={`${styles.topicName} ${styles[`topicName_${theme}`]}`}>{quiz.topicsIdentity}</span>
+                <span className={`${applyTheme(styles, 'topicName')}`}>{quiz.topicsIdentity}</span>
                 <span className={styles.historyTime}>{formatDate(quiz.poolsMembersCreatedAt)}</span>
               </div>
 
-              <div className={`${styles.historyDetails} ${styles[`historyDetails_${theme}`]}`}>
+              <div className={`${applyTheme(styles, 'historyDetails')}`}>
                 <span>{formatTimeWithTranslation(quiz.poolsDuration)}</span>
                 <span>● {t('duration_text',{value: quiz.challengeQuestionCount})}</span>
               </div>
 
                 <div className={styles.historyDetailsBottom}>
 
-              <div className={`${styles.historyDetails} ${styles[`historyDetails_${theme}`]}`}>
+              <div className={`${applyTheme(styles, 'historyDetails')}`}>
                 {/* Rank */}
                 <span>
                   <svg className={styles.icon} fill="none" height="8" viewBox="0 0 8 8" width="8" xmlns="http://www.w3.org/2000/svg"> <path d="M0.0640625 0.596875C0.021875 0.534375 0 0.459375 0 0.384375C0 0.171875 0.171875 0 0.384375 0H2.09219C2.26719 0 2.43125 0.0921875 2.52031 0.242188L3.59063 2.025C2.8375 2.12031 2.16406 2.47188 1.6625 2.99219L0.0640625 0.596875ZM7.93437 0.596875L6.3375 2.99219C5.83594 2.47188 5.1625 2.12031 4.40938 2.025L5.47969 0.242188C5.57031 0.0921875 5.73281 0 5.90781 0H7.61562C7.82812 0 8 0.171875 8 0.384375C8 0.459375 7.97812 0.534375 7.93594 0.596875H7.93437ZM1.25 5.25C1.25 4.52065 1.53973 3.82118 2.05546 3.30546C2.57118 2.78973 3.27065 2.5 4 2.5C4.72935 2.5 5.42882 2.78973 5.94454 3.30546C6.46027 3.82118 6.75 4.52065 6.75 5.25C6.75 5.97935 6.46027 6.67882 5.94454 7.19454C5.42882 7.71027 4.72935 8 4 8C3.27065 8 2.57118 7.71027 2.05546 7.19454C1.53973 6.67882 1.25 5.97935 1.25 5.25ZM4.13125 3.76719C4.07812 3.65781 3.92344 3.65781 3.86875 3.76719L3.51875 4.47656C3.49687 4.52031 3.45625 4.55 3.40937 4.55625L2.625 4.67031C2.50469 4.6875 2.45781 4.83437 2.54375 4.92031L3.11094 5.47344C3.14531 5.50781 3.16094 5.55469 3.15313 5.60313L3.01875 6.38281C2.99844 6.50156 3.12344 6.59375 3.23125 6.5375L3.93125 6.16875C3.97344 6.14687 4.025 6.14687 4.06719 6.16875L4.76719 6.5375C4.875 6.59375 5 6.50312 4.97969 6.38281L4.84531 5.60313C4.8375 5.55625 4.85312 5.50781 4.8875 5.47344L5.45469 4.92031C5.54219 4.83594 5.49375 4.68906 5.37344 4.67031L4.59062 4.55625C4.54375 4.55 4.50156 4.51875 4.48125 4.47656L4.13125 3.76719Z" fill="#8500C4" /> </svg>
@@ -355,7 +355,7 @@ useEffect(() => {
                 </span>
                 </div>
                 {/* Amount */}
-                <span className={ quiz.poolsMembersPaidAmount < 0 ?  `${styles.crossText} ${styles[`crossText_${theme}`]}` : `${styles.earnings} ${styles[`earnings_${theme}`]}`}>
+                <span className={ quiz.poolsMembersPaidAmount < 0 ?  `${applyTheme(styles, 'crossText')}` : `${applyTheme(styles, 'earnings')}`}>
                     <svg className={styles.iconLarge} fill="none" height="98" viewBox="0 0 86 98" width="86" xmlns="http://www.w3.org/2000/svg"> <circle cx="43" cy="51" fill="#155B16" r="43" /> <circle cx="43" cy="51" fill="#249E27" r="40" /> <path d="M59.6494 46.5244V46.9512C59.6195 48.209 59.4847 49.5117 59.2451 50.8594C59.0205 52.207 58.6986 53.5547 58.2793 54.9023C57.86 56.25 57.3584 57.5827 56.7744 58.9004C56.1904 60.2181 55.5316 61.4759 54.7979 62.6738C54.0791 63.8867 53.3005 65.0173 52.4619 66.0654C51.6234 67.1286 50.7399 68.0645 49.8115 68.873L46.4648 66.9414C46.9889 66.0579 47.4606 65.0921 47.8799 64.0439C48.3141 63.0107 48.7035 61.9251 49.0479 60.7871C49.3923 59.6491 49.6842 58.4811 49.9238 57.2832C50.1784 56.0853 50.388 54.8949 50.5527 53.7119C50.7174 52.529 50.8372 51.3685 50.9121 50.2305C51.002 49.0775 51.0469 47.9844 51.0469 46.9512C51.0469 46.1426 51.0394 45.2292 51.0244 44.2109C51.0244 43.1777 50.9645 42.1296 50.8447 41.0664C50.7399 40.0033 50.5602 38.9701 50.3057 37.9668C50.0511 36.9486 49.6693 36.0426 49.1602 35.249C48.666 34.4554 48.0221 33.819 47.2285 33.3398C46.4499 32.8607 45.4766 32.6211 44.3086 32.6211C43.2754 32.6211 42.3844 32.8008 41.6357 33.1602C40.902 33.5046 40.2731 33.9762 39.749 34.5752C39.2399 35.1592 38.8281 35.8405 38.5137 36.6191C38.2142 37.3978 37.9746 38.2214 37.7949 39.0898C37.6302 39.9434 37.5179 40.8118 37.458 41.6953C37.4131 42.5638 37.3906 43.3874 37.3906 44.166V50.4326H47.0713V54.1387H37.3906V62H28.4736V45.5586C28.4736 43.2077 28.848 41.0215 29.5967 39C30.3454 36.9785 31.401 35.2266 32.7637 33.7441C34.1413 32.2467 35.7884 31.0788 37.7051 30.2402C39.6367 29.3867 41.7855 28.96 44.1514 28.96C45.7536 28.96 47.251 29.1921 48.6436 29.6562C50.0511 30.1055 51.3314 30.7344 52.4844 31.543C53.6374 32.3366 54.6631 33.2874 55.5615 34.3955C56.4749 35.4886 57.2311 36.6865 57.8301 37.9893C58.444 39.292 58.9082 40.6696 59.2227 42.1221C59.5371 43.5745 59.6794 45.042 59.6494 46.5244Z" fill="white" /> <rect fill="white" height="55" width="4" x="40" y="23.6075" /> </svg>
                         {formatAmount(quiz.poolsMembersPaidAmount)}
                 </span>
@@ -366,7 +366,7 @@ useEffect(() => {
       </div>
 
       { historyLoading && <div className={styles.moreSpinnerContainer}><span className={styles.moreSpinner}></span></div>}
-      { !historyLoading && quizHistoryData.length === 0 && <span className={`${styles.refreshContainer} ${styles[`refreshContainer_${theme}`]}`}>{t('history_empty')} <span role="button" onClick={refreshData} className={`${styles.refreshButton} ${styles[`refreshButton_${theme}`]}`}> {t('refresh')} </span></span>}
+      { !historyLoading && quizHistoryData.length === 0 && <span className={`${applyTheme(styles, 'refreshContainer')}`}>{t('history_empty')} <span role="button" onClick={refreshData} className={`${applyTheme(styles, 'refreshButton')}`}> {t('refresh')} </span></span>}
       { quizHistoryData.length > 0 && <div ref={loaderRef} className={styles.loadMoreSentinel}></div>}
 
     </div>

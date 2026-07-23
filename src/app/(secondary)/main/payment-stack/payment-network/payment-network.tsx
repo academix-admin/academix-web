@@ -24,7 +24,7 @@ interface NetworkItemProps {
 }
 
 const NetworkItem = ({ onClick, network, isSelected }: NetworkItemProps) => {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const getInitials = (text: string): string => {
     const words = text.trim().split(' ');
     if (words.length === 1) return words[0][0].toUpperCase();
@@ -33,7 +33,7 @@ const NetworkItem = ({ onClick, network, isSelected }: NetworkItemProps) => {
 
   return (
     <div
-      className={`${styles.networkItem} ${styles[`networkItem_${theme}`]} ${isSelected ? styles.selected : ''}`}
+      className={`${applyTheme(styles, 'networkItem')} ${isSelected ? styles.selected : ''}`}
       onClick={onClick}
       aria-label={`Select ${network.identity}`}
       role="button"
@@ -61,7 +61,7 @@ const NetworkItem = ({ onClick, network, isSelected }: NetworkItemProps) => {
 };
 
 export default function PaymentNetwork({ paymentMethodId, onNetworkSelect, scopeKey = 'payment_flow' }: PaymentNetworkProps) {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t, lang } = useLanguage();
   const { userData } = useUserData();
 
@@ -132,12 +132,12 @@ export default function PaymentNetwork({ paymentMethodId, onNetworkSelect, scope
 
   return (
     <div className={styles.experienceContainer}>
-      <h2 className={`${styles.experienceTitle} ${styles[`experienceTitle_${theme}`]}`}>
+      <h2 className={`${applyTheme(styles, 'experienceTitle')}`}>
         {t('payment_network_text')}
       </h2>
 
       <div className={styles.formGroup}>
-        <button onClick={openNetwork} className={`${styles.selectButton} ${styles[`selectButton_${theme}`]}`}>
+        <button onClick={openNetwork} className={`${applyTheme(styles, 'selectButton')}`}>
           {networkData ? (
             <div className={styles.selectedNetwork}>
               <div className={styles.networkImage}>
@@ -147,7 +147,7 @@ export default function PaymentNetwork({ paymentMethodId, onNetworkSelect, scope
                   <div className={styles.networkInitials}>{getInitials(networkData.identity)}</div>
                 )}
               </div>
-              <div className={`${styles.networkInfo} ${styles[`networkInfo_${theme}`]}`}>
+              <div className={`${applyTheme(styles, 'networkInfo')}`}>
                 <div className={styles.networkName}>{networkData.identity}</div>
               </div>
             </div>

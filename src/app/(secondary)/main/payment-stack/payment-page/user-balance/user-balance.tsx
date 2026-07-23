@@ -17,7 +17,7 @@ import { UserBalanceChangeEvent } from '@/lib/managers/UserBalanceManager';
 import CurrencySymbol from '@/components/CurrencySymbol/CurrencySymbol';
 
 export default function UserBalance({ onStateChange }: ComponentStateProps) {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t, lang, tNode } = useLanguage();
   const { userData } = useUserData();
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -159,7 +159,7 @@ export default function UserBalance({ onStateChange }: ComponentStateProps) {
 
   return (
     <div className={styles.experienceContainer}>
-      <h2 className={`${styles.experienceTitle} ${styles[`experienceTitle_${theme}`]}`}>
+      <h2 className={`${applyTheme(styles, 'experienceTitle')}`}>
         {t('payment_details')}
       </h2>
 

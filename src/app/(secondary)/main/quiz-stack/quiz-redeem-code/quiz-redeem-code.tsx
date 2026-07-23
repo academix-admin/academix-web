@@ -33,7 +33,7 @@ interface QuizRedeemCodeProps {
 
 const RedeemCodeCard: React.FC<{ redeemCode: RedeemCodeModel, onClick?: () => void, display?: boolean, onEdit?: () => void, onDelete?: () => void }> = ({ redeemCode, onClick, display = false, onEdit, onDelete }) => {
   const { t, lang } = useLanguage();
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { showToast, ToastComponent } = useTopViewer();
 
   const handleCopy = async (code: RedeemCodeModel) => {
@@ -164,7 +164,7 @@ const RedeemCodeView = ({
   onRedeemCodeSelect: (redeemCode: RedeemCodeModel | null) => void;
 }) => {
   const { t, tNode, lang } = useLanguage();
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { userData } = useUserData();
 
   const [isFormValid, setIsFormValid] = useState(false);
@@ -263,7 +263,7 @@ const RedeemCodeView = ({
           value={codeText}
           onChange={handleChange}
           placeholder="ACADEMIX"
-          className={`${styles.input} ${styles[`input_${theme}`]}`}
+          className={`${applyTheme(styles, 'input')}`}
           required
         />
       </div>
@@ -292,7 +292,7 @@ const RedeemCodeView = ({
 };
 
 export default function QuizRedeemCode({ onRedeemCodeSelect, onSkip, onRegisterOpen }: QuizRedeemCodeProps) {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t, lang } = useLanguage();
   const { userData } = useUserData();
   const [codeView, setCodeView] = useState(false);
@@ -479,10 +479,10 @@ export default function QuizRedeemCode({ onRedeemCodeSelect, onSkip, onRegisterO
     <div className={styles.experienceContainer}>
       <div className={styles.titleRowContainer}>
         <div role="button" onClick={toggleView} className={styles.titleContainer}>
-          <h2 className={`${styles.experienceTitle} ${styles[`experienceTitle_${theme}`]}`}>
+          <h2 className={`${applyTheme(styles, 'experienceTitle')}`}>
             {t('redeem_code_text')}
           </h2>
-          <h3 className={`${styles.experienceDesc} ${styles[`experienceDesc_${theme}`]}`}>
+          <h3 className={`${applyTheme(styles, 'experienceDesc')}`}>
             {t('option_to_redeem_code')}
           </h3>
         </div>

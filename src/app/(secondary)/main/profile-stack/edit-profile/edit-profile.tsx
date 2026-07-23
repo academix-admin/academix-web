@@ -43,7 +43,7 @@ const getSpecialCharacters = (value: string): string[] => {
 
 // Common edit button component
 const EditButton = ({ onClick }: { onClick: () => void }) => {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   
   return (
     <button
@@ -100,7 +100,7 @@ const ActionButtons = ({
 );
 
 const UserNameView = ({ onEditing }: ViewProps) => {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t, lang } = useLanguage();
   const { userData, userData$, __meta } = useUserData();
   const errorDialog = useDialog();
@@ -302,7 +302,7 @@ const UserNameView = ({ onEditing }: ViewProps) => {
 };
 
 const LanguageView = () => {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t } = useLanguage();
   const { userData, __meta } = useUserData();
 
@@ -326,7 +326,7 @@ const LanguageView = () => {
 };
 
 const CountryView = () => {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t } = useLanguage();
   const { userData, __meta } = useUserData();
 
@@ -360,7 +360,7 @@ const CountryView = () => {
 };
 
 const ReferredByView = () => {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t } = useLanguage();
   const { userData, __meta } = useUserData();
 
@@ -413,7 +413,7 @@ const ReferredByView = () => {
 };
 
 const TransactionView = () => {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t } = useLanguage();
   const nav = useNav();
   const { userData, __meta } = useUserData();
@@ -447,7 +447,7 @@ const TransactionView = () => {
 };
 
 const PhoneNumberView = ({ onEditing }: ViewProps) => {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t, lang } = useLanguage();
   const { userData, userData$, __meta } = useUserData();
   const errorDialog = useDialog();
@@ -598,7 +598,7 @@ const PhoneNumberView = ({ onEditing }: ViewProps) => {
 };
 
 const EmailView = ({ onEditing }: ViewProps) => {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t, lang } = useLanguage();
   const { userData, userData$, __meta } = useUserData();
   const errorDialog = useDialog();
@@ -726,7 +726,7 @@ const EmailView = ({ onEditing }: ViewProps) => {
 };
 
 const FullnameView = ({ onEditing }: ViewProps) => {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t, lang } = useLanguage();
   const { userData, userData$, __meta } = useUserData();
   const errorDialog = useDialog();
@@ -850,7 +850,7 @@ const FullnameView = ({ onEditing }: ViewProps) => {
 };
 
 const ImageView = ({ onEditing }: ViewProps) => {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t, lang } = useLanguage();
   const { userData, userData$, __meta } = useUserData();
   const errorDialog = useDialog();
@@ -1279,7 +1279,7 @@ const ImageView = ({ onEditing }: ViewProps) => {
 };
 
 export default function EditProfile() {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t, lang } = useLanguage();
   const nav = useNav();
   const { userData, userData$, __meta } = useUserData();
@@ -1327,8 +1327,8 @@ export default function EditProfile() {
   }, [userData, __meta.isHydrated, fetchedUserData, fetchUserData]);
 
   return (
-    <main className={`${styles.container} ${styles[`container_${theme}`]}`}>
-      <header className={`${styles.header} ${styles[`header_${theme}`]}`}>
+    <main className={`${applyTheme(styles, 'container')}`}>
+      <header className={`${applyTheme(styles, 'header')}`}>
         <div className={styles.headerContent}>
           <button
             className={styles.backButton}

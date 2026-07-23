@@ -189,6 +189,7 @@ const RoleSelector = ({
   onSelect: (role: string) => void;
   theme: string;
 }) => {
+  const { applyTheme } = useTheme();
   const roleSelectorRef = useRef<HTMLDivElement>(null);
 
   const scroll = (direction: 'left' | 'right') => {
@@ -201,7 +202,7 @@ const RoleSelector = ({
   return (
     <div className={styles.role_scroll_container}>
       <button
-        className={`${styles.scroll_button} ${styles[`scroll_button_${theme}`]}`}
+        className={`${applyTheme(styles, 'scroll_button')}`}
         onClick={() => scroll('left')}
         aria-label="Scroll roles left"
       >
@@ -222,7 +223,7 @@ const RoleSelector = ({
         ))}
       </div>
       <button
-        className={`${styles.scroll_button} ${styles[`scroll_button_${theme}`]}`}
+        className={`${applyTheme(styles, 'scroll_button')}`}
         onClick={() => scroll('right')}
         aria-label="Scroll roles right"
       >
@@ -235,7 +236,7 @@ const RoleSelector = ({
 };
 
 const OneVsOneView = ({ data, roles }: { data: CalculatorMode['1v1']; roles: string[] }) => {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const [selectedQuestion, setSelectedQuestion] = useState(data.questionOptions[0]);
   const [selectedRole, setSelectedRole] = useState('Roles.creator');
 
@@ -249,8 +250,8 @@ const OneVsOneView = ({ data, roles }: { data: CalculatorMode['1v1']; roles: str
   }
 
   return (
-    <div className={`${styles.card} ${styles[`card_${theme}`]}`}>
-      <h4 className={`${styles.revenue_role} ${styles[`revenue_role_${theme}`]}`}>Revenue Role</h4>
+    <div className={`${applyTheme(styles, 'card')}`}>
+      <h4 className={`${applyTheme(styles, 'revenue_role')}`}>Revenue Role</h4>
       <RoleSelector
         roles={roles}
         selectedRole={selectedRole}
@@ -299,17 +300,17 @@ const OneVsOneView = ({ data, roles }: { data: CalculatorMode['1v1']; roles: str
       </div>
 
       <div className={styles.matchup}>
-        <button className={`${styles.player_button} ${styles[`player_button_${theme}`]}`}>Player 1</button>
-        <span className={`${styles.vs} ${styles[`vs_${theme}`]}`}>vs</span>
-        <button className={`${styles.player_button} ${styles[`player_button_${theme}`]}`}>Player 2</button>
+        <button className={`${applyTheme(styles, 'player_button')}`}>Player 1</button>
+        <span className={`${applyTheme(styles, 'vs')}`}>vs</span>
+        <button className={`${applyTheme(styles, 'player_button')}`}>Player 2</button>
       </div>
-      <div className={`${styles.score} ${styles[`score_${theme}`]}`}>
+      <div className={`${applyTheme(styles, 'score')}`}>
         <span>{selectedQuestion.entryFees}</span>
         <span>+</span>
         <span>{selectedQuestion.entryFees}</span>
       </div>
 
-      <div className={`${styles.payout_breakdown} ${styles[`payout_breakdown_${theme}`]}`}>
+      <div className={`${applyTheme(styles, 'payout_breakdown')}`}>
         <div className={styles.payout_row}>
           <span>Winner:</span>
           <span className={styles.payout_value}>{selectedQuestion.winnerPayout}</span>
@@ -339,7 +340,7 @@ const OneVsOneView = ({ data, roles }: { data: CalculatorMode['1v1']; roles: str
 };
 
 const MultiplayerView = ({ data, roles }: { data: CalculatorMode['multiplayer']; roles: string[] }) => {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const [selectedChallenge, setSelectedChallenge] = useState(data.challengeOptions[0]);
   const [minPlayers, setMinPlayers] = useState(selectedChallenge.min);
   const [selectedRole, setSelectedRole] = useState('Roles.creator');
@@ -398,8 +399,8 @@ const MultiplayerView = ({ data, roles }: { data: CalculatorMode['multiplayer'];
   }
 
   return (
-    <div className={`${styles.card} ${styles[`card_${theme}`]}`}>
-      <h4 className={`${styles.revenue_role} ${styles[`revenue_role_${theme}`]}`}>Revenue Role</h4>
+    <div className={`${applyTheme(styles, 'card')}`}>
+      <h4 className={`${applyTheme(styles, 'revenue_role')}`}>Revenue Role</h4>
       <RoleSelector
         roles={roles}
         selectedRole={selectedRole}
@@ -447,12 +448,12 @@ const MultiplayerView = ({ data, roles }: { data: CalculatorMode['multiplayer'];
         </Swiper>
       </div>
 
-      <div className={`${styles.entry_fee} ${styles[`entry_fee_${theme}`]}`}>
+      <div className={`${applyTheme(styles, 'entry_fee')}`}>
         <strong>Entry Fee:</strong> {selectedChallenge.entryFee}
       </div>
 
       <div className={styles.slider_container}>
-        <label className={`${styles.slider_label} ${styles[`slider_label_${theme}`]}`}>Minimum Player: {minPlayers}</label>
+        <label className={`${applyTheme(styles, 'slider_label')}`}>Minimum Player: {minPlayers}</label>
         <input
           type="range"
           min={selectedChallenge.min}
@@ -462,12 +463,12 @@ const MultiplayerView = ({ data, roles }: { data: CalculatorMode['multiplayer'];
             setMinPlayers(Number(e.target.value));
             setCurrentPage(1);
           }}
-          className={`${styles.slider} ${styles[`slider_${theme}`]}`}
+          className={`${applyTheme(styles, 'slider')}`}
         />
       </div>
 
-      <div className={`${styles.payout_table} ${styles[`payout_table_${theme}`]}`}>
-        <div className={`${styles.table_header} ${styles[`table_header_${theme}`]}`}>
+      <div className={`${applyTheme(styles, 'payout_table')}`}>
+        <div className={`${applyTheme(styles, 'table_header')}`}>
           <span>#</span>
           <span>Rank</span>
           <span>Amount</span>
@@ -475,7 +476,7 @@ const MultiplayerView = ({ data, roles }: { data: CalculatorMode['multiplayer'];
         {paginatedRewards.map((payout, index) => (
           <div
             key={index}
-            className={`${styles.table_row} ${styles[`table_row_${theme}`]} ${
+            className={`${applyTheme(styles, 'table_row')} ${
               (currentPage - 1) * itemsPerPage + index  < moreRewards.winnersSize ? styles.top_winner : ''
             }`}
           >
@@ -489,7 +490,7 @@ const MultiplayerView = ({ data, roles }: { data: CalculatorMode['multiplayer'];
       {totalPages > 1 && (
         <div className={styles.pagination}>
           <button
-            className={`${styles.page_button} ${styles[`page_button_${theme}`]}`}
+            className={`${applyTheme(styles, 'page_button')}`}
             onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
             disabled={currentPage === 1}
           >
@@ -519,10 +520,10 @@ const MultiplayerView = ({ data, roles }: { data: CalculatorMode['multiplayer'];
             );
           })}
           {totalPages > 3 && currentPage < totalPages - 1 && (
-            <span className={`${styles.page_dots} ${styles[`page_dots_${theme}`]}`}>...</span>
+            <span className={`${applyTheme(styles, 'page_dots')}`}>...</span>
           )}
           <button
-            className={`${styles.page_button} ${styles[`page_button_${theme}`]}`}
+            className={`${applyTheme(styles, 'page_button')}`}
             onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
             disabled={currentPage === totalPages}
           >
@@ -531,7 +532,7 @@ const MultiplayerView = ({ data, roles }: { data: CalculatorMode['multiplayer'];
         </div>
       )}
 
-      <div className={`${styles.creator_info} ${styles[`creator_info_${theme}`]}`}>
+      <div className={`${applyTheme(styles, 'creator_info')}`}>
         {selectedRole != 'Roles.Reviewer' && <div className={styles.payout_row}>
           <span>{selectedRole}:</span>
           <span className={styles.payout_value}>{calculateCharge(selectedChallenge.entryFee,minPlayers, selectedChallenge.questions, selectedChallenge.roleRevenue[selectedRole] || 0, selectedChallenge.developmentCharge, selectedChallenge.creatorShare)} /question</span>
@@ -551,19 +552,19 @@ const MultiplayerView = ({ data, roles }: { data: CalculatorMode['multiplayer'];
 
 // Main Component
 export default function LandingAcademixCalculator() {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<'1v1' | 'multiplayer'>('1v1');
 
   return (
-    <div className={`${styles.lac_container} ${styles[`lac_container_${theme}`]}`}>
-      <h1 className={`${styles.title} ${styles[`title_${theme}`]}`}>Academix Calculator</h1>
-      <h4 className={`${styles.description} ${styles[`description_${theme}`]}`}>
+    <div className={`${applyTheme(styles, 'lac_container')}`}>
+      <h1 className={`${applyTheme(styles, 'title')}`}>Academix Calculator</h1>
+      <h4 className={`${applyTheme(styles, 'description')}`}>
         Academix uses a smart, scalable reward system that adjusts prize distribution based on the number of players in a quiz.
       </h4>
 
-      <div className={`${styles.lac_inner_container} ${styles[`lac_inner_container_${theme}`]}`}>
-        <h4 className={`${styles.game_mode} ${styles[`game_mode_${theme}`]}`}>Game Mode</h4>
+      <div className={`${applyTheme(styles, 'lac_inner_container')}`}>
+        <h4 className={`${applyTheme(styles, 'game_mode')}`}>Game Mode</h4>
         <div className={styles.tab_switcher}>
           <button
             className={`${styles.tab} ${activeTab === '1v1' ? styles.tab_active : ''} ${styles[`tab_${theme}`]}`}

@@ -12,7 +12,7 @@ import DialogCancel from '@/components/DialogCancel';
 interface QuizRuleAcceptanceProps {}
 
 export default function QuizRuleAcceptance({ }: QuizRuleAcceptanceProps) {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t, lang, tNode } = useLanguage();
 
   // Correctly destructure all values from useBottomController
@@ -37,7 +37,7 @@ export default function QuizRuleAcceptance({ }: QuizRuleAcceptanceProps) {
     <div
       tabIndex={0}
       onClick={handleAcceptanceClick}
-      className={`${styles.historyContainer} ${styles[`historyContainer_${theme}`]}`}>
+      className={`${applyTheme(styles, 'historyContainer')}`}>
       <div className={styles.textContent}>
         {tNode('review_rules_regulation', {
           rules: <strong>{t('rules_text').toLowerCase()}</strong>,

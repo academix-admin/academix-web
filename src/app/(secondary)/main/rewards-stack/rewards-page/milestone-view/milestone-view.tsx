@@ -17,7 +17,7 @@ import { useMissionData } from '@/lib/stacks/milestone-stack';
 import { useAchievementsData } from '@/lib/stacks/milestone-stack';
 
 export default function MilestoneView({ onStateChange }: ComponentStateProps) {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t, lang, tNode } = useLanguage();
   const { userData, userData$ } = useUserData();
   const nav = useNav();
@@ -120,7 +120,7 @@ export default function MilestoneView({ onStateChange }: ComponentStateProps) {
 
   return (
     <div className={styles.performanceContainer}>
-      <h2 className={`${styles.performanceTitle} ${styles[`performanceTitle_${theme}`]}`}>
+      <h2 className={`${applyTheme(styles, 'performanceTitle')}`}>
         {t('milestone_text')}
       </h2>
 
@@ -128,17 +128,17 @@ export default function MilestoneView({ onStateChange }: ComponentStateProps) {
         <div className={styles.performanceGrid}>
           {/* Mission Card */}
           <div
-            className={`${styles.performanceItem} ${styles[`performanceItem_${theme}`]}`}
+            className={`${applyTheme(styles, 'performanceItem')}`}
             onClick={handleMissionClick}
             style={{cursor: 'pointer'}}
           >
             <div className={styles.performanceContent}>
               <div className={styles.performanceValueContainer}>
                 <div className={styles.valueSection}>
-                  <span className={`${styles.performanceValue} ${styles[`performanceValue_${theme}`]}`}>
+                  <span className={`${applyTheme(styles, 'performanceValue')}`}>
                     {missionData.missionCompleted}/{missionData.missionCount}
                   </span>
-                  <span className={`${styles.performanceLabel} ${styles[`performanceLabel_${theme}`]}`}>
+                  <span className={`${applyTheme(styles, 'performanceLabel')}`}>
                     {t('missions_text').toUpperCase()}
                   </span>
                 </div>
@@ -161,17 +161,17 @@ export default function MilestoneView({ onStateChange }: ComponentStateProps) {
 
           {/* Achievement Card */}
           <div
-            className={`${styles.performanceItem} ${styles[`performanceItem_${theme}`]}`}
+            className={`${applyTheme(styles, 'performanceItem')}`}
             onClick={handleAchievementClick}
             style={{cursor: 'pointer'}}
           >
             <div className={styles.performanceContent}>
               <div className={styles.performanceValueContainer}>
                 <div className={styles.valueSection}>
-                  <span className={`${styles.performanceValue} ${styles[`performanceValue_${theme}`]}`}>
+                  <span className={`${applyTheme(styles, 'performanceValue')}`}>
                     {achievementsData.achievementsCompleted}/{achievementsData.achievementsCount}
                   </span>
-                  <span className={`${styles.performanceLabel} ${styles[`performanceLabel_${theme}`]}`}>
+                  <span className={`${applyTheme(styles, 'performanceLabel')}`}>
                     {t('achievements_text').toUpperCase()}
                   </span>
                 </div>

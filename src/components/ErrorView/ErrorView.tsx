@@ -13,7 +13,7 @@ export default function ErrorView({
   buttonText?: string | null;
   onButtonClick?: (() => void) | null;
 }) {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t } = useLanguage();
 
   return (
@@ -27,11 +27,11 @@ export default function ErrorView({
         />
       </div>
 
-      {text && <p className={`${styles.error_text} ${styles[`error_text_${theme}`]}`}>{text}</p>}
+      {text && <p className={`${applyTheme(styles, 'error_text')}`}>{text}</p>}
 
       {buttonText && onButtonClick && (
         <button
-          className={`${styles.action_button} ${styles[`action_button_${theme}`]}`}
+          className={`${applyTheme(styles, 'action_button')}`}
           onClick={onButtonClick}
         >
           {buttonText}

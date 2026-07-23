@@ -46,7 +46,7 @@ interface PaymentRedirectProps {
 }
 
 const PaymentRedirect: React.FC<PaymentRedirectProps> = ({ controller }) => {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t } = useLanguage();
 
   const handleOpenLink = useCallback(() => {
@@ -70,12 +70,12 @@ const PaymentRedirect: React.FC<PaymentRedirectProps> = ({ controller }) => {
 
   return (
     <div
-      className={`${styles.overlay} ${styles[`overlay_${theme}`]}`}
+      className={`${applyTheme(styles, 'overlay')}`}
       role="dialog"
       aria-modal="true"
       tabIndex={-1}
     >
-      <div className={`${styles.dialog} ${styles[`dialog_${theme}`]}`}>
+      <div className={`${applyTheme(styles, 'dialog')}`}>
         <h2 className={styles.title}>{t('payment_redirect_title')}</h2>
         <p className={styles.text}>{t('payment_redirect_text')}</p>
 

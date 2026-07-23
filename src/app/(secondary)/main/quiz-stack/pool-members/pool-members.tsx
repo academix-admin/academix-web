@@ -28,7 +28,7 @@ interface PoolMembersProps {
 
 const PoolMemberCard: React.FC<{ poolMember: PoolMemberModel }> = ({ poolMember }) => {
   const { t, lang } = useLanguage();
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const [imageError, setImageError] = useState(false);
 
    const getInitials = (text: string): string => {
@@ -41,7 +41,7 @@ const PoolMemberCard: React.FC<{ poolMember: PoolMemberModel }> = ({ poolMember 
 
   return (
     <div
-      className={`${styles.membersCard} ${styles[`membersCard_${theme}`]}`}
+      className={`${applyTheme(styles, 'membersCard')}`}
     >
       <div className={styles.cardContent}>
         {/* Pool Image/Initials */}
@@ -67,10 +67,10 @@ const PoolMemberCard: React.FC<{ poolMember: PoolMemberModel }> = ({ poolMember 
         {/* members Info */}
         <div className={styles.membersInfo}>
           <div className={styles.membersHeader}>
-            <h3 className={`${styles.membersTitle} ${styles[`membersTitle_${theme}`]}`}>
+            <h3 className={`${applyTheme(styles, 'membersTitle')}`}>
               {capitalize(poolMember.userDetails.userName)}
             </h3>
-            <span className={`${styles.membersDate} ${styles[`membersDate_${theme}`]}`}>
+            <span className={`${applyTheme(styles, 'membersDate')}`}>
               {poolMember.userDetails.rolesDetails.identity}
             </span>
           </div>
@@ -78,7 +78,7 @@ const PoolMemberCard: React.FC<{ poolMember: PoolMemberModel }> = ({ poolMember 
           {/* Creator Info */}
           <div className={styles.creatorInfo}>
             <div className={styles.creatorDetails}>
-              <span className={`${styles.creatorName} ${styles[`creatorName_${theme}`]}`}>
+              <span className={`${applyTheme(styles, 'creatorName')}`}>
                 {poolMember.userDetails.userUsername}
               </span>
             </div>
@@ -90,7 +90,7 @@ const PoolMemberCard: React.FC<{ poolMember: PoolMemberModel }> = ({ poolMember 
 };
 
 export default function PoolMembers(props: PoolMembersProps) {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t, lang } = useLanguage();
   const nav = useNav();
   const { poolsId } = props;
@@ -263,8 +263,8 @@ export default function PoolMembers(props: PoolMembersProps) {
     };
 
   return (
-    <main className={`${styles.container} ${styles[`container_${theme}`]}`}>
-      <header className={`${styles.header} ${styles[`header_${theme}`]}`}>
+    <main className={`${applyTheme(styles, 'container')}`}>
+      <header className={`${applyTheme(styles, 'header')}`}>
         <div className={styles.headerContent}>
           <button
             className={styles.backButton}

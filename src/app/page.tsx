@@ -18,11 +18,11 @@ import Payout from './(public)/payout/page';
 import Rates from './(public)/rates/page';
 
 export default function LandingPage() {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t } = useLanguage();
 
   return (
-    <div className={`${styles.landingContainer} ${styles[`landingContainer_${theme}`]}`}>
+    <div className={`${applyTheme(styles, 'landingContainer')}`}>
       <LandingHeader />
       <HeroLanding />
       <LandingAccounting />

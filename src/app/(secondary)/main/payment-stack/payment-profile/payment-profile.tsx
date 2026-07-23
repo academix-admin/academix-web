@@ -38,7 +38,7 @@ interface ProfileItemProps {
 
 
 const ProfileItem = ({ onClick, profile, methodType, isSelected }: ProfileItemProps) => {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t } = useLanguage();
 
   const buildProfileView = (profile: PaymentProfileModel, methodType: string) => {
@@ -128,7 +128,7 @@ const ProfileItem = ({ onClick, profile, methodType, isSelected }: ProfileItemPr
 
   return (
     <div
-      className={`${styles.profileItemContainer} ${styles[`profileItemContainer_${theme}`]} ${isSelected ? styles.selected : ''}`}
+      className={`${applyTheme(styles, 'profileItemContainer')} ${isSelected ? styles.selected : ''}`}
       onClick={onClick}
       role="button"
       tabIndex={0}
@@ -139,7 +139,7 @@ const ProfileItem = ({ onClick, profile, methodType, isSelected }: ProfileItemPr
 };
 
 export default function PaymentProfile({ profileType, methodId, methodType, onProfileSelect, onCreateProfile, scopeKey = 'payment_flow' }: PaymentProfileProps) {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t, lang } = useLanguage();
   const { userData } = useUserData();
 
@@ -370,12 +370,12 @@ const buildProfileView = (profile: PaymentProfileModel, methodType: string) => {
 
   return (
     <div className={styles.experienceContainer}>
-      <h2 className={`${styles.experienceTitle} ${styles[`experienceTitle_${theme}`]}`}>
+      <h2 className={`${applyTheme(styles, 'experienceTitle')}`}>
         {t('payment_profile_text')}
       </h2>
 
       <div className={styles.formGroup}>
-        <button onClick={openProfile} className={`${styles.selectButton} ${styles[`selectButton_${theme}`]}`}>
+        <button onClick={openProfile} className={`${applyTheme(styles, 'selectButton')}`}>
           {profileData ? (
              buildProfileView(profileData, methodType)
           ) : (

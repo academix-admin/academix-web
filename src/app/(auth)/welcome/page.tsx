@@ -12,7 +12,7 @@ import CachedLottie from '@/components/CachedLottie';
 
 
 export default function Welcome() {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t } = useLanguage();
   const router = useRouter();
   const [canGoBack, setCanGoBack] = useState(false);
@@ -22,9 +22,9 @@ export default function Welcome() {
   }, []);
 
   return (
-    <main className={`${styles.container} ${styles[`container_${theme}`]}`}>
+    <main className={`${applyTheme(styles, 'container')}`}>
 
-     <header className={`${styles.header} ${styles[`header_${theme}`]}`}>
+     <header className={`${applyTheme(styles, 'header')}`}>
              <div className={styles.headerContent}>
                {canGoBack && (
                  <button

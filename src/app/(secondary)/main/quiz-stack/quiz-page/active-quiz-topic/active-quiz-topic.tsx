@@ -41,7 +41,7 @@ interface LeaveQuizResponse {
 }
 
 export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t, lang, tNode } = useLanguage();
   const nav = useNav();
   const { userData, userData$, __meta } = useUserData();
@@ -401,7 +401,7 @@ interface CurrentQuizCardProps {
 }
 
 function CurrentQuizCard({ topic, getInitials, onClick, onLeave, showContinue }: CurrentQuizCardProps) {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t, tNode } = useLanguage();
   const [remainingTime, setRemainingTime] = useState<number>(0);
   const [imageError, setImageError] = useState(false);
@@ -585,7 +585,7 @@ function CurrentQuizCard({ topic, getInitials, onClick, onLeave, showContinue }:
   const displayTime = useMemo(() => formatQuizPoolStatusTime(status, remainingTime), [status, remainingTime, formatQuizPoolStatusTime]);
 
   return (
-    <div className={`${styles.quizContainer} ${styles[`quizContainer_${theme}`]}`} >
+    <div className={`${applyTheme(styles, 'quizContainer')}`} >
       <ToastComponent />
       <div className={`${styles.topicCard}`} onClick={onClick}>
         {/* Main Image with Overlay */}
@@ -736,8 +736,8 @@ function CurrentQuizCard({ topic, getInitials, onClick, onLeave, showContinue }:
         closeThreshold={0.2}
         zIndex={1000}
       >
-        <div className={`${styles.dialogContainer} ${styles[`dialogContainer_${theme}`]}`}>
-          <h3 className={`${styles.dialogTitle} ${styles[`dialogTitle_${theme}`]}`}>
+        <div className={`${applyTheme(styles, 'dialogContainer')}`}>
+          <h3 className={`${applyTheme(styles, 'dialogTitle')}`}>
             {t('scan_quiz_code') || 'Scan Quiz Code'}
           </h3>
 

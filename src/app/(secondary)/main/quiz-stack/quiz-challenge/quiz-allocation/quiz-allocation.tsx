@@ -5,14 +5,14 @@ import styles from './quiz-allocation.module.css';
 import { useLanguage } from '@/context/LanguageContext';
 
 export default function QuizAllocation() {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t, lang, tNode } = useLanguage();
 
 
   return (
     <div className={styles.historyContainer}>
 
-      <div className={`${styles.rewardInfo} ${styles[`rewardInfo_${theme}`]}`}>
+      <div className={`${applyTheme(styles, 'rewardInfo')}`}>
           {tNode('quiz_challenge_allocation',{
                 dwa: <strong>{t('dwa_text')}</strong>,
                 top: <strong>{t('top_text')}</strong>,

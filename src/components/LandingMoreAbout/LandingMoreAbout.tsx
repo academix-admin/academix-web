@@ -23,7 +23,7 @@ interface StepConfig {
 
 export default function LandingMoreAbout() {
   const { t } = useLanguage();
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
 
 
 
@@ -116,14 +116,14 @@ export default function LandingMoreAbout() {
 
   return (
     <div className={styles.container}>
-      <h1 className={`${styles.title} ${styles[`title_${theme}`]}`}>
+      <h1 className={`${applyTheme(styles, 'title')}`}>
         {t('what_academix_abt_part1')}{' '}
-        <span className={`${styles.academixText} ${styles[`academixText_${theme}`]}`}>
+        <span className={`${applyTheme(styles, 'academixText')}`}>
           {t('what_academix_abt_part2')}
         </span>{' '}
         {t('what_academix_abt_part3')}
       </h1>
-      <h4 className={`${styles.description} ${styles[`description_${theme}`]}`}>
+      <h4 className={`${applyTheme(styles, 'description')}`}>
               {t('what_academix_is_desc')}
             </h4>
       <div className={styles.stepsContainer}>

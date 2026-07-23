@@ -22,7 +22,7 @@ const NoRewardView = ({
       continueLoading: boolean;
 }) => {
   const { t, tNode, lang } = useLanguage();
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
 
 
   return (
@@ -59,7 +59,7 @@ const RewardView = ({
             continueLoading: boolean;
 }) => {
   const { t, tNode, lang } = useLanguage();
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { signup, signup$, __meta  } = useSignup();
 
   const [userNameState, setUserNameState] = useState('initial');
@@ -145,7 +145,7 @@ const onSearchClick = async () => {
 
                     {userNameState === 'exists' && (<div  className={styles.resultContainer}>
 
-                           <div className={styles.userNameContainer}> <span className={`${styles.userNameResult} ${styles[`userNameResult_${theme}`]}`}>{signup.referral?.users_username || 'null'} </span> <svg role="button" onClick={changeUsername} fill="none" height="15" viewBox="0 0 15 15" width="15" xmlns="http://www.w3.org/2000/svg">
+                           <div className={styles.userNameContainer}> <span className={`${applyTheme(styles, 'userNameResult')}`}>{signup.referral?.users_username || 'null'} </span> <svg role="button" onClick={changeUsername} fill="none" height="15" viewBox="0 0 15 15" width="15" xmlns="http://www.w3.org/2000/svg">
                                                                                                                                                                                                                <path clipRule="evenodd" d="M7.01434 2.646H1.7173C0.791151 2.646 0.0410156 3.43687 0.0410156 4.41109V13.2349C0.0410156 14.2099 0.791151 15 1.7173 15H10.9368C11.863 15 12.6131 14.2099 12.6131 13.2349V6.77622L9.33263 10.2297C9.04616 10.5343 8.67308 10.7448 8.26317 10.8331L6.01611 11.3065C4.54937 11.6148 3.25696 10.2539 3.55031 8.71049L3.99955 6.34453C4.08085 5.91784 4.28033 5.52532 4.57284 5.2178L7.01434 2.646Z"
                                                                                                                                                                                                                    fill="white"
                                                                                                                                                                                                                    fillRule="evenodd" />
@@ -158,7 +158,7 @@ const onSearchClick = async () => {
                         </div>)}
                     {userNameState != 'exists' && (<label htmlFor="username" className={styles.label}>{t('username_label')}</label>)}
                     {userNameState != 'exists' && (<div className={styles.usernameInputContainer}>
-                       <span className={`${styles.prefix} ${styles[`prefix_${theme}`]}`}>@</span>
+                       <span className={`${applyTheme(styles, 'prefix')}`}>@</span>
                        <input
                                                  autoFocus={userNameState === 'exists' ? false : true}
                                                  type="text"
@@ -175,13 +175,13 @@ const onSearchClick = async () => {
                        />
                    </div>)}
                                              {userNameState === 'wrongFormat' && (
-                                               <p className={`${styles.errorText} ${styles[`errorText_${theme}`]}`}>{t('username_wrong_format')}</p>
+                                               <p className={`${applyTheme(styles, 'errorText')}`}>{t('username_wrong_format')}</p>
                                              )}
                                              {userNameState === 'error' && (
-                                               <p className={`${styles.errorText} ${styles[`errorText_${theme}`]}`}>{t('username_error')}</p>
+                                               <p className={`${applyTheme(styles, 'errorText')}`}>{t('username_error')}</p>
                                              )}
                                              {userNameState === 'empty' && (
-                                               <p className={`${styles.errorText} ${styles[`errorText_${theme}`]}`}>{t('username_empty')}</p>
+                                               <p className={`${applyTheme(styles, 'errorText')}`}>{t('username_empty')}</p>
                                              )}
               <div className={styles.actionsRow}>
     <button
@@ -215,7 +215,7 @@ const onSearchClick = async () => {
 };
 
 export default function SignUpStep6() {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t, tNode, lang } = useLanguage();
   const { signup, signup$, __meta  } = useSignup();
   const nav = useNav();
@@ -259,10 +259,10 @@ export default function SignUpStep6() {
 
 
   return (
-    <main className={`${styles.container} ${styles[`container_${theme}`]}`}>
+    <main className={`${applyTheme(styles, 'container')}`}>
       {continueLoading && <div className={styles.continueLoadingOverlay} aria-hidden="true" />}
 
-      <header className={`${styles.header} ${styles[`header_${theme}`]}`}>
+      <header className={`${applyTheme(styles, 'header')}`}>
         <div className={styles.headerContent}>
           {canGoBack && (
             <button
@@ -311,8 +311,8 @@ export default function SignUpStep6() {
            <label htmlFor="referral" className={styles.label}>
                         {t('referral_optional')}
             </label>
-          <div className={`${styles.rewardSection} ${styles[`rewardSection_${theme}`]}`}>
-          <div className={`${styles.rewardInfo} ${styles[`rewardInfo_${theme}`]}`}>
+          <div className={`${applyTheme(styles, 'rewardSection')}`}>
+          <div className={`${applyTheme(styles, 'rewardInfo')}`}>
                 {tNode('referral_reward_info', {
                   amount: <strong>300</strong>,
                   threshold: <strong>1000</strong>

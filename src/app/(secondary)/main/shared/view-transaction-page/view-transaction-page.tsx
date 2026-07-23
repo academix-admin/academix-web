@@ -23,7 +23,7 @@ interface ViewTransactionProps {
 }
 
 export default function ViewTransactionPage(props: ViewTransactionProps) {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t, lang } = useLanguage();
   const nav = useNav();
   const isTop = nav.isTop();
@@ -535,8 +535,8 @@ export default function ViewTransactionPage(props: ViewTransactionProps) {
 
   if (!currentTransaction) {
     return (
-      <main className={`${styles.container} ${styles[`container_${theme}`]}`}>
-        <header className={`${styles.header} ${styles[`header_${theme}`]}`}>
+      <main className={`${applyTheme(styles, 'container')}`}>
+        <header className={`${applyTheme(styles, 'header')}`}>
           <div className={styles.headerContent}>
             <button
               className={styles.backButton}
@@ -617,8 +617,8 @@ export default function ViewTransactionPage(props: ViewTransactionProps) {
 
 
   return (
-    <main className={`${styles.container} ${styles[`container_${theme}`]}`}>
-      <header className={`${styles.header} ${styles[`header_${theme}`]}`}>
+    <main className={`${applyTheme(styles, 'container')}`}>
+      <header className={`${applyTheme(styles, 'header')}`}>
         <div className={styles.headerContent}>
           <button
             className={styles.backButton}
@@ -640,7 +640,7 @@ export default function ViewTransactionPage(props: ViewTransactionProps) {
             aria-label="Refresh transaction"
           >
             {isRefreshing ? (
-              <span className={`${styles.refreshSpinner} ${styles[`refreshSpinner_${theme}`]}`} />
+              <span className={`${applyTheme(styles, 'refreshSpinner')}`} />
             ) : (
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2" />
@@ -652,8 +652,8 @@ export default function ViewTransactionPage(props: ViewTransactionProps) {
 
       <div className={styles.innerBody}>
         {/* Transaction Card */}
-        <div className={`${styles.transactionCard} ${styles[`transactionCard_${theme}`]}`}>
-          <div className={`${styles.transactionTypeIcon} ${styles[`transactionTypeIcon_${theme}`]}`}>
+        <div className={`${applyTheme(styles, 'transactionCard')}`}>
+          <div className={`${applyTheme(styles, 'transactionTypeIcon')}`}>
             {getTransactionIcon(currentTransaction.transactionType)}
           </div>
           <div className={styles.transactionHeader}>
@@ -734,7 +734,7 @@ export default function ViewTransactionPage(props: ViewTransactionProps) {
         </div>
 
         {/* Transaction Details */}
-        <div className={`${styles.detailsCard} ${styles[`detailsCard_${theme}`]}`}>
+        <div className={`${applyTheme(styles, 'detailsCard')}`}>
           <h3 className={styles.detailsTitle}>{t('details_text')}</h3>
 
           <div className={styles.detailsGrid}>

@@ -46,12 +46,12 @@ const StatusBadge = ({ status, time, onRetry, canResubmit, questionId, questionS
   questionStatus?: string | null;
   options_selected: string[];
 }) => {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t } = useLanguage();
 
   if (status === 'loading') {
     return (
-      <div className={`${styles.statusLoading} ${styles[`statusLoading_${theme}`]}`}>
+      <div className={`${applyTheme(styles, 'statusLoading')}`}>
         <div className={styles.loadingSpinner}></div>
       </div>
     );
@@ -61,7 +61,7 @@ const StatusBadge = ({ status, time, onRetry, canResubmit, questionId, questionS
 
     return (
       <button
-        className={`${styles.retryButton} ${styles[`retryButton_${theme}`]} ${
+        className={`${applyTheme(styles, 'retryButton')} ${
           !canResubmit ? styles.retryButtonDisabled : ''
         }`}
         onClick={() => canResubmit && onRetry(questionId)}
@@ -74,11 +74,11 @@ const StatusBadge = ({ status, time, onRetry, canResubmit, questionId, questionS
 
   if (status === 'data') {
     return (
-      <div className={`${styles.statusCompleted} ${styles[`statusCompleted_${theme}`]}`}>
+      <div className={`${applyTheme(styles, 'statusCompleted')}`}>
         {options_selected.length > 0 && (
           <div className={styles.optionsSelected}>
             {options_selected.map((opt, i) => (
-              <span key={i} className={`${styles.optionChip} ${styles[`optionChip_${theme}`]}`}>{opt}</span>
+              <span key={i} className={`${applyTheme(styles, 'optionChip')}`}>{opt}</span>
             ))}
           </div>
         )}
@@ -108,7 +108,7 @@ const StatusBadge = ({ status, time, onRetry, canResubmit, questionId, questionS
           )}
         </div>
         {time && (
-          <div className={`${styles.timeBadge} ${styles[`timeBadge_${theme}`]}`}>
+          <div className={`${applyTheme(styles, 'timeBadge')}`}>
             <svg className={styles.timeIcon} viewBox="0 0 24 24" fill="currentColor">
               <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/>
             </svg>
@@ -144,14 +144,14 @@ const QuestionCard = ({
   questionStatus?: string | null;
   options_selected: string[];
 }) => {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t } = useLanguage();
 
   return (
-    <div className={`${styles.questionCard} ${styles[`questionCard_${theme}`]}`}>
+    <div className={`${applyTheme(styles, 'questionCard')}`}>
       <div className={styles.questionHeader}>
-        <div className={`${styles.questionText} ${styles[`questionText_${theme}`]}`}>
-          <span className={`${styles.questionNumber} ${styles[`questionNumber_${theme}`]}`}>
+        <div className={`${applyTheme(styles, 'questionText')}`}>
+          <span className={`${applyTheme(styles, 'questionNumber')}`}>
             {t('question_text_count', {count: index + 1})}
           </span>{" "}
           {showQuestion(question, status)}
@@ -184,7 +184,7 @@ export default function TrackerSection ({
   size?: 'mobile' | 'tablet' | 'web';
   containerClass: string;
 }) {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
 
   const gridClasses = {
     mobile: styles.mobileGrid,

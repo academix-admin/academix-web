@@ -253,7 +253,7 @@ const RewardView: React.FC<RewardViewProps> = ({ streak, onClaim, isClaiming, cl
 
 // Main Component
 export default function RewardsStreaks({ onStateChange }: ComponentStateProps) {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t, lang } = useLanguage();
   const { userData } = useUserData();
   const nav = useNav();
@@ -459,7 +459,7 @@ export default function RewardsStreaks({ onStateChange }: ComponentStateProps) {
         closeOnBackdrop={true}
         layoutProp={{ backgroundColor: theme === 'light' ? '#fff' : '#121212', margin: '16px 16px', titleColor: theme === 'light' ? '#1a1a1a' : '#fff' }}
       />
-      <h2 onClick={openRewardInfo} className={`${styles.dailyStreaksTitle} ${styles[`dailyStreaksTitle_${theme}`]}`}>
+      <h2 onClick={openRewardInfo} className={`${applyTheme(styles, 'dailyStreaksTitle')}`}>
         {t('streaks_text')}
         <div className={styles.infoIcon}>
           <svg width="100%" height="100%" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg" aria-label="Infos">

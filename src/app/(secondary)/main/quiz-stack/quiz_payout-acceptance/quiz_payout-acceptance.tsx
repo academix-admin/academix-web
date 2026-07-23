@@ -13,7 +13,7 @@ interface QuizPayoutAcceptanceProps {
 }
 
 export default function QuizPayoutAcceptance({ challengeId }: QuizPayoutAcceptanceProps) {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t, lang, tNode } = useLanguage();
 
   const [bottomViewerId, bottomController, bottomIsOpen, setBottomIsOpen, bottomRef] = useBottomController();
@@ -39,7 +39,7 @@ export default function QuizPayoutAcceptance({ challengeId }: QuizPayoutAcceptan
     <div 
       tabIndex={0}
       onClick={handleAcceptanceClick}
-      className={`${styles.historyContainer} ${styles[`historyContainer_${theme}`]}`}>
+      className={`${applyTheme(styles, 'historyContainer')}`}>
       <div className={styles.textContent}>
         {tNode('review_expected_payout', {
           expected_payout: <strong>{t('expected_payout')}</strong>

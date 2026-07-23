@@ -243,7 +243,7 @@ const Keypad: React.FC<KeypadProps> = ({
 
 
 export default function Otp() {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t, tNode, lang } = useLanguage();
   const nav = useNav();
   const isTop = nav.isTop();
@@ -295,10 +295,10 @@ export default function Otp() {
   }, [pinController.isProvided]);
 
   return (
-    <main className={`${styles.container} ${styles[`container_${theme}`]}`}>
+    <main className={`${applyTheme(styles, 'container')}`}>
       {(isRequesting || isLoading) && <div className={styles.loadingOverlay} aria-hidden="true" />}
 
-      <header className={`${styles.header} ${styles[`header_${theme}`]}`}>
+      <header className={`${applyTheme(styles, 'header')}`}>
         <div className={styles.headerContent}>
             <button
               className={styles.backButton}

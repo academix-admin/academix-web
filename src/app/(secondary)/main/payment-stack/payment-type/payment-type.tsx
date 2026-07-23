@@ -17,7 +17,7 @@
 // }
 //
 // export default function PaymentType({ onTopUp, onWithdraw, initialTopUp = false, initialWithdraw = false, modifyTopUp = true, modifyWithdraw = true }: PaymentTypeProps) {
-//   const { theme } = useTheme();
+//   const { theme, applyTheme } = useTheme();
 //   const { t, lang } = useLanguage();
 //
 //   const [ topUp , setTopUp ] = useState(initialTopUp);
@@ -45,12 +45,12 @@
 //
 //   return (
 //     <div className={styles.experienceContainer}>
-//       <h2 className={`${styles.experienceTitle} ${styles[`experienceTitle_${theme}`]}`}>
+//       <h2 className={`${applyTheme(styles, 'experienceTitle')}`}>
 //         {t('payment_type_text')}
 //       </h2>
 //
 //       <div className={styles.formGroup}>
-//         <div className={`${styles.selectButton} ${styles[`selectButton_${theme}`]}`}>
+//         <div className={`${applyTheme(styles, 'selectButton')}`}>
 //
 //         </div>
 //       </div>
@@ -75,7 +75,7 @@ interface PaymentTypeProps {
 }
 
 export default function PaymentType({ onTopUp, onWithdraw, initialTopUp = false, initialWithdraw = false, modifyTopUp = true, modifyWithdraw = true }: PaymentTypeProps) {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t, lang } = useLanguage();
 
   const [ topUp , setTopUp ] = useState(initialTopUp);
@@ -103,20 +103,20 @@ export default function PaymentType({ onTopUp, onWithdraw, initialTopUp = false,
 
   return (
     <div className={styles.experienceContainer}>
-      <h2 className={`${styles.experienceTitle} ${styles[`experienceTitle_${theme}`]}`}>
+      <h2 className={`${applyTheme(styles, 'experienceTitle')}`}>
         {t('payment_type_text')}
       </h2>
 
       <div className={styles.formGroup}>
         {/* Top Up Option */}
         <div
-          className={`${styles.selectButton} ${styles[`selectButton_${theme}`]} ${topUp ? styles.selectButton_active : ''}`}
+          className={`${applyTheme(styles, 'selectButton')} ${topUp ? styles.selectButton_active : ''}`}
           onClick={changeTopUp}
         >
           <div className={`${styles.switch} ${topUp ? styles.switch_active : ''} ${styles[`switch_${theme}`]}`}>
              <div className={`${styles.switchHandle} ${topUp ? styles.switchHandle_active : ''} ${styles[`switchHandle_${theme}`]}`} />
           </div>
-          <span className={`${styles.optionText} ${styles[`optionText_${theme}`]}`}>
+          <span className={`${applyTheme(styles, 'optionText')}`}>
             {t('top_up_text')}
           </span>
 
@@ -124,13 +124,13 @@ export default function PaymentType({ onTopUp, onWithdraw, initialTopUp = false,
 
         {/* Withdraw Option */}
         <div
-          className={`${styles.selectButton} ${styles[`selectButton_${theme}`]} ${withdraw ? styles.selectButton_active : ''}`}
+          className={`${applyTheme(styles, 'selectButton')} ${withdraw ? styles.selectButton_active : ''}`}
           onClick={changeWithdraw}
         >
           <div className={`${styles.switch} ${withdraw ? styles.switch_active : ''} ${styles[`switch_${theme}`]}`}>
             <div className={`${styles.switchHandle} ${withdraw ? styles.switchHandle_active : ''} ${styles[`switchHandle_${theme}`]}`} />
           </div>
-          <span className={`${styles.optionText} ${styles[`optionText_${theme}`]}`}>
+          <span className={`${applyTheme(styles, 'optionText')}`}>
             {t('withdraw_text')}
           </span>
         </div>

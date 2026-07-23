@@ -13,7 +13,7 @@ export default function NoResultsView({
   buttonText?: string | null;
   onButtonClick?: (() => void) | null;
 }) {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t } = useLanguage();
 
   return (
@@ -27,11 +27,11 @@ export default function NoResultsView({
         />
       </div>
 
-      {text && <p className={`${styles.no_results_text} ${styles[`no_results_text_${theme}`]}`}>{text}</p>}
+      {text && <p className={`${applyTheme(styles, 'no_results_text')}`}>{text}</p>}
 
       {buttonText && onButtonClick && (
         <button
-          className={`${styles.action_button} ${styles[`action_button_${theme}`]}`}
+          className={`${applyTheme(styles, 'action_button')}`}
           onClick={onButtonClick}
         >
           {buttonText}

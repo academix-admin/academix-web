@@ -63,7 +63,7 @@ const LEGAL_LINKS = [
 ];
 
 export default function LandingFooter() {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t } = useLanguage();
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -118,7 +118,7 @@ export default function LandingFooter() {
   };
 
   return (
-    <footer className={`${styles.footer} ${styles[`footer_${theme}`]}`}>
+    <footer className={`${applyTheme(styles, 'footer')}`}>
       <div className={styles.footerContainer}>
         <div className={styles.footerTop}>
           <div className={styles.brandSection}>
@@ -135,7 +135,7 @@ export default function LandingFooter() {
                 <a
                   key={social.name}
                   href={social.url}
-                  className={`${styles.socialLink} ${styles[`socialLink_${theme}`]}`}
+                  className={`${applyTheme(styles, 'socialLink')}`}
                   aria-label={social.name}
                 >
                   {social.icon}
@@ -151,7 +151,7 @@ export default function LandingFooter() {
                 <li key={link.key}>
                   <Link
                     href={link.href}
-                    className={`${styles.footerLink} ${styles[`footerLink_${theme}`]}`}
+                    className={`${applyTheme(styles, 'footerLink')}`}
                   >
                     {t(link.key)}
                   </Link>
@@ -167,7 +167,7 @@ export default function LandingFooter() {
                 <li key={link.key}>
                   <a
                     href={link.href}
-                    className={`${styles.footerLink} ${styles[`footerLink_${theme}`]}`}
+                    className={`${applyTheme(styles, 'footerLink')}`}
                   >
                     {t(link.key)}
                   </a>
@@ -183,7 +183,7 @@ export default function LandingFooter() {
               <input
                 type="email"
                 placeholder={t('sub_email_placeholder')}
-                className={`${styles.emailInput} ${styles[`emailInput_${theme}`]}`}
+                className={`${applyTheme(styles, 'emailInput')}`}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={isLoading}
@@ -191,7 +191,7 @@ export default function LandingFooter() {
               />
               <button
                 type="submit"
-                className={`${styles.subscribeButton} ${styles[`subscribeButton_${theme}`]}`}
+                className={`${applyTheme(styles, 'subscribeButton')}`}
                 disabled={isLoading}
               >
                 {isLoading ? <span className={styles.spinner}></span> : t('subscribe')}
@@ -209,7 +209,7 @@ export default function LandingFooter() {
               <a
                 key={link.key}
                 href={link.href}
-                className={`${styles.legalLink} ${styles[`legalLink_${theme}`]}`}
+                className={`${applyTheme(styles, 'legalLink')}`}
               >
                 {t(link.key)}
               </a>

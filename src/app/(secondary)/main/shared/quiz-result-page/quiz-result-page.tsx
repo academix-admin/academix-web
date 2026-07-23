@@ -95,7 +95,7 @@ const formatAmount = (amount: number): string => {
 
 // Podium Component
 const Podium = ({ members, viewType, currentUser }: PodiumProps) => {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t } = useLanguage();
 
   const topThree = members.filter((member: PoolMemberModel) => member.poolsMembersRank <= 3);
@@ -212,7 +212,7 @@ const Podium = ({ members, viewType, currentUser }: PodiumProps) => {
       {currentUser && currentUser.poolsMembersRank > 3 && (
         <div
           ref={overlayRef}
-          className={`${styles.currentUserCard} ${styles[`currentUserCard_${theme}`]}`}
+          className={`${applyTheme(styles, 'currentUserCard')}`}
         >
           <div className={styles.userInfo}>
             {viewType === 'rank' && <div className={styles.rankBadge}>{getRankText(currentUser.poolsMembersRank)}</div>}
@@ -256,7 +256,7 @@ const Podium = ({ members, viewType, currentUser }: PodiumProps) => {
                   <div className={styles.statFlex}>
                     <div className={styles.statItem}>
                       <svg className={styles.icon} fill="none" height="86" viewBox="0 0 86 98" width="86" xmlns="http://www.w3.org/2000/svg"> <circle cx="43" cy="51" fill="#155B16" r="43" /> <circle cx="43" cy="51" fill="#249E27" r="40" /> <path d="M59.6494 46.5244V46.9512C59.6195 48.209 59.4847 49.5117 59.2451 50.8594C59.0205 52.207 58.6986 53.5547 58.2793 54.9023C57.86 56.25 57.3584 57.5827 56.7744 58.9004C56.1904 60.2181 55.5316 61.4759 54.7979 62.6738C54.0791 63.8867 53.3005 65.0173 52.4619 66.0654C51.6234 67.1286 50.7399 68.0645 49.8115 68.873L46.4648 66.9414C46.9889 66.0579 47.4606 65.0921 47.8799 64.0439C48.3141 63.0107 48.7035 61.9251 49.0479 60.7871C49.3923 59.6491 49.6842 58.4811 49.9238 57.2832C50.1784 56.0853 50.388 54.8949 50.5527 53.7119C50.7174 52.529 50.8372 51.3685 50.9121 50.2305C51.002 49.0775 51.0469 47.9844 51.0469 46.9512C51.0469 46.1426 51.0394 45.2292 51.0244 44.2109C51.0244 43.1777 50.9645 42.1296 50.8447 41.0664C50.7399 40.0033 50.5602 38.9701 50.3057 37.9668C50.0511 36.9486 49.6693 36.0426 49.1602 35.249C48.666 34.4554 48.0221 33.819 47.2285 33.3398C46.4499 32.8607 45.4766 32.6211 44.3086 32.6211C43.2754 32.6211 42.3844 32.8008 41.6357 33.1602C40.902 33.5046 40.2731 33.9762 39.749 34.5752C39.2399 35.1592 38.8281 35.8405 38.5137 36.6191C38.2142 37.3978 37.9746 38.2214 37.7949 39.0898C37.6302 39.9434 37.5179 40.8118 37.458 41.6953C37.4131 42.5638 37.3906 43.3874 37.3906 44.166V50.4326H47.0713V54.1387H37.3906V62H28.4736V45.5586C28.4736 43.2077 28.848 41.0215 29.5967 39C30.3454 36.9785 31.401 35.2266 32.7637 33.7441C34.1413 32.2467 35.7884 31.0788 37.7051 30.2402C39.6367 29.3867 41.7855 28.96 44.1514 28.96C45.7536 28.96 47.251 29.1921 48.6436 29.6562C50.0511 30.1055 51.3314 30.7344 52.4844 31.543C53.6374 32.3366 54.6631 33.2874 55.5615 34.3955C56.4749 35.4886 57.2311 36.6865 57.8301 37.9893C58.444 39.292 58.9082 40.6696 59.2227 42.1221C59.5371 43.5745 59.6794 45.042 59.6494 46.5244Z" fill="white" /> <rect fill="white" height="55" width="4" x="40" y="23.6075" /> </svg>
-                      <span className={currentUser.poolsMembersPaidAmount < 0 ? `${styles.crossStat} ${styles[`crossStat_${theme}`]}` : ''}>{formatAmount(currentUser.poolsMembersPaidAmount)}</span>
+                      <span className={currentUser.poolsMembersPaidAmount < 0 ? `${applyTheme(styles, 'crossStat')}` : ''}>{formatAmount(currentUser.poolsMembersPaidAmount)}</span>
                     </div>
                   </div>
                 </div>
@@ -277,7 +277,7 @@ const PodiumStand = ({
   paddingBottom,
   borderRadiusStyle,
 }: PodiumStandProps) => {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t } = useLanguage();
 
   return (
@@ -287,7 +287,7 @@ const PodiumStand = ({
 
       {/* Username */}
       <div className={styles.standHeader}>
-        <div className={`${styles.username} ${styles[`username_${theme}`]}`}>
+        <div className={`${applyTheme(styles, 'username')}`}>
           {member.poolsMembersIsUser ? 'You' : member.userDetails.userUsername}
         </div>
       </div>
@@ -344,7 +344,7 @@ const PodiumStand = ({
 
             <div className={styles.rewardStat}>
               <svg className={styles.rewardIcon} fill="none" height="98" viewBox="0 0 86 98" width="86" xmlns="http://www.w3.org/2000/svg"> <circle cx="43" cy="51" fill="#155B16" r="43" /> <circle cx="43" cy="51" fill="#249E27" r="40" /> <path d="M59.6494 46.5244V46.9512C59.6195 48.209 59.4847 49.5117 59.2451 50.8594C59.0205 52.207 58.6986 53.5547 58.2793 54.9023C57.86 56.25 57.3584 57.5827 56.7744 58.9004C56.1904 60.2181 55.5316 61.4759 54.7979 62.6738C54.0791 63.8867 53.3005 65.0173 52.4619 66.0654C51.6234 67.1286 50.7399 68.0645 49.8115 68.873L46.4648 66.9414C46.9889 66.0579 47.4606 65.0921 47.8799 64.0439C48.3141 63.0107 48.7035 61.9251 49.0479 60.7871C49.3923 59.6491 49.6842 58.4811 49.9238 57.2832C50.1784 56.0853 50.388 54.8949 50.5527 53.7119C50.7174 52.529 50.8372 51.3685 50.9121 50.2305C51.002 49.0775 51.0469 47.9844 51.0469 46.9512C51.0469 46.1426 51.0394 45.2292 51.0244 44.2109C51.0244 43.1777 50.9645 42.1296 50.8447 41.0664C50.7399 40.0033 50.5602 38.9701 50.3057 37.9668C50.0511 36.9486 49.6693 36.0426 49.1602 35.249C48.666 34.4554 48.0221 33.819 47.2285 33.3398C46.4499 32.8607 45.4766 32.6211 44.3086 32.6211C43.2754 32.6211 42.3844 32.8008 41.6357 33.1602C40.902 33.5046 40.2731 33.9762 39.749 34.5752C39.2399 35.1592 38.8281 35.8405 38.5137 36.6191C38.2142 37.3978 37.9746 38.2214 37.7949 39.0898C37.6302 39.9434 37.5179 40.8118 37.458 41.6953C37.4131 42.5638 37.3906 43.3874 37.3906 44.166V50.4326H47.0713V54.1387H37.3906V62H28.4736V45.5586C28.4736 43.2077 28.848 41.0215 29.5967 39C30.3454 36.9785 31.401 35.2266 32.7637 33.7441C34.1413 32.2467 35.7884 31.0788 37.7051 30.2402C39.6367 29.3867 41.7855 28.96 44.1514 28.96C45.7536 28.96 47.251 29.1921 48.6436 29.6562C50.0511 30.1055 51.3314 30.7344 52.4844 31.543C53.6374 32.3366 54.6631 33.2874 55.5615 34.3955C56.4749 35.4886 57.2311 36.6865 57.8301 37.9893C58.444 39.292 58.9082 40.6696 59.2227 42.1221C59.5371 43.5745 59.6794 45.042 59.6494 46.5244Z" fill="white" /> <rect fill="white" height="55" width="4" x="40" y="23.6075" /> </svg>
-              <span className={member.poolsMembersPaidAmount < 0 ? `${styles.crossText} ${styles[`crossText_${theme}`]}` : styles.rewardText}>{formatAmount(member.poolsMembersPaidAmount)}</span>
+              <span className={member.poolsMembersPaidAmount < 0 ? `${applyTheme(styles, 'crossText')}` : styles.rewardText}>{formatAmount(member.poolsMembersPaidAmount)}</span>
             </div>
           </div>
         )}
@@ -355,14 +355,14 @@ const PodiumStand = ({
 
 // Participants List Component
 const ParticipantsList = ({ participants, viewType, layout }: ParticipantsListProps) => {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t } = useLanguage();
 
   if (layout === 'web') {
     return (
       <div className={styles.participantsGridWeb}>
         {participants.map((participant: PoolMemberModel) => (
-          <div key={participant.userDetails.userId} className={`${styles.participantCard} ${styles[`participantCard_${theme}`]}`}>
+          <div key={participant.userDetails.userId} className={`${applyTheme(styles, 'participantCard')}`}>
             <div className={styles.cardHeader}>
               {viewType === 'rank' && <div className={styles.rankPosition}>{getRankText(participant.poolsMembersRank)}</div>}
               {participant.userDetails.userImage ? (
@@ -405,7 +405,7 @@ const ParticipantsList = ({ participants, viewType, layout }: ParticipantsListPr
                 <div className={styles.statFlex}>
                   <div className={styles.stat}>
                     <svg className={styles.icon} fill="none" height="86" viewBox="0 0 86 98" width="86" xmlns="http://www.w3.org/2000/svg"> <circle cx="43" cy="51" fill="#155B16" r="43" /> <circle cx="43" cy="51" fill="#249E27" r="40" /> <path d="M59.6494 46.5244V46.9512C59.6195 48.209 59.4847 49.5117 59.2451 50.8594C59.0205 52.207 58.6986 53.5547 58.2793 54.9023C57.86 56.25 57.3584 57.5827 56.7744 58.9004C56.1904 60.2181 55.5316 61.4759 54.7979 62.6738C54.0791 63.8867 53.3005 65.0173 52.4619 66.0654C51.6234 67.1286 50.7399 68.0645 49.8115 68.873L46.4648 66.9414C46.9889 66.0579 47.4606 65.0921 47.8799 64.0439C48.3141 63.0107 48.7035 61.9251 49.0479 60.7871C49.3923 59.6491 49.6842 58.4811 49.9238 57.2832C50.1784 56.0853 50.388 54.8949 50.5527 53.7119C50.7174 52.529 50.8372 51.3685 50.9121 50.2305C51.002 49.0775 51.0469 47.9844 51.0469 46.9512C51.0469 46.1426 51.0394 45.2292 51.0244 44.2109C51.0244 43.1777 50.9645 42.1296 50.8447 41.0664C50.7399 40.0033 50.5602 38.9701 50.3057 37.9668C50.0511 36.9486 49.6693 36.0426 49.1602 35.249C48.666 34.4554 48.0221 33.819 47.2285 33.3398C46.4499 32.8607 45.4766 32.6211 44.3086 32.6211C43.2754 32.6211 42.3844 32.8008 41.6357 33.1602C40.902 33.5046 40.2731 33.9762 39.749 34.5752C39.2399 35.1592 38.8281 35.8405 38.5137 36.6191C38.2142 37.3978 37.9746 38.2214 37.7949 39.0898C37.6302 39.9434 37.5179 40.8118 37.458 41.6953C37.4131 42.5638 37.3906 43.3874 37.3906 44.166V50.4326H47.0713V54.1387H37.3906V62H28.4736V45.5586C28.4736 43.2077 28.848 41.0215 29.5967 39C30.3454 36.9785 31.401 35.2266 32.7637 33.7441C34.1413 32.2467 35.7884 31.0788 37.7051 30.2402C39.6367 29.3867 41.7855 28.96 44.1514 28.96C45.7536 28.96 47.251 29.1921 48.6436 29.6562C50.0511 30.1055 51.3314 30.7344 52.4844 31.543C53.6374 32.3366 54.6631 33.2874 55.5615 34.3955C56.4749 35.4886 57.2311 36.6865 57.8301 37.9893C58.444 39.292 58.9082 40.6696 59.2227 42.1221C59.5371 43.5745 59.6794 45.042 59.6494 46.5244Z" fill="white" /> <rect fill="white" height="55" width="4" x="40" y="23.6075" /> </svg>
-                    <span className={participant.poolsMembersPaidAmount < 0 ? `${styles.crossStat} ${styles[`crossStat_${theme}`]}` : ''}>{formatAmount(participant.poolsMembersPaidAmount)}</span>
+                    <span className={participant.poolsMembersPaidAmount < 0 ? `${applyTheme(styles, 'crossStat')}` : ''}>{formatAmount(participant.poolsMembersPaidAmount)}</span>
                   </div>
                 </div>
               </div>
@@ -420,7 +420,7 @@ const ParticipantsList = ({ participants, viewType, layout }: ParticipantsListPr
     return (
       <div className={styles.participantsGridTablet}>
         {participants.map((participant: PoolMemberModel) => (
-          <div key={participant.userDetails.userId} className={`${styles.participantCard} ${styles[`participantCard_${theme}`]}`}>
+          <div key={participant.userDetails.userId} className={`${applyTheme(styles, 'participantCard')}`}>
             <div className={styles.cardHeader}>
               {viewType === 'rank' && <div className={styles.rankPosition}>{getRankText(participant.poolsMembersRank)}</div>}
               {participant.userDetails.userImage ? (
@@ -461,7 +461,7 @@ const ParticipantsList = ({ participants, viewType, layout }: ParticipantsListPr
                 <div className={styles.statFlex}>
                   <div className={styles.stat}>
                     <svg className={styles.icon} fill="none" height="86" viewBox="0 0 86 98" width="86" xmlns="http://www.w3.org/2000/svg"> <circle cx="43" cy="51" fill="#155B16" r="43" /> <circle cx="43" cy="51" fill="#249E27" r="40" /> <path d="M59.6494 46.5244V46.9512C59.6195 48.209 59.4847 49.5117 59.2451 50.8594C59.0205 52.207 58.6986 53.5547 58.2793 54.9023C57.86 56.25 57.3584 57.5827 56.7744 58.9004C56.1904 60.2181 55.5316 61.4759 54.7979 62.6738C54.0791 63.8867 53.3005 65.0173 52.4619 66.0654C51.6234 67.1286 50.7399 68.0645 49.8115 68.873L46.4648 66.9414C46.9889 66.0579 47.4606 65.0921 47.8799 64.0439C48.3141 63.0107 48.7035 61.9251 49.0479 60.7871C49.3923 59.6491 49.6842 58.4811 49.9238 57.2832C50.1784 56.0853 50.388 54.8949 50.5527 53.7119C50.7174 52.529 50.8372 51.3685 50.9121 50.2305C51.002 49.0775 51.0469 47.9844 51.0469 46.9512C51.0469 46.1426 51.0394 45.2292 51.0244 44.2109C51.0244 43.1777 50.9645 42.1296 50.8447 41.0664C50.7399 40.0033 50.5602 38.9701 50.3057 37.9668C50.0511 36.9486 49.6693 36.0426 49.1602 35.249C48.666 34.4554 48.0221 33.819 47.2285 33.3398C46.4499 32.8607 45.4766 32.6211 44.3086 32.6211C43.2754 32.6211 42.3844 32.8008 41.6357 33.1602C40.902 33.5046 40.2731 33.9762 39.749 34.5752C39.2399 35.1592 38.8281 35.8405 38.5137 36.6191C38.2142 37.3978 37.9746 38.2214 37.7949 39.0898C37.6302 39.9434 37.5179 40.8118 37.458 41.6953C37.4131 42.5638 37.3906 43.3874 37.3906 44.166V50.4326H47.0713V54.1387H37.3906V62H28.4736V45.5586C28.4736 43.2077 28.848 41.0215 29.5967 39C30.3454 36.9785 31.401 35.2266 32.7637 33.7441C34.1413 32.2467 35.7884 31.0788 37.7051 30.2402C39.6367 29.3867 41.7855 28.96 44.1514 28.96C45.7536 28.96 47.251 29.1921 48.6436 29.6562C50.0511 30.1055 51.3314 30.7344 52.4844 31.543C53.6374 32.3366 54.6631 33.2874 55.5615 34.3955C56.4749 35.4886 57.2311 36.6865 57.8301 37.9893C58.444 39.292 58.9082 40.6696 59.2227 42.1221C59.5371 43.5745 59.6794 45.042 59.6494 46.5244Z" fill="white" /> <rect fill="white" height="55" width="4" x="40" y="23.6075" /> </svg>
-                    <span className={participant.poolsMembersPaidAmount < 0 ? `${styles.crossStat} ${styles[`crossStat_${theme}`]}` : ''}>{formatAmount(participant.poolsMembersPaidAmount)}</span>
+                    <span className={participant.poolsMembersPaidAmount < 0 ? `${applyTheme(styles, 'crossStat')}` : ''}>{formatAmount(participant.poolsMembersPaidAmount)}</span>
                   </div>
                 </div>
               </div>
@@ -476,7 +476,7 @@ const ParticipantsList = ({ participants, viewType, layout }: ParticipantsListPr
   return (
     <div className={styles.participantsList}>
       {participants.map((participant: PoolMemberModel, index: number) => (
-        <div key={participant.userDetails.userId} className={`${styles.participantItem} ${styles[`participantItem_${theme}`]}`}>
+        <div key={participant.userDetails.userId} className={`${applyTheme(styles, 'participantItem')}`}>
           {viewType === 'rank' ? (
             <div className={styles.rankViewItem}>
               {viewType === 'rank' && <div className={styles.rankPosition}>{getRankText(participant.poolsMembersRank)}</div>}
@@ -534,7 +534,7 @@ const ParticipantsList = ({ participants, viewType, layout }: ParticipantsListPr
                   <div className={styles.statFlex}>
                     <div className={styles.stat}>
                       <svg className={styles.icon} fill="none" height="86" viewBox="0 0 86 98" width="86" xmlns="http://www.w3.org/2000/svg"> <circle cx="43" cy="51" fill="#155B16" r="43" /> <circle cx="43" cy="51" fill="#249E27" r="40" /> <path d="M59.6494 46.5244V46.9512C59.6195 48.209 59.4847 49.5117 59.2451 50.8594C59.0205 52.207 58.6986 53.5547 58.2793 54.9023C57.86 56.25 57.3584 57.5827 56.7744 58.9004C56.1904 60.2181 55.5316 61.4759 54.7979 62.6738C54.0791 63.8867 53.3005 65.0173 52.4619 66.0654C51.6234 67.1286 50.7399 68.0645 49.8115 68.873L46.4648 66.9414C46.9889 66.0579 47.4606 65.0921 47.8799 64.0439C48.3141 63.0107 48.7035 61.9251 49.0479 60.7871C49.3923 59.6491 49.6842 58.4811 49.9238 57.2832C50.1784 56.0853 50.388 54.8949 50.5527 53.7119C50.7174 52.529 50.8372 51.3685 50.9121 50.2305C51.002 49.0775 51.0469 47.9844 51.0469 46.9512C51.0469 46.1426 51.0394 45.2292 51.0244 44.2109C51.0244 43.1777 50.9645 42.1296 50.8447 41.0664C50.7399 40.0033 50.5602 38.9701 50.3057 37.9668C50.0511 36.9486 49.6693 36.0426 49.1602 35.249C48.666 34.4554 48.0221 33.819 47.2285 33.3398C46.4499 32.8607 45.4766 32.6211 44.3086 32.6211C43.2754 32.6211 42.3844 32.8008 41.6357 33.1602C40.902 33.5046 40.2731 33.9762 39.749 34.5752C39.2399 35.1592 38.8281 35.8405 38.5137 36.6191C38.2142 37.3978 37.9746 38.2214 37.7949 39.0898C37.6302 39.9434 37.5179 40.8118 37.458 41.6953C37.4131 42.5638 37.3906 43.3874 37.3906 44.166V50.4326H47.0713V54.1387H37.3906V62H28.4736V45.5586C28.4736 43.2077 28.848 41.0215 29.5967 39C30.3454 36.9785 31.401 35.2266 32.7637 33.7441C34.1413 32.2467 35.7884 31.0788 37.7051 30.2402C39.6367 29.3867 41.7855 28.96 44.1514 28.96C45.7536 28.96 47.251 29.1921 48.6436 29.6562C50.0511 30.1055 51.3314 30.7344 52.4844 31.543C53.6374 32.3366 54.6631 33.2874 55.5615 34.3955C56.4749 35.4886 57.2311 36.6865 57.8301 37.9893C58.444 39.292 58.9082 40.6696 59.2227 42.1221C59.5371 43.5745 59.6794 45.042 59.6494 46.5244Z" fill="white" /> <rect fill="white" height="55" width="4" x="40" y="23.6075" /> </svg>
-                      <span className={participant.poolsMembersPaidAmount < 0 ? `${styles.crossStat} ${styles[`crossStat_${theme}`]}` : ''}>{formatAmount(participant.poolsMembersPaidAmount)}</span>
+                      <span className={participant.poolsMembersPaidAmount < 0 ? `${applyTheme(styles, 'crossStat')}` : ''}>{formatAmount(participant.poolsMembersPaidAmount)}</span>
                     </div>
                   </div>
                 </div>
@@ -549,11 +549,11 @@ const ParticipantsList = ({ participants, viewType, layout }: ParticipantsListPr
 
 // Tab Switcher Component
 const TabSwitcher = ({ viewType, setViewType, maxWidth }: TabSwitcherProps) => {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t } = useLanguage();
 
   return (
-    <div className={`${styles.tabSwitcher} ${styles[`tabSwitcher_${theme}`]}`}>
+    <div className={`${applyTheme(styles, 'tabSwitcher')}`}>
       <button
         className={`${styles.tab} ${viewType === 'rank' ? styles.tabActive : ''} ${styles[`tab_${theme}`]}`}
         onClick={() => setViewType('rank')}
@@ -581,7 +581,7 @@ const WebView = ({
   loaderRef,
   callPaginate
 }: ResultViewProps) => {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t } = useLanguage();
 
   const topThree = poolMembers.filter(member => member.poolsMembersRank <= 3);
@@ -638,7 +638,7 @@ const TabletView = ({
   loaderRef,
   callPaginate
 }: ResultViewProps) => {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t } = useLanguage();
 
   const topThree = poolMembers.filter(member => member.poolsMembersRank <= 3);
@@ -694,7 +694,7 @@ const MobileView = ({
   loaderRef,
   callPaginate
 }: ResultViewProps) => {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t } = useLanguage();
 
   const topThree = poolMembers.filter(member => member.poolsMembersRank <= 3);
@@ -741,7 +741,7 @@ const MobileView = ({
 
 
 export default function QuizResultPage(props: QuizResultProps) {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t, lang } = useLanguage();
   const nav = useNav();
   const { poolsId } = props;
@@ -947,8 +947,8 @@ export default function QuizResultPage(props: QuizResultProps) {
 
 
   return (
-    <main className={`${styles.container} ${styles[`container_${theme}`]}`}>
-      <header className={`${styles.header} ${styles[`header_${theme}`]}`}>
+    <main className={`${applyTheme(styles, 'container')}`}>
+      <header className={`${applyTheme(styles, 'header')}`}>
         <div className={styles.headerContent}>
           <button
             className={styles.backButton}

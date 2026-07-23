@@ -25,7 +25,7 @@ type AvailableQuizTopicsProps = ComponentStateProps & {
 };
 
 export default function AvailableQuizTopics({ onStateChange, pType }: AvailableQuizTopicsProps) {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t, lang, tNode } = useLanguage();
   const nav = useNav();
   const { userData, userData$ } = useUserData();
@@ -325,7 +325,7 @@ export default function AvailableQuizTopics({ onStateChange, pType }: AvailableQ
 
   return (
     <div className={styles.container}>
-      <h2 className={`${styles.title} ${styles[`title_${theme}`]}`}>
+      <h2 className={`${applyTheme(styles, 'title')}`}>
         {getTitle(pType)}
       </h2>
 
@@ -386,12 +386,13 @@ interface TopicCardProps {
 }
 
 function TopicCard({ topic, theme, getInitials, formatDate, onClick }: TopicCardProps) {
+  const { applyTheme } = useTheme();
   const [imageError, setImageError] = useState(false);
   const [userImageError, setUserImageError] = useState(false);
 
   return (
     <div
-      className={`${styles.topicCard} ${styles[`topicCard_${theme}`]}`}
+      className={`${applyTheme(styles, 'topicCard')}`}
       onClick={onClick}
       role="button"
     >
@@ -417,7 +418,7 @@ function TopicCard({ topic, theme, getInitials, formatDate, onClick }: TopicCard
         {/* Topic Info */}
         <div className={styles.topicInfo}>
           <div className={styles.topicHeader}>
-            <h3 className={`${styles.topicTitle} ${styles[`topicTitle_${theme}`]}`}>
+            <h3 className={`${applyTheme(styles, 'topicTitle')}`}>
               {capitalize(topic.topicsIdentity)}
             </h3>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -433,7 +434,7 @@ function TopicCard({ topic, theme, getInitials, formatDate, onClick }: TopicCard
                   {topic.quizPool.poolsLocale.toUpperCase()}
                 </span>
               )}
-              <span className={`${styles.topicDate} ${styles[`topicDate_${theme}`]}`}>
+              <span className={`${applyTheme(styles, 'topicDate')}`}>
                 {formatDate(topic.topicsCreatedAt)}
               </span>
             </div>
@@ -459,7 +460,7 @@ function TopicCard({ topic, theme, getInitials, formatDate, onClick }: TopicCard
             </div>
 
             <div className={styles.creatorDetails}>
-              <span className={`${styles.creatorName} ${styles[`creatorName_${theme}`]}`}>
+              <span className={`${applyTheme(styles, 'creatorName')}`}>
                 {topic.usernameText}
               </span>
             </div>

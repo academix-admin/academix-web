@@ -42,7 +42,7 @@ interface MissionContainerProps {
 
 
 const MissionCard: React.FC<{ mission: MissionModel, tab: string, handleCollected: () => void }> = ({ mission, tab, handleCollected }) => {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t, lang } = useLanguage();
   const { userData } = useUserData();
   const errorDialog = useDialog();
@@ -300,7 +300,7 @@ const MissionContainer: React.FC<MissionContainerProps> = ({
   handleCollected,
   onLoadMore 
 }) => {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t } = useLanguage();
 
   const loaderRef = useRef<HTMLDivElement | null>(null);
@@ -346,7 +346,7 @@ const MissionContainer: React.FC<MissionContainerProps> = ({
 };
 
 export default function MissionPage() {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t, lang } = useLanguage();
   const nav = useNav();
   const { userData } = useUserData();
@@ -559,10 +559,10 @@ export default function MissionPage() {
   };
 
   return (
-    <main className={`${styles.container} ${styles[`container_${theme}`]}`}>
+    <main className={`${applyTheme(styles, 'container')}`}>
 
 
-      <header className={`${styles.header} ${styles[`header_${theme}`]}`}>
+      <header className={`${applyTheme(styles, 'header')}`}>
         <div className={styles.headerContent}>
           <button
             className={styles.backButton}

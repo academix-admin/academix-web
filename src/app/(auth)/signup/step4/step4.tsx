@@ -21,10 +21,10 @@ interface GenderItemProps {
 }
 
 const GenderItem = ({ onClick, text }: GenderItemProps) => {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   return (
     <div
-      className={`${styles.item} ${styles[`item_${theme}`]}`}
+      className={`${applyTheme(styles, 'item')}`}
       onClick={onClick}
       aria-label={`Option ${text}`}
       role="button"
@@ -36,7 +36,7 @@ const GenderItem = ({ onClick, text }: GenderItemProps) => {
 };
 
 export default function SignUpStep4() {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t, lang } = useLanguage();
   const { signup, signup$, __meta } = useSignup();
   const nav = useNav();
@@ -138,10 +138,10 @@ export default function SignUpStep4() {
 
 
   return (
-    <main className={`${styles.container} ${styles[`container_${theme}`]}`}>
+    <main className={`${applyTheme(styles, 'container')}`}>
       {continueLoading && <div className={styles.continueLoadingOverlay} aria-hidden="true" />}
 
-      <header className={`${styles.header} ${styles[`header_${theme}`]}`}>
+      <header className={`${applyTheme(styles, 'header')}`}>
         <div className={styles.headerContent}>
           {canGoBack && (
             <button
@@ -192,7 +192,7 @@ export default function SignUpStep4() {
             </label>
             <button onClick={openBirthday} className={styles.select}> {formatBirthday(signup.birthday) || 'Select'} </button>
             {birthdayState === 'less' && (
-              <p className={`${styles.errorText} ${styles[`errorText_${theme}`]}`}>{t('date_less')}</p>
+              <p className={`${applyTheme(styles, 'errorText')}`}>{t('date_less')}</p>
             )}
           </div>
           <div className={styles.formGroup}>
@@ -233,9 +233,9 @@ export default function SignUpStep4() {
         closeThreshold={0.2}
         zIndex={1000}
       >
-        <div className={`${styles.dialogContainer} ${styles[`dialogContainer_${theme}`]}`}>
-          <div className={`${styles.dialogHeaderContainer} ${styles[`dialogHeaderContainer_${theme}`]}`}>
-            <h3 className={`${styles.dialogTitle} ${styles[`dialogTitle_${theme}`]}`}>SELECT BIRTHDAY DATE</h3>
+        <div className={`${applyTheme(styles, 'dialogContainer')}`}>
+          <div className={`${applyTheme(styles, 'dialogHeaderContainer')}`}>
+            <h3 className={`${applyTheme(styles, 'dialogTitle')}`}>SELECT BIRTHDAY DATE</h3>
           </div>
 
           <CustomScrollDatePicker
@@ -256,8 +256,8 @@ export default function SignUpStep4() {
             todayText={t('today_text')}
             yesterdayText={t('yesterday_text')}
           />
-          <div className={`${styles.dialogBottomContainer} ${styles[`dialogBottomContainer_${theme}`]}`}>
-            <button className={`${styles.selectButton} ${styles[`selectButton_${theme}`]}`} onClick={birthdayViewerController.close}>Select Date</button>
+          <div className={`${applyTheme(styles, 'dialogBottomContainer')}`}>
+            <button className={`${applyTheme(styles, 'selectButton')}`} onClick={birthdayViewerController.close}>Select Date</button>
           </div>
         </div>
       </BottomViewer>
@@ -279,10 +279,10 @@ export default function SignUpStep4() {
         closeThreshold={0.2}
         zIndex={1000}
       >
-        <div className={`${styles.dialogContainer} ${styles[`dialogContainer_${theme}`]}`}>
-          <div className={`${styles.dialogHeaderContainer} ${styles[`dialogHeaderContainer_${theme}`]}`}>
-            <h3 className={`${styles.dialogTitle} ${styles[`dialogTitle_${theme}`]}`}>SELECT YOUR GENDER</h3>
-            <div className={`${styles.itemContainer} ${styles[`itemContainer_${theme}`]}`} >
+        <div className={`${applyTheme(styles, 'dialogContainer')}`}>
+          <div className={`${applyTheme(styles, 'dialogHeaderContainer')}`}>
+            <h3 className={`${applyTheme(styles, 'dialogTitle')}`}>SELECT YOUR GENDER</h3>
+            <div className={`${applyTheme(styles, 'itemContainer')}`} >
               {genderList.map((gender, index) => (
                 <GenderItem
                   key={index}

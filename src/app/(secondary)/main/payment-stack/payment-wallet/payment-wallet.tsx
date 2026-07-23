@@ -39,7 +39,7 @@ interface WalletItemProps {
 }
 
 const WalletItem = ({ onClick, wallet, isSelected }: WalletItemProps) => {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
 
   const getInitials = (text: string): string => {
     const words = text.trim().split(' ');
@@ -49,7 +49,7 @@ const WalletItem = ({ onClick, wallet, isSelected }: WalletItemProps) => {
 
   return (
     <div
-      className={`${styles.walletItem} ${styles[`walletItem_${theme}`]} ${isSelected ? styles.selected : ''}`}
+      className={`${applyTheme(styles, 'walletItem')} ${isSelected ? styles.selected : ''}`}
       onClick={onClick}
       aria-label={`Select ${wallet.paymentWalletIdentity}`}
       role="button"
@@ -78,7 +78,7 @@ const WalletItem = ({ onClick, wallet, isSelected }: WalletItemProps) => {
 };
 
 export default function PaymentWallet({ profileType, onWalletData, onWalletAmount, entryMode = false, paymentWalletId, modify = true, scopeKey = 'payment_flow' }: PaymentWalletProps) {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t, lang } = useLanguage();
   const nav = useNav();
   const isTop = nav.isTop();
@@ -424,13 +424,13 @@ export default function PaymentWallet({ profileType, onWalletData, onWalletAmoun
 
   return (
     <div className={styles.experienceContainer}>
-      <h2 className={`${styles.experienceTitle} ${styles[`experienceTitle_${theme}`]}`}>
+      <h2 className={`${applyTheme(styles, 'experienceTitle')}`}>
         {t('payment_wallet_text')}
       </h2>
 
       {
        entryMode
-      ?<div className={`${styles.paymentWalletContainer} ${styles[`paymentWalletContainer_${theme}`]}`}>
+      ?<div className={`${applyTheme(styles, 'paymentWalletContainer')}`}>
         <div className={styles.walletHeader}>
           <div className={styles.walletImageContainer} onClick={switchPaymentMode}>
             {isFocused ? (
@@ -537,7 +537,7 @@ export default function PaymentWallet({ profileType, onWalletData, onWalletAmoun
           </div>
         </div>
       </div>
-       : <button onClick={openWallet} className={`${styles.selectButton} ${styles[`selectButton_${theme}`]}`}>
+       : <button onClick={openWallet} className={`${applyTheme(styles, 'selectButton')}`}>
           {walletData ? (
             <div className={styles.selectedMethod}>
               <div className={styles.methodImage}>
@@ -547,7 +547,7 @@ export default function PaymentWallet({ profileType, onWalletData, onWalletAmoun
                   <div className={styles.methodInitials}>{getInitials(walletData.paymentWalletIdentity)}</div>
                 )}
               </div>
-              <div className={`${styles.methodInfo} ${styles[`methodInfo_${theme}`]}`}>
+              <div className={`${applyTheme(styles, 'methodInfo')}`}>
                 <div className={styles.methodName}>{walletData.paymentWalletIdentity}</div>
                 <div className={styles.methodCountry}>{walletData.paymentWalletCurrency}</div>
               </div>

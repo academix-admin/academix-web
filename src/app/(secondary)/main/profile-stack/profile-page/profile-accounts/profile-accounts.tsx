@@ -8,7 +8,7 @@ import { ComponentStateProps } from '@/hooks/use-component-state';
 import { useNav } from "@academix-admin/navigation-stack";
 
 export default function ProfileAccounts({ onStateChange }: ComponentStateProps) {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t } = useLanguage();
     const nav = useNav();
     const isTop = nav.isTop();
@@ -86,16 +86,16 @@ export default function ProfileAccounts({ onStateChange }: ComponentStateProps) 
 
   return (
     <div className={styles.container}>
-      <h2 className={`${styles.title} ${styles[`title_${theme}`]}`}>
+      <h2 className={`${applyTheme(styles, 'title')}`}>
         {t('accounts_text')}
       </h2>
 
-      <div className={`${styles.accountsSection} ${styles[`accountsSection_${theme}`]}`}>
+      <div className={`${applyTheme(styles, 'accountsSection')}`}>
         <div className={styles.menuList}>
           {accountItems.map((item, index) => (
             <React.Fragment key={item.id}>
               <div
-                className={`${styles.menuItem} ${styles[`menuItem_${theme}`]}`}
+                className={`${applyTheme(styles, 'menuItem')}`}
                 onClick={() => handleItemClick(item.id)}
               >
                 <div className={styles.iconContainer}>

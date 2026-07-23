@@ -12,7 +12,7 @@ const LANGUAGE_FLAGS: Record<SupportedLang, string> = {
 
 export default function LanguageSelector() {
   const { lang, setLang } = useLanguage();
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -40,7 +40,7 @@ export default function LanguageSelector() {
   return (
     <div className={styles.container} ref={containerRef}>
       <button
-        className={`${styles.trigger} ${styles[`trigger_${theme}`]}`}
+        className={`${applyTheme(styles, 'trigger')}`}
         onClick={() => setIsOpen(!isOpen)}
         aria-label="Select language"
         aria-expanded={isOpen}
@@ -66,11 +66,11 @@ export default function LanguageSelector() {
       </button>
 
       {isOpen && (
-        <div className={`${styles.dropdown} ${styles[`dropdown_${theme}`]}`}>
+        <div className={`${applyTheme(styles, 'dropdown')}`}>
           {SUPPORTED_LANGUAGES.map((langOption) => (
             <button
               key={langOption}
-              className={`${styles.option} ${styles[`option_${theme}`]} ${
+              className={`${applyTheme(styles, 'option')} ${
                 lang === langOption ? styles.optionActive : ''
               }`}
               onClick={() => handleSelect(langOption)}

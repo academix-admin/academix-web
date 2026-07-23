@@ -12,13 +12,13 @@ interface QuizStatusInfoProps {
 }
 
 export default function QuizStatusInfo({ status }: QuizStatusInfoProps) {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t, tNode } = useLanguage();
 
 
   return (
     <div className={styles.experienceContainer}>
-      <h2 className={`${styles.details} ${styles[`details_${theme}`]}`}>
+      <h2 className={`${applyTheme(styles, 'details')}`}>
         ℹ️ {tNode('status_change_after_expiry',{status: <strong>{status}</strong>})}
       </h2>
     </div>

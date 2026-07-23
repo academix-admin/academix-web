@@ -21,23 +21,24 @@ function SecurityMenuItem({
   theme,
   showDivider = false,
 }: SecurityMenuItemProps) {
+  const { applyTheme } = useTheme();
   return (
     <>
       <div
-        className={`${styles.menuItem} ${styles[`menuItem_${theme}`]}`}
+        className={`${applyTheme(styles, 'menuItem')}`}
         onClick={onClick}
       >
         <div className={styles.iconContainer}>
           <div className={styles.iconBackground}>{icon}</div>
         </div>
 
-        <div className={`${styles.menuLabel} ${styles[`menuLabel_${theme}`]}`}>
+        <div className={`${applyTheme(styles, 'menuLabel')}`}>
           {label}
         </div>
 
         <div className={styles.menuArrow}>
           <svg
-            className={`${styles.arrow} ${styles[`arrow_${theme}`]}`}
+            className={`${applyTheme(styles, 'arrow')}`}
             xmlns="http://www.w3.org/2000/svg"
             width="9"
             height="15"
@@ -54,7 +55,7 @@ function SecurityMenuItem({
         </div>
       </div>
       {showDivider && (
-        <div className={`${styles.divider} ${styles[`divider_${theme}`]}`}></div>
+        <div className={`${applyTheme(styles, 'divider')}`}></div>
       )}
     </>
   );
@@ -62,7 +63,7 @@ function SecurityMenuItem({
 
 
 export default function SecurityPage() {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t } = useLanguage();
   const nav = useNav();
 
@@ -80,8 +81,8 @@ export default function SecurityPage() {
   }
 
   return (
-    <main className={`${styles.container} ${styles[`container_${theme}`]}`}>
-      <header className={`${styles.header} ${styles[`header_${theme}`]}`}>
+    <main className={`${applyTheme(styles, 'container')}`}>
+      <header className={`${applyTheme(styles, 'header')}`}>
         <div className={styles.headerContent}>
           <button
             className={styles.backButton}
@@ -101,7 +102,7 @@ export default function SecurityPage() {
       </header>
 
       <div className={styles.content}>
-          <div className={`${styles.securitySection} ${styles[`securitySection_${theme}`]}`}>
+          <div className={`${applyTheme(styles, 'securitySection')}`}>
             <div className={styles.menuList}>
               <SecurityMenuItem
                 label={t('change_pin')}

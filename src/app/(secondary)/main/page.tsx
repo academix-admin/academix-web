@@ -16,7 +16,7 @@ import Image from 'next/image';
 import { useUserData } from '@/lib/stacks/user-stack';
 
 const Main = () => {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t } = useLanguage();
   const [active, setActive] = useState('home-stack');
   const { userData, userData$, __meta } = useUserData();
@@ -92,7 +92,7 @@ const Main = () => {
   const borderColor = theme === 'light' ? "#e5e7eb" : "#2a2a2a";
 
   return (
-    <div className={`${styles.mainContainer} ${styles[`mainContainer_${theme}`]}`}>
+    <div className={`${applyTheme(styles, 'mainContainer')}`}>
       <div className={styles.contentWrapper}>
         <div className={styles.sidebarContainer}>
           <SideBar

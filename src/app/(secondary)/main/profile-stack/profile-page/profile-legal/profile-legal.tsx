@@ -8,7 +8,7 @@ import { ComponentStateProps } from '@/hooks/use-component-state';
 import { useNav } from "@academix-admin/navigation-stack";
 
 export default function ProfileAccounts({ onStateChange }: ComponentStateProps) {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t } = useLanguage();
     const nav = useNav();
     const isTop = nav.isTop();
@@ -58,16 +58,16 @@ export default function ProfileAccounts({ onStateChange }: ComponentStateProps) 
 
   return (
     <div className={styles.container}>
-      <h2 className={`${styles.title} ${styles[`title_${theme}`]}`}>
+      <h2 className={`${applyTheme(styles, 'title')}`}>
         {t('legal')}
       </h2>
 
-      <div className={`${styles.accountsSection} ${styles[`accountsSection_${theme}`]}`}>
+      <div className={`${applyTheme(styles, 'accountsSection')}`}>
         <div className={styles.menuList}>
           {contactItems.map((item, index) => (
             <React.Fragment key={item.id}>
               <div
-                className={`${styles.menuItem} ${styles[`menuItem_${theme}`]}`}
+                className={`${applyTheme(styles, 'menuItem')}`}
                 onClick={() => handleItemClick(item.id)}
               >
                 <div className={styles.iconContainer}>
@@ -76,11 +76,11 @@ export default function ProfileAccounts({ onStateChange }: ComponentStateProps) 
                   </div>
                 </div>
 
-                <div className={`${styles.menuLabel} ${styles[`menuLabel_${theme}`]}`}>{item.label}</div>
+                <div className={`${applyTheme(styles, 'menuLabel')}`}>{item.label}</div>
 
                 <div className={styles.menuArrow}>
                   <svg
-                    className={`${styles.arrow} ${styles[`arrow_${theme}`]}`}
+                    className={`${applyTheme(styles, 'arrow')}`}
                     xmlns="http://www.w3.org/2000/svg"
                     width="9"
                     height="15"
@@ -98,7 +98,7 @@ export default function ProfileAccounts({ onStateChange }: ComponentStateProps) 
               </div>
 
               {index < contactItems.length - 1 && (
-                <div className={`${styles.divider} ${styles[`divider_${theme}`]}`}></div>
+                <div className={`${applyTheme(styles, 'divider')}`}></div>
               )}
             </React.Fragment>
           ))}

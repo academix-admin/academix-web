@@ -8,7 +8,7 @@ import { useNav } from "@academix-admin/navigation-stack";
 import Help from '@/app/(public)/help/page';
 
 export default function HelpPage() {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t } = useLanguage();
   const nav = useNav();
 
@@ -17,8 +17,8 @@ export default function HelpPage() {
   };
 
   return (
-    <main className={`${styles.container} ${styles[`container_${theme}`]}`}>
-      <header className={`${styles.header} ${styles[`header_${theme}`]}`}>
+    <main className={`${applyTheme(styles, 'container')}`}>
+      <header className={`${applyTheme(styles, 'header')}`}>
         <div className={styles.headerContent}>
           <button className={styles.backButton} onClick={goBack} aria-label="Go back">
             <svg className={styles.backIcon} viewBox="0 0 16 22" fill="none" xmlns="http://www.w3.org/2000/svg">

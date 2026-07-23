@@ -25,10 +25,10 @@ interface LanguageItemProps {
 }
 
 const LanguageItem = ({ onClick, text, code }: LanguageItemProps) => {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   return (
     <div
-      className={`${styles.item} ${styles[`item_${theme}`]}`}
+      className={`${applyTheme(styles, 'item')}`}
       onClick={onClick}
       aria-label={`Option ${text}`}
       role="button"
@@ -36,7 +36,7 @@ const LanguageItem = ({ onClick, text, code }: LanguageItemProps) => {
     >
       <div className={styles.itemContent}>
         <span className={styles.itemText}>{text}</span>
-        <span className={`${styles.itemCode} ${styles[`itemCode_${theme}`]}`}>{code}</span>
+        <span className={`${applyTheme(styles, 'itemCode')}`}>{code}</span>
       </div>
     </div>
   );
@@ -51,10 +51,10 @@ interface CountryItemProps {
 }
 
 const CountryItem = ({ onClick, text, image, isoCode, phoneCode }: CountryItemProps) => {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   return (
     <div
-      className={`${styles.item} ${styles[`item_${theme}`]}`}
+      className={`${applyTheme(styles, 'item')}`}
       onClick={onClick}
       aria-label={`Option ${text}`}
       role="button"
@@ -72,7 +72,7 @@ const CountryItem = ({ onClick, text, image, isoCode, phoneCode }: CountryItemPr
         )}
         <div className={styles.countryInfo}>
           <span className={styles.itemText}>{text}</span>
-          <span className={`${styles.itemCode} ${styles[`itemCode_${theme}`]}`}>{isoCode} • {phoneCode}</span>
+          <span className={`${applyTheme(styles, 'itemCode')}`}>{isoCode} • {phoneCode}</span>
         </div>
       </div>
     </div>
@@ -80,7 +80,7 @@ const CountryItem = ({ onClick, text, image, isoCode, phoneCode }: CountryItemPr
 };
 
 export default function SignUpStep2() {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t, lang } = useLanguage();
   const { signup, signup$, __meta } = useSignup();
   const nav = useNav();
@@ -230,10 +230,10 @@ export default function SignUpStep2() {
   }, [countries, searchCountryQuery]);
 
   return (
-    <main className={`${styles.container} ${styles[`container_${theme}`]}`}>
+    <main className={`${applyTheme(styles, 'container')}`}>
       {continueLoading && <div className={styles.continueLoadingOverlay} aria-hidden="true" />}
 
-      <header className={`${styles.header} ${styles[`header_${theme}`]}`}>
+      <header className={`${applyTheme(styles, 'header')}`}>
         <div className={styles.headerContent}>
           {canGoBack && (
             <button
@@ -282,14 +282,14 @@ export default function SignUpStep2() {
             <label htmlFor="language" className={styles.label}>
               {t('language')}
             </label>
-            <p className={`${styles.fieldDescription} ${styles[`fieldDescription_${theme}`]}`}>{t('language_description')}</p>
+            <p className={`${applyTheme(styles, 'fieldDescription')}`}>{t('language_description')}</p>
             <button onClick={openLanguage} className={styles.select}> {signup.language?.language_identity || 'Select'} </button>
           </div>
           <div className={styles.formGroup}>
             <label htmlFor="country" className={styles.label}>
               {t('country')}
             </label>
-            <p className={`${styles.fieldDescription} ${styles[`fieldDescription_${theme}`]}`}>{t('country_description')}</p>
+            <p className={`${applyTheme(styles, 'fieldDescription')}`}>{t('country_description')}</p>
             <button onClick={openCountry} className={styles.select}> {signup.country?.country_identity || 'Select'} </button>
           </div>
           <button

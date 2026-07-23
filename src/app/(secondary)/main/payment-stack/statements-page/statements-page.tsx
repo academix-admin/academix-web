@@ -50,7 +50,7 @@ function getDateRangeFromPeriod(period: StatementPeriod): { from: string; to: st
 }
 
 export default function StatementsPage() {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t, lang } = useLanguage();
   const nav = useNav();
   const { userData } = useUserData();
@@ -209,9 +209,9 @@ export default function StatementsPage() {
   }, [userData, isFormValid, submitState, lang, resolvedEmail, resolvedDateRange, selectedFormat]);
 
   return (
-    <main className={`${styles.container} ${styles[`container_${theme}`]}`}>
+    <main className={`${applyTheme(styles, 'container')}`}>
 
-      <header className={`${styles.header} ${styles[`header_${theme}`]}`}>
+      <header className={`${applyTheme(styles, 'header')}`}>
         <div className={styles.headerContent}>
           <button
             className={styles.backButton}
@@ -233,14 +233,14 @@ export default function StatementsPage() {
 
         {/* ── Period selector ── */}
         <section className={styles.section}>
-          <h2 className={`${styles.sectionTitle} ${styles[`sectionTitle_${theme}`]}`}>
+          <h2 className={`${applyTheme(styles, 'sectionTitle')}`}>
             {t('select_period_text')}
           </h2>
           <div className={styles.periodGrid}>
             {PERIOD_OPTIONS.map((opt) => (
               <button
                 key={opt.value}
-                className={`${styles.periodChip} ${styles[`periodChip_${theme}`]} ${selectedPeriod === opt.value ? styles.periodChipActive : ''}`}
+                className={`${applyTheme(styles, 'periodChip')} ${selectedPeriod === opt.value ? styles.periodChipActive : ''}`}
                 onClick={() => setSelectedPeriod(opt.value)}
               >
                 {opt.label}
@@ -267,7 +267,7 @@ export default function StatementsPage() {
 
           {/* Summary pill */}
           {(resolvedDateRange.from && resolvedDateRange.to) && (
-            <div className={`${styles.summaryPill} ${styles[`summaryPill_${theme}`]}`}>
+            <div className={`${applyTheme(styles, 'summaryPill')}`}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
                 <line x1="16" y1="2" x2="16" y2="6" />
@@ -281,14 +281,14 @@ export default function StatementsPage() {
 
         {/* ── Format selector ── */}
         <section className={styles.section}>
-          <h2 className={`${styles.sectionTitle} ${styles[`sectionTitle_${theme}`]}`}>
+          <h2 className={`${applyTheme(styles, 'sectionTitle')}`}>
             {t('format_text')}
           </h2>
           <div className={styles.formatRow}>
             {(['pdf', 'csv'] as StatementFormat[]).map((fmt) => (
               <button
                 key={fmt}
-                className={`${styles.formatCard} ${styles[`formatCard_${theme}`]} ${selectedFormat === fmt ? styles.formatCardActive : ''}`}
+                className={`${applyTheme(styles, 'formatCard')} ${selectedFormat === fmt ? styles.formatCardActive : ''}`}
                 onClick={() => setSelectedFormat(fmt)}
               >
                 <div className={`${styles.formatIcon} ${selectedFormat === fmt ? styles.formatIconActive : ''}`}>
@@ -310,7 +310,7 @@ export default function StatementsPage() {
                   )}
                 </div>
                 <span className={styles.formatLabel}>{fmt.toUpperCase()}</span>
-                <span className={`${styles.formatDesc} ${styles[`formatDesc_${theme}`]}`}>
+                <span className={`${applyTheme(styles, 'formatDesc')}`}>
                   {fmt === 'pdf' ? t('pdf_desc_text') : t('csv_desc_text')}
                 </span>
               </button>
@@ -320,13 +320,13 @@ export default function StatementsPage() {
 
         {/* ── Delivery email ── */}
         <section className={styles.section}>
-          <h2 className={`${styles.sectionTitle} ${styles[`sectionTitle_${theme}`]}`}>
+          <h2 className={`${applyTheme(styles, 'sectionTitle')}`}>
             {t('delivery_email_text')}
           </h2>
 
           {/* Toggle for custom email */}
           <button
-            className={`${styles.toggleRow} ${styles[`toggleRow_${theme}`]}`}
+            className={`${applyTheme(styles, 'toggleRow')}`}
             onClick={() => {
               setUseCustomEmail((prev) => !prev);
               if (useCustomEmail) setEmailOverride('');
@@ -339,8 +339,8 @@ export default function StatementsPage() {
               </svg>
               <span className={styles.toggleLabel}>{t('send_to_different_email_text')}</span>
             </div>
-            <div className={`${styles.switch} ${styles[`switch_${theme}`]} ${useCustomEmail ? styles.switch_active : ''}`}>
-              <div className={`${styles.switchHandle} ${styles[`switchHandle_${theme}`]} ${useCustomEmail ? styles.switchHandle_active : ''}`} />
+            <div className={`${applyTheme(styles, 'switch')} ${useCustomEmail ? styles.switch_active : ''}`}>
+              <div className={`${applyTheme(styles, 'switchHandle')} ${useCustomEmail ? styles.switchHandle_active : ''}`} />
             </div>
           </button>
 
@@ -350,19 +350,19 @@ export default function StatementsPage() {
                 <label className={styles.label}>{t('email_label')}</label>
                 <input
                   type="email"
-                  className={`${styles.input} ${styles[`input_${theme}`]}`}
+                  className={`${applyTheme(styles, 'input')}`}
                   value={emailOverride}
                   onChange={(e) => setEmailOverride(e.target.value)}
                   placeholder={t('email_placeholder')}
                 />
                 {emailOverride && !isEmailValid(emailOverride) && (
-                  <p className={`${styles.errorText} ${styles[`errorText_${theme}`]}`}>
+                  <p className={`${applyTheme(styles, 'errorText')}`}>
                     {t('invalid_email_text')}
                   </p>
                 )}
               </div>
             ) : (
-              <div className={`${styles.emailDisplay} ${styles[`emailDisplay_${theme}`]}`}>
+              <div className={`${applyTheme(styles, 'emailDisplay')}`}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
                   <polyline points="22,6 12,13 2,6" />
@@ -449,9 +449,9 @@ export default function StatementsPage() {
         closeThreshold={0.2}
         zIndex={1000}
       >
-        <div className={`${styles.dialogContainer} ${styles[`dialogContainer_${theme}`]}`}>
-          <div className={`${styles.dialogHeaderContainer} ${styles[`dialogHeaderContainer_${theme}`]}`}>
-            <h3 className={`${styles.dialogTitle} ${styles[`dialogTitle_${theme}`]}`}>{t('select_from_date_text')}</h3>
+        <div className={`${applyTheme(styles, 'dialogContainer')}`}>
+          <div className={`${applyTheme(styles, 'dialogHeaderContainer')}`}>
+            <h3 className={`${applyTheme(styles, 'dialogTitle')}`}>{t('select_from_date_text')}</h3>
           </div>
           <CustomScrollDatePicker
             key={`from-date-${customTo || 'no-to'}`}
@@ -472,8 +472,8 @@ export default function StatementsPage() {
             todayText={t('today_text')}
             yesterdayText={t('yesterday_text')}
           />
-          <div className={`${styles.dialogBottomContainer} ${styles[`dialogBottomContainer_${theme}`]}`}>
-            <button className={`${styles.selectButton} ${styles[`selectButton_${theme}`]}`} onClick={fromDateViewerController.close}>{t('select_date_text')}</button>
+          <div className={`${applyTheme(styles, 'dialogBottomContainer')}`}>
+            <button className={`${applyTheme(styles, 'selectButton')}`} onClick={fromDateViewerController.close}>{t('select_date_text')}</button>
           </div>
         </div>
       </BottomViewer>
@@ -495,9 +495,9 @@ export default function StatementsPage() {
         closeThreshold={0.2}
         zIndex={1000}
       >
-        <div className={`${styles.dialogContainer} ${styles[`dialogContainer_${theme}`]}`}>
-          <div className={`${styles.dialogHeaderContainer} ${styles[`dialogHeaderContainer_${theme}`]}`}>
-            <h3 className={`${styles.dialogTitle} ${styles[`dialogTitle_${theme}`]}`}>{t('select_to_date_text')}</h3>
+        <div className={`${applyTheme(styles, 'dialogContainer')}`}>
+          <div className={`${applyTheme(styles, 'dialogHeaderContainer')}`}>
+            <h3 className={`${applyTheme(styles, 'dialogTitle')}`}>{t('select_to_date_text')}</h3>
           </div>
           <CustomScrollDatePicker
             key={`to-date-${customFrom || 'no-from'}`}
@@ -519,8 +519,8 @@ export default function StatementsPage() {
             todayText={t('today_text')}
             yesterdayText={t('yesterday_text')}
           />
-          <div className={`${styles.dialogBottomContainer} ${styles[`dialogBottomContainer_${theme}`]}`}>
-            <button className={`${styles.selectButton} ${styles[`selectButton_${theme}`]}`} onClick={toDateViewerController.close}>{t('select_date_text')}</button>
+          <div className={`${applyTheme(styles, 'dialogBottomContainer')}`}>
+            <button className={`${applyTheme(styles, 'selectButton')}`} onClick={toDateViewerController.close}>{t('select_date_text')}</button>
           </div>
         </div>
       </BottomViewer>

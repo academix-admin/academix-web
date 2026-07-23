@@ -35,7 +35,7 @@ type PublicQuizTopicsProps = ComponentStateProps & {
 };
 
 export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTopicsProps) {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t, lang, tNode } = useLanguage();
   const nav = useNav();
   const { userData, userData$ } = useUserData();
@@ -440,7 +440,7 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
 
   return (
     <div className={styles.container}>
-      <h2 className={`${styles.title} ${styles[`title_${theme}`]}`}>
+      <h2 className={`${applyTheme(styles, 'title')}`}>
         {getTitle(pType)}
       </h2>
       <div className={`${styles.scrollWrapper} ${filteredQuizModels.length <= 1 ? styles.scrollWrapperExpanded : ''}`}>
@@ -495,7 +495,7 @@ interface OpenQuizCardProps {
 }
 
 function OpenQuizCard({ topic, length, getInitials, onClick }: OpenQuizCardProps) {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t } = useLanguage();
   const [remainingTime, setRemainingTime] = useState<number>(0);
   const [imageError, setImageError] = useState(false);
@@ -595,7 +595,7 @@ function OpenQuizCard({ topic, length, getInitials, onClick }: OpenQuizCardProps
   const quizCode = topic.quizPool?.poolsCode || '';
 
   return (
-    <div className={`${styles.quizContainer} ${styles[`quizContainer_${theme}`]} ${length > 1 ? '' : styles.expanded}`}>
+    <div className={`${applyTheme(styles, 'quizContainer')} ${length > 1 ? '' : styles.expanded}`}>
       <ToastComponent />
       <div className={`${styles.topicCard} ${length > 1 ? '' : styles.expanded}`}>
         {/* Main Image with Overlay */}
@@ -687,8 +687,8 @@ function OpenQuizCard({ topic, length, getInitials, onClick }: OpenQuizCardProps
         closeThreshold={0.2}
         zIndex={1000}
       >
-        <div className={`${styles.dialogContainer} ${styles[`dialogContainer_${theme}`]}`}>
-          <h3 className={`${styles.dialogTitle} ${styles[`dialogTitle_${theme}`]}`}>
+        <div className={`${applyTheme(styles, 'dialogContainer')}`}>
+          <h3 className={`${applyTheme(styles, 'dialogTitle')}`}>
             {t('scan_quiz_code') || 'Scan Quiz Code'}
           </h3>
 

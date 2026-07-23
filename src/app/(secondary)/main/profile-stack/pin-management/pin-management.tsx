@@ -24,7 +24,7 @@ const validatePin = (value: string | null | number) => {
 
 // ================== Component ==================
 export default function PinManagement(props: { isNew: boolean, returnGroup?: string | undefined }) {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t } = useLanguage();
   const { otpTimer, otpTimer$ } = useOtp();
   const { userData } = useUserData();
@@ -244,10 +244,10 @@ export default function PinManagement(props: { isNew: boolean, returnGroup?: str
   };
 
   return (
-    <main className={`${styles.container} ${styles[`container_${theme}`]}`}>
+    <main className={`${applyTheme(styles, 'container')}`}>
       {(isLoading) && <div className={styles.loadingOverlay} aria-hidden="true" />}
 
-      <header className={`${styles.header} ${styles[`header_${theme}`]}`}>
+      <header className={`${applyTheme(styles, 'header')}`}>
         <div className={styles.headerContent}>
           <button
             className={styles.backButton}
