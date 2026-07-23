@@ -11,6 +11,7 @@ import { getLastNameOrSingle, capitalize } from '@/utils/textUtils';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useSignup, Referral} from '@/lib/stacks/signup-stack';
 import { useNav } from "@academix-admin/navigation-stack";
+import { Header } from '@academix-admin/header';
 
 const NoRewardView = ({
   onRewardClick,
@@ -262,26 +263,13 @@ export default function SignUpStep6() {
     <main className={`${applyTheme(styles, 'container')}`}>
       {continueLoading && <div className={styles.continueLoadingOverlay} aria-hidden="true" />}
 
-      <header className={`${applyTheme(styles, 'header')}`}>
-        <div className={styles.headerContent}>
-          {canGoBack && (
-            <button
-              className={styles.backButton}
-              onClick={() => nav.pop()}
-              aria-label="Go back"
-              disabled={continueLoading}
-            >
-              <svg className={styles.backIcon} viewBox="0 0 16 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path
-                  d="M10.0424 0.908364L1.01887 8.84376C0.695893 9.12721 0.439655 9.46389 0.264823 9.83454C0.089992 10.2052 0 10.6025 0 11.0038C0 11.405 0.089992 11.8024 0.264823 12.173C0.439655 12.5437 0.695893 12.8803 1.01887 13.1638L10.0424 21.0992C12.2373 23.0294 16 21.6507 16 18.9239V3.05306C16 0.326231 12.2373 -1.02187 10.0424 0.908364Z"
-                  fill="currentColor"
-                />
-              </svg>
-            </button>
-          )}
-
-          <h1 className={styles.title}>{t('sign_up')}</h1>
-
+      <Header
+        title={t('sign_up')}
+        theme={theme}
+        showBack={canGoBack}
+        onBack={() => nav.pop()}
+        backDisabled={continueLoading}
+        rightContent={(
           <Link className={styles.logoContainer} href="/">
             <Image
               className={styles.logo}
@@ -292,8 +280,8 @@ export default function SignUpStep6() {
               priority
             />
           </Link>
-        </div>
-      </header>
+        )}
+      />
 
       <div className={styles.innerBody}>
         <CachedLottie
