@@ -23,6 +23,7 @@ import { StateStack } from '@academix-admin/state-stack';
 import { useRedeemCodeModel } from '@/lib/stacks/redeem-code-stack';
 import { useTopViewer } from '@/lib/TopViewer';
 import { copyToClipboard } from '@/utils/clipboard';
+import { Header } from '@academix-admin/header';
 
 
 const RedeemCodeCard: React.FC<{ redeemCode: RedeemCodeModel }> = ({ redeemCode }) => {
@@ -134,7 +135,7 @@ const RedeemCodeCard: React.FC<{ redeemCode: RedeemCodeModel }> = ({ redeemCode 
 };
 
 export default function RedeemCodes() {
-  const { theme } = useTheme();
+  const { theme, applyTheme } = useTheme();
   const { t, lang } = useLanguage();
   const nav = useNav();
   const { userData, userData$ } = useUserData();
@@ -287,51 +288,37 @@ export default function RedeemCodes() {
   };
 
   return (
-    <main className={`${styles.container} ${styles[`container_${theme}`]}`}>
-      <header className={`${styles.header} ${styles[`header_${theme}`]}`}>
-        <div className={styles.headerContent}>
-          <button
-            className={styles.backButton}
-            onClick={goBack}
-            aria-label="Go back"
-          >
-            <svg className={styles.backIcon} viewBox="0 0 16 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path
-                d="M10.0424 0.908364L1.01887 8.84376C0.695893 9.12721 0.439655 9.46389 0.264823 9.83454C0.089992 10.2052 0 10.6025 0 11.0038C0 11.405 0.089992 11.8024 0.264823 12.173C0.439655 12.5437 0.695893 12.8803 1.01887 13.1638L10.0424 21.0992C12.2373 23.0294 16 21.6507 16 18.9239V3.05306C16 0.326231 12.2373 -1.02187 10.0424 0.908364Z"
-                fill="currentColor"
-              />
-            </svg>
-          </button>
-          <h1 className={styles.title}>{t('redeem_codes')}</h1>
-          <button
-            className={styles.refreshButton}
-            onClick={refreshData}
-            disabled={isRefreshing}
-            aria-label="Refresh"
-          >
-            {isRefreshing ? (
-              <span className={styles.refreshSpinner} />
-            ) : (
+    <main className={applyTheme(styles, 'container')}>
+      <Header
+        title={t('redeem_codes')}
+        theme={theme}
+        onBack={goBack}
+        actions={[
+          {
+            icon: (
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2" />
               </svg>
-            )}
-          </button>
-          <button
-            className={styles.backButton}
-            onClick={() => nav.push('giveback_page')}
-            aria-label="Give backs"
-          >
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M20 12V22H4V12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M22 7H2V12H22V7Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M12 22V7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M12 7H7.5C6.83696 7 6.20107 6.73661 5.73223 6.26777C5.26339 5.79893 5 5.16304 5 4.5C5 3.83696 5.26339 3.20107 5.73223 2.73223C6.20107 2.26339 6.83696 2 7.5 2C11 2 12 7 12 7Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M12 7H16.5C17.163 7 17.7989 6.73661 18.2678 6.26777C18.7366 5.79893 19 5.16304 19 4.5C19 3.83696 18.7366 3.20107 18.2678 2.73223C17.7989 2.26339 17.163 2 16.5 2C13 2 12 7 12 7Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
-        </div>
-      </header>
+            ),
+            onClick: refreshData,
+            loading: isRefreshing,
+            ariaLabel: 'Refresh',
+          },
+          {
+            icon: (
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M20 12V22H4V12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M22 7H2V12H22V7Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M12 22V7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M12 7H7.5C6.83696 7 6.20107 6.73661 5.73223 6.26777C5.26339 5.79893 5 5.16304 5 4.5C5 3.83696 5.26339 3.20107 5.73223 2.73223C6.20107 2.26339 6.83696 2 7.5 2C11 2 12 7 12 7Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M12 7H16.5C17.163 7 17.7989 6.73661 18.2678 6.26777C18.7366 5.79893 19 5.16304 19 4.5C19 3.83696 18.7366 3.20107 18.2678 2.73223C17.7989 2.26339 17.163 2 16.5 2C13 2 12 7 12 7Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            ),
+            onClick: () => nav.push('giveback_page'),
+            ariaLabel: 'Give backs',
+          },
+        ]}
+      />
 
       <div className={styles.content}>
         {redeemCodes.length === 0 && fetchLoading && <LoadingView />}

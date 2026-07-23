@@ -13,12 +13,25 @@ const STORED_THEMES = ['light', 'dark', 'system'] as const;
 type StoredTheme = (typeof STORED_THEMES)[number];
 export type Theme = 'light' | 'dark';
 
+/** A CSS-module styles object (class name → hashed class). */
+type StyleModule = Readonly<Record<string, string>>;
+
 interface ThemeContextProps {
   theme: Theme;
   storedTheme: StoredTheme;
   setTheme: (theme: StoredTheme) => void;
   toggleTheme: () => void;
   cycleTheme: () => void;
+  /**
+   * Compose a CSS-module class with its themed variant in one call:
+   *
+   *   className={applyTheme(styles, 'mainSection')}
+   *   // === `${styles.mainSection} ${styles[`mainSection_${theme}`]}`
+   *
+   * Pass a theme to override the current one: `applyTheme(styles, 'mainSection', 'light')`.
+   * Missing base or variant classes resolve to '' (never the string "undefined").
+   */
+  applyTheme: (styles: StyleModule, name: string, themeOverride?: Theme) => string;
 }
 
 const ThemeContext = createContext<ThemeContextProps>({
@@ -27,6 +40,7 @@ const ThemeContext = createContext<ThemeContextProps>({
   setTheme: () => {},
   toggleTheme: () => {},
   cycleTheme: () => {},
+  applyTheme: (styles, name) => styles?.[name] ?? '',
 });
 
 const getSystemTheme = (): Theme => {
@@ -126,6 +140,16 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     setTheme(next);
   }, [storedTheme, setTheme]);
 
+  const applyTheme = useCallback(
+    (styles: StyleModule, name: string, themeOverride?: Theme) => {
+      const t = themeOverride ?? resolvedTheme;
+      const base = styles[name] ?? '';
+      const themed = styles[`${name}_${t}`] ?? '';
+      return themed ? `${base} ${themed}` : base;
+    },
+    [resolvedTheme]
+  );
+
   // Don't render children until theme is initialized to prevent flash
   if (!isInitialized) {
     return null;
@@ -139,6 +163,7 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
         setTheme,
         toggleTheme,
         cycleTheme,
+        applyTheme,
       }}
     >
       {children}
