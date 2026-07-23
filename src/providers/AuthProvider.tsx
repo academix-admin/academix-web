@@ -253,10 +253,17 @@ function isSessionExpired(sess: Session | null): boolean {
 const FLOW_SCOPES = [
   'mission_flow', 'achievements_flow', 'payment_flow', 'secondary_flow',
   'top-up-flow', 'withdraw-flow', 'roles-flow', 'redeem_code_flow',
+  // D-security (2026-07-23): previously-missed user-data scopes — without
+  // these, cached user data survived sign-out on shared devices.
+  'give_back_flow', 'quiz-topics', 'pin_scope', 'payment-transactions',
+  'pool_member_flow', 'quiz_pool_flow', 'active-quiz',
 ] as const;
 
 async function clearAllScopes() {
   await Promise.all(FLOW_SCOPES.map(s => StateStack.core.clearScope(s)));
+  // Route-scoped state: useDemandState defaults to scope `route:<pathname>`
+  // with persist: true, so persisted per-page data must be flushed too.
+  await StateStack.clearByPrefix('route:');
   sessionStorage.clear();
 }
 
