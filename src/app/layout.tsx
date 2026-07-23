@@ -4,6 +4,7 @@ import { ThemeProvider } from '@/context/ThemeContext';
 import { LanguageProvider } from '@/context/LanguageContext';
 import { Poppins } from 'next/font/google'
 import { AuthProvider } from '@/providers/AuthProvider'
+import { ViewInsetsProvider } from '@/context/ViewInsetsProvider'
 
 const poppins = Poppins({
   subsets: ['latin'],
@@ -30,7 +31,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ThemeProvider>
           <LanguageProvider>
             <AuthProvider>
-              {children}
+              <ViewInsetsProvider>
+                {children}
+              </ViewInsetsProvider>
             </AuthProvider>
           </LanguageProvider>
         </ThemeProvider>
