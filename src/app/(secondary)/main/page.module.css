@@ -3,7 +3,20 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  position: relative;
+  /* App-shell tracks the VISUAL viewport (Workstream F). Rather than fight iOS's
+     keyboard scroll/resize, the shell positions + sizes itself to exactly the
+     visible area (top = visualViewport.offsetTop, height = visualViewport.height,
+     published by ViewInsetsProvider). So however iOS scrolls or resizes to make
+     room for the keyboard, the shell — and its pinned header — stay in view, and
+     the ColumnBody is sized to the visible area. Fallbacks keep it full-viewport
+     before the vars are set / on non-visualViewport browsers. */
+  position: fixed;
+  top: var(--ax-viewport-offset-top, 0px);
+  left: 0;
+  right: 0;
+  height: 100vh;
+  height: 100dvh;
+  height: var(--ax-vv-height, 100dvh);
 }
 
 
@@ -62,6 +75,17 @@
   .sidebarContainer {
     display: none;
   }
+}
+
+/* Keyboard open (flag on <html> from ViewInsetsProvider): hide the bottom nav so
+   it doesn't float above / get covered by the keyboard, and freeze the content-area
+   scroll so it can't drag the pinned header away. The page's ColumnBody still
+   scrolls the focused field into view. */
+html[data-ax-keyboard="open"] .navigationContainer {
+  display: none;
+}
+html[data-ax-keyboard="open"] .contentArea {
+  overflow: hidden;
 }
 
 /* Theme-specific styles */

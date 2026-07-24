@@ -4,7 +4,7 @@ import { ThemeProvider } from '@/context/ThemeContext';
 import { LanguageProvider } from '@/context/LanguageContext';
 import { Poppins } from 'next/font/google'
 import { AuthProvider } from '@/providers/AuthProvider'
-import { ViewInsetsProvider } from '@/context/ViewInsetsProvider'
+import { ViewportInsetsProvider } from '@academix-admin/navigation-stack'
 
 const poppins = Poppins({
   subsets: ['latin'],
@@ -31,9 +31,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ThemeProvider>
           <LanguageProvider>
             <AuthProvider>
-              <ViewInsetsProvider>
+              <ViewportInsetsProvider>
                 {children}
-              </ViewInsetsProvider>
+              </ViewportInsetsProvider>
             </AuthProvider>
           </LanguageProvider>
         </ThemeProvider>

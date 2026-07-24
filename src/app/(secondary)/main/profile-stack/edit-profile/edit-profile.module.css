@@ -119,7 +119,9 @@
   margin: 0 auto;
   width: 100%;
     padding: 1rem 2.5rem;
-    padding-top: 6rem;
+    /* Header is the Scaffold appBar (pinned above the scroll body), so no
+       fixed-header clearance is needed (Workstream F). */
+    padding-top: 1rem;
   box-sizing: border-box;
 }
 

@@ -14,6 +14,7 @@ import { ProfileStack } from './profile-stack/profile-stack';
 import { useLanguage } from '@/context/LanguageContext';
 import Image from 'next/image';
 import { useUserData } from '@/lib/stacks/user-stack';
+import { useResizeToAvoidKeyboard } from '@academix-admin/navigation-stack';
 
 const Main = () => {
   const { theme, applyTheme } = useTheme();
@@ -21,6 +22,12 @@ const Main = () => {
   const [active, setActive] = useState('home-stack');
   const { userData, userData$, __meta } = useUserData();
   const navBarScrollRef = useRef<(event: NavigationBarScrollEvent) => void>(null);
+
+  // Keyboard-aware app shell (Flutter's Scaffold.resizeToAvoidBottomInset), from
+  // navigation-stack. Single toggle for the document scroll-lock — turn off for a
+  // shell that needs native document scrolling. Pairs with ViewportInsetsProvider
+  // (root) + the .mainContainer viewport-tracking CSS.
+  useResizeToAvoidKeyboard({ enabled: true });
 
   const navStackMap = new Map([
     ['home-stack', <HomeStack />],

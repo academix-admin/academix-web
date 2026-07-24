@@ -6,7 +6,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import Image from 'next/image';
 import styles from './edit-profile.module.css';
 import { supabaseBrowser } from '@/lib/supabase/client';
-import { useNav } from "@academix-admin/navigation-stack";
+import { useNav, Scaffold } from "@academix-admin/navigation-stack";
 import { capitalizeWords } from '@/utils/textUtils';
 import { getParamatical } from '@/utils/checkers';
 import { useUserData } from '@/lib/stacks/user-stack';
@@ -1328,25 +1328,29 @@ export default function EditProfile() {
   }, [userData, __meta.isHydrated, fetchedUserData, fetchUserData]);
 
   return (
-    <main className={`${applyTheme(styles, 'container')}`}>
-      <Header
-        title={t('edit_profile')}
-        theme={theme}
-        onBack={goBack}
-        actions={[
-          {
-            key: 'refresh',
-            icon: (
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2" />
-              </svg>
-            ),
-            onClick: fetchUserData,
-            ariaLabel: 'Refresh',
-          },
-        ]}
-      />
-
+    <Scaffold
+      bodyClassName={theme === 'dark' ? styles.container_dark : styles.container_light}
+      appBar={
+        <Header
+          title={t('edit_profile')}
+          theme={theme}
+          onBack={goBack}
+          position="static"
+          actions={[
+            {
+              key: 'refresh',
+              icon: (
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2" />
+                </svg>
+              ),
+              onClick: fetchUserData,
+              ariaLabel: 'Refresh',
+            },
+          ]}
+        />
+      }
+    >
       <div className={styles.content}>
         {fetchLoading && <LoadingView />}
 
@@ -1374,6 +1378,6 @@ export default function EditProfile() {
           </div>
         )}
       </div>
-    </main>
+    </Scaffold>
   );
 }

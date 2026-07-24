@@ -30,6 +30,15 @@ body.dark {
   color: #fff;
 }
 
+/* Keyboard-safe scrolling (Workstream F): stop the per-page scroll from chaining
+   to the outer container (the "double scroll"). The single-scroller + keyboard
+   handling lives in navigation-stack's ColumnBody + the app-shell document
+   scroll-lock (useResizeToAvoidKeyboard), which is scoped to the app shell so it
+   never freezes auth/public pages. */
+.navstack-page {
+  overscroll-behavior: contain;
+}
+
 
 
 
