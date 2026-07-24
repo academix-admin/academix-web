@@ -15,7 +15,7 @@
     "@academix-admin/lottie-cache": "^0.1.0",
     "@academix-admin/modal-sheet": "^0.1.0",
     "@academix-admin/navigation-bar": "^0.1.0",
-    "@academix-admin/navigation-stack": "^0.6.0",
+    "@academix-admin/navigation-stack": "^0.6.1",
     "@academix-admin/scroll-date-picker": "^0.1.0",
     "@academix-admin/search-viewer": "^0.1.0",
     "@academix-admin/side-drawer": "^0.1.0",
