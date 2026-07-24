@@ -36,10 +36,17 @@
 
 .contentArea {
   flex: 1;
-  overflow-y: auto;
+  /* DEFINITE height (not max-height) + no scroll of its own. max-height only CAPS
+     the height, so the height:100% chain down to the NavigationStack page wrapper
+     couldn't resolve — the wrapper collapsed to content height and contentArea
+     became the scroller, whose scroll the NavigationBar never hears (autohide
+     broke). With a definite height and overflow:hidden, the PAGE (ColumnBody /
+     page wrapper) is the single scroller and its scroll drives autohide. */
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
   transition: padding 0.3s ease;
   width: 100%;
-  max-height: 100dvh;
 }
 
 .navigationContainer {
