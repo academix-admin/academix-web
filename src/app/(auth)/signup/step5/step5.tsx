@@ -7,7 +7,7 @@ import Image from 'next/image';
 import styles from './step5.module.css';
 import Link from 'next/link';
 import CachedLottie from '@/components/CachedLottie';
-import { Checkbox } from '@/components/Checkbox';
+import { Checkbox } from '@academix-admin/forms';
 import { getLastNameOrSingle, capitalize } from '@/utils/textUtils';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useSignup, Role } from '@/lib/stacks/signup-stack';

@@ -7,7 +7,7 @@ import Image from 'next/image';
 import styles from './edit-profile.module.css';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useNav, Scaffold } from "@academix-admin/navigation-stack";
-import { TextInput } from '@/components/TextInput';
+import { TextInput } from '@academix-admin/forms';
 import { capitalizeWords } from '@/utils/textUtils';
 import { getParamatical } from '@/utils/checkers';
 import { useUserData } from '@/lib/stacks/user-stack';

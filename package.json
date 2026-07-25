@@ -11,6 +11,7 @@
   "dependencies": {
     "@academix-admin/bottom-viewer": "^0.1.0",
     "@academix-admin/dialog-viewer": "^0.1.1",
+    "@academix-admin/forms": "^0.1.0",
     "@academix-admin/header": "^0.2.3",
     "@academix-admin/lottie-cache": "^0.1.0",
     "@academix-admin/modal-sheet": "^0.1.0",

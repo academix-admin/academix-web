@@ -10,7 +10,7 @@ import styles from './page.module.css';
 import { useRouter } from 'next/navigation';
 import { useSearchParams } from 'next/navigation';
 import { useAuthContext } from '@/providers/AuthProvider'
-import { TextInput } from '@/components/TextInput';
+import { TextInput } from '@academix-admin/forms';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { BackendBuyPaymentWalletModel } from '@/models/payment-wallet-model';
 import { BackendSellPaymentWalletModel } from '@/models/payment-wallet-model';

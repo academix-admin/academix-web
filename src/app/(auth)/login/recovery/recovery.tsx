@@ -7,7 +7,7 @@ import Image from 'next/image';
 import styles from './recovery.module.css';
 import Link from 'next/link'
 import CachedLottie from '@/components/CachedLottie';
-import { RadioGroup } from '@/components/RadioGroup';
+import { RadioGroup } from '@academix-admin/forms';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useAccountDetails, VerificationMethodModel } from '@/lib/stacks/login-stack';
 import { StateStack } from '@academix-admin/state-stack';

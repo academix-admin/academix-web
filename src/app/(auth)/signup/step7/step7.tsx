@@ -7,7 +7,7 @@ import Image from 'next/image';
 import styles from './step7.module.css';
 import Link from 'next/link';
 import CachedLottie from '@/components/CachedLottie';
-import { TextInput } from '@/components/TextInput';
+import { TextInput } from '@academix-admin/forms';
 import { getLastNameOrSingle, capitalize } from '@/utils/textUtils';
 import { useSignup } from '@/lib/stacks/signup-stack';
 import { useNav } from "@academix-admin/navigation-stack";

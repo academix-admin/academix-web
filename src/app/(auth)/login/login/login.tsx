@@ -7,7 +7,7 @@ import Image from 'next/image';
 import styles from './login.module.css';
 import Link from 'next/link'
 import CachedLottie from '@/components/CachedLottie';
-import { TextInput } from '@/components/TextInput';
+import { TextInput } from '@academix-admin/forms';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useLogin } from '@/lib/stacks/login-stack';
 import { useUserData } from '@/lib/stacks/user-stack';

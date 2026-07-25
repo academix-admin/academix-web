@@ -7,7 +7,7 @@ import Image from 'next/image';
 import styles from './step1.module.css';
 import Link from 'next/link'
 import CachedLottie from '@/components/CachedLottie';
-import { TextInput } from '@/components/TextInput';
+import { TextInput } from '@academix-admin/forms';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useSignup } from '@/lib/stacks/signup-stack';
 import { StateStack } from '@academix-admin/state-stack';

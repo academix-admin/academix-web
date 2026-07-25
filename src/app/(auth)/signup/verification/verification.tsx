@@ -7,7 +7,7 @@ import Image from 'next/image';
 import styles from './verification.module.css';
 import Link from 'next/link'
 import CachedLottie from '@/components/CachedLottie';
-import { RadioGroup } from '@/components/RadioGroup';
+import { RadioGroup } from '@academix-admin/forms';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useSignup, UserRegistrationData } from '@/lib/stacks/signup-stack';
 import { StateStack } from '@academix-admin/state-stack';

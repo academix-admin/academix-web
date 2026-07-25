@@ -7,7 +7,7 @@ import Image from 'next/image';
 import styles from './forgot-password.module.css';
 import Link from 'next/link'
 import CachedLottie from '@/components/CachedLottie';
-import { TextInput } from '@/components/TextInput';
+import { TextInput } from '@academix-admin/forms';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useAccountDetails, VerificationMethodModel } from '@/lib/stacks/login-stack';
 import { StateStack } from '@academix-admin/state-stack';

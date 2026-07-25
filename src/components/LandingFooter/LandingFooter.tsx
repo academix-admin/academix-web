@@ -7,7 +7,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useDialog } from '@academix-admin/dialog-viewer';
-import { TextInput } from '@/components/TextInput';
+import { TextInput } from '@academix-admin/forms';
 
 const SOCIAL_LINKS = [
   {
