@@ -62,6 +62,10 @@ type SignupState = {
   sixDigitPin: number | null;
   password: string;
   verification: string;
+  /** OAuth onboarding: the social provider ('google'…) or null for classic email signup. */
+  provider: string | null;
+  /** OAuth onboarding: the already-existing Supabase auth user id. */
+  authUserId: string | null;
 };
 
 const signupMethods = {
@@ -92,7 +96,9 @@ const signupMethods = {
       referral: null,
       sixDigitPin: null,
       password: '',
-      verification: ''
+      verification: '',
+      provider: null,
+      authUserId: null
     }),
   },
 };
@@ -115,6 +121,8 @@ export const signupConfig = {
     sixDigitPin: null,
     password: '',
     verification: '',
+    provider: null,
+    authUserId: null,
   },
   persist: true,
   ttl: 600, // 10 minutes

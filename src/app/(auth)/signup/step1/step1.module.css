@@ -335,3 +335,21 @@
     max-width: 800px;
   }
 }
+.socialDivider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  color: var(--text-secondary, #9ca3af);
+  font-size: 0.8125rem;
+  margin: 0.25rem 0;
+}
+.socialDivider::before,
+.socialDivider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: #e5e7eb;
+}
+.socialDivider span {
+  padding: 0 0.75rem;
+}

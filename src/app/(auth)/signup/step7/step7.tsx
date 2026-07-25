@@ -8,10 +8,16 @@ import styles from './step7.module.css';
 import Link from 'next/link';
 import CachedLottie from '@/components/CachedLottie';
 import { TextInput } from '@academix-admin/forms';
-import { getLastNameOrSingle, capitalize } from '@/utils/textUtils';
+import { getLastNameOrSingle, capitalize, treatSpaces, formatDateToDBString } from '@/utils/textUtils';
 import { useSignup } from '@/lib/stacks/signup-stack';
 import { useNav } from "@academix-admin/navigation-stack";
 import { Header } from '@academix-admin/header';
+import { useRouter } from 'next/navigation';
+import { supabaseBrowser } from '@/lib/supabase/client';
+import { useUserData } from '@/lib/stacks/user-stack';
+import { fetchUserData } from '@/utils/checkers';
+import { StateStack } from '@academix-admin/state-stack';
+import { UserData } from '@/models/user-data';
 
 // ================== Helpers ==================
 const validatePin = (value: string | null | number) => {
@@ -43,14 +49,21 @@ const validatePassword = (value: string) => {
 // ================== Component ==================
 export default function SignUpStep7() {
   const { theme, applyTheme } = useTheme();
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const { signup, signup$, __meta } = useSignup();
+  const { userData$ } = useUserData();
   const nav = useNav();
+  const router = useRouter();
   const isTop = nav.isTop();
+
+  // Social (Google) onboarding: no password — the identity is already established by the
+  // OAuth provider, so this step collects only the PIN and creates the profile directly.
+  const isOAuth = signup.provider != null;
 
   const [firstname, setFirstname] = useState('');
   const [canGoBack, setCanGoBack] = useState(false);
   const [signUpLoading, setContinueLoading] = useState(false);
+  const [error, setError] = useState('');
 
   // PIN states
   const [sixPinInputValue, setSixPinInputValue] = useState('');
@@ -60,7 +73,7 @@ export default function SignUpStep7() {
   const [passwordInputValue, setPasswordInputValue] = useState('');
   const [passwordChecks, setPasswordChecks] = useState(validatePassword(''));
 
-  const isFormValid = sixPinState === 'valid' && passwordChecks.valid;
+  const isFormValid = isOAuth ? sixPinState === 'valid' : (sixPinState === 'valid' && passwordChecks.valid);
 
   // ================== Effects ==================
   useEffect(() => {
@@ -91,12 +104,86 @@ export default function SignUpStep7() {
   }, [signup.password]);
 
   // ================== Handlers ==================
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isFormValid) return;
+
+    // Classic email signup → go verify the email/phone with an OTP, then create the account.
+    if (!isOAuth) {
+      setContinueLoading(true);
+      nav.push('verification');
+      setContinueLoading(false);
+      return;
+    }
+
+    // Social onboarding → the auth user already exists (verified email from Google); create
+    // the academix profile for it directly (no OTP, no password), then land on /main.
     setContinueLoading(true);
-    nav.push('verification');
-    setContinueLoading(false);
+    setError('');
+    try {
+      if (!signup.country || !signup.language || !signup.role || !signup.sixDigitPin || !signup.username || !signup.gender || !signup.authUserId) {
+        setError(t('error_occurred'));
+        setContinueLoading(false);
+        return;
+      }
+
+      const { data: sessionData } = await supabaseBrowser.auth.getSession();
+      const jwt = sessionData.session?.access_token;
+      if (!jwt) {
+        setError(t('error_occurred'));
+        setContinueLoading(false);
+        return;
+      }
+
+      const payload = {
+        users_phone: signup.phoneNumber,
+        users_dob: formatDateToDBString(signup.birthday),
+        users_sex: signup.gender === 'Male' ? 'Gender.male' : 'Gender.female',
+        users_username: signup.username,
+        users_names: treatSpaces(signup.fullName),
+        country_id: signup.country.country_id,
+        language_id: signup.language.language_id,
+        users_referred_id: signup.referral?.users_id || null,
+        roles_id: signup.role.roles_id,
+        users_pin: String(signup.sixDigitPin),
+      };
+
+      const res = await fetch('/api/create-oauth-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${jwt}` },
+        body: JSON.stringify(payload),
+      });
+      const result = await res.json().catch(() => ({}));
+
+      if (!res.ok || result?.success === false) {
+        // Already onboarded (e.g. a retry) → just proceed in.
+        if (result?.code === 'PROFILE_EXISTS') {
+          // fall through to the success path below
+        } else {
+          setError(result?.message || t('unable_to_create_account'));
+          setContinueLoading(false);
+          return;
+        }
+      }
+
+      const userObj: UserData | null = await fetchUserData(signup.authUserId, lang);
+      if (!userObj) {
+        setError(t('error_occurred'));
+        setContinueLoading(false);
+        return;
+      }
+
+      await StateStack.core.clearScope('secondary_flow');
+      await userData$.set(userObj);
+      __meta.clear();
+      await StateStack.core.clearScope('signup_flow');
+      nav.dispose();
+      router.replace('/main');
+    } catch (err) {
+      console.error('OAuth profile creation error:', err);
+      setError(t('error_occurred'));
+      setContinueLoading(false);
+    }
   };
 
   const handleSixPinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -219,34 +306,38 @@ export default function SignUpStep7() {
             }}
           />
 
-          {/* Password */}
-          <div className={styles.formGroup}>
-            <TextInput
-              id="password"
-              name="password"
-              label={t('password_label')}
-              hint={t('password_placeholder')}
-              value={passwordInputValue}
-              onChange={(_, e) => handlePasswordChange(e)}
-              secureToggle
-              disabled={signUpLoading}
-              autoComplete="new-password"
-              required
-              inputProps={{ 'aria-invalid': !passwordChecks.valid }}
-              classNames={{
-                root: styles.textInputRoot,
-                label: styles.label,
-                field: styles.inputWrapper,
-                input: styles.input,
-                toggle: styles.eyeButton,
-              }}
-            />
-            <p className={passwordChecks.hasUppercase ? styles.validText : styles.errorText}>• {t('contain_uppercase')}</p>
-            <p className={passwordChecks.hasMinLength ? styles.validText : styles.errorText}>• {t('contain_sixChar')}</p>
-            <p className={passwordChecks.hasLowercase ? styles.validText : styles.errorText}>• {t('contain_lowercase')}</p>
-            <p className={passwordChecks.hasNumber ? styles.validText : styles.errorText}>• {t('contain_number')}</p>
-            <p className={passwordChecks.hasSpecialChar ? styles.validText : styles.errorText}>• {t('contain_specialChar')}</p>
-          </div>
+          {/* Password — classic email signup only; social users have no password. */}
+          {!isOAuth && (
+            <div className={styles.formGroup}>
+              <TextInput
+                id="password"
+                name="password"
+                label={t('password_label')}
+                hint={t('password_placeholder')}
+                value={passwordInputValue}
+                onChange={(_, e) => handlePasswordChange(e)}
+                secureToggle
+                disabled={signUpLoading}
+                autoComplete="new-password"
+                required
+                inputProps={{ 'aria-invalid': !passwordChecks.valid }}
+                classNames={{
+                  root: styles.textInputRoot,
+                  label: styles.label,
+                  field: styles.inputWrapper,
+                  input: styles.input,
+                  toggle: styles.eyeButton,
+                }}
+              />
+              <p className={passwordChecks.hasUppercase ? styles.validText : styles.errorText}>• {t('contain_uppercase')}</p>
+              <p className={passwordChecks.hasMinLength ? styles.validText : styles.errorText}>• {t('contain_sixChar')}</p>
+              <p className={passwordChecks.hasLowercase ? styles.validText : styles.errorText}>• {t('contain_lowercase')}</p>
+              <p className={passwordChecks.hasNumber ? styles.validText : styles.errorText}>• {t('contain_number')}</p>
+              <p className={passwordChecks.hasSpecialChar ? styles.validText : styles.errorText}>• {t('contain_specialChar')}</p>
+            </div>
+          )}
+
+          {error && <p className={styles.errorText}>{error}</p>}
 
           <button
             type="submit"

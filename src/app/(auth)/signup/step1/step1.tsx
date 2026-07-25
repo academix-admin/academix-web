@@ -8,6 +8,7 @@ import styles from './step1.module.css';
 import Link from 'next/link'
 import CachedLottie from '@/components/CachedLottie';
 import { TextInput } from '@academix-admin/forms';
+import { SocialAuthButtons } from '@/components/SocialAuthButtons';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useSignup } from '@/lib/stacks/signup-stack';
 import { StateStack } from '@academix-admin/state-stack';
@@ -30,6 +31,32 @@ export default function SignUpStep1() {
   useEffect(() => {
     setCanGoBack(window.history.length > 1);
   }, []);
+
+  // Social onboarding: if the user arrived here from a Google (OAuth) sign-in, Google has
+  // already given us a verified name + email, so prefill them and skip straight to step 2
+  // (no email entry, no email-OTP, and step 7 will collect a PIN only — no password).
+  useEffect(() => {
+    if (signup.provider) return; // already in an OAuth onboarding
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabaseBrowser.auth.getSession();
+      const user = data.session?.user;
+      const isOAuth = !!user && (user.app_metadata?.provider ?? '') !== 'email';
+      if (!user || !isOAuth || cancelled) return;
+      const meta = user.user_metadata ?? {};
+      const name = meta.full_name || meta.name || '';
+      signup$.setField(
+        { field: 'provider', value: (user.app_metadata?.provider as string) || 'google' },
+        { field: 'authUserId', value: user.id },
+        { field: 'fullName', value: name ? capitalizeWords(name) : '' },
+        { field: 'email', value: user.email || '' },
+      );
+      signup$.setStep(2);
+      nav.push('step2');
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [signup.provider]);
 
   useEffect(() => {
       validateForm(signup.fullName,signup.email);
@@ -178,6 +205,9 @@ export default function SignUpStep1() {
           >
                 {continueLoading ? <span className={styles.spinner}></span> : t('continue')}
           </button>
+
+          <div className={styles.socialDivider}><span>{t('or_text')}</span></div>
+          <SocialAuthButtons providers={['google']} theme={theme} disabled={continueLoading} />
         </form>
       </div>
     </main>

@@ -8,6 +8,7 @@ import styles from './login.module.css';
 import Link from 'next/link'
 import CachedLottie from '@/components/CachedLottie';
 import { TextInput } from '@academix-admin/forms';
+import { SocialAuthButtons } from '@/components/SocialAuthButtons';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useLogin } from '@/lib/stacks/login-stack';
 import { useUserData } from '@/lib/stacks/user-stack';
@@ -516,6 +517,9 @@ export default function LoginUser() {
           >
             {loginLoading ? <span className={styles.spinner}></span> : t('login')}
           </button>
+
+          <div className={styles.socialDivider}><span>{t('or_text')}</span></div>
+          <SocialAuthButtons providers={['google']} theme={theme} disabled={loginLoading} onError={setError} />
         </form>
       </div>
     </main>
