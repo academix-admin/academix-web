@@ -18,7 +18,7 @@ import RewardsFriends from "./rewards-friends/rewards-friends";
 import LoadingView from '@/components/LoadingView/LoadingView'
 import NoResultsView from '@/components/NoResultsView/NoResultsView';
 import ErrorView from '@/components/ErrorView/ErrorView';
-import { useComponentState, ComponentStateProps, getComponentStatus } from '@/hooks/use-component-state';
+import { useComponentState, ComponentStateProps, getComponentStatus, useSettledReveal } from '@/hooks/use-component-state';
 
 export default function RewardsPage() {
   const { theme } = useTheme();
@@ -34,27 +34,24 @@ export default function RewardsPage() {
     // we have an error but not all loaded yet
     const error = loadedCount < 5 && errorCount > 0;
 
-    // we can show loading
-    const loading = loadedCount < 5 && errorCount === 0 && loadingCount > 0;
-
-    // show ui
-//     const show = !error && !loading;
-    const show = true;
-
-
+    // Reveal the body sections together once loads settle (see useSettledReveal). The title
+    // shows early; the rest stay mounted (fetching) but hidden behind one LoadingView.
+    const revealed = useSettledReveal(loadedCount);
 
   return (
     <div className={styles.mainContainer}>
-      {show && (<RewardsTitle onStateChange={(state) => handleStateChange('rewardsTitle', state)}/>)}
-      {show && (<AcademixRatio onStateChange={(state) => handleStateChange('academixRatio', state)}/>)}
-      {show && (<RewardsStreaks onStateChange={(state) => handleStateChange('rewardsStreaks', state)}/>)}
-      {show && (<MilestoneView onStateChange={(state) => handleStateChange('milestoneView', state)}/>)}
-      {show && (<RewardsFriends onStateChange={(state) => handleStateChange('rewardsFriends', state)}/>)}
+      <RewardsTitle onStateChange={(state) => handleStateChange('rewardsTitle', state)}/>
 
+      <div style={{ display: revealed ? undefined : 'none' }}>
+        <AcademixRatio onStateChange={(state) => handleStateChange('academixRatio', state)}/>
+        <RewardsStreaks onStateChange={(state) => handleStateChange('rewardsStreaks', state)}/>
+        <MilestoneView onStateChange={(state) => handleStateChange('milestoneView', state)}/>
+        <RewardsFriends onStateChange={(state) => handleStateChange('rewardsFriends', state)}/>
+      </div>
 
       <div>
-            {loading && (<LoadingView />)}
-      {error && (<ErrorView text="Error occurred." buttonText="Try Again" onButtonClick={()=> console.log('error')} />)}
+        {!revealed && <LoadingView />}
+        {revealed && error && (<ErrorView text="Error occurred." buttonText="Try Again" onButtonClick={()=> console.log('error')} />)}
       </div>
 
     </div>

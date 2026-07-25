@@ -1,4 +1,32 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+
+/**
+ * Reveal a page's body sections TOGETHER once their loads settle, instead of painting them
+ * in one-by-one. The sections must stay MOUNTED while hidden (so their data keeps fetching);
+ * this only gates when they become visible.
+ *
+ * `signal` should be a value that increases as sections resolve (e.g. `loadedCount`): the
+ * reveal fires `settleMs` after it last changed (loads stopped arriving), with a `capMs`
+ * hard cap so a slow or genuinely-empty section can never leave the page stuck on the loader.
+ * Needed because the section components report `'none'` (not `'loading'`) while fetching, so
+ * a plain "any loading?" check can't tell "still fetching" from "no data".
+ */
+export function useSettledReveal(
+  signal: number,
+  { settleMs = 400, capMs = 4000 }: { settleMs?: number; capMs?: number } = {}
+): boolean {
+  const [revealed, setRevealed] = useState(false);
+  useEffect(() => {
+    if (revealed) return;
+    const t = window.setTimeout(() => setRevealed(true), settleMs);
+    return () => window.clearTimeout(t);
+  }, [signal, revealed, settleMs]);
+  useEffect(() => {
+    const cap = window.setTimeout(() => setRevealed(true), capMs);
+    return () => window.clearTimeout(cap);
+  }, [capMs]);
+  return revealed;
+}
 
 export type ComponentState = 'data' | 'loading' | 'error' | 'none'; // we can have more
 export interface ComponentStateProps {

@@ -10,7 +10,7 @@ import CachedLottie from '@/components/CachedLottie';
 import { getLastNameOrSingle, capitalize } from '@/utils/textUtils';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useNav } from "@academix-admin/navigation-stack";
-import { useComponentState, ComponentStateProps, getComponentStatus } from '@/hooks/use-component-state';
+import { useComponentState, ComponentStateProps, getComponentStatus, useSettledReveal } from '@/hooks/use-component-state';
 import ProfileTitle from './profile-title/profile-title'
 import ProfileOverview from './profile-overview/profile-overview'
 import ProfileAccounts from './profile-accounts/profile-accounts'
@@ -37,25 +37,27 @@ export default function ProfilePage() {
     // we have an error but not all loaded yet
     const error = loadedCount < 4 && errorCount > 0;
 
-    // we can show loading
-    const loading = loadedCount < 4 && errorCount === 0 && loadingCount > 0;
-
-    // show ui
-    const show = !error && !loading;
+    // Reveal the body sections together once loads settle. Sections stay mounted (fetching)
+    // while hidden — the previous `{show && ...}` gating UNMOUNTED them, so they never
+    // fetched while hidden.
+    const revealed = useSettledReveal(loadedCount);
 
   return (
     <div className={styles.mainContainer}>
 
-      {show && (<ProfileTitle onStateChange={(state) => handleStateChange('profileTitle', state)}/>)}
-      {show && (<ProfileOverview onStateChange={(state) => handleStateChange('profileOverview', state)}/>)}
-      {show && (<ProfileAccounts onStateChange={(state) => handleStateChange('profileAccounts', state)}/>)}
-      {show && (<ProfileLinks onStateChange={(state) => handleStateChange('profileLinks', state)}/>)}
-      {show && (<ProfileContacts onStateChange={(state) => handleStateChange('profileContacts', state)}/>)}
-      {show && (<ProfileLegal onStateChange={(state) => handleStateChange('profileLegal', state)}/>)}
+      <ProfileTitle onStateChange={(state) => handleStateChange('profileTitle', state)}/>
+
+      <div style={{ display: revealed ? undefined : 'none' }}>
+        <ProfileOverview onStateChange={(state) => handleStateChange('profileOverview', state)}/>
+        <ProfileAccounts onStateChange={(state) => handleStateChange('profileAccounts', state)}/>
+        <ProfileLinks onStateChange={(state) => handleStateChange('profileLinks', state)}/>
+        <ProfileContacts onStateChange={(state) => handleStateChange('profileContacts', state)}/>
+        <ProfileLegal onStateChange={(state) => handleStateChange('profileLegal', state)}/>
+      </div>
 
                  <div>
-                 {error && (<ErrorView text="Error occurred." buttonText="Try Again" onButtonClick={()=> console.log('error')} />)}
-                       {loading && (<LoadingView />)}
+                 {revealed && error && (<ErrorView text="Error occurred." buttonText="Try Again" onButtonClick={()=> console.log('error')} />)}
+                       {!revealed && (<LoadingView />)}
                  </div>
 
     </div>

@@ -14,7 +14,7 @@ import PaymentTitle from './payment-title/payment-title'
 import UserBalance from './user-balance/user-balance'
 import PaymentAction from './payment-action/payment-action'
 import PaymentTransactions from './payment-transactions/payment-transactions'
-import { useComponentState, ComponentStateProps, getComponentStatus } from '@/hooks/use-component-state';
+import { useComponentState, ComponentStateProps, getComponentStatus, useSettledReveal } from '@/hooks/use-component-state';
 import LoadingView from '@/components/LoadingView/LoadingView'
 import NoResultsView from '@/components/NoResultsView/NoResultsView';
 import ErrorView from '@/components/ErrorView/ErrorView';
@@ -33,11 +33,9 @@ export default function PaymentPage() {
     // we have an error but not all loaded yet
     const error = loadedCount < 4 && errorCount > 0;
 
-    // we can show loading
-    const loading = loadedCount < 4 && errorCount === 0 && loadingCount > 0;
-
-    // show ui
-    const show = !error && !loading && loadedCount >= 3;
+    // Title/balance/action show immediately; the transactions list stays mounted (fetching)
+    // but hidden until loads settle, then reveals — no empty-then-fill on a cold start.
+    const revealed = useSettledReveal(loadedCount);
 
   return (
     <div className={styles.mainContainer}>
@@ -45,11 +43,13 @@ export default function PaymentPage() {
      <PaymentTitle onStateChange={(state) => handleStateChange('paymentTitle', state)}/>
      <UserBalance onStateChange={(state) => handleStateChange('userBalance', state)}/>
      <PaymentAction onStateChange={(state) => handleStateChange('paymentAction', state)}/>
-     {show && (<PaymentTransactions onStateChange={(state) => handleStateChange('paymentTransactions', state)}/>)}
+     <div style={{ display: revealed ? undefined : 'none' }}>
+       <PaymentTransactions onStateChange={(state) => handleStateChange('paymentTransactions', state)}/>
+     </div>
 
            <div>
-           {error && (<ErrorView text="Error occurred." buttonText="Try Again" onButtonClick={()=> console.log('error')} />)}
-                 {loading && (<LoadingView />)}
+           {revealed && error && (<ErrorView text="Error occurred." buttonText="Try Again" onButtonClick={()=> console.log('error')} />)}
+                 {!revealed && (<LoadingView />)}
            </div>
 
     </div>

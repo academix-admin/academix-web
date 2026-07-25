@@ -10,7 +10,8 @@ import CachedLottie from '@/components/CachedLottie';
 import { getLastNameOrSingle, capitalize } from '@/utils/textUtils';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useNav } from "@academix-admin/navigation-stack";
-import { useComponentState, ComponentStateProps, getComponentStatus } from '@/hooks/use-component-state';
+import { useComponentState, ComponentStateProps, getComponentStatus, useSettledReveal } from '@/hooks/use-component-state';
+import LoadingView from '@/components/LoadingView/LoadingView';
 import QuizPageTitle from "./quiz-page-title/quiz-page-title";
 import AvailableQuizTopics from "./available-quiz-topics/available-quiz-topics";
 import PublicQuizTopics from "./public-quiz-topics/public-quiz-topics";
@@ -28,36 +29,31 @@ export default function QuizPage() {
       [compState]
     );
 
-    // we have an error but not all loaded yet
-    const error = loadedCount < 5 && errorCount > 0;
-
-    // we can show loading
-    const loading = loadedCount < 5 && errorCount === 0 && loadingCount > 0;
-
-    // show ui
-    const show = !error && !loading;
-
-
+    // Reveal the topic lists together once loads settle; the title shows immediately and the
+    // lists stay mounted (fetching) but hidden behind one LoadingView until then.
+    const revealed = useSettledReveal(loadedCount);
 
   return (
     <div className={styles.mainContainer}>
       <QuizPageTitle onStateChange={(state) => handleStateChange('quizPageTitle', state)} />
 
+      <div style={{ display: revealed ? undefined : 'none' }}>
+        <ActiveQuizTopic onStateChange={(state) => handleStateChange('activeQuizTopic', state)} />
 
+        <PublicQuizTopics onStateChange={(state) => handleStateChange('creatorPublicQuizTopics', state)} pType={'creator'} />
 
-      <ActiveQuizTopic onStateChange={(state) => handleStateChange('creatorPublicQuizTopics', state)} />
+        <PublicQuizTopics onStateChange={(state) => handleStateChange('personalizedPublicQuizTopics', state)} pType={'personalized'} />
 
-      <PublicQuizTopics onStateChange={(state) => handleStateChange('creatorPublicQuizTopics', state)} pType={'creator'} />
+        <PublicQuizTopics onStateChange={(state) => handleStateChange('publicPublicQuizTopics', state)} pType={'public'} />
 
-      <PublicQuizTopics onStateChange={(state) => handleStateChange('personalizedPublicQuizTopics', state)} pType={'personalized'} />
+        <AvailableQuizTopics onStateChange={(state) => handleStateChange('creatorAvailableQuizTopics', state)} pType={'creator'} />
 
-      <PublicQuizTopics onStateChange={(state) => handleStateChange('publicPublicQuizTopics', state)} pType={'public'} />
+        <AvailableQuizTopics onStateChange={(state) => handleStateChange('personalizedAvailableQuizTopics', state)} pType={'personalized'} />
 
-      <AvailableQuizTopics onStateChange={(state) => handleStateChange('creatorAvailableQuizTopics', state)} pType={'creator'} />
+        <AvailableQuizTopics onStateChange={(state) => handleStateChange('publicAvailableQuizTopics', state)} pType={'public'} />
+      </div>
 
-      <AvailableQuizTopics onStateChange={(state) => handleStateChange('personalizedAvailableQuizTopics', state)} pType={'personalized'} />
-
-      <AvailableQuizTopics onStateChange={(state) => handleStateChange('publicAvailableQuizTopics', state)} pType={'public'} />
+      {!revealed && <LoadingView />}
 
     </div>
   );

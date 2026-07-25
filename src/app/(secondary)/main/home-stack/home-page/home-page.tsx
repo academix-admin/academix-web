@@ -18,7 +18,7 @@ import HomeQuizHistory from "./home-quiz-history/home-quiz-history";
 import LoadingView from '@/components/LoadingView/LoadingView'
 import NoResultsView from '@/components/NoResultsView/NoResultsView';
 import ErrorView from '@/components/ErrorView/ErrorView';
-import { useComponentState, ComponentStateProps, getComponentStatus } from '@/hooks/use-component-state';
+import { useComponentState, ComponentStateProps, getComponentStatus, useSettledReveal } from '@/hooks/use-component-state';
 
 
 
@@ -40,18 +40,7 @@ export default function HomePage() {
   // section fetches its own data at a different time, which looked like an empty body filling
   // piece by piece. The sections stay MOUNTED while hidden (display:none still runs their
   // effects/fetches), so nothing is delayed; we just hold the reveal until things settle.
-  const [revealed, setRevealed] = useState(false);
-  useEffect(() => {
-    if (revealed) return;
-    // reveal ~400ms after the most recent section resolves (i.e. once loads stop arriving)
-    const settle = window.setTimeout(() => setRevealed(true), 400);
-    return () => window.clearTimeout(settle);
-  }, [loadedCount, revealed]);
-  useEffect(() => {
-    // hard cap so a slow/empty section can never leave the home stuck on the loader
-    const cap = window.setTimeout(() => setRevealed(true), 4000);
-    return () => window.clearTimeout(cap);
-  }, []);
+  const revealed = useSettledReveal(loadedCount);
 
   return (
     <div className={`${applyTheme(styles, 'mainContainer')}`}>
