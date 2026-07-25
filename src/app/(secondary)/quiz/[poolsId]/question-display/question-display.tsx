@@ -3,6 +3,7 @@
 import { use, useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import styles from './question-display.module.css';
+import { TextInput } from '@academix-admin/forms';
 import { useLanguage } from '@/context/LanguageContext';
 import { getLastNameOrSingle, capitalize } from '@/utils/textUtils';
 import { getParamatical, ParamaticalData } from '@/utils/checkers';
@@ -483,12 +484,14 @@ const FillGapComponent = ({
 
   return (
     <div className={getContainerClass()}>
-      <input
-        type="text"
+      <TextInput
         value={answer}
-        onChange={handleAnswerChange}
-        placeholder="Type your answer here..."
-        className={getInputClass()}
+        onChange={(_, e) => handleAnswerChange(e)}
+        hint="Type your answer here..."
+        classNames={{
+          root: styles.textInputRoot,
+          input: getInputClass(),
+        }}
       />
     </div>
   );

@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import styles from './new-profile-page.module.css';
+import { TextInput } from '@academix-admin/forms';
 import { useNav } from "@academix-admin/navigation-stack";
 import { StateStack } from '@academix-admin/state-stack';
 import { getParamatical } from '@/utils/checkers';
@@ -214,17 +215,19 @@ const BankTransfer = ({ onSubmit, methodId, errorDialog }: BankTransferProps) =>
       {bankData && <div className={styles.accountNumberGroup}>
         <label htmlFor="accountNumber" className={styles.label}>{t('account_number_label')}</label>
         <div className={styles.accountNumberContainer}>
-          <input
-            type="text"
+          <TextInput
             id="accountNumber"
             name="accountNumber"
             value={accountNumberInputValue}
-            onChange={handleAccountNumberChange}
-            placeholder={t('account_number_placeholder')}
-            className={styles.input}
-            inputMode="numeric"
+            onChange={(_, e) => handleAccountNumberChange(e)}
+            hint={t('account_number_placeholder')}
+            keyboardType="numeric"
             pattern="[0-9]*"
             required
+            classNames={{
+              root: styles.textInputRoot,
+              input: styles.input,
+            }}
           />
         </div>
         {accountNumberState === 'invalid' && !accountData && (
@@ -562,31 +565,33 @@ const MobileMoney = ({ onSubmit, prefix, length }: MobileMoneyProps) => {
   };
 
   return (
-    <div className={styles.formGroup}>
-      <label htmlFor="phoneNumber" className={styles.label}>{t('phone_number_label')}</label>
-      <div className={styles.phoneInputContainer}>
-        <span className={styles.prefix}>{`${prefix} - `}</span>
-        <input
-          type="text"
-          id="phoneNumber"
-          name="phoneNumber"
-          value={phoneInputValue}
-          maxLength={length}
-          onChange={handlePhoneNumberChange}
-          placeholder={t('phone_number_placeholder')}
-          className={styles.input}
-          inputMode="numeric"
-          pattern="[0-9]*"
-          required
-        />
-      </div>
-      {phoneNumberState === 'invalid' && (
-        <p className={styles.errorText}>{t('phone_number_invalid')}</p>
-      )}
-      {phoneNumberState === 'valid' && (
-        <p className={styles.validText}>{t('phone_number_valid')}</p>
-      )}
-    </div>
+    <TextInput
+      id="phoneNumber"
+      name="phoneNumber"
+      label={t('phone_number_label')}
+      hint={t('phone_number_placeholder')}
+      value={phoneInputValue}
+      onChange={(_, e) => handlePhoneNumberChange(e)}
+      prefix={`${prefix} - `}
+      keyboardType="numeric"
+      pattern="[0-9]*"
+      maxLength={length}
+      required
+      status={phoneNumberState === 'invalid' ? 'error' : phoneNumberState === 'valid' ? 'valid' : 'default'}
+      helperText={
+        phoneNumberState === 'invalid' ? t('phone_number_invalid')
+          : phoneNumberState === 'valid' ? t('phone_number_valid')
+            : undefined
+      }
+      classNames={{
+        root: styles.formGroup,
+        label: styles.label,
+        field: styles.phoneInputContainer,
+        prefix: styles.prefix,
+        input: styles.input,
+        helper: phoneNumberState === 'valid' ? styles.validText : styles.errorText,
+      }}
+    />
   );
 };
 

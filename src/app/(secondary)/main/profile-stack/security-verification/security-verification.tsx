@@ -4,6 +4,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import styles from './security-verification.module.css';
+import { RadioGroup } from '@academix-admin/forms';
 import { useNav } from "@academix-admin/navigation-stack";
 import { useUserData } from '@/lib/stacks/user-stack';
 import { UserData } from '@/models/user-data';
@@ -122,49 +123,30 @@ export default function SecurityVerification(props: SecurityVerificationProps) {
               {t('verify_identity_label')}
             </label>
 
-            <div className={styles.radioGroup}>
-              {userData?.usersEmail && (
-                <label
-                  className={`${styles.radioLabel} ${verificationSelected?.type === 'Email' ? styles.radioLabelSelected : ''
-                    }`}
-                >
-                  <input
-                    type="radio"
-                    name="verification"
-                    value="email"
-                    checked={verificationSelected?.type === 'Email'}
-                    onChange={() => handleChange({ type: 'Email', value: userData.usersEmail })}
-                    className={styles.radioInput}
-                  />
-                  <div className={styles.radioContent}>
-                    <span className={styles.radioText}>
-                      {tNode('code_through_email', { email: <strong>{userData.usersEmail}</strong> })}
-                    </span>
-                  </div>
-                </label>
-              )}
-
-              {userData?.usersPhone && (
-                <label
-                  className={`${styles.radioLabel} ${verificationSelected?.type === 'Phone' ? styles.radioLabelSelected : ''
-                    }`}
-                >
-                  <input
-                    type="radio"
-                    name="verification"
-                    value="phone"
-                    checked={verificationSelected?.type === 'Phone'}
-                    onChange={() => handleChange({ type: 'Phone', value: userData.usersPhone })}
-                    className={styles.radioInput}
-                  />
-                  <div className={styles.radioContent}>
-                    <span className={styles.radioText}>
-                      {tNode('code_through_phone', { phone: <strong>{userData.usersPhone}</strong> })}
-                    </span>
-                  </div>
-                </label>
-              )}
-            </div>
+            <RadioGroup
+              name="verification"
+              value={verificationSelected?.type}
+              onChange={(type) => {
+                if (type === 'Email' && userData?.usersEmail) handleChange({ type: 'Email', value: userData.usersEmail });
+                else if (type === 'Phone' && userData?.usersPhone) handleChange({ type: 'Phone', value: userData.usersPhone });
+              }}
+              options={[
+                ...(userData?.usersEmail
+                  ? [{ value: 'Email', label: tNode('code_through_email', { email: <strong>{userData.usersEmail}</strong> }) }]
+                  : []),
+                ...(userData?.usersPhone
+                  ? [{ value: 'Phone', label: tNode('code_through_phone', { phone: <strong>{userData.usersPhone}</strong> }) }]
+                  : []),
+              ]}
+              classNames={{
+                group: styles.radioGroup,
+                item: styles.radioLabel,
+                itemSelected: styles.radioLabelSelected,
+                input: styles.radioInput,
+                content: styles.radioContent,
+                text: styles.radioText,
+              }}
+            />
           </div>
 
           {error && (

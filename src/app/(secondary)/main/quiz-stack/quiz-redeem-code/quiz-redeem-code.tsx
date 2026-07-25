@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import styles from './quiz-redeem-code.module.css';
+import { TextInput } from '@academix-admin/forms';
 import { useNav } from "@academix-admin/navigation-stack";
 import { getParamatical, ParamaticalData } from '@/utils/checkers';
 import { checkLocation, checkFeatures, fetchUserPartialDetails, fetchUserDetails, fetchUserData } from '@/utils/checkers';
@@ -254,19 +255,20 @@ const RedeemCodeView = ({
           titleColor: theme === 'light' ? '#1a1a1a' : '#fff',
         }}
       />
-      <div className={styles.formGroup}>
-        <label htmlFor="codeText" className={styles.label}>{t('code_text_label')}</label>
-        <input
-          type="text"
-          id="redeemCode"
-          name="redeemCode"
-          value={codeText}
-          onChange={handleChange}
-          placeholder="ACADEMIX"
-          className={`${applyTheme(styles, 'input')}`}
-          required
-        />
-      </div>
+      <TextInput
+        id="redeemCode"
+        name="redeemCode"
+        label={t('code_text_label')}
+        hint="ACADEMIX"
+        value={codeText}
+        onChange={(_, e) => handleChange(e)}
+        required
+        classNames={{
+          root: styles.formGroup,
+          label: styles.label,
+          input: applyTheme(styles, 'input'),
+        }}
+      />
 
       <div className={styles.actionsRow}>
         <button

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import styles from './payment-wallet.module.css';
+import { TextInput } from '@academix-admin/forms';
 import { useNav } from "@academix-admin/navigation-stack";
 import { getParamatical, ParamaticalData } from '@/utils/checkers';
 import { useUserData } from '@/lib/stacks/user-stack';
@@ -469,15 +470,17 @@ export default function PaymentWallet({ profileType, onWalletData, onWalletAmoun
         </div>
 
         <div className={styles.amountInputContainer}>
-          <input
+          <TextInput
             ref={paymentSwitch === 'wallet' ? walletInputRef : academixInputRef}
-            type="text"
-            className={styles.amountInput}
             value={paymentSwitch === 'wallet' ? walletAmount : academixAmount}
-            onChange={paymentSwitch === 'wallet' ? handleWalletAmountChange : handleAcademixAmountChange}
-            placeholder="0.00"
-            inputMode="decimal"
+            onChange={(_, e) => (paymentSwitch === 'wallet' ? handleWalletAmountChange(e) : handleAcademixAmountChange(e))}
+            hint="0.00"
+            keyboardType="decimal"
             pattern="^\d+(\.\d*)?$"
+            classNames={{
+              root: styles.textInputRoot,
+              input: styles.amountInput,
+            }}
           />
         </div>
 

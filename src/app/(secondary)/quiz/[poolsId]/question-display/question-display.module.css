@@ -1373,3 +1373,7 @@
 
 
 }
+/* Layout-transparent TextInput root so the answer input stays a direct child of its container. */
+.textInputRoot {
+  display: contents;
+}

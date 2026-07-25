@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import styles from './statements-page.module.css';
+import { TextInput } from '@academix-admin/forms';
 import { useNav } from "@academix-admin/navigation-stack";
 import { useUserData } from '@/lib/stacks/user-stack';
 import { getParamatical } from '@/utils/checkers';
@@ -331,21 +332,21 @@ export default function StatementsPage() {
 
           <div className={styles.emailBox}>
             {useCustomEmail ? (
-              <div className={styles.formGroup}>
-                <label className={styles.label}>{t('email_label')}</label>
-                <input
-                  type="email"
-                  className={`${applyTheme(styles, 'input')}`}
-                  value={emailOverride}
-                  onChange={(e) => setEmailOverride(e.target.value)}
-                  placeholder={t('email_placeholder')}
-                />
-                {emailOverride && !isEmailValid(emailOverride) && (
-                  <p className={`${applyTheme(styles, 'errorText')}`}>
-                    {t('invalid_email_text')}
-                  </p>
-                )}
-              </div>
+              <TextInput
+                type="email"
+                label={t('email_label')}
+                hint={t('email_placeholder')}
+                value={emailOverride}
+                onChange={(v) => setEmailOverride(v)}
+                status={emailOverride && !isEmailValid(emailOverride) ? 'error' : 'default'}
+                helperText={emailOverride && !isEmailValid(emailOverride) ? t('invalid_email_text') : undefined}
+                classNames={{
+                  root: styles.formGroup,
+                  label: styles.label,
+                  input: applyTheme(styles, 'input'),
+                  helper: applyTheme(styles, 'errorText'),
+                }}
+              />
             ) : (
               <div className={`${applyTheme(styles, 'emailDisplay')}`}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

@@ -262,6 +262,9 @@
 }
 
 .accountNumberContainer{  position: relative;  display: flex;  align-items: center;  width: 100%;
+}
+/* Layout-transparent TextInput root so the account-number input stays a direct child. */
+.textInputRoot{  display: contents;
 }  /* Tablet */
 @media screen and (min-width: 500px) and (max-width: 800px) {
  .header {  left: 0;  }

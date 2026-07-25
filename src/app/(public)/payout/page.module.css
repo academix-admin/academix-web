@@ -556,6 +556,11 @@
     align-items: center;
 }
 
+/* Layout-transparent TextInput root so the position input stays a direct flex child. */
+.textInputRoot {
+    display: contents;
+}
+
 .position_input {
     flex: 1;
     padding: 0.5rem;

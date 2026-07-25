@@ -5,6 +5,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { getSupportedLang } from '@/context/LanguageContext';
 import CurrencySymbol from '@/components/CurrencySymbol/CurrencySymbol';
+import { TextInput } from '@academix-admin/forms';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Autoplay } from 'swiper/modules';
 import 'swiper/css';
@@ -733,14 +734,16 @@ const MultiplayerView = ({ data, roles }: { data: ChallengeConfig; roles: string
           {t('enter_position')} (1 - {moreRewards.rewards.length}):
         </label>
         <div className={styles.position_input_wrapper}>
-          <input
+          <TextInput
             type="number"
-            min="1"
-            max={moreRewards.rewards.length}
             value={positionInput}
-            onChange={handlePositionInputChange}
-            placeholder={t('position_placeholder')}
-            className={`${applyTheme(styles, 'position_input')}`}
+            onChange={(_, e) => handlePositionInputChange(e)}
+            hint={t('position_placeholder')}
+            inputProps={{ min: 1, max: moreRewards.rewards.length }}
+            classNames={{
+              root: styles.textInputRoot,
+              input: applyTheme(styles, 'position_input'),
+            }}
           />
         </div>
         {positionAmount !== null && (

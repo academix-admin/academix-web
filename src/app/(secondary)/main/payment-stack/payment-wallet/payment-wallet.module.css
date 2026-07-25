@@ -128,6 +128,11 @@
   margin-bottom: 12px;
 }
 
+/* Layout-transparent TextInput root so the amount input stays a direct child. */
+.textInputRoot {
+  display: contents;
+}
+
 .amountInput {
   width: 100%;
   background: transparent;
