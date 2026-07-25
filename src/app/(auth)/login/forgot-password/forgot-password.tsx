@@ -7,6 +7,7 @@ import Image from 'next/image';
 import styles from './forgot-password.module.css';
 import Link from 'next/link'
 import CachedLottie from '@/components/CachedLottie';
+import { TextInput } from '@/components/TextInput';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useAccountDetails, VerificationMethodModel } from '@/lib/stacks/login-stack';
 import { StateStack } from '@academix-admin/state-stack';
@@ -266,31 +267,37 @@ export default function ForgotPassword() {
                 {t('forgot_password_instruction')}
               </div>
             </div>
-            <label htmlFor="account_details" className={styles.label}>{t('account_details_label')}</label>
-            <input
-              type="text"
+            <TextInput
               id="accountDetails"
               name="accountDetails"
+              label={t('account_details_label')}
+              hint={t('login_placeholder')}
               value={accountDetailsInputValue}
-              onChange={handleLoginChange}
-              placeholder={t('login_placeholder')}
-              className={styles.input}
+              onChange={(_, e) => handleLoginChange(e)}
               required
               autoComplete="username"
               autoCapitalize="none"
+              status={
+                error ? 'default'
+                  : accountDetailsState === 'error' ? 'error'
+                    : (accountDetailsState === 'username' || accountDetailsState === 'phone' || accountDetailsState === 'email') ? 'valid'
+                      : 'default'
+              }
+              helperText={
+                error ? undefined
+                  : accountDetailsState === 'error' ? t('login_error')
+                    : accountDetailsState === 'username' ? t('login_username')
+                      : accountDetailsState === 'phone' ? t('login_phone')
+                        : accountDetailsState === 'email' ? t('login_email')
+                          : undefined
+              }
+              classNames={{
+                root: styles.textInputRoot,
+                label: styles.label,
+                input: styles.input,
+                helper: accountDetailsState === 'error' ? styles.errorText : styles.validText,
+              }}
             />
-            {accountDetailsState === 'error' && !error && (
-              <p className={styles.errorText}>{t('login_error')}</p>
-            )}
-            {accountDetailsState === 'username' && !error && (
-              <p className={styles.validText}>{t('login_username')}</p>
-            )}
-            {accountDetailsState === 'phone' && !error && (
-              <p className={styles.validText}>{t('login_phone')}</p>
-            )}
-            {accountDetailsState === 'email' && !error && (
-              <p className={styles.validText}>{t('login_email')}</p>
-            )}
           </div>
 
           {error && (<div className={styles.errorSection}>

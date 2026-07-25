@@ -1,0 +1,117 @@
+/* Built-in DEFAULT styles for TextInput. Any slot a route supplies via `classNames`
+   REPLACES the matching default, so these only render on fields that don't pin their
+   own look (new pages). Kept deliberately close to the auth `.input` baseline. */
+
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-align: left;
+  color: var(--text-color, inherit);
+  word-break: break-word;
+  white-space: normal;
+}
+
+.field {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input {
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border: 1px solid #c4c4c4;
+  font-size: 1rem;
+  width: 100%;
+  box-sizing: border-box;
+  background-color: transparent;
+  color: inherit;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #4f46e5;
+}
+
+/* Themed default variants (composed by the `theme` prop like applyTheme's
+   `input_light`/`input_dark`). Only used when a page relies on the built-in default
+   input — routes that pass their own `classNames.input` are unaffected. */
+.input_light {
+  background-color: #ffffff;
+  color: #000000;
+  border-color: #c4c4c4;
+}
+
+.input_dark {
+  background-color: #1e1e1e;
+  color: #ffffff;
+  border-color: #333333;
+}
+
+.field .input {
+  /* leave room for a leading adornment when present */
+}
+
+.prefix {
+  position: absolute;
+  left: 1rem;
+  z-index: 1;
+  font-size: 1rem;
+  color: var(--text-secondary, #6b7280);
+  pointer-events: none;
+}
+
+.field:has(.prefix) .input {
+  padding-left: 2.5rem;
+}
+
+.suffix {
+  position: absolute;
+  right: 1rem;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  color: var(--text-secondary, #6b7280);
+}
+
+.toggle {
+  position: absolute;
+  right: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  padding: 0.25rem;
+  cursor: pointer;
+  color: var(--text-secondary, #6b7280);
+}
+
+.counter {
+  position: absolute;
+  right: 0.75rem;
+  font-size: 0.75rem;
+  color: var(--text-secondary, #9ca3af);
+  pointer-events: none;
+}
+
+.helper {
+  font-size: 0.75rem;
+  margin: 0;
+  margin-top: 0.15rem;
+  text-align: left;
+  font-weight: 500;
+  line-height: 1.25;
+  word-break: break-word;
+  white-space: normal;
+}
+
+.statusError { color: #dc2626; }
+.statusValid { color: #16a34a; }
+.statusInfo  { color: #4f46e5; }

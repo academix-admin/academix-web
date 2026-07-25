@@ -7,6 +7,7 @@ import Image from 'next/image';
 import styles from './step7.module.css';
 import Link from 'next/link';
 import CachedLottie from '@/components/CachedLottie';
+import { TextInput } from '@/components/TextInput';
 import { getLastNameOrSingle, capitalize } from '@/utils/textUtils';
 import { useSignup } from '@/lib/stacks/signup-stack';
 import { useNav } from "@academix-admin/navigation-stack";
@@ -54,12 +55,10 @@ export default function SignUpStep7() {
   // PIN states
   const [sixPinInputValue, setSixPinInputValue] = useState('');
   const [sixPinState, setSixPinState] = useState<'initial' | 'valid' | 'invalid' | 'incomplete'>('incomplete');
-  const [showPin, setShowPin] = useState(false);
 
   // Password states
   const [passwordInputValue, setPasswordInputValue] = useState('');
   const [passwordChecks, setPasswordChecks] = useState(validatePassword(''));
-  const [showPassword, setShowPassword] = useState(false);
 
   const isFormValid = sixPinState === 'valid' && passwordChecks.valid;
 
@@ -141,13 +140,6 @@ export default function SignUpStep7() {
     signup$.setField({ field: 'password', value: result.valid ? value : '' });
   };
 
-  const togglePinVisibility = () => {
-    setShowPin(!showPin);
-  };
-
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
-  };
 
   // ================== Render ==================
   return (
@@ -195,93 +187,60 @@ export default function SignUpStep7() {
                     aria-hidden="true"
                   />
           {/* PIN */}
-          <div className={styles.formGroup}>
-            <label htmlFor="sixDigitPin" className={styles.label}>{t('sixDigitPin_label')}</label>
-            <div className={styles.inputWrapper}>
-              <input
-                type={showPin ? "text" : "password"}
-                id="sixDigitPin"
-                name="sixDigitPin"
-                value={sixPinInputValue}
-                maxLength={6}
-                onChange={handleSixPinChange}
-                placeholder={t('sixDigitPin_placeholder')}
-                className={styles.input}
-                disabled={signUpLoading}
-                inputMode="numeric"
-                pattern="[0-9]*"
-                autoComplete={'new-password'}
-                aria-invalid={sixPinState === 'invalid'}
-                required
-              />
-              <button
-                type="button"
-                className={styles.eyeButton}
-                onClick={togglePinVisibility}
-                aria-label={showPin ? "Hide PIN" : "Show PIN"}
-              >
-                {showPin ? (
-                  <svg className={styles.eyeIcon} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M1 12C1 12 5 4 12 4C19 4 23 12 23 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M1 12C1 12 5 20 12 20C19 20 23 12 23 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                ) : (
-                  <svg className={styles.eyeIcon} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M10.5858 10.5858C10.2107 10.9609 10 11.4696 10 12C10 13.1046 10.8954 14 12 14C12.5304 14 13.0391 13.7893 13.4142 13.4142" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M17.6112 17.6112C16.0556 18.979 14.1364 19.7493 12.0001 19.7493C5.63647 19.7493 2.25011 12.3743 2.25011 12.3743C3.47011 10.1443 5.27761 8.35577 7.38911 7.13965" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M20.8892 6.00928C21.8292 6.78928 22.6732 7.70428 23.3892 8.72428C23.7502 9.23428 23.7502 9.91428 23.3892 10.4243C22.6732 11.4443 21.8292 12.3593 20.8892 13.1393" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M14.9318 6.00928C13.6618 5.38928 12.2818 5.02928 10.8188 5.00928C9.35585 4.98928 7.93185 5.30928 6.61185 5.88928" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M21 3L3 21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                )}
-              </button>
-            </div>
-            {sixPinState === 'incomplete' && <p className={styles.errorText}>{t('pin_incomplete')}</p>}
-            {sixPinState === 'invalid' && <p className={styles.errorText}>{t('pin_invalid')}</p>}
-            {sixPinState === 'valid' && <p className={styles.validText}>{t('pin_valid')}</p>}
-          </div>
+          <TextInput
+            id="sixDigitPin"
+            name="sixDigitPin"
+            label={t('sixDigitPin_label')}
+            hint={t('sixDigitPin_placeholder')}
+            value={sixPinInputValue}
+            onChange={(_, e) => handleSixPinChange(e)}
+            secureToggle
+            keyboardType="numeric"
+            pattern="[0-9]*"
+            maxLength={6}
+            disabled={signUpLoading}
+            autoComplete="new-password"
+            required
+            status={sixPinState === 'invalid' ? 'error' : 'default'}
+            inputProps={{ 'aria-invalid': sixPinState === 'invalid' }}
+            helperText={
+              sixPinState === 'incomplete' ? t('pin_incomplete')
+                : sixPinState === 'invalid' ? t('pin_invalid')
+                  : sixPinState === 'valid' ? t('pin_valid')
+                    : undefined
+            }
+            classNames={{
+              root: styles.formGroup,
+              label: styles.label,
+              field: styles.inputWrapper,
+              input: styles.input,
+              toggle: styles.eyeButton,
+              helper: sixPinState === 'valid' ? styles.validText : styles.errorText,
+            }}
+          />
 
           {/* Password */}
           <div className={styles.formGroup}>
-            <label htmlFor="password" className={styles.label}>{t('password_label')}</label>
-            <div className={styles.inputWrapper}>
-              <input
-                type={showPassword ? "text" : "password"}
-                id="password"
-                name="password"
-                value={passwordInputValue}
-                onChange={handlePasswordChange}
-                placeholder={t('password_placeholder')}
-                className={styles.input}
-                disabled={signUpLoading}
-                autoComplete={'new-password'}
-                aria-invalid={!passwordChecks.valid}
-                required
-              />
-              <button
-                type="button"
-                className={styles.eyeButton}
-                onClick={togglePasswordVisibility}
-                aria-label={showPassword ? "Hide password" : "Show password"}
-              >
-                {showPassword ? (
-                  <svg className={styles.eyeIcon} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M1 12C1 12 5 4 12 4C19 4 23 12 23 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M1 12C1 12 5 20 12 20C19 20 23 12 23 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                ) : (
-                  <svg className={styles.eyeIcon} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M10.5858 10.5858C10.2107 10.9609 10 11.4696 10 12C10 13.1046 10.8954 14 12 14C12.5304 14 13.0391 13.7893 13.4142 13.4142" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M17.6112 17.6112C16.0556 18.979 14.1364 19.7493 12.0001 19.7493C5.63647 19.7493 2.25011 12.3743 2.25011 12.3743C3.47011 10.1443 5.27761 8.35577 7.38911 7.13965" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M20.8892 6.00928C21.8292 6.78928 22.6732 7.70428 23.3892 8.72428C23.7502 9.23428 23.7502 9.91428 23.3892 10.4243C22.6732 11.4443 21.8292 12.3593 20.8892 13.1393" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M14.9318 6.00928C13.6618 5.38928 12.2818 5.02928 10.8188 5.00928C9.35585 4.98928 7.93185 5.30928 6.61185 5.88928" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M21 3L3 21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                )}
-              </button>
-            </div>
+            <TextInput
+              id="password"
+              name="password"
+              label={t('password_label')}
+              hint={t('password_placeholder')}
+              value={passwordInputValue}
+              onChange={(_, e) => handlePasswordChange(e)}
+              secureToggle
+              disabled={signUpLoading}
+              autoComplete="new-password"
+              required
+              inputProps={{ 'aria-invalid': !passwordChecks.valid }}
+              classNames={{
+                root: styles.textInputRoot,
+                label: styles.label,
+                field: styles.inputWrapper,
+                input: styles.input,
+                toggle: styles.eyeButton,
+              }}
+            />
             <p className={passwordChecks.hasUppercase ? styles.validText : styles.errorText}>• {t('contain_uppercase')}</p>
             <p className={passwordChecks.hasMinLength ? styles.validText : styles.errorText}>• {t('contain_sixChar')}</p>
             <p className={passwordChecks.hasLowercase ? styles.validText : styles.errorText}>• {t('contain_lowercase')}</p>

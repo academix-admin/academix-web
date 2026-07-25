@@ -157,6 +157,12 @@
   margin-top: 0.5rem;
 }
 
+/* Layout-transparent TextInput root so the email field stays a direct flex child of
+   the newsletter form (sitting above the submit button). */
+.textInputRoot {
+  display: contents;
+}
+
 .emailInput {
   padding: 0.75rem 1rem;
   border-radius: 6px;

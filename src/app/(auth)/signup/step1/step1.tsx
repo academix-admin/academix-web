@@ -7,6 +7,7 @@ import Image from 'next/image';
 import styles from './step1.module.css';
 import Link from 'next/link'
 import CachedLottie from '@/components/CachedLottie';
+import { TextInput } from '@/components/TextInput';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useSignup } from '@/lib/stacks/signup-stack';
 import { StateStack } from '@academix-admin/state-stack';
@@ -127,44 +128,48 @@ export default function SignUpStep1() {
         <p className={styles.titleSmall}>{t('cheers_sign_up')}</p>
         <h2 className={styles.titleBig}>{t('join_us_academix')}</h2>
         <form onSubmit={handleSubmit} className={styles.form}>
-          <div className={styles.formGroup}>
-            <label htmlFor="fullName" className={styles.label}>{t('fullname_label')}</label>
-            <input
-              type="text"
-              id="fullName"
-              name="fullName"
-              value={signup.fullName}
-              onChange={handleChange}
-              placeholder={t('fullname_placeholder')}
-              className={styles.input}
-              disabled={continueLoading}
-              required
-            />
-            {fullNameState === 'invalid' && (
-              <p className={styles.errorText}>{t('fullname_too_short')}</p>
-            )}
-            {fullNameState === 'valid' && (
-              <p className={styles.validText}>{t('fullname_valid')}</p>
-            )}
-          </div>
+          <TextInput
+            id="fullName"
+            name="fullName"
+            label={t('fullname_label')}
+            hint={t('fullname_placeholder')}
+            value={signup.fullName}
+            onChange={(_, e) => handleChange(e)}
+            disabled={continueLoading}
+            required
+            status={fullNameState === 'invalid' ? 'error' : fullNameState === 'valid' ? 'valid' : 'default'}
+            helperText={
+              fullNameState === 'invalid' ? t('fullname_too_short')
+                : fullNameState === 'valid' ? t('fullname_valid')
+                  : undefined
+            }
+            classNames={{
+              root: styles.formGroup,
+              label: styles.label,
+              input: styles.input,
+              helper: fullNameState === 'invalid' ? styles.errorText : styles.validText,
+            }}
+          />
 
-          <div className={styles.formGroup}>
-            <label htmlFor="email" className={styles.label}>{t('email_label')}</label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={signup.email}
-              onChange={handleChange}
-              placeholder={t('email_placeholder')}
-              className={styles.input}
-              disabled={continueLoading}
-              required
-            />
-            {emailExists && (
-              <p className={styles.errorText}>{t('email_exists_error')}</p>
-            )}
-          </div>
+          <TextInput
+            id="email"
+            name="email"
+            type="email"
+            label={t('email_label')}
+            hint={t('email_placeholder')}
+            value={signup.email}
+            onChange={(_, e) => handleChange(e)}
+            disabled={continueLoading}
+            required
+            status={emailExists ? 'error' : 'default'}
+            helperText={emailExists ? t('email_exists_error') : undefined}
+            classNames={{
+              root: styles.formGroup,
+              label: styles.label,
+              input: styles.input,
+              helper: styles.errorText,
+            }}
+          />
 
           <button
             type="submit"

@@ -260,6 +260,13 @@
   gap: 0.75rem;
 }
 
+/* Layout-transparent wrapper so a nested TextInput's label/field/helper stay direct
+   flex children of .formGroup (exact original spacing) while a sibling like the
+   username checking-spinner remains in the same group. */
+.textInputRoot {
+  display: contents;
+}
+
 .label {
   font-size: 0.875rem;
   font-weight: 600;

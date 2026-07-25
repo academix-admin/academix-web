@@ -354,6 +354,12 @@
   width: 100%;
 }
 
+/* Layout-transparent TextInput root so its label/field/helper stay direct children
+   of the surrounding container (keeps the original flat layout). */
+.textInputRoot {
+  display: contents;
+}
+
 .prefix {
   position: absolute;
   left: 1rem;

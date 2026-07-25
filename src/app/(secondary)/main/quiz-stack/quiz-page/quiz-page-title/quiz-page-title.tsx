@@ -8,6 +8,7 @@ import { getLastNameOrSingle, capitalize } from '@/utils/textUtils';
 import { ComponentStateProps } from '@/hooks/use-component-state';
 import { BottomViewer, useBottomController } from "@academix-admin/bottom-viewer";
 import DialogCancel from '@/components/DialogCancel';
+import { TextInput } from '@/components/TextInput';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useUserData } from '@/lib/stacks/user-stack';
 import { getParamatical } from '@/utils/checkers';
@@ -299,21 +300,22 @@ function QuizJoinContent({ theme, t, onClose, scannedQuizPool, setScannedQuizPoo
                 <div className={`${applyTheme(styles, 'codeLabel')}`}>
                   {t('code_placeholder')}
                 </div>
-                <div className={styles.codeInputWrapper}>
-                  <input
-                    type="text"
-                    value={code}
-                    onChange={(e) => setCode(e.target.value.toUpperCase())}
-                    onKeyPress={handleKeyPress}
-                    maxLength={9}
-                    placeholder="XXXXXXXXX"
-                    autoFocus
-                    className={`${applyTheme(styles, 'codeInput')}`}
-                  />
-                  <div className={`${applyTheme(styles, 'codeCounter')}`}>
-                    {code.length}/9
-                  </div>
-                </div>
+                <TextInput
+                  value={code}
+                  onChange={(v) => setCode(v)}
+                  onKeyPress={handleKeyPress}
+                  transform="uppercase"
+                  maxLength={9}
+                  hint="XXXXXXXXX"
+                  autoFocus
+                  counter
+                  classNames={{
+                    root: styles.textInputRoot,
+                    field: styles.codeInputWrapper,
+                    input: applyTheme(styles, 'codeInput'),
+                    counter: applyTheme(styles, 'codeCounter'),
+                  }}
+                />
               </div>
             )}
           </div>

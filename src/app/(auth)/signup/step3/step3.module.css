@@ -154,6 +154,12 @@
   gap: 0.5rem;
 }
 
+/* Layout-transparent TextInput root so its label/field/helper stay direct flex
+   children of .formGroup, next to the username checking-spinner sibling. */
+.textInputRoot {
+  display: contents;
+}
+
 .label {
   font-size: 0.875rem;
   font-weight: 600;

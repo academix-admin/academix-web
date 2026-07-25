@@ -242,6 +242,12 @@
   overflow: hidden;
 }
 
+/* Layout-transparent TextInput root so the code field's wrapper stays a direct,
+   centered child of .codeContainer (no extra flex box around it). */
+.textInputRoot {
+  display: contents;
+}
+
 .codeLabel {
   font-size: 56px;
   font-weight: bold;

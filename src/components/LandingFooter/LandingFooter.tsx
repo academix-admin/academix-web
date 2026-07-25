@@ -7,6 +7,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useDialog } from '@academix-admin/dialog-viewer';
+import { TextInput } from '@/components/TextInput';
 
 const SOCIAL_LINKS = [
   {
@@ -180,14 +181,17 @@ export default function LandingFooter() {
             <h3 className={styles.linksHeading}>{t('newsletter')}</h3>
             <p className={styles.newsletterText}>{t('newsletter_text')}</p>
             <form className={styles.newsletterForm} onSubmit={handleSubscribe}>
-              <input
+              <TextInput
                 type="email"
-                placeholder={t('sub_email_placeholder')}
-                className={`${applyTheme(styles, 'emailInput')}`}
+                hint={t('sub_email_placeholder')}
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(v) => setEmail(v)}
                 disabled={isLoading}
                 required
+                classNames={{
+                  root: styles.textInputRoot,
+                  input: applyTheme(styles, 'emailInput'),
+                }}
               />
               <button
                 type="submit"

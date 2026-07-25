@@ -7,6 +7,7 @@ import Image from 'next/image';
 import styles from './edit-profile.module.css';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useNav, Scaffold } from "@academix-admin/navigation-stack";
+import { TextInput } from '@/components/TextInput';
 import { capitalizeWords } from '@/utils/textUtils';
 import { getParamatical } from '@/utils/checkers';
 import { useUserData } from '@/lib/stacks/user-stack';
@@ -251,34 +252,37 @@ const UserNameView = ({ onEditing }: ViewProps) => {
   return (
     <div className={styles.editSection}>
       <div className={styles.formGroup}>
-        <label htmlFor="username" className={styles.label}>{t('username_label')}</label>
-        <div className={styles.usernameInputContainer}>
-          <span className={styles.prefix}>@</span>
-          <input
-            type="text"
-            id="username"
-            name="username"
-            value={editingValue}
-            onChange={handleUserNameChange}
-            placeholder={t('username_placeholder')}
-            className={styles.input}
-            required
-            autoCapitalize="none"
-          />
-        </div>
-
-        {userNameState === 'wrongFormat' && (
-          <p className={styles.errorText}>{t('username_wrong_format')}</p>
-        )}
-        {userNameState === 'exists' && (
-          <p className={styles.errorText}>{t('username_exist')}</p>
-        )}
-        {userNameState === 'error' && (
-          <p className={styles.errorText}>{t('username_error')}</p>
-        )}
-        {userNameState === 'valid' && (
-          <p className={styles.validText}>{t('username_valid')}</p>
-        )}
+        <TextInput
+          id="username"
+          name="username"
+          label={t('username_label')}
+          hint={t('username_placeholder')}
+          value={editingValue}
+          onChange={(_, e) => handleUserNameChange(e)}
+          required
+          autoCapitalize="none"
+          prefix="@"
+          status={
+            userNameState === 'valid' ? 'valid'
+              : (userNameState === 'wrongFormat' || userNameState === 'exists' || userNameState === 'error') ? 'error'
+                : 'default'
+          }
+          helperText={
+            userNameState === 'wrongFormat' ? t('username_wrong_format')
+              : userNameState === 'exists' ? t('username_exist')
+                : userNameState === 'error' ? t('username_error')
+                  : userNameState === 'valid' ? t('username_valid')
+                    : undefined
+          }
+          classNames={{
+            root: styles.textInputRoot,
+            label: styles.label,
+            field: styles.usernameInputContainer,
+            prefix: styles.prefix,
+            input: styles.input,
+            helper: userNameState === 'valid' ? styles.validText : styles.errorText,
+          }}
+        />
         {userNameState === 'checking' && (
           <span className={styles.usernameSpinner}></span>
         )}
@@ -554,31 +558,33 @@ const PhoneNumberView = ({ onEditing }: ViewProps) => {
 
   return (
     <div className={styles.editSection}>
-      <div className={styles.formGroup}>
-        <label htmlFor="phoneNumber" className={styles.label}>{t('phone_number_label')}</label>
-        <div className={styles.phoneInputContainer}>
-          <span className={styles.prefix}>+</span>
-          <input
-            type="text"
-            id="phoneNumber"
-            name="phoneNumber"
-            value={editingValue}
-            maxLength={userData?.usersPhone?.replace('+', '').length || 0}
-            onChange={handlePhoneNumberChange}
-            placeholder={t('phone_number_placeholder')}
-            className={styles.input}
-            inputMode="numeric"
-            pattern="[0-9]*"
-            required
-          />
-        </div>
-        {phoneNumberState === 'invalid' && (
-          <p className={styles.errorText}>{t('phone_number_invalid')}</p>
-        )}
-        {phoneNumberState === 'valid' && (
-          <p className={styles.validText}>{t('phone_number_valid')}</p>
-        )}
-      </div>
+      <TextInput
+        id="phoneNumber"
+        name="phoneNumber"
+        label={t('phone_number_label')}
+        hint={t('phone_number_placeholder')}
+        value={editingValue}
+        onChange={(_, e) => handlePhoneNumberChange(e)}
+        prefix="+"
+        keyboardType="numeric"
+        pattern="[0-9]*"
+        maxLength={userData?.usersPhone?.replace('+', '').length || 0}
+        required
+        status={phoneNumberState === 'invalid' ? 'error' : phoneNumberState === 'valid' ? 'valid' : 'default'}
+        helperText={
+          phoneNumberState === 'invalid' ? t('phone_number_invalid')
+            : phoneNumberState === 'valid' ? t('phone_number_valid')
+              : undefined
+        }
+        classNames={{
+          root: styles.formGroup,
+          label: styles.label,
+          field: styles.phoneInputContainer,
+          prefix: styles.prefix,
+          input: styles.input,
+          helper: phoneNumberState === 'valid' ? styles.validText : styles.errorText,
+        }}
+      />
 
       <ActionButtons
         onCancel={() => setEditing(false)}
@@ -690,23 +696,25 @@ const EmailView = ({ onEditing }: ViewProps) => {
 
   return (
     <div className={styles.editSection}>
-      <div className={styles.formGroup}>
-        <label htmlFor="email" className={styles.label}>{t('email_label')}</label>
-        <input
-          type="email"
-          id="email"
-          name="email"
-          value={editingValue}
-          onChange={handleChange}
-          placeholder={t('email_placeholder')}
-          className={styles.input}
-          disabled={saveLoading}
-          required
-        />
-        {!isEmailValid && (
-          <p className={styles.errorText}>{t('email_invalid')}</p>
-        )}
-      </div>
+      <TextInput
+        id="email"
+        name="email"
+        type="email"
+        label={t('email_label')}
+        hint={t('email_placeholder')}
+        value={editingValue}
+        onChange={(_, e) => handleChange(e)}
+        disabled={saveLoading}
+        required
+        status={!isEmailValid ? 'error' : 'default'}
+        helperText={!isEmailValid ? t('email_invalid') : undefined}
+        classNames={{
+          root: styles.formGroup,
+          label: styles.label,
+          input: styles.input,
+          helper: styles.errorText,
+        }}
+      />
 
       <ActionButtons
         onCancel={() => setEditing(false)}
@@ -817,20 +825,21 @@ const FullnameView = ({ onEditing }: ViewProps) => {
 
   return (
     <div className={styles.editSection}>
-      <div className={styles.formGroup}>
-        <label htmlFor="fullName" className={styles.label}>{t('fullname_label')}</label>
-        <input
-          type="text"
-          id="fullName"
-          name="fullName"
-          value={editingValue}
-          onChange={handleChange}
-          placeholder={t('fullname_placeholder')}
-          className={styles.input}
-          disabled={saveLoading}
-          required
-        />
-      </div>
+      <TextInput
+        id="fullName"
+        name="fullName"
+        label={t('fullname_label')}
+        hint={t('fullname_placeholder')}
+        value={editingValue}
+        onChange={(_, e) => handleChange(e)}
+        disabled={saveLoading}
+        required
+        classNames={{
+          root: styles.formGroup,
+          label: styles.label,
+          input: styles.input,
+        }}
+      />
 
       <ActionButtons
         onCancel={() => setEditing(false)}

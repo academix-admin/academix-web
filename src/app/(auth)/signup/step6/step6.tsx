@@ -7,6 +7,7 @@ import Image from 'next/image';
 import styles from './step6.module.css';
 import Link from 'next/link';
 import CachedLottie from '@/components/CachedLottie';
+import { TextInput } from '@/components/TextInput';
 import { getLastNameOrSingle, capitalize } from '@/utils/textUtils';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useSignup, Referral} from '@/lib/stacks/signup-stack';
@@ -157,33 +158,36 @@ const onSearchClick = async () => {
                            <h2 className={`${styles.userNameResult} ${styles[`nameResult_${theme}`]}`}>{signup.referral?.users_names || 'null'}  </h2>
 
                         </div>)}
-                    {userNameState != 'exists' && (<label htmlFor="username" className={styles.label}>{t('username_label')}</label>)}
-                    {userNameState != 'exists' && (<div className={styles.usernameInputContainer}>
-                       <span className={`${applyTheme(styles, 'prefix')}`}>@</span>
-                       <input
-                                                 autoFocus={userNameState === 'exists' ? false : true}
-                                                 type="text"
-                                                 id="username_check"
-                                                 name="username"
-                                                 value={usernameInputValue}
-                                                 onChange={handleUserNameChange}
-                                                 placeholder={t('username_placeholder')}
-                                                 className={styles.input}
-                                                 required
-                                                 disabled={continueLoading}
-
-                                                 autoCapitalize="none"
-                       />
-                   </div>)}
-                                             {userNameState === 'wrongFormat' && (
-                                               <p className={`${applyTheme(styles, 'errorText')}`}>{t('username_wrong_format')}</p>
-                                             )}
-                                             {userNameState === 'error' && (
-                                               <p className={`${applyTheme(styles, 'errorText')}`}>{t('username_error')}</p>
-                                             )}
-                                             {userNameState === 'empty' && (
-                                               <p className={`${applyTheme(styles, 'errorText')}`}>{t('username_empty')}</p>
-                                             )}
+                    {userNameState != 'exists' && (
+                      <TextInput
+                        id="username_check"
+                        name="username"
+                        label={t('username_label')}
+                        hint={t('username_placeholder')}
+                        value={usernameInputValue}
+                        onChange={(_, e) => handleUserNameChange(e)}
+                        required
+                        disabled={continueLoading}
+                        autoFocus={userNameState !== 'exists'}
+                        autoCapitalize="none"
+                        prefix="@"
+                        status={(userNameState === 'wrongFormat' || userNameState === 'error' || userNameState === 'empty') ? 'error' : 'default'}
+                        helperText={
+                          userNameState === 'wrongFormat' ? t('username_wrong_format')
+                            : userNameState === 'error' ? t('username_error')
+                              : userNameState === 'empty' ? t('username_empty')
+                                : undefined
+                        }
+                        classNames={{
+                          root: styles.textInputRoot,
+                          label: styles.label,
+                          field: styles.usernameInputContainer,
+                          prefix: applyTheme(styles, 'prefix'),
+                          input: styles.input,
+                          helper: applyTheme(styles, 'errorText'),
+                        }}
+                      />
+                    )}
               <div className={styles.actionsRow}>
     <button
                   type="button"

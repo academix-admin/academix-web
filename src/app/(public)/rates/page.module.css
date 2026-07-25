@@ -490,6 +490,12 @@
     align-items: center;
 }
 
+/* Layout-transparent TextInput root so the amount field's wrapper stays a direct
+   child of .inputGroup (keeps the original conversion layout). */
+.textInputRoot {
+    display: contents;
+}
+
 .amountInput {
     width: 100%;
     padding: 1rem;

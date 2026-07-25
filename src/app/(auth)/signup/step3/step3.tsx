@@ -7,6 +7,7 @@ import Image from 'next/image';
 import styles from './step3.module.css';
 import Link from 'next/link';
 import CachedLottie from '@/components/CachedLottie';
+import { TextInput } from '@/components/TextInput';
 import { getLastNameOrSingle, capitalize } from '@/utils/textUtils';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useSignup } from '@/lib/stacks/signup-stack';
@@ -275,63 +276,67 @@ export default function SignUpStep3() {
         })}</p>
 
         <form onSubmit={handleSubmit} className={styles.form}>
-          <div className={styles.formGroup}>
-            <label htmlFor="phoneNumber" className={styles.label}>{t('phone_number_label')}</label>
-            <div className={styles.phoneInputContainer}>
-              <span className={styles.prefix}>{`${signup.country?.country_phone_code || ''} - `}</span>
-              <input
-                type="text"
-                id="phoneNumber"
-                name="phoneNumber"
-                value={phoneInputValue}
-                maxLength={signup.country?.country_phone_digit || 0}
-                onChange={handlePhoneNumberChange}
-                placeholder={t('phone_number_placeholder')}
-                className={styles.input}
-                inputMode="numeric"
-                pattern="[0-9]*"
-                required
-              />
-            </div>
-            {phoneNumberState === 'exists' && (
-              <p className={styles.errorText}>{t('phone_number_exists')}</p>
-            )}
-            {phoneNumberState === 'invalid' && (
-              <p className={styles.errorText}>{t('phone_number_invalid')}</p>
-            )}
-            {phoneNumberState === 'valid' && (
-              <p className={styles.validText}>{t('phone_number_valid')}</p>
-            )}
-          </div>
+          <TextInput
+            id="phoneNumber"
+            name="phoneNumber"
+            label={t('phone_number_label')}
+            hint={t('phone_number_placeholder')}
+            value={phoneInputValue}
+            onChange={(_, e) => handlePhoneNumberChange(e)}
+            prefix={`${signup.country?.country_phone_code || ''} - `}
+            keyboardType="numeric"
+            pattern="[0-9]*"
+            maxLength={signup.country?.country_phone_digit || 0}
+            required
+            status={phoneNumberState === 'valid' ? 'valid' : (phoneNumberState === 'exists' || phoneNumberState === 'invalid') ? 'error' : 'default'}
+            helperText={
+              phoneNumberState === 'exists' ? t('phone_number_exists')
+                : phoneNumberState === 'invalid' ? t('phone_number_invalid')
+                  : phoneNumberState === 'valid' ? t('phone_number_valid')
+                    : undefined
+            }
+            classNames={{
+              root: styles.formGroup,
+              label: styles.label,
+              field: styles.phoneInputContainer,
+              prefix: styles.prefix,
+              input: styles.input,
+              helper: phoneNumberState === 'valid' ? styles.validText : styles.errorText,
+            }}
+          />
 
           <div className={styles.formGroup}>
-            <label htmlFor="username" className={styles.label}>{t('username_label')}</label>
-            <div className={styles.usernameInputContainer}>
-              <span className={styles.prefix}>@</span>
-              <input
-                type="text"
-                id="username"
-                name="username"
-                value={usernameInputValue}
-                onChange={handleUserNameChange}
-                placeholder={t('username_placeholder')}
-                className={styles.input}
-                required
-                autoCapitalize="none"
-              />
-            </div>
-            {userNameState === 'wrongFormat' && (
-              <p className={styles.errorText}>{t('username_wrong_format')}</p>
-            )}
-            {userNameState === 'exists' && (
-              <p className={styles.errorText}>{t('username_exist')}</p>
-            )}
-            {userNameState === 'error' && (
-              <p className={styles.errorText}>{t('username_error')}</p>
-            )}
-            {userNameState === 'valid' && (
-              <p className={styles.validText}>{t('username_valid')}</p>
-            )}
+            <TextInput
+              id="username"
+              name="username"
+              label={t('username_label')}
+              hint={t('username_placeholder')}
+              value={usernameInputValue}
+              onChange={(_, e) => handleUserNameChange(e)}
+              required
+              autoCapitalize="none"
+              prefix="@"
+              status={
+                userNameState === 'valid' ? 'valid'
+                  : (userNameState === 'wrongFormat' || userNameState === 'exists' || userNameState === 'error') ? 'error'
+                    : 'default'
+              }
+              helperText={
+                userNameState === 'wrongFormat' ? t('username_wrong_format')
+                  : userNameState === 'exists' ? t('username_exist')
+                    : userNameState === 'error' ? t('username_error')
+                      : userNameState === 'valid' ? t('username_valid')
+                        : undefined
+              }
+              classNames={{
+                root: styles.textInputRoot,
+                label: styles.label,
+                field: styles.usernameInputContainer,
+                prefix: styles.prefix,
+                input: styles.input,
+                helper: userNameState === 'valid' ? styles.validText : styles.errorText,
+              }}
+            />
             {userNameState === 'checking' && (
               <span className={styles.usernameSpinner}></span>
             )}

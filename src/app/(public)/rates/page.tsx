@@ -10,6 +10,7 @@ import styles from './page.module.css';
 import { useRouter } from 'next/navigation';
 import { useSearchParams } from 'next/navigation';
 import { useAuthContext } from '@/providers/AuthProvider'
+import { TextInput } from '@/components/TextInput';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { BackendBuyPaymentWalletModel } from '@/models/payment-wallet-model';
 import { BackendSellPaymentWalletModel } from '@/models/payment-wallet-model';
@@ -798,18 +799,19 @@ export default function Rates({ searchParams }: RatesPageProps) {
                   <div className={`${styles.conversionHeader} ${flipped ? styles.conversionRightHeader : styles.conversionLeftHeader}`}>
                       <span>{isBuyMode ? t('you_pay', resolvedLang) : t('you_receive', resolvedLang)}</span>
                   </div>
-                  <div className={styles.inputWrapper}>
-
-                    <input
-                      ref={walletInputRef}
-                      type="text"
-                      value={walletAmount}
-                      onChange={handleWalletAmountChange}
-                      placeholder="0.00"
-                      className={`${styles.amountInput} ${styles[`amountInput_${resolvedTheme}`]}`}
-                    />
-                    <div className={styles.currencyLabel}>{walletData.paymentWalletCurrency}</div>
-                  </div>
+                  <TextInput
+                    ref={walletInputRef}
+                    value={walletAmount}
+                    onChange={(_, e) => handleWalletAmountChange(e)}
+                    hint="0.00"
+                    suffix={walletData.paymentWalletCurrency}
+                    classNames={{
+                      root: styles.textInputRoot,
+                      field: styles.inputWrapper,
+                      input: `${styles.amountInput} ${styles[`amountInput_${resolvedTheme}`]}`,
+                      suffix: styles.currencyLabel,
+                    }}
+                  />
                 </div>
 
                 <div className={styles.swapButton} onClick={switchPaymentMode}>
@@ -822,17 +824,19 @@ export default function Rates({ searchParams }: RatesPageProps) {
                   <div className={`${styles.conversionHeader} ${ flipped ? styles.conversionLeftHeader : styles.conversionRightHeader}`}>
                       <span>{isBuyMode ? t('you_receive', resolvedLang) : t('you_pay', resolvedLang)}</span>
                   </div>
-                  <div className={styles.inputWrapper}>
-                    <input
-                      ref={academixInputRef}
-                      type="text"
-                      value={academixAmount}
-                      onChange={handleAcademixAmountChange}
-                      placeholder="0.00"
-                      className={`${styles.amountInput} ${styles[`amountInput_${resolvedTheme}`]}`}
-                    />
-                    <div className={styles.currencyLabel}>ADC</div>
-                  </div>
+                  <TextInput
+                    ref={academixInputRef}
+                    value={academixAmount}
+                    onChange={(_, e) => handleAcademixAmountChange(e)}
+                    hint="0.00"
+                    suffix="ADC"
+                    classNames={{
+                      root: styles.textInputRoot,
+                      field: styles.inputWrapper,
+                      input: `${styles.amountInput} ${styles[`amountInput_${resolvedTheme}`]}`,
+                      suffix: styles.currencyLabel,
+                    }}
+                  />
                 </div>
               </div>
 
