@@ -206,11 +206,19 @@ import AuthBlocker from '@/components/AuthBlocker/AuthBlocker';
 import { UserData } from '@/models/user-data';
 import { useUserData } from '@/lib/stacks/user-stack';
 import { StateStack } from '@academix-admin/state-stack';
+import { useLanguage } from '@/context/LanguageContext';
+import { fetchUserData } from '@/utils/checkers';
+import { useSignup } from '@/lib/stacks/signup-stack';
+import { capitalizeWords } from '@/utils/textUtils';
 
 export type RoutePattern = string | RegExp;
 
 interface AuthContextType {
   initialized: boolean;
+  /** true while we are resolving a signed-in user's academix profile (e.g. right after an
+   *  OAuth sign-in, before we know whether to go to /main or onboarding). Keeps the single
+   *  AuthBlocker loading up so there is never a second spinner. */
+  resolving: boolean;
   session: Session | null;
   userData: UserData | null;
   hasValidSession: boolean;
@@ -257,6 +265,9 @@ const FLOW_SCOPES = [
   // these, cached user data survived sign-out on shared devices.
   'give_back_flow', 'quiz-topics', 'pin_scope', 'payment-transactions',
   'pool_member_flow', 'quiz_pool_flow', 'active-quiz',
+  // Onboarding progress must not survive a sign-out (else a fresh visitor could
+  // inherit a stale social-onboarding marker).
+  'signup_flow', 'login_flow',
 ] as const;
 
 async function clearAllScopes() {
@@ -270,13 +281,19 @@ async function clearAllScopes() {
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [initialized, setInitialized] = useState(false);
+  const [resolving, setResolving] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
-  const { userData, __meta } = useUserData();
+  const { userData, userData$, __meta } = useUserData();
+  const { lang } = useLanguage();
+  const { signup$ } = useSignup();
   const { replaceAndWait } = useAwaitableRouter({ timeout: 8000, enableLogging: true });
+  const resolveRef = useRef(false);
 
   const publicRoutes:    RoutePattern[] = ['/rules', '/payout', '/rewards', '/rates', '/about', '/help', '/instructions', /^\/redirect(\/[a-f0-9-]+)?$/];
-  const internalRoutes:  RoutePattern[] = ['/', '/login', '/signup', '/welcome'];
+  // /auth/callback is where OAuth lands — treat it like an internal route so a signed-in
+  // user with a profile is forwarded to /main once resolved.
+  const internalRoutes:  RoutePattern[] = ['/', '/login', '/signup', '/welcome', '/auth/callback'];
   const protectedRoutes: RoutePattern[] = ['/main', '/quiz', /^\/quiz\/[a-f0-9-]+$/];
 
   // ─── Effect 1: auth init + subscription ───────────────────────────────────
@@ -317,6 +334,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (!mounted) return;
 
             if (!newSession || isSessionExpired(newSession)) {
+              resolveRef.current = false;
               setSession(null);
               setUser(null);
               await clearAllScopes();
@@ -364,6 +382,63 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
+  // ─── Effect 1b: profile resolution (the single place OAuth is handled) ────
+  // A signed-in user without loaded academix `userData` (the classic case: right after a
+  // Google/OAuth sign-in — Supabase gives us a session but no profile in state) is resolved
+  // HERE, under the one AuthBlocker loading, so there is never a second spinner or a route
+  // race with a per-page callback:
+  //   • profile found  → set userData (Effect 2 forwards internal routes → /main)
+  //   • no profile yet → prefill the signup stack from the session + go to /signup, where
+  //     step 1 auto-advances to step 2 (onboarding). Covers merged email+Google users too
+  //     (same user id → profile found → /main).
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (!initialized || !__meta.isHydrated) return;
+
+    const hasSession = !!session && !isSessionExpired(session);
+    if (!hasSession || userData || resolveRef.current) return;
+    if (matchesRoutePattern(pathname, publicRoutes)) return; // don't disrupt public browsing
+
+    resolveRef.current = true;
+    setResolving(true);
+    (async () => {
+      try {
+        const profile = await fetchUserData(session!.user.id, lang);
+        if (profile) {
+          // Stale onboarding marker (from an abandoned social sign-up) must not linger.
+          await StateStack.core.clearScope('signup_flow');
+          await userData$.set(profile);
+          // Effect 2 will forward internal/callback routes → /main.
+        } else {
+          const u = session!.user;
+          const provider = (u.app_metadata?.provider as string) || '';
+          // Only a social (OAuth) session with no profile means "needs onboarding". A
+          // password (email/phone) session with no profile is an anomaly — don't run people
+          // through social onboarding; send them to /login to re-authenticate.
+          if (provider && provider !== 'email' && provider !== 'phone') {
+            const meta = u.user_metadata ?? {};
+            const name = meta.full_name || meta.name || '';
+            signup$.setField(
+              { field: 'provider', value: provider },
+              { field: 'authUserId', value: u.id },
+              { field: 'fullName', value: name ? capitalizeWords(name) : '' },
+              { field: 'email', value: u.email || '' },
+            );
+            if (pathname !== '/signup') await replaceAndWait('/signup');
+          } else if (!matchesRoutePattern(pathname, publicRoutes)) {
+            await replaceAndWait('/login');
+          }
+        }
+      } catch (e) {
+        console.error('[AUTH] profile resolution error:', e);
+        resolveRef.current = false;
+      } finally {
+        setResolving(false);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialized, session, userData, __meta.isHydrated, pathname]);
+
   // ─── Effect 2: redirect guard ─────────────────────────────────────────────
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -381,11 +456,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       replaceAndWait('/');
       return;
     }
-  }, [initialized, session, __meta.isHydrated, userData, pathname]);
+
+    // /auth/callback with no session = a bare/expired hit (real OAuth always arrives with a
+    // session in the URL). Nothing to resolve → send them to /login.
+    if (initialized && !resolving && !hasSession && pathname === '/auth/callback') {
+      replaceAndWait('/login');
+      return;
+    }
+  }, [initialized, resolving, session, __meta.isHydrated, userData, pathname]);
 
   return (
     <AuthContext.Provider value={{
       initialized,
+      resolving,
       session,
       userData,
       hasValidSession: !!session && !isSessionExpired(session),

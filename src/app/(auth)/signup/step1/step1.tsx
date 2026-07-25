@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import Image from 'next/image';
@@ -27,36 +27,23 @@ export default function SignUpStep1() {
   const [isFormValid, setIsFormValid] = useState(false);
   const [emailExists, setEmailExists] = useState(false);
   const [fullNameState, setFullNameState] = useState('initial');
+  const oauthAdvancedRef = useRef(false);
 
   useEffect(() => {
     setCanGoBack(window.history.length > 1);
   }, []);
 
-  // Social onboarding: if the user arrived here from a Google (OAuth) sign-in, Google has
-  // already given us a verified name + email, so prefill them and skip straight to step 2
-  // (no email entry, no email-OTP, and step 7 will collect a PIN only — no password).
+  // Social onboarding: AuthProvider (the single auth resolver) prefills `provider` + verified
+  // name/email for a first-time social sign-up and lands the user here. Step 1 just forwards
+  // to step 2 — no email entry, no email-OTP, and step 7 collects a PIN only (no password).
   useEffect(() => {
-    if (signup.provider) return; // already in an OAuth onboarding
-    let cancelled = false;
-    (async () => {
-      const { data } = await supabaseBrowser.auth.getSession();
-      const user = data.session?.user;
-      const isOAuth = !!user && (user.app_metadata?.provider ?? '') !== 'email';
-      if (!user || !isOAuth || cancelled) return;
-      const meta = user.user_metadata ?? {};
-      const name = meta.full_name || meta.name || '';
-      signup$.setField(
-        { field: 'provider', value: (user.app_metadata?.provider as string) || 'google' },
-        { field: 'authUserId', value: user.id },
-        { field: 'fullName', value: name ? capitalizeWords(name) : '' },
-        { field: 'email', value: user.email || '' },
-      );
+    if (oauthAdvancedRef.current) return;
+    if (signup.provider && signup.email && nav.isTop()) {
+      oauthAdvancedRef.current = true;
       signup$.setStep(2);
       nav.push('step2');
-    })();
-    return () => { cancelled = true; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [signup.provider]);
+    }
+  }, [signup.provider, signup.email]);
 
   useEffect(() => {
       validateForm(signup.fullName,signup.email);

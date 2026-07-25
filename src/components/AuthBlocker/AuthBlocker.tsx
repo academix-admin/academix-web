@@ -32,9 +32,9 @@ import { useAuthContext } from '@/providers/AuthProvider';
 export default function AuthBlocker({ children }: { children: React.ReactNode }) {
   const { theme, applyTheme } = useTheme();
   const { t } = useLanguage();
-  const { initialized } = useAuthContext();
+  const { initialized, resolving } = useAuthContext();
 
-  if (!initialized) {
+  if (!initialized || resolving) {
     return (
       <div className={`${applyTheme(styles, 'overlay')}`}>
         <LoadingView text={t('loading')} />
