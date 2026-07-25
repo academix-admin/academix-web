@@ -7,6 +7,7 @@ import Image from 'next/image';
 import styles from './step5.module.css';
 import Link from 'next/link';
 import CachedLottie from '@/components/CachedLottie';
+import { Checkbox } from '@/components/Checkbox';
 import { getLastNameOrSingle, capitalize } from '@/utils/textUtils';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useSignup, Role } from '@/lib/stacks/signup-stack';
@@ -350,32 +351,24 @@ export default function SignUpStep5() {
                 {/* Acceptance Notice */}
                 {walletData && (
                   <div className={styles.acceptanceSection}>
-                    <label className={`${applyTheme(styles, 'checkboxLabel')}`}>
-                      <input
-                        type="checkbox"
-                        checked={acceptedTerms}
-                        onChange={(e) => setAcceptedTerms(e.target.checked)}
-                        className={styles.checkbox}
-                      />
-                      <div className={styles.checkboxCustom}>
-                        {acceptedTerms && (
-                          <svg className={styles.checkIcon} viewBox="0 0 16 16" fill="none">
-                            <path
-                              d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"
-                              fill="currentColor"
-                            />
-                          </svg>
-                        )}
-                      </div>
-                      <span className={styles.checkboxText}>
-                        {tNode('role_acceptance_notice', {
-                          amount: (() => {
-                            const converted = calculateConvertedAmount(signup.role.roles_buy_in || 0);
-                            return `${converted.amount} ${converted.currency}`;
-                          })()
-                        })}
-                      </span>
-                    </label>
+                    <Checkbox
+                      checked={acceptedTerms}
+                      onChange={(c) => setAcceptedTerms(c)}
+                      classNames={{
+                        label: applyTheme(styles, 'checkboxLabel'),
+                        input: styles.checkbox,
+                        box: styles.checkboxCustom,
+                        icon: styles.checkIcon,
+                        text: styles.checkboxText,
+                      }}
+                    >
+                      {tNode('role_acceptance_notice', {
+                        amount: (() => {
+                          const converted = calculateConvertedAmount(signup.role.roles_buy_in || 0);
+                          return `${converted.amount} ${converted.currency}`;
+                        })()
+                      })}
+                    </Checkbox>
                   </div>
                 )}
               </>

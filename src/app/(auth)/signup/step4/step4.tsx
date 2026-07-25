@@ -7,6 +7,7 @@ import Image from 'next/image';
 import styles from './step4.module.css';
 import Link from 'next/link';
 import CachedLottie from '@/components/CachedLottie';
+import { SelectField } from '@/components/SelectField';
 import { getLastNameOrSingle, capitalize } from '@/utils/textUtils';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useSignup } from '@/lib/stacks/signup-stack';
@@ -174,21 +175,33 @@ export default function SignUpStep4() {
         <p className={styles.stepSubtitle}>{t('step_x_of_y', { current: 4, total: 7 })}</p>
 
         <div className={styles.form}>
-          <div className={styles.formGroup}>
-            <label htmlFor="birthday" className={styles.label}>
-              {t('birthday')}
-            </label>
-            <button onClick={openBirthday} className={styles.select}> {formatBirthday(signup.birthday) || 'Select'} </button>
-            {birthdayState === 'less' && (
-              <p className={`${applyTheme(styles, 'errorText')}`}>{t('date_less')}</p>
-            )}
-          </div>
-          <div className={styles.formGroup}>
-            <label htmlFor="gender" className={styles.label}>
-              {t('gender')}
-            </label>
-            <button onClick={openGender} className={styles.select}> {signup.gender || 'Select'} </button>
-          </div>
+          <SelectField
+            id="birthday"
+            label={t('birthday')}
+            value={formatBirthday(signup.birthday)}
+            placeholder="Select"
+            onOpen={openBirthday}
+            status={birthdayState === 'less' ? 'error' : 'default'}
+            helperText={birthdayState === 'less' ? t('date_less') : undefined}
+            classNames={{
+              root: styles.formGroup,
+              label: styles.label,
+              control: styles.select,
+              helper: applyTheme(styles, 'errorText'),
+            }}
+          />
+          <SelectField
+            id="gender"
+            label={t('gender')}
+            value={signup.gender}
+            placeholder="Select"
+            onOpen={openGender}
+            classNames={{
+              root: styles.formGroup,
+              label: styles.label,
+              control: styles.select,
+            }}
+          />
           <button
             type="submit"
             className={styles.continueButton}

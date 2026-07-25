@@ -7,6 +7,7 @@ import Image from 'next/image';
 import styles from './recovery.module.css';
 import Link from 'next/link'
 import CachedLottie from '@/components/CachedLottie';
+import { RadioGroup } from '@/components/RadioGroup';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useAccountDetails, VerificationMethodModel } from '@/lib/stacks/login-stack';
 import { StateStack } from '@academix-admin/state-stack';
@@ -147,25 +148,28 @@ export default function Recovery(props: RecoveryProps) {
               {accountDetails?.methods.length === 0 && (<NoResultsView text="Nothing found." />)}
 
             </div>
-            <div className={styles.radioGroup}>
-              {accountDetails?.methods.map((method, index) => (
-                <label key={index} className={`${styles.radioLabel} ${verificationSelected?.type === method.type ? styles.radioLabelSelected : ''}`}>
-                  <input
-                    type="radio"
-                    name="recovery"
-                    value={method.value}
-                    checked={verificationSelected?.type === method.type}
-                    onChange={() => handleChange(method)}
-                    className={styles.radioInput}
-                  />
-                  <div className={styles.radioContent}>
-                    <span className={styles.radioText}>
-                      {method.type === 'UserLoginType.email' ? tNode('code_through_email', { email: <strong>{method.value}</strong> }) : tNode('code_through_phone', { phone: <strong>{method.value}</strong> })}
-                    </span>
-                  </div>
-                </label>
-              ))}
-            </div>
+            <RadioGroup
+              name="recovery"
+              value={verificationSelected?.type}
+              onChange={(type) => {
+                const method = accountDetails?.methods.find((m) => m.type === type);
+                if (method) handleChange(method);
+              }}
+              options={(accountDetails?.methods ?? []).map((method) => ({
+                value: method.type,
+                label: method.type === 'UserLoginType.email'
+                  ? tNode('code_through_email', { email: <strong>{method.value}</strong> })
+                  : tNode('code_through_phone', { phone: <strong>{method.value}</strong> }),
+              }))}
+              classNames={{
+                group: styles.radioGroup,
+                item: styles.radioLabel,
+                itemSelected: styles.radioLabelSelected,
+                input: styles.radioInput,
+                content: styles.radioContent,
+                text: styles.radioText,
+              }}
+            />
 
           </div>
 

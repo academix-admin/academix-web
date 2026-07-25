@@ -7,6 +7,7 @@ import Image from 'next/image';
 import styles from './verification.module.css';
 import Link from 'next/link'
 import CachedLottie from '@/components/CachedLottie';
+import { RadioGroup } from '@/components/RadioGroup';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useSignup, UserRegistrationData } from '@/lib/stacks/signup-stack';
 import { StateStack } from '@academix-admin/state-stack';
@@ -211,39 +212,23 @@ export default function Verification() {
           <div className={styles.formGroup}>
             <label htmlFor="validate_acct" className={styles.label}>{t('validate_acct_label')}</label>
 
-            <div className={styles.radioGroup}>
-              <label className={`${styles.radioLabel} ${verificationSelected === 'email' ? styles.radioLabelSelected : ''}`}>
-                <input
-                  type="radio"
-                  name="verification"
-                  value="email"
-                  checked={verificationSelected === 'email'}
-                  onChange={() => handleChange('email')}
-                  className={styles.radioInput}
-                />
-                <div className={styles.radioContent}>
-                  <span className={styles.radioText}>
-                    {tNode('code_through_email', { email: <strong>{signup.email}</strong> })}
-                  </span>
-                </div>
-              </label>
-
-              <label className={`${styles.radioLabel} ${verificationSelected === 'phone' ? styles.radioLabelSelected : ''}`}>
-                <input
-                  type="radio"
-                  name="verification"
-                  value="phone"
-                  checked={verificationSelected === 'phone'}
-                  onChange={() => handleChange('phone')}
-                  className={styles.radioInput}
-                />
-                <div className={styles.radioContent}>
-                  <span className={styles.radioText}>
-                    {tNode('code_through_phone', { phone: <strong>{signup.phoneNumber}</strong> })}
-                  </span>
-                </div>
-              </label>
-            </div>
+            <RadioGroup
+              name="verification"
+              value={verificationSelected}
+              onChange={(v) => handleChange(v)}
+              options={[
+                { value: 'email', label: tNode('code_through_email', { email: <strong>{signup.email}</strong> }) },
+                { value: 'phone', label: tNode('code_through_phone', { phone: <strong>{signup.phoneNumber}</strong> }) },
+              ]}
+              classNames={{
+                group: styles.radioGroup,
+                item: styles.radioLabel,
+                itemSelected: styles.radioLabelSelected,
+                input: styles.radioInput,
+                content: styles.radioContent,
+                text: styles.radioText,
+              }}
+            />
           </div>
 
           {error && (<div className={styles.errorSection}>

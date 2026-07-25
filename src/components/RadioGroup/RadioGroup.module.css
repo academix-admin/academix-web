@@ -1,0 +1,44 @@
+/* Built-in DEFAULT styles for RadioGroup. Any slot supplied via `classNames` replaces
+   the matching default (only renders on groups that don't pin their own look). */
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border: 1px solid #c4c4c4;
+  cursor: pointer;
+}
+
+.itemSelected {
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 1px #4f46e5;
+}
+
+.input {
+  accent-color: #4f46e5;
+  width: 1.1rem;
+  height: 1.1rem;
+  flex-shrink: 0;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+}
+
+.text {
+  font-size: 0.9375rem;
+  line-height: 1.4;
+  color: var(--text-color, inherit);
+}
+
+.item_dark { border-color: #333333; }
+.text_dark { color: #ffffff; }

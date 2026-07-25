@@ -7,6 +7,7 @@ import Image from 'next/image';
 import styles from './step2.module.css';
 import Link from 'next/link';
 import CachedLottie from '@/components/CachedLottie';
+import { SelectField } from '@/components/SelectField';
 import { getLastNameOrSingle, capitalize } from '@/utils/textUtils';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useSignup, Country, Language } from '@/lib/stacks/signup-stack';
@@ -266,20 +267,34 @@ export default function SignUpStep2() {
         <p className={styles.stepSubtitle}>{t('step_x_of_y', { current: 2, total: 7 })}</p>
 
         <div className={styles.form}>
-          <div className={styles.formGroup}>
-            <label htmlFor="language" className={styles.label}>
-              {t('language')}
-            </label>
-            <p className={`${applyTheme(styles, 'fieldDescription')}`}>{t('language_description')}</p>
-            <button onClick={openLanguage} className={styles.select}> {signup.language?.language_identity || 'Select'} </button>
-          </div>
-          <div className={styles.formGroup}>
-            <label htmlFor="country" className={styles.label}>
-              {t('country')}
-            </label>
-            <p className={`${applyTheme(styles, 'fieldDescription')}`}>{t('country_description')}</p>
-            <button onClick={openCountry} className={styles.select}> {signup.country?.country_identity || 'Select'} </button>
-          </div>
+          <SelectField
+            id="language"
+            label={t('language')}
+            description={t('language_description')}
+            value={signup.language?.language_identity}
+            placeholder="Select"
+            onOpen={openLanguage}
+            classNames={{
+              root: styles.formGroup,
+              label: styles.label,
+              description: applyTheme(styles, 'fieldDescription'),
+              control: styles.select,
+            }}
+          />
+          <SelectField
+            id="country"
+            label={t('country')}
+            description={t('country_description')}
+            value={signup.country?.country_identity}
+            placeholder="Select"
+            onOpen={openCountry}
+            classNames={{
+              root: styles.formGroup,
+              label: styles.label,
+              description: applyTheme(styles, 'fieldDescription'),
+              control: styles.select,
+            }}
+          />
           <button
             type="submit"
             className={styles.continueButton}
