@@ -35,31 +35,44 @@ export default function HomePage() {
   // we have an error but not all loaded yet
   const error = loadedCount < 5 && errorCount > 0;
 
-  // the title is none
-  const none = getComponentState('homeTitle') === 'none';
-
-  // we can show loading
-  const loading = loadedCount < 5 && errorCount === 0 && loadingCount > 0;
-
-  // show ui
-//   const show = !error && !none && !loading;
-  const show = true;
+  // Reveal the body sections TOGETHER once their loads settle, instead of painting them in
+  // one-by-one. On a cold start (e.g. right after Google sign-in — a full-page reload) each
+  // section fetches its own data at a different time, which looked like an empty body filling
+  // piece by piece. The sections stay MOUNTED while hidden (display:none still runs their
+  // effects/fetches), so nothing is delayed; we just hold the reveal until things settle.
+  const [revealed, setRevealed] = useState(false);
+  useEffect(() => {
+    if (revealed) return;
+    // reveal ~400ms after the most recent section resolves (i.e. once loads stop arriving)
+    const settle = window.setTimeout(() => setRevealed(true), 400);
+    return () => window.clearTimeout(settle);
+  }, [loadedCount, revealed]);
+  useEffect(() => {
+    // hard cap so a slow/empty section can never leave the home stuck on the loader
+    const cap = window.setTimeout(() => setRevealed(true), 4000);
+    return () => window.clearTimeout(cap);
+  }, []);
 
   return (
-    <div  className={`${applyTheme(styles, 'mainContainer')}`}>
-      {show && (<HomeTitle onStateChange={(state) => handleStateChange('homeTitle', state)}/>)}
-      {show && (<HomeExperience onStateChange={(state) => handleStateChange('homeExperience', state)}/>)}
-      {show && (<HomePerformance onStateChange={(state) => handleStateChange('homePerformance', state)}/>)}
-      {show && (<HomeStatistics onStateChange={(state) => handleStateChange('homeStatistics', state)}/>)}
-      {show && (<HomeQuizHistory onStateChange={(state) => handleStateChange('homeQuizHistory', state)}/>)}
+    <div className={`${applyTheme(styles, 'mainContainer')}`}>
+      {/* Header shows as soon as userData is ready (it only needs the profile). */}
+      <HomeTitle onStateChange={(state) => handleStateChange('homeTitle', state)} />
 
+      {/* Body: mounted (so it fetches) but hidden until the sections settle, then revealed
+          all at once — no piecemeal fill. */}
+      <div style={{ display: revealed ? undefined : 'none' }}>
+        <HomeExperience onStateChange={(state) => handleStateChange('homeExperience', state)} />
+        <HomePerformance onStateChange={(state) => handleStateChange('homePerformance', state)} />
+        <HomeStatistics onStateChange={(state) => handleStateChange('homeStatistics', state)} />
+        <HomeQuizHistory onStateChange={(state) => handleStateChange('homeQuizHistory', state)} />
+      </div>
 
-     <div>
-      {error && (<ErrorView text="Error occurred." buttonText="Try Again" onButtonClick={()=> console.log('error')} />)}
-           {loading && (<LoadingView />)}
-           {none && (<LoadingView />)}
-     </div>
-
+      <div>
+        {!revealed && <LoadingView />}
+        {revealed && error && (
+          <ErrorView text="Error occurred." buttonText="Try Again" onButtonClick={() => console.log('error')} />
+        )}
+      </div>
     </div>
   );
 }
