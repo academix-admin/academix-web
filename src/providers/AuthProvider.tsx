@@ -219,6 +219,12 @@ interface AuthContextType {
    *  OAuth sign-in, before we know whether to go to /main or onboarding). Keeps the single
    *  AuthBlocker loading up so there is never a second spinner. */
   resolving: boolean;
+  /** the single "hold the loading" signal for AuthBlocker: not initialized, mid-resolve, or
+   *  (on an auth route) the persisted StateStack not yet hydrated. The last one matters after
+   *  an OAuth redirect — a COLD start where the home page's persisted data is still loading;
+   *  waiting for hydration lets /main paint fully instead of flashing empty (email login is a
+   *  warm client nav, so it's already hydrated and never waits here). Public routes never wait. */
+  blocking: boolean;
   session: Session | null;
   userData: UserData | null;
   hasValidSession: boolean;
@@ -465,10 +471,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [initialized, resolving, session, __meta.isHydrated, userData, pathname]);
 
+  // Only PROTECTED routes (/main, /quiz) wait for StateStack hydration — that's where the
+  // persisted home data lives and where a cold OAuth start would otherwise flash empty.
+  // Internal routes (/login, /signup, /, /welcome) must render immediately (a logged-out
+  // user needs the form), and public routes never wait.
+  const blocking =
+    !initialized || resolving ||
+    (matchesRoutePattern(pathname, protectedRoutes) && !__meta.isHydrated);
+
   return (
     <AuthContext.Provider value={{
       initialized,
       resolving,
+      blocking,
       session,
       userData,
       hasValidSession: !!session && !isSessionExpired(session),
