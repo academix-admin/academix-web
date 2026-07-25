@@ -9,239 +9,7 @@ import Link from 'next/link';
 import { useNav, useObject } from "@academix-admin/navigation-stack";
 import { PinData } from '@/models/pin-data';
 import { Header } from '@academix-admin/header';
-
-// Define types for PinInput props
-interface PinInputProps {
-  length?: number;
-  value: string;
-  onChange: (value: string) => void;
-  disabled?: boolean;
-  error?: boolean;
-  showPin?: boolean;  // ✅ New prop for visibility toggle
-}
-
-// Pin Input Component
-const PinInput: React.FC<PinInputProps> = ({
-  length = 6,
-  value,
-  onChange,
-  disabled = false,
-  error = false,
-  showPin = false  // ✅ Defaults to hidden
-}) => {
-  const inputs = Array(length).fill(0);
-
-   const handleChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
-     const digit = e.target.value.replace(/\D/g, "").slice(-1);
-
-     const otpArray = value.split("");
-     otpArray[index] = digit || "";
-     const nextValue = otpArray.join("");
-
-     onChange(nextValue);
-
-     // ---- FIX: compute allowed index from the new value ---- //
-     const allowedIndex = getFirstInvalidIndex(nextValue);
-
-     // Auto-advance only if digit is valid and index < allowed position
-     if (digit && index < length - 1 && index < allowedIndex) {
-       const next = e.target.nextElementSibling as HTMLInputElement | null;
-       next?.focus();
-     }
-   };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
-    if (e.key !== "Backspace") return;
-
-    // Error mode: clear everything
-    if (error && value.length === length) {
-      onChange("");
-      const inputs = e.currentTarget.parentElement!.querySelectorAll("input");
-      (inputs[0] as HTMLInputElement).focus();
-      return;
-    }
-
-    const inputs = e.currentTarget.parentElement!.querySelectorAll("input");
-
-    // Build a snapshot of the current actual values from DOM, not from state.
-    const domValues = Array.from(inputs).map(
-      (input) => (input as HTMLInputElement).value
-    );
-
-    // If current field already empty → move back
-    if (!domValues[index] && index > 0) {
-      const prev = inputs[index - 1] as HTMLInputElement;
-      prev.focus();
-    }
-
-    // Clear current char and update parent state
-    const otpArray = value.split("");
-    for (let i = index; i < otpArray.length; i++) {
-      otpArray[i] = "";
-    }
-    onChange(otpArray.join(""));
-  };
-
-
-  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
-    e.preventDefault();
-    const pasted = e.clipboardData.getData("text").replace(/\D/g, "");
-    if (pasted) {
-      onChange(pasted.slice(0, length));
-    }
-  };
-
-  const getFirstInvalidIndex = (value: string) => {
-    for (let i = 0; i < length; i++) {
-      if (!value[i]) return i;
-    }
-    return length - 1; // all full → last field
-  };
-
-  const handleFocus = (e: React.FocusEvent<HTMLInputElement>, index: number) => {
-    const inputs = e.currentTarget.parentElement!.querySelectorAll("input");
-
-    // Determine focusable index based on ACTUAL input values
-    let allowedIndex = 0;
-    for (let i = 0; i < length; i++) {
-      if ((inputs[i] as HTMLInputElement).value === "") {
-        allowedIndex = i;
-        break;
-      }
-      if (i === length - 1) allowedIndex = length - 1;
-    }
-
-    // Prevent skipping ahead
-    if (index > allowedIndex) {
-      (inputs[allowedIndex] as HTMLInputElement).focus();
-    }
-  };
-
-
-
-  return (
-    <div className={`${styles.otpContainer} ${error ? styles.otpError : ""}`}>
-      {inputs.map((_, index) => (
-        <input
-          key={index}
-          type="text"
-          inputMode="numeric"
-          pattern="[0-9]*"
-          maxLength={1}
-          value={showPin ? (value[index] || "") : (value[index] ? '*' : "")}
-          onChange={(e) => handleChange(e, index)}
-          onKeyDown={(e) => handleKeyDown(e, index)}
-          onPaste={handlePaste}
-          disabled={disabled}
-          className={styles.otpInput}
-          autoFocus={index === 0 && !error}
-          onFocus={(e) => handleFocus(e, index)}
-          autoComplete="off"
-          spellCheck="false"
-          data-lpignore="true"
-          data-1p-ignore
-          data-bitwarden-ignore
-        />
-      ))}
-    </div>
-  );
-};
-
-// Define types for Keypad props
-interface KeypadProps {
-  value: string;
-  onChange: (value: string) => void;
-  disabled?: boolean;
-  error?: boolean;
-  showPin?: boolean;  // ✅ New prop
-  onShowPinToggle?: (show: boolean) => void;  // ✅ Callback for toggle
-}
-
-// Keypad Component
-const Keypad: React.FC<KeypadProps> = ({ 
-  value, 
-  onChange, 
-  disabled = false, 
-  error,
-  showPin = false,  // ✅ Defaults to hidden
-  onShowPinToggle  // ✅ Handle toggle
-}) => {
-  const digits = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0];
-
-  const handleDigitInput = (digit: number) => {
-    if (value.length < 6) {
-      onChange(value + digit);
-    } else if(!!error && value.length === 6){
-      onChange(`${digit}`);
-    }
-  };
-
-  const handleBackspace = () => {
-    if (value.length > 0 && !error) {
-      onChange(value.slice(0, -1));
-    } else if(!!error && value.length === 6){
-      onChange('');
-    }
-  };
-
-  return (
-    <div className={styles.keypad}>
-      <div className={styles.keypadGrid}>
-        {digits.map((digit) => (
-          <button
-            key={digit}
-            onClick={() => handleDigitInput(digit)}
-            disabled={disabled}
-            className={styles.keypadButton}
-          >
-            {digit}
-          </button>
-        ))}
-        <button
-          onClick={handleBackspace}
-          disabled={disabled}
-          className={`${styles.keypadButton} ${styles.backspaceButton}`}
-        >
-          ✕
-        </button>
-        <button
-          onClick={() => onShowPinToggle?.(!showPin)}  // ✅ Toggle visibility
-          disabled={disabled}
-          className={`${styles.keypadButton} ${styles.eyeButton}`}
-          title={showPin ? "Hide PIN" : "Show PIN"}
-          aria-label={showPin ? "Hide PIN" : "Show PIN"}
-        >
-          {showPin ? (
-            // Eye open icon
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path
-                d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" />
-            </svg>
-          ) : (
-            // Eye closed/hidden icon
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path
-                d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <line x1="1" y1="1" x2="23" y2="23" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          )}
-        </button>
-      </div>
-    </div>
-  );
-};
-
+import { PinInput, Keypad } from '@academix-admin/pin-input';
 
 export default function Otp() {
   const { theme, applyTheme } = useTheme();
@@ -313,7 +81,20 @@ export default function Otp() {
               onChange={setOtpValue}
               disabled={isLoading}
               error={!!error}
-              showPin={showPin}  // ✅ Pass visibility state
+              mask
+              revealed={showPin}
+              inputProps={{
+                autoComplete: 'off',
+                spellCheck: false,
+                'data-lpignore': 'true',
+                'data-1p-ignore': true,
+                'data-bitwarden-ignore': true,
+              }}
+              classNames={{
+                container: styles.otpContainer,
+                containerError: styles.otpError,
+                input: styles.otpInput,
+              }}
             />
           )}
 
@@ -334,8 +115,16 @@ export default function Otp() {
             onChange={setOtpValue}
             disabled={isLoading}
             error={!!error}
-            showPin={showPin}  // ✅ Pass visibility state
-            onShowPinToggle={setShowPin}  // ✅ Pass callback
+            showMaskToggle
+            revealed={showPin}
+            onToggleReveal={setShowPin}
+            classNames={{
+              keypad: styles.keypad,
+              grid: styles.keypadGrid,
+              button: styles.keypadButton,
+              backspace: styles.backspaceButton,
+              toggle: styles.eyeButton,
+            }}
           />
         </div>
       </div>

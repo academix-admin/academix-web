@@ -16,189 +16,7 @@ import { useUserData } from '@/lib/stacks/user-stack';
 import { fetchUserData } from '@/utils/checkers';
 import { useRouter } from "next/navigation";
 import { Header } from '@academix-admin/header';
-
-// Define types for OTPInput props
-interface OTPInputProps {
-  length?: number;
-  value: string;
-  onChange: (value: string) => void;
-  disabled?: boolean;
-  error?: boolean;
-}
-
-// OTP Input Component
-const OTPInput: React.FC<OTPInputProps> = ({
-  length = 6,
-  value,
-  onChange,
-  disabled = false,
-  error = false
-}) => {
-  const inputs = Array(length).fill(0);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
-    const digit = e.target.value.replace(/\D/g, "").slice(-1);
-
-    const otpArray = value.split("");
-    otpArray[index] = digit || "";
-    const nextValue = otpArray.join("");
-
-    onChange(nextValue);
-
-    // ---- FIX: compute allowed index from the new value ---- //
-    const allowedIndex = getFirstInvalidIndex(nextValue);
-
-    // Auto-advance only if digit is valid and index < allowed position
-    if (digit && index < length - 1 && index < allowedIndex) {
-      const next = e.target.nextElementSibling as HTMLInputElement | null;
-      next?.focus();
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
-    if (e.key !== "Backspace") return;
-
-    // Error mode: clear everything
-    if (error && value.length === length) {
-      onChange("");
-      const inputs = e.currentTarget.parentElement!.querySelectorAll("input");
-      (inputs[0] as HTMLInputElement).focus();
-      return;
-    }
-
-    const inputs = e.currentTarget.parentElement!.querySelectorAll("input");
-
-    // Build a snapshot of the current actual values from DOM, not from state.
-    const domValues = Array.from(inputs).map(
-      (input) => (input as HTMLInputElement).value
-    );
-
-    // If current field already empty → move back
-    if (!domValues[index] && index > 0) {
-      const prev = inputs[index - 1] as HTMLInputElement;
-      prev.focus();
-    }
-
-    // Clear current char and update parent state
-    const otpArray = value.split("");
-    for (let i = index; i < otpArray.length; i++) {
-      otpArray[i] = "";
-    }
-    onChange(otpArray.join(""));
-  };
-
-
-  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
-    e.preventDefault();
-    const pasted = e.clipboardData.getData("text").replace(/\D/g, "");
-    if (pasted) {
-      onChange(pasted.slice(0, length));
-    }
-  };
-
-  const getFirstInvalidIndex = (value: string) => {
-    for (let i = 0; i < length; i++) {
-      if (!value[i]) return i;
-    }
-    return length - 1; // all full → last field
-  };
-
-  const handleFocus = (e: React.FocusEvent<HTMLInputElement>, index: number) => {
-    const inputs = e.currentTarget.parentElement!.querySelectorAll("input");
-
-    // Determine focusable index based on ACTUAL input values
-    let allowedIndex = 0;
-    for (let i = 0; i < length; i++) {
-      if ((inputs[i] as HTMLInputElement).value === "") {
-        allowedIndex = i;
-        break;
-      }
-      if (i === length - 1) allowedIndex = length - 1;
-    }
-
-    // Prevent skipping ahead
-    if (index > allowedIndex) {
-      (inputs[allowedIndex] as HTMLInputElement).focus();
-    }
-  };
-
-
-
-  return (
-    <div className={`${styles.otpContainer} ${error ? styles.otpError : ""}`}>
-      {inputs.map((_, index) => (
-        <input
-          key={index}
-          type="text"
-          inputMode="numeric"
-          pattern="[0-9]*"
-          maxLength={1}
-          value={(value[index] || "")}
-          onChange={(e) => handleChange(e, index)}
-          onKeyDown={(e) => handleKeyDown(e, index)}
-          onPaste={handlePaste}
-          disabled={disabled}
-          className={styles.otpInput}
-          autoFocus={index === 0 && !error}
-          onFocus={(e) => handleFocus(e, index)}
-        />
-      ))}
-    </div>
-  );
-};
-
-// Define types for Keypad props
-interface KeypadProps {
-  value: string;
-  onChange: (value: string) => void;
-  disabled?: boolean;
-  error?: boolean;
-}
-
-// Keypad Component
-const Keypad: React.FC<KeypadProps> = ({ value, onChange, disabled = false, error }) => {
-  const digits = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0];
-
-  const handleDigitInput = (digit: number) => {
-    if (value.length < 6) {
-      onChange(value + digit);
-    } else if (!!error && value.length === 6) {
-      onChange(`${digit}`);
-    }
-  };
-
-  const handleBackspace = () => {
-    if (value.length > 0 && !error) {
-      onChange(value.slice(0, -1));
-    } else if (!!error && value.length === 6) {
-      onChange('');
-    }
-  };
-
-  return (
-    <div className={styles.keypad}>
-      <div className={styles.keypadGrid}>
-        {digits.map((digit) => (
-          <button
-            key={digit}
-            onClick={() => handleDigitInput(digit)}
-            disabled={disabled}
-            className={styles.keypadButton}
-          >
-            {digit}
-          </button>
-        ))}
-        <button
-          onClick={handleBackspace}
-          disabled={disabled}
-          className={`${styles.keypadButton} ${styles.backspaceButton}`}
-        >
-          ✕
-        </button>
-      </div>
-    </div>
-  );
-};
+import { PinInput, Keypad } from '@academix-admin/pin-input';
 
 // Define props interface for the Otp component
 interface OtpProps {
@@ -476,11 +294,16 @@ export default function Otp(props: OtpProps) {
               <div className={styles.spinner}></div>
             </div>
           ) : (
-            <OTPInput
+            <PinInput
               value={otpValue}
               onChange={setOtpValue}
               disabled={isLoading}
               error={!!error}
+              classNames={{
+                container: styles.otpContainer,
+                containerError: styles.otpError,
+                input: styles.otpInput,
+              }}
             />
           )}
 
@@ -501,6 +324,12 @@ export default function Otp(props: OtpProps) {
             onChange={setOtpValue}
             disabled={isLoading}
             error={!!error}
+            classNames={{
+              keypad: styles.keypad,
+              grid: styles.keypadGrid,
+              button: styles.keypadButton,
+              backspace: styles.backspaceButton,
+            }}
           />
         </div>
 

@@ -7,6 +7,7 @@ import Image from 'next/image';
 import styles from './pin-management.module.css';
 import Link from 'next/link';
 import CachedLottie from '@/components/CachedLottie';
+import { TextInput } from '@academix-admin/forms';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useNav } from "@academix-admin/navigation-stack";
 import { useOtp } from '@/lib/stacks/otp-stack';
@@ -37,17 +38,14 @@ export default function PinManagement(props: { isNew: boolean, returnGroup?: str
   // Old PIN states (only when not creating new)
   const [oldPinInputValue, setOldPinInputValue] = useState('');
   const [oldPinState, setOldPinState] = useState<'initial' | 'valid' | 'invalid' | 'incomplete'>('incomplete');
-  const [showOldPin, setShowOldPin] = useState(false);
 
   // New PIN states
   const [newPinInputValue, setNewPinInputValue] = useState('');
   const [newPinState, setNewPinState] = useState<'initial' | 'valid' | 'invalid' | 'incomplete'>('incomplete');
-  const [showNewPin, setShowNewPin] = useState(false);
 
   // Confirm PIN states
   const [confirmPinInputValue, setConfirmPinInputValue] = useState('');
   const [confirmPinState, setConfirmPinState] = useState<'initial' | 'valid' | 'invalid' | 'incomplete'>('incomplete');
-  const [showConfirmPin, setShowConfirmPin] = useState(false);
 
   // Form states
   const [isLoading, setIsLoading] = useState(false);
@@ -139,17 +137,6 @@ export default function PinManagement(props: { isNew: boolean, returnGroup?: str
     }
   };
 
-  const toggleOldPinVisibility = () => {
-    setShowOldPin(!showOldPin);
-  };
-
-  const toggleNewPinVisibility = () => {
-    setShowNewPin(!showNewPin);
-  };
-
-  const toggleConfirmPinVisibility = () => {
-    setShowConfirmPin(!showConfirmPin);
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -284,106 +271,97 @@ export default function PinManagement(props: { isNew: boolean, returnGroup?: str
 
           {/* Old PIN (only when not creating new) */}
           {!isNew && (
-            <div className={styles.formGroup}>
-              <label htmlFor="oldPin" className={styles.label}>{t('old_pin_label')}</label>
-              <div className={styles.inputWrapper}>
-                <input
-                  type={showOldPin ? "text" : "password"}
-                  id="oldPin"
-                  name="oldPin"
-                  value={oldPinInputValue}
-                  maxLength={6}
-                  onChange={handleOldPinChange}
-                  placeholder={t('pin_placeholder')}
-                  className={styles.input}
-                  disabled={isLoading}
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  autoComplete="current-password"
-                  aria-invalid={oldPinState === 'invalid' ? true : false}
-                  required={!isNew}
-                />
-                <button
-                  type="button"
-                  className={styles.eyeButton}
-                  onClick={toggleOldPinVisibility}
-                  aria-label={showOldPin ? "Hide PIN" : "Show PIN"}
-                  disabled={isLoading}
-                >
-                  {showOldPin ? <EyeOpenIcon /> : <EyeClosedIcon />}
-                </button>
-              </div>
-              {oldPinState === 'incomplete' && <p className={styles.errorText}>{t('pin_incomplete')}</p>}
-              {oldPinState === 'invalid' && <p className={styles.errorText}>{t('pin_invalid')}</p>}
-              {oldPinState === 'valid' && <p className={styles.validText}>{t('pin_valid')}</p>}
-            </div>
+            <TextInput
+              id="oldPin"
+              name="oldPin"
+              label={t('old_pin_label')}
+              hint={t('pin_placeholder')}
+              value={oldPinInputValue}
+              onChange={(_, e) => handleOldPinChange(e)}
+              secureToggle
+              keyboardType="numeric"
+              pattern="[0-9]*"
+              maxLength={6}
+              disabled={isLoading}
+              autoComplete="current-password"
+              required={!isNew}
+              status={oldPinState === 'invalid' ? 'error' : 'default'}
+              inputProps={{ 'aria-invalid': oldPinState === 'invalid' }}
+              helperText={
+                oldPinState === 'incomplete' ? t('pin_incomplete')
+                  : oldPinState === 'invalid' ? t('pin_invalid')
+                    : oldPinState === 'valid' ? t('pin_valid')
+                      : undefined
+              }
+              classNames={{
+                root: styles.formGroup,
+                label: styles.label,
+                field: styles.inputWrapper,
+                input: styles.input,
+                toggle: styles.eyeButton,
+                helper: oldPinState === 'valid' ? styles.validText : styles.errorText,
+              }}
+            />
           )}
 
           {/* New PIN */}
-          <div className={styles.formGroup}>
-            <label htmlFor="newPin" className={styles.label}>{t('new_pin_label')}</label>
-            <div className={styles.inputWrapper}>
-              <input
-                type={showNewPin ? "text" : "password"}
-                id="newPin"
-                name="newPin"
-                value={newPinInputValue}
-                maxLength={6}
-                onChange={handleNewPinChange}
-                placeholder={t('pin_placeholder')}
-                className={styles.input}
-                disabled={isLoading}
-                inputMode="numeric"
-                pattern="[0-9]*"
-                autoComplete="new-password"
-                aria-invalid={newPinState === 'invalid' ? true : false}
-                required
-              />
-              <button
-                type="button"
-                className={styles.eyeButton}
-                onClick={toggleNewPinVisibility}
-                aria-label={showNewPin ? "Hide PIN" : "Show PIN"}
-                disabled={isLoading}
-              >
-                {showNewPin ? <EyeOpenIcon /> : <EyeClosedIcon />}
-              </button>
-            </div>
-            {newPinState === 'incomplete' && <p className={styles.errorText}>{t('pin_incomplete')}</p>}
-            {newPinState === 'invalid' && <p className={styles.errorText}>{t('pin_invalid')}</p>}
-            {newPinState === 'valid' && <p className={styles.validText}>{t('pin_valid')}</p>}
-          </div>
+          <TextInput
+            id="newPin"
+            name="newPin"
+            label={t('new_pin_label')}
+            hint={t('pin_placeholder')}
+            value={newPinInputValue}
+            onChange={(_, e) => handleNewPinChange(e)}
+            secureToggle
+            keyboardType="numeric"
+            pattern="[0-9]*"
+            maxLength={6}
+            disabled={isLoading}
+            autoComplete="new-password"
+            required
+            status={newPinState === 'invalid' ? 'error' : 'default'}
+            inputProps={{ 'aria-invalid': newPinState === 'invalid' }}
+            helperText={
+              newPinState === 'incomplete' ? t('pin_incomplete')
+                : newPinState === 'invalid' ? t('pin_invalid')
+                  : newPinState === 'valid' ? t('pin_valid')
+                    : undefined
+            }
+            classNames={{
+              root: styles.formGroup,
+              label: styles.label,
+              field: styles.inputWrapper,
+              input: styles.input,
+              toggle: styles.eyeButton,
+              helper: newPinState === 'valid' ? styles.validText : styles.errorText,
+            }}
+          />
 
           {/* Confirm PIN */}
           <div className={styles.formGroup}>
-            <label htmlFor="confirmPin" className={styles.label}>{t('confirm_pin_label')}</label>
-            <div className={styles.inputWrapper}>
-              <input
-                type={showConfirmPin ? "text" : "password"}
-                id="confirmPin"
-                name="confirmPin"
-                value={confirmPinInputValue}
-                maxLength={6}
-                onChange={handleConfirmPinChange}
-                placeholder={t('pin_placeholder')}
-                className={styles.input}
-                disabled={isLoading}
-                inputMode="numeric"
-                pattern="[0-9]*"
-                autoComplete="new-password"
-                aria-invalid={confirmPinState === 'invalid' || (newPinInputValue && confirmPinInputValue && newPinInputValue !== confirmPinInputValue) ? true : false}
-                required
-              />
-              <button
-                type="button"
-                className={styles.eyeButton}
-                onClick={toggleConfirmPinVisibility}
-                aria-label={showConfirmPin ? "Hide PIN" : "Show PIN"}
-                disabled={isLoading}
-              >
-                {showConfirmPin ? <EyeOpenIcon /> : <EyeClosedIcon />}
-              </button>
-            </div>
+            <TextInput
+              id="confirmPin"
+              name="confirmPin"
+              label={t('confirm_pin_label')}
+              hint={t('pin_placeholder')}
+              value={confirmPinInputValue}
+              onChange={(_, e) => handleConfirmPinChange(e)}
+              secureToggle
+              keyboardType="numeric"
+              pattern="[0-9]*"
+              maxLength={6}
+              disabled={isLoading}
+              autoComplete="new-password"
+              required
+              inputProps={{ 'aria-invalid': confirmPinState === 'invalid' || !!(newPinInputValue && confirmPinInputValue && newPinInputValue !== confirmPinInputValue) }}
+              classNames={{
+                root: styles.textInputRoot,
+                label: styles.label,
+                field: styles.inputWrapper,
+                input: styles.input,
+                toggle: styles.eyeButton,
+              }}
+            />
             {confirmPinState === 'incomplete' && <p className={styles.errorText}>{t('pin_incomplete')}</p>}
             {confirmPinState === 'invalid' && <p className={styles.errorText}>{t('pin_invalid')}</p>}
             {newPinInputValue && confirmPinInputValue && newPinInputValue !== confirmPinInputValue && (
@@ -411,15 +389,6 @@ export default function PinManagement(props: { isNew: boolean, returnGroup?: str
 }
 
 // Icon components
-function EyeOpenIcon() {
-  return (
-    <svg className={styles.eyeIcon} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M1 12C1 12 5 4 12 4C19 4 23 12 23 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M1 12C1 12 5 20 12 20C19 20 23 12 23 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-      <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
 
 function EyeClosedIcon() {
   return (
