@@ -37,7 +37,7 @@ export default function QuizPage() {
     <div className={styles.mainContainer}>
       <QuizPageTitle onStateChange={(state) => handleStateChange('quizPageTitle', state)} />
 
-      <div style={{ display: revealed ? undefined : 'none' }}>
+      <div style={{ display: revealed ? 'contents' : 'none' }}>
         <ActiveQuizTopic onStateChange={(state) => handleStateChange('activeQuizTopic', state)} />
 
         <PublicQuizTopics onStateChange={(state) => handleStateChange('creatorPublicQuizTopics', state)} pType={'creator'} />

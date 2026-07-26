@@ -47,7 +47,7 @@ export default function ProfilePage() {
 
       <ProfileTitle onStateChange={(state) => handleStateChange('profileTitle', state)}/>
 
-      <div style={{ display: revealed ? undefined : 'none' }}>
+      <div style={{ display: revealed ? 'contents' : 'none' }}>
         <ProfileOverview onStateChange={(state) => handleStateChange('profileOverview', state)}/>
         <ProfileAccounts onStateChange={(state) => handleStateChange('profileAccounts', state)}/>
         <ProfileLinks onStateChange={(state) => handleStateChange('profileLinks', state)}/>

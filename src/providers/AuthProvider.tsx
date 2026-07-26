@@ -471,13 +471,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [initialized, resolving, session, __meta.isHydrated, userData, pathname]);
 
-  // Only PROTECTED routes (/main, /quiz) wait for StateStack hydration — that's where the
-  // persisted home data lives and where a cold OAuth start would otherwise flash empty.
-  // Internal routes (/login, /signup, /, /welcome) must render immediately (a logged-out
-  // user needs the form), and public routes never wait.
-  const blocking =
-    !initialized || resolving ||
-    (matchesRoutePattern(pathname, protectedRoutes) && !__meta.isHydrated);
+  // Single "hold the loading" signal. Deliberately does NOT gate on `__meta.isHydrated`:
+  // that flag can flip on token-refresh / app-resume re-hydration, which made the AuthBlocker
+  // flash the loader at intervals mid-session. The cold-start empty-home is handled where it
+  // belongs — each tab page reveals its sections together (useSettledReveal) — so we only hold
+  // the loader while auth itself is settling (init + OAuth profile resolution).
+  const blocking = !initialized || resolving;
 
   return (
     <AuthContext.Provider value={{

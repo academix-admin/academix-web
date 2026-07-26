@@ -49,7 +49,7 @@ export default function HomePage() {
 
       {/* Body: mounted (so it fetches) but hidden until the sections settle, then revealed
           all at once — no piecemeal fill. */}
-      <div style={{ display: revealed ? undefined : 'none' }}>
+      <div style={{ display: revealed ? 'contents' : 'none' }}>
         <HomeExperience onStateChange={(state) => handleStateChange('homeExperience', state)} />
         <HomePerformance onStateChange={(state) => handleStateChange('homePerformance', state)} />
         <HomeStatistics onStateChange={(state) => handleStateChange('homeStatistics', state)} />

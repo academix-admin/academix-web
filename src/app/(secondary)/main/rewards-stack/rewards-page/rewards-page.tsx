@@ -42,7 +42,7 @@ export default function RewardsPage() {
     <div className={styles.mainContainer}>
       <RewardsTitle onStateChange={(state) => handleStateChange('rewardsTitle', state)}/>
 
-      <div style={{ display: revealed ? undefined : 'none' }}>
+      <div style={{ display: revealed ? 'contents' : 'none' }}>
         <AcademixRatio onStateChange={(state) => handleStateChange('academixRatio', state)}/>
         <RewardsStreaks onStateChange={(state) => handleStateChange('rewardsStreaks', state)}/>
         <MilestoneView onStateChange={(state) => handleStateChange('milestoneView', state)}/>

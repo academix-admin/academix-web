@@ -43,7 +43,7 @@ export default function PaymentPage() {
      <PaymentTitle onStateChange={(state) => handleStateChange('paymentTitle', state)}/>
      <UserBalance onStateChange={(state) => handleStateChange('userBalance', state)}/>
      <PaymentAction onStateChange={(state) => handleStateChange('paymentAction', state)}/>
-     <div style={{ display: revealed ? undefined : 'none' }}>
+     <div style={{ display: revealed ? 'contents' : 'none' }}>
        <PaymentTransactions onStateChange={(state) => handleStateChange('paymentTransactions', state)}/>
      </div>
 
