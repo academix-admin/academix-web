@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { PinInput, Keypad } from '@academix-admin/pin-input';
 import { useAuthContext } from '@/providers/AuthProvider';
 import { useTheme } from '@/context/ThemeContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import styles from './AppLock.module.css';
 
@@ -26,6 +27,7 @@ const ACTIVITY_EVENTS = ['pointerdown', 'keydown', 'touchstart', 'click', 'scrol
 export function AppLock({ children }: { children: React.ReactNode }) {
   const { hasValidSession, userData } = useAuthContext();
   const { theme } = useTheme();
+  const { t } = useLanguage();
   const active = hasValidSession && !!userData;
 
   const [locked, setLocked] = useState(false);
@@ -91,20 +93,20 @@ export function AppLock({ children }: { children: React.ReactNode }) {
       const json = await res.json().catch(() => ({}));
       if (json.success || json.not_set) { unlock(); return; } // not_set: never trap a PIN-less account
       if (json.locked_until) {
-        setError('Too many attempts. Try again in a few minutes.');
+        setError(t('lock_too_many_attempts'));
       } else if (typeof json.attempts_left === 'number') {
-        setError(`Incorrect PIN — ${json.attempts_left} attempt${json.attempts_left === 1 ? '' : 's'} left`);
+        setError(t('lock_incorrect_pin', { count: String(json.attempts_left) }));
       } else {
-        setError('Something went wrong. Please try again.');
+        setError(t('lock_generic_error'));
       }
       setValue('');
     } catch {
-      setError('Network error. Check your connection and try again.');
+      setError(t('lock_network_error'));
       setValue('');
     } finally {
       setBusy(false);
     }
-  }, [unlock]);
+  }, [unlock, t]);
 
   useEffect(() => {
     if (locked && value.length === 6 && !busy) verify(value);
@@ -120,9 +122,9 @@ export function AppLock({ children }: { children: React.ReactNode }) {
           aria-modal="true"
           aria-label="App locked"
         >
-          <div className={styles.card}>
-            <h2 className={styles.title}>Enter your PIN</h2>
-            <p className={styles.subtitle}>Locked for your security after inactivity.</p>
+          <div className={styles.top}>
+            <h2 className={styles.title}>{t('lock_enter_pin')}</h2>
+            <p className={styles.subtitle}>{t('lock_subtitle')}</p>
 
             <PinInput
               length={6}
@@ -137,6 +139,9 @@ export function AppLock({ children }: { children: React.ReactNode }) {
 
             <p className={`${styles.error} ${error ? '' : styles.errorHidden}`}>{error || ' '}</p>
 
+          </div>
+
+          <div className={styles.keypadSection}>
             <Keypad
               value={value}
               onChange={setValue}

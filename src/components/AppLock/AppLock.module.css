@@ -1,77 +1,84 @@
+/* Matches the app's PIN page (shared/pin) styling — headless @academix-admin/pin-input
+   styled via classNames, minus the header. */
+
 .overlay {
   position: fixed;
   inset: 0;
   z-index: 2147483000; /* above nav, headers, sheets, dialogs */
   display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
+  flex-direction: column;
+  padding: 24px 16px;
   box-sizing: border-box;
 }
 
 .light { background: #ffffff; color: #0f172a; }
-.dark { background: #0b0f19; color: #f1f5f9; }
+.dark { background: #121212; color: #f1f5f9; }
 
-.card {
-  width: 100%;
-  max-width: 380px;
+/* Top: heading + PIN boxes */
+.top {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  width: 100%;
+  margin-top: 6vh;
 }
 
-.title {
-  margin: 0;
-  font-size: 1.5rem;
-  font-weight: 700;
-}
+.title { margin: 0 0 6px; font-size: 1.5rem; font-weight: 700; }
+.subtitle { margin: 0 0 24px; font-size: 0.9rem; opacity: 0.7; text-align: center; }
 
-.subtitle {
-  margin: 0 0 12px;
-  font-size: 0.9rem;
-  opacity: 0.7;
-  text-align: center;
-}
-
-/* PinInput slots */
 .pinContainer {
   display: flex;
-  gap: 10px;
   justify-content: center;
-  margin: 8px 0;
+  gap: 8px;
+  width: 100%;
+  max-width: 420px;
 }
 
 .pinBox {
-  width: 44px;
-  height: 52px;
+  width: calc((100vw - 32px - (8px * 5)) / 6);
+  height: calc((100vw - 32px - (8px * 5)) / 6);
+  max-width: 56px;
+  max-height: 56px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
   text-align: center;
-  font-size: 1.5rem;
-  font-weight: 700;
-  border-radius: 10px;
-  border: 1px solid #c4c4c4;
+  font-size: clamp(16px, 6vw, 28px);
+  font-weight: 600;
+  box-sizing: border-box;
   background: transparent;
   color: inherit;
   outline: none;
   caret-color: transparent;
 }
-
-.pinBox:focus { border-color: #1c6b1e; }
-.dark .pinBox { border-color: #333; }
+.light .pinBox { background: #ffffff; color: #000000; }
+.dark .pinBox { background: #1e1e1e; color: #ffffff; border-color: #333; }
+.pinBox:focus { border-color: #1c6b1e; box-shadow: 0 0 0 3px rgba(28, 107, 30, 0.1); }
 
 .error {
   min-height: 1.1rem;
-  margin: 4px 0 8px;
+  margin: 10px 0 0;
   font-size: 0.8125rem;
   font-weight: 500;
-  color: #dc2626;
   text-align: center;
+  color: #dc2626;
 }
 .dark .error { color: #f87171; }
 .errorHidden { visibility: hidden; }
 
-/* Keypad slots */
-.keypad { width: 100%; max-width: 300px; }
+/* Keypad fills the remaining space, centered */
+.keypadSection {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  overflow: hidden;
+}
+
+.keypad {
+  width: 100%;
+  max-width: 380px;
+}
 
 .keypadGrid {
   display: grid;
@@ -82,24 +89,24 @@
 .key {
   height: 64px;
   border: none;
-  border-radius: 14px;
-  background: rgba(28, 107, 30, 0.08);
-  color: inherit;
-  font-size: 1.4rem;
+  border-radius: 8px;
+  font-size: clamp(16px, 5vw, 28px);
   font-weight: 600;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background-color 0.15s ease;
 }
-.key:active:not(:disabled) { background: rgba(28, 107, 30, 0.2); }
-.key:disabled { opacity: 0.5; cursor: default; }
-.dark .key { background: rgba(255, 255, 255, 0.06); }
-.dark .key:active:not(:disabled) { background: rgba(255, 255, 255, 0.14); }
+.light .key { background: #f3f4f6; color: #000000; }
+.light .key:hover:not(:disabled) { background: #e5e7eb; }
+.dark .key { background: #2d2d2d; color: #ffffff; }
+.dark .key:hover:not(:disabled) { background: #3d3d3d; }
+.key:disabled { opacity: 0.5; cursor: not-allowed; }
 
-.keyMuted {
-  background: transparent;
-  color: #1c6b1e;
-}
+.keyMuted { background: transparent; color: #1c6b1e; }
 .dark .keyMuted { color: #4ade80; background: transparent; }
+
+@media screen and (max-width: 500px) {
+  .keypadGrid { gap: 8px; }
+  .key { height: 58px; font-size: 18px; }
+}
