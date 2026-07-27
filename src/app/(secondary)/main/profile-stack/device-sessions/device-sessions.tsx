@@ -14,7 +14,7 @@ export default function DeviceSessions() {
 
   return (
     <main className={`${applyTheme(styles, 'container')}`}>
-      <Header title={t('devices_sessions') || 'Devices & sessions'} theme={theme} onBack={() => nav.pop()} />
+      <Header title={t('devices_sessions')} theme={theme} onBack={() => nav.pop()} />
       <div className={styles.content}>
         <SessionManager />
       </div>

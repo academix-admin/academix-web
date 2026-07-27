@@ -23,7 +23,7 @@ export default function ProfileAccounts({ onStateChange }: ComponentStateProps) 
 //     { id: 2, label: t('friends_text'), icon: 'family' },
     { id: 3, label: t('security'), icon: 'security' },
     { id: 4, label: t('redeem_codes'), icon: 'redeem' },
-    { id: 5, label: t('devices_sessions') || 'Devices & sessions', icon: 'devices' }
+    { id: 5, label: t('devices_sessions'), icon: 'devices' }
   ]);
 
   const handleItemClick = (itemId: number) => {

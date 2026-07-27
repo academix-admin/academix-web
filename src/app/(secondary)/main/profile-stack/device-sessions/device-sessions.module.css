@@ -1,14 +1,62 @@
 .container {
   display: flex;
   flex-direction: column;
+  position: relative;
   min-height: 100dvh;
+  padding-bottom: var(--nav-height);
 }
-.container_light { background: #f8fafc; color: #0f172a; }
-.container_dark { background: #0b0f19; color: #f1f5f9; }
+
+/* Theme variables (mirrors security-page) — SessionManager reads these too. */
+.container_light {
+  --text-color: #000000;
+  --text-secondary: #666666;
+  --border-color: #cecece;
+  --section-bg: #f7f6f6;
+  --hover-bg: rgba(0, 0, 0, 0.05);
+  --accent: #1c6b1e;
+  --badge-bg: rgba(28, 107, 30, 0.12);
+  --danger: #dc2626;
+  --danger-bg: rgba(220, 38, 38, 0.1);
+  background: #ffffff;
+  color: #000000;
+}
+
+.container_dark {
+  --text-color: #ffffff;
+  --text-secondary: #a0a0a0;
+  --border-color: #424242;
+  --section-bg: #1c1c1c;
+  --hover-bg: rgba(255, 255, 255, 0.1);
+  --accent: #34d399;
+  --badge-bg: rgba(52, 211, 153, 0.16);
+  --danger: #f87171;
+  --danger-bg: rgba(248, 113, 113, 0.14);
+  background: #121212;
+  color: #ffffff;
+}
 
 .content {
   flex: 1;
-  padding: 16px;
+  max-width: 800px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 1rem 2.5rem;
+  padding-top: 6rem; /* clear the fixed Header */
   box-sizing: border-box;
-  overflow-y: auto;
+}
+
+@media screen and (max-width: 800px) {
+  .content {
+    padding: 1rem;
+    padding-top: 6rem;
+    max-width: 800px;
+  }
+}
+
+@media screen and (max-width: 500px) {
+  .content {
+    padding: 16px;
+    padding-top: 5rem;
+    max-width: 500px;
+  }
 }

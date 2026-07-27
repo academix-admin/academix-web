@@ -1,23 +1,23 @@
+/* Reads the theme variables set on the profile page container (see device-sessions). */
+
 .section {
   border-radius: 16px;
-  padding: 16px;
-  margin-top: 16px;
+  padding: 4px 16px;
+  border: 1px solid var(--border-color, #cecece);
+  background: var(--section-bg, #f7f6f6);
 }
-.section_light { background: #ffffff; border: 1px solid #eef0f2; }
-.section_dark { background: #1a1f2b; border: 1px solid #232a37; }
 
 .heading {
-  margin: 0 0 4px;
+  margin: 12px 0 4px;
   font-size: 1rem;
   font-weight: 700;
+  color: var(--text-color, #000);
 }
-.heading_light { color: #0f172a; }
-.heading_dark { color: #f1f5f9; }
 
 .subtext {
-  margin: 0 0 12px;
+  margin: 0 0 4px;
   font-size: 0.8125rem;
-  opacity: 0.65;
+  color: var(--text-secondary, #666);
 }
 
 .list { list-style: none; margin: 0; padding: 0; }
@@ -26,30 +26,29 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 0;
+  padding: 14px 0;
+  border-top: 1px solid var(--border-color, #eee);
 }
-.row_light { border-top: 1px solid #f1f3f5; }
-.row_dark { border-top: 1px solid #232a37; }
-.list .row:first-child, .list li:first-child .row { border-top: none; }
+.list .row:first-child { border-top: none; }
 
 .info { flex: 1; min-width: 0; }
 
 .deviceLine { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.device { font-size: 0.9375rem; font-weight: 600; }
+.device { font-size: 0.9375rem; font-weight: 600; color: var(--text-color, #000); }
 
 .currentBadge {
   font-size: 0.6875rem;
   font-weight: 700;
-  color: #1c6b1e;
-  background: rgba(28, 107, 30, 0.12);
+  color: var(--accent, #1c6b1e);
+  background: var(--badge-bg, rgba(28, 107, 30, 0.12));
   border-radius: 999px;
   padding: 2px 8px;
 }
 
 .meta {
-  margin-top: 2px;
+  margin-top: 3px;
   font-size: 0.75rem;
-  opacity: 0.6;
+  color: var(--text-secondary, #666);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -63,32 +62,25 @@
   font-weight: 600;
   cursor: pointer;
   border: 1px solid transparent;
-  background: rgba(220, 38, 38, 0.1);
-  color: #dc2626;
+  background: var(--danger-bg, rgba(220, 38, 38, 0.1));
+  color: var(--danger, #dc2626);
 }
 .logoutBtn:disabled { opacity: 0.5; cursor: default; }
-.logoutBtn_light {}
-.logoutBtn_dark { background: rgba(248, 113, 113, 0.14); color: #f87171; }
 
 .logoutAllBtn {
   width: 100%;
-  margin-top: 14px;
+  margin: 14px 0;
   border-radius: 10px;
   padding: 12px;
   font-size: 0.9rem;
   font-weight: 700;
   cursor: pointer;
-  border: 1px solid #dc2626;
+  border: 1px solid var(--danger, #dc2626);
   background: transparent;
-  color: #dc2626;
+  color: var(--danger, #dc2626);
 }
 .logoutAllBtn:disabled { opacity: 0.6; cursor: default; }
-.logoutAllBtn_dark { border-color: #f87171; color: #f87171; }
 
-.rowMuted { padding: 12px 0; font-size: 0.875rem; opacity: 0.6; }
+.rowMuted { padding: 14px 0; font-size: 0.875rem; color: var(--text-secondary, #666); }
 
-.error {
-  margin: 8px 0 0;
-  font-size: 0.8125rem;
-  color: #dc2626;
-}
+.error { margin: 8px 0; font-size: 0.8125rem; color: var(--danger, #dc2626); }
