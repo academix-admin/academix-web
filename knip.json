@@ -1,0 +1,12 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "entry": [
+    "check-translations.js",
+    "find-missing-keys.js",
+    "supabase-export/*.mjs"
+  ],
+  "ignore": [
+    "aws-export/**"
+  ],
+  "ignoreDependencies": []
+}
