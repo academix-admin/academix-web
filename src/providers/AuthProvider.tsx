@@ -314,68 +314,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     let mounted = true;
 
-    const initializeAuth = async () => {
-      try {
-        const [userResult, sessionResult] = await Promise.all([
-          supabaseBrowser.auth.getUser(),
-          supabaseBrowser.auth.getSession(),
-        ]);
-
+    // Subscribe FIRST. onAuthStateChange emits INITIAL_SESSION from local storage with NO
+    // network round-trip, so `initialized` flips fast even on a poor/offline connection; later
+    // TOKEN_REFRESHED / SIGNED_OUT events keep it in sync (e.g. a background token refresh
+    // after the tab was idle for hours). Previously we AWAITED a network getUser() here, which
+    // hung indefinitely on a poor network after backgrounding and froze the AuthBlocker loader.
+    const { data: { subscription } } = supabaseBrowser.auth.onAuthStateChange(
+      async (event, newSession) => {
         if (!mounted) return;
-
-        const initialUser    = userResult.data.user;
-        const initialSession = sessionResult.data.session;
-
-        if (isSessionExpired(initialSession)) {
-          setUser(null);
+        if (!newSession || isSessionExpired(newSession)) {
+          resolveRef.current = false;
           setSession(null);
+          setUser(null);
+          // Only wipe cached scopes on a REAL sign-out — a transient/expired blip must not
+          // clear userData (which would bounce a still-valid user to the landing page).
+          if (event === 'SIGNED_OUT') await clearAllScopes();
         } else {
-          setUser(initialUser);
-          setSession(initialSession);
+          setSession(newSession);
+          setUser(newSession.user ?? null);
         }
-
-        // ─── Subscription ──────────────────────────────────────────────
-        const { data: { subscription } } = supabaseBrowser.auth.onAuthStateChange(
-          async (event, newSession) => {
-            if (!mounted) return;
-
-            if (!newSession || isSessionExpired(newSession)) {
-              resolveRef.current = false;
-              setSession(null);
-              setUser(null);
-              await clearAllScopes();
-            } else {
-              setSession(newSession);
-              setUser(newSession.user ?? null);
-            }
-          }
-        );
-
-        if (mounted) {
-          setInitialized(true);
-        }
-
-        return () => subscription.unsubscribe();
-      } catch (error) {
-        console.error('[AUTH Effect1] initialization error=' + error);
         if (mounted) setInitialized(true);
       }
-    };
+    );
 
-    const cleanup = initializeAuth();
+    // Backstop: never let a slow/offline auth check freeze the app on the loader.
+    const initFloor = window.setTimeout(() => { if (mounted) setInitialized(true); }, 3500);
 
-    // ─── Tab visibility: re-validate session on return from idle ──────
+    // ─── Tab visibility: refresh session state on return from idle (never blocks the loader).
     const handleVisibilityChange = async () => {
       if (document.visibilityState !== 'visible') return;
-      const { data: { session: freshSession } } = await supabaseBrowser.auth.getSession();
-      if (!mounted) return;
-      if (isSessionExpired(freshSession)) {
-        setSession(null);
-        setUser(null);
-        await clearAllScopes();
-      } else {
-        setSession(freshSession);
-        setUser(freshSession?.user ?? null);
+      try {
+        const { data: { session: freshSession } } = await supabaseBrowser.auth.getSession();
+        if (!mounted) return;
+        const valid = freshSession && !isSessionExpired(freshSession);
+        setSession(valid ? freshSession : null);
+        setUser(valid ? (freshSession!.user ?? null) : null);
+      } catch {
+        /* offline — leave state as-is; the auth subscription will catch up on reconnect */
       }
     };
 
@@ -383,7 +358,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return () => {
       mounted = false;
-      cleanup?.then(unsub => unsub?.());
+      subscription.unsubscribe();
+      window.clearTimeout(initFloor);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, []);
@@ -409,7 +385,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setResolving(true);
     (async () => {
       try {
-        const profile = await fetchUserData(session!.user.id, lang);
+        // Timeout the fetch so a poor network can't leave the loader (resolving) stuck; on
+        // timeout we throw → reset resolveRef so it retries on the next auth/route change.
+        const profile = await Promise.race([
+          fetchUserData(session!.user.id, lang),
+          new Promise<never>((_, reject) => setTimeout(() => reject(new Error('profile-resolve-timeout')), 10000)),
+        ]);
         if (profile) {
           // Stale onboarding marker (from an abandoned social sign-up) must not linger.
           await StateStack.core.clearScope('signup_flow');
