@@ -25,6 +25,7 @@ import Pin from "../shared/pin/pin";
 import NewProfilePage from "../shared/new-profile-page/new-profile-page";
 import ViewTransactionPage from "../shared/view-transaction-page/view-transaction-page";
 import GiveBackPage from "./giveback-page/giveback-page";
+import DeviceSessions from "./device-sessions/device-sessions";
 
 
 const profileStackNavLink = {
@@ -50,6 +51,7 @@ const profileStackNavLink = {
   new_profile: NewProfilePage,
   view_transaction: ViewTransactionPage,
   giveback_page: GiveBackPage,
+  device_sessions: DeviceSessions,
 };
 
 export const ProfileStack = () => (
