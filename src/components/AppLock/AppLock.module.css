@@ -1,0 +1,105 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000; /* above nav, headers, sheets, dialogs */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+.light { background: #ffffff; color: #0f172a; }
+.dark { background: #0b0f19; color: #f1f5f9; }
+
+.card {
+  width: 100%;
+  max-width: 380px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.subtitle {
+  margin: 0 0 12px;
+  font-size: 0.9rem;
+  opacity: 0.7;
+  text-align: center;
+}
+
+/* PinInput slots */
+.pinContainer {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin: 8px 0;
+}
+
+.pinBox {
+  width: 44px;
+  height: 52px;
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+  border-radius: 10px;
+  border: 1px solid #c4c4c4;
+  background: transparent;
+  color: inherit;
+  outline: none;
+  caret-color: transparent;
+}
+
+.pinBox:focus { border-color: #1c6b1e; }
+.dark .pinBox { border-color: #333; }
+
+.error {
+  min-height: 1.1rem;
+  margin: 4px 0 8px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #dc2626;
+  text-align: center;
+}
+.dark .error { color: #f87171; }
+.errorHidden { visibility: hidden; }
+
+/* Keypad slots */
+.keypad { width: 100%; max-width: 300px; }
+
+.keypadGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.key {
+  height: 64px;
+  border: none;
+  border-radius: 14px;
+  background: rgba(28, 107, 30, 0.08);
+  color: inherit;
+  font-size: 1.4rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s ease;
+}
+.key:active:not(:disabled) { background: rgba(28, 107, 30, 0.2); }
+.key:disabled { opacity: 0.5; cursor: default; }
+.dark .key { background: rgba(255, 255, 255, 0.06); }
+.dark .key:active:not(:disabled) { background: rgba(255, 255, 255, 0.14); }
+
+.keyMuted {
+  background: transparent;
+  color: #1c6b1e;
+}
+.dark .keyMuted { color: #4ade80; background: transparent; }
