@@ -7,7 +7,7 @@ import styles from './statements-page.module.css';
 import { TextInput } from '@academix-admin/forms';
 import { useNav } from "@academix-admin/navigation-stack";
 import { useUserData } from '@/lib/stacks/user-stack';
-import { getParamatical } from '@/utils/checkers';
+import { getParamatical, ensureSession } from '@/utils/checkers';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useDialog } from '@academix-admin/dialog-viewer';
 import { BottomViewer, useBottomController } from "@academix-admin/bottom-viewer";
@@ -145,8 +145,7 @@ export default function StatementsPage() {
         return;
       }
 
-      const session = await supabaseBrowser.auth.getSession();
-      const jwt = session.data.session?.access_token;
+      const jwt = await ensureSession();
       if (!jwt) {
         setSubmitState('initial');
         errorDialog.open(

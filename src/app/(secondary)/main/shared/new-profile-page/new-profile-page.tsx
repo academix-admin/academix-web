@@ -7,7 +7,7 @@ import styles from './new-profile-page.module.css';
 import { TextInput } from '@academix-admin/forms';
 import { useNav } from "@academix-admin/navigation-stack";
 import { StateStack } from '@academix-admin/state-stack';
-import { getParamatical } from '@/utils/checkers';
+import { getParamatical, ensureSession } from '@/utils/checkers';
 import { checkLocation, checkFeatures } from '@/utils/checkers';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useUserData } from '@/lib/stacks/user-stack';
@@ -162,8 +162,7 @@ const BankTransfer = ({ onSubmit, methodId, errorDialog }: BankTransferProps) =>
     try {
       setSearchingLoading(true);
       setError('');
-      const session = await supabaseBrowser.auth.getSession();
-      const jwt = session.data.session?.access_token;
+      const jwt = await ensureSession();
 
       if (!jwt) {
         console.log('no JWT token');
@@ -340,8 +339,7 @@ const BankView = ({ onSubmit, methodId }: BankViewProps) => {
 
   const callFetchBanks = async () => {
     try {
-      const session = await supabaseBrowser.auth.getSession();
-      const jwt = session.data.session?.access_token;
+      const jwt = await ensureSession();
 
       if (!jwt) {
         console.log('no JWT token');

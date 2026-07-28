@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import { ensureSession } from '@/utils/checkers';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import styles from './view-transaction-page.module.css';
@@ -128,8 +129,7 @@ export default function ViewTransactionPage(props: ViewTransactionProps) {
     if (isRefreshing) return;
     try {
       setIsRefreshing(true);
-      const session = await supabaseBrowser.auth.getSession();
-      const jwt = session.data.session?.access_token;
+      const jwt = await ensureSession();
       if (!jwt) return;
 
       const response = await fetch('/api/refresh-transaction', {

@@ -5,7 +5,7 @@ import { useTheme } from '@/context/ThemeContext';
 import styles from './active-quiz-topic.module.css';
 import { useLanguage } from '@/context/LanguageContext';
 import { getLastNameOrSingle, capitalize } from '@/utils/textUtils';
-import { getParamatical, ParamaticalData } from '@/utils/checkers';
+import { getParamatical, ParamaticalData, ensureSession } from '@/utils/checkers';
 import { useUserData } from '@/lib/stacks/user-stack';
 import { useDemandState } from '@academix-admin/state-stack';
 import { supabaseBrowser } from '@/lib/supabase/client';
@@ -320,8 +320,7 @@ export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) 
         return;
       }
 
-      const session = await supabaseBrowser.auth.getSession();
-      const jwt = session.data.session?.access_token;
+      const jwt = await ensureSession();
 
       if (!jwt) {
         console.log('no JWT token');

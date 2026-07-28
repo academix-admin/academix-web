@@ -15,7 +15,7 @@ import { Header } from '@academix-admin/header';
 import { useRouter } from 'next/navigation';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useUserData } from '@/lib/stacks/user-stack';
-import { fetchUserData } from '@/utils/checkers';
+import { fetchUserData, ensureSession } from '@/utils/checkers';
 import { StateStack } from '@academix-admin/state-stack';
 import { UserData } from '@/models/user-data';
 
@@ -127,8 +127,7 @@ export default function SignUpStep7() {
         return;
       }
 
-      const { data: sessionData } = await supabaseBrowser.auth.getSession();
-      const jwt = sessionData.session?.access_token;
+      const jwt = await ensureSession();
       if (!jwt) {
         setError(t('error_occurred'));
         setContinueLoading(false);

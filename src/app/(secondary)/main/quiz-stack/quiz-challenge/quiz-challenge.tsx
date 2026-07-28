@@ -8,7 +8,7 @@ import styles from './quiz-challenge.module.css';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useNav, useProvideObject, useObject } from "@academix-admin/navigation-stack";
 import { capitalizeWords } from '@/utils/textUtils';
-import { getParamatical } from '@/utils/checkers';
+import { getParamatical, ensureSession } from '@/utils/checkers';
 import { useUserData } from '@/lib/stacks/user-stack';
 import { UserData } from '@/models/user-data';
 import { BackendRedeemCodeModel } from '@/models/redeem-code-model';
@@ -187,8 +187,7 @@ export default function QuizChallenge(props: QuizChallengeProps) {
                 return;
             }
 
-            const session = await supabaseBrowser.auth.getSession();
-            const jwt = session.data.session?.access_token;
+            const jwt = await ensureSession();
 
             if (!jwt) {
                 console.log('no JWT token');

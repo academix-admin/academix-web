@@ -9,6 +9,7 @@ import Link from 'next/link';
 import CachedLottie from '@/components/CachedLottie';
 import { TextInput } from '@academix-admin/forms';
 import { supabaseBrowser } from '@/lib/supabase/client';
+import { ensureSession } from '@/utils/checkers';
 import { useNav } from "@academix-admin/navigation-stack";
 import { useOtp } from '@/lib/stacks/otp-stack';
 import { useUserData } from '@/lib/stacks/user-stack';
@@ -156,8 +157,7 @@ export default function PinManagement(props: { isNew: boolean, returnGroup?: str
 
     try {
       // Get JWT token from Supabase session
-      const session = await supabaseBrowser.auth.getSession();
-      const jwt = session.data.session?.access_token;
+      const jwt = await ensureSession();
 
       if (!jwt) {
         setError(t('authentication_error'));
