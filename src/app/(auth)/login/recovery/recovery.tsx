@@ -36,10 +36,7 @@ export default function Recovery(props: RecoveryProps) {
   const [isFormValid, setIsFormValid] = useState(false);
   const [verificationSelected, setVerificationSelected] = useState<VerificationMethodModel>();
 
-  const [error, setError] = useState('');
   const { showError, close: closeError, errorDialogNode } = useErrorDialog();
-  useEffect(() => { if (error) showError(error); else closeError(); // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [error]);
 
 
   useEffect(() => {
@@ -63,7 +60,7 @@ export default function Recovery(props: RecoveryProps) {
     if (!isFormValid) return;
 
     setSendLoading(true);
-    setError('');
+    closeError();
 
     try {
 
@@ -75,12 +72,12 @@ export default function Recovery(props: RecoveryProps) {
         handleRecovery(verificationSelected.type, verificationSelected.value)
       } else {
         console.error('Unknown verification type');
-        setError(t('error_occurred'));
+        showError(t('error_occurred'));
 
       }
     } catch (error) {
       console.error('Error during password reset:', error);
-      setError(t('error_occurred'));
+      showError(t('error_occurred'));
 
     } finally {
       setSendLoading(false);

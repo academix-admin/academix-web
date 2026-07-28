@@ -38,10 +38,7 @@ export default function Verification() {
   const [isFormValid, setIsFormValid] = useState(false);
   const [verificationSelected, setVerificationSelected] = useState('');
 
-  const [error, setError] = useState('');
   const { showError, close: closeError, errorDialogNode } = useErrorDialog();
-  useEffect(() => { if (error) showError(error); else closeError(); // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [error]);
 
   useEffect(() => {
     if (!signup.fullName && __meta.isHydrated && isTop) {
@@ -59,7 +56,7 @@ export default function Verification() {
   }, [signup.verification]);
 
   const handleChange = (type: string) => {
-    setError('');
+    closeError();
     signup$.setField({ field: 'verification', value: type });
   };
 
@@ -120,12 +117,12 @@ export default function Verification() {
     const signUpData = getSignupData();
     if (!signUpData) {
       console.error('Something is wrong');
-      setError(t('error_occurred'));
+      showError(t('error_occurred'));
       return;
     }
 
     setContinueLoading(true);
-    setError('');
+    closeError();
 
     try {
       // Client sign-up feature/region pre-check removed (bypassable + caused false failures).
@@ -134,7 +131,7 @@ export default function Verification() {
       const result = await createAccount(signUpData);
 
       if (!result.user) {
-        setError(t('unable_to_create_account'));
+        showError(t('unable_to_create_account'));
         setContinueLoading(false);
         return null;
       }
@@ -143,7 +140,7 @@ export default function Verification() {
       setContinueLoading(false);
     } catch (err) {
       console.error('Signup error:', err);
-      setError(t('error_occurred'));
+      showError(t('error_occurred'));
       setContinueLoading(false);
       return null;
     }

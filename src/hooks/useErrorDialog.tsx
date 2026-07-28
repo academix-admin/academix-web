@@ -14,7 +14,7 @@ import { useDialog } from '@academix-admin/dialog-viewer';
 import { useLanguage } from '@/context/LanguageContext';
 import { useTheme } from '@/context/ThemeContext';
 
-export function useErrorDialog() {
+export function useErrorDialog(onDismiss?: () => void) {
   const dialog = useDialog();
   const { t } = useLanguage();
   const { theme } = useTheme();
@@ -24,12 +24,15 @@ export function useErrorDialog() {
     dialog.open(<div style={{ textAlign: 'center' }}><p>{message}</p></div>);
   };
 
+  // Dismiss = close + let the caller clear any driving error state (so it can't re-open).
+  const dismiss = () => { dialog.close(); onDismiss?.(); };
+
   const errorDialogNode = (
     <dialog.DialogViewer
       title={t('error_text')}
-      buttons={[{ text: t('ok_text'), variant: 'primary', onClick: () => dialog.close() }]}
+      buttons={[{ text: t('ok_text'), variant: 'primary', onClick: dismiss }]}
       showCancel={false}
-      closeOnBackdrop={true}
+      closeOnBackdrop={false}
       layoutProp={{
         backgroundColor: theme === 'light' ? '#fff' : '#121212',
         margin: '16px 16px',
@@ -38,5 +41,5 @@ export function useErrorDialog() {
     />
   );
 
-  return { showError, close: dialog.close, errorDialogNode };
+  return { showError, close: dismiss, errorDialogNode };
 }

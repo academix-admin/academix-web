@@ -53,8 +53,8 @@ export default function ForgotPassword() {
   const [accountDetailsInputValue, setLoginInputValue] = useState('');
 
   const [error, setError] = useState('');
-  const { showError, close: closeError, errorDialogNode } = useErrorDialog();
-  useEffect(() => { if (error) showError(error); else closeError(); // eslint-disable-next-line react-hooks/exhaustive-deps
+  const { showError, close: closeError, errorDialogNode } = useErrorDialog(() => setError(''));
+  useEffect(() => { if (error) showError(error); // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [error]);
 
   useEffect(() => {

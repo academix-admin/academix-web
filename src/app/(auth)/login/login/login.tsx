@@ -83,13 +83,7 @@ export default function LoginUser() {
   const [passwordInputValue, setPasswordInputValue] = useState('');
   const [passwordChecks, setPasswordChecks] = useState(validatePassword(''));
 
-  const [error, setError] = useState('');
   const { showError, close: closeError, errorDialogNode } = useErrorDialog();
-
-  // Mirror the error state into the shared dialog (replaces the old inline error block).
-  useEffect(() => { if (error) showError(error); else closeError(); // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [error]);
-
 
   useEffect(() => {
     setCanGoBack(window.history.length > 1);
@@ -104,7 +98,7 @@ export default function LoginUser() {
     if (!flagged) return;
     (async () => {
       const gs = await signInGateStatus(lang);
-      if (gs) setError(t('region_blocked'));
+      if (gs) showError(t('region_blocked'));
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -153,12 +147,12 @@ export default function LoginUser() {
     }
 
     setLoginLoading(true);
-    setError('');
+    closeError();
 
     try {
       const userLoginAccount: UserLoginAccount | null = await fetchUserDetails(login.login);
       if (!userLoginAccount) {
-        setError(t('invalid_login_credentials'));
+        showError(t('invalid_login_credentials'));
         setLoginLoading(false);
         return;
       }
@@ -183,7 +177,7 @@ export default function LoginUser() {
 
     } catch (err) {
       console.error(err);
-      setError(t('error_occurred'));
+      showError(t('error_occurred'));
     } finally {
       setLoginLoading(false);
     }
@@ -219,7 +213,7 @@ export default function LoginUser() {
       // server-side with a gate_check (accurate cf-ipcountry) and show a clear message.
       if (error?.status === 500 || String(error?.code) === 'unexpected_failure') {
         const gs = await signInGateStatus(lang);
-        if (gs) { setError(t('region_blocked')); return null; }
+        if (gs) { showError(t('region_blocked')); return null; }
       }
 
       if (error.code === 'email_not_confirmed') {
@@ -228,13 +222,13 @@ export default function LoginUser() {
         await StateStack.core.clearScope('login_flow');
         setLoginInputValue('');
         setPasswordInputValue('');
-        setError('');
+        closeError();
         nav.pushAndPopUntil('otp', (entry: any) => entry.key === 'login', {
           verificationType: 'UserLoginType.email',
           verificationValue: email, verificationRequest: 'SignUp'
         });
       } else if (error.code === 'invalid_credentials') {
-        setError(t('invalid_login_credentials'));
+        showError(t('invalid_login_credentials'));
         return null;
       }
 
@@ -268,7 +262,7 @@ export default function LoginUser() {
       // server-side with a gate_check (accurate cf-ipcountry) and show a clear message.
       if (error?.status === 500 || String(error?.code) === 'unexpected_failure') {
         const gs = await signInGateStatus(lang);
-        if (gs) { setError(t('region_blocked')); return null; }
+        if (gs) { showError(t('region_blocked')); return null; }
       }
 
       if (error.code === 'phone_not_confirmed') {
@@ -277,13 +271,13 @@ export default function LoginUser() {
         await StateStack.core.clearScope('login_flow');
         setLoginInputValue('');
         setPasswordInputValue('');
-        setError('');
+        closeError();
         nav.pushAndPopUntil('otp', (entry: any) => entry.key === 'login', {
           verificationType: 'UserLoginType.phone',
           verificationValue: phone, verificationRequest: 'SignUp'
         });
       } else if (error.code === 'invalid_credentials') {
-        setError(t('invalid_login_credentials'));
+        showError(t('invalid_login_credentials'));
         return null;
       }
 
@@ -319,7 +313,7 @@ export default function LoginUser() {
     nav.dispose();
     setLoginInputValue('');
     setPasswordInputValue('');
-    setError('');
+    closeError();
 
     await replaceAndWait("/main");
   };
@@ -355,7 +349,7 @@ export default function LoginUser() {
     const cleanValue = value.trim();
 
     setLoginInputValue(cleanValue);
-    setError('');
+    closeError();
 
     if (cleanValue.length === 0) {
       setLoginState('initial');
@@ -397,7 +391,7 @@ export default function LoginUser() {
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = e.target;
     setPasswordInputValue(value);
-    setError('');
+    closeError();
 
     const result = validatePassword(value);
     setPasswordChecks(result);
@@ -408,7 +402,7 @@ export default function LoginUser() {
 
   const handleForgotPassword = async () => {
     await StateStack.core.clearScope('login_flow');
-    setError('');
+    closeError();
     setLoginInputValue('');
     setPasswordInputValue('');
     nav.push('forgot_password');
@@ -515,7 +509,7 @@ export default function LoginUser() {
           </button>
 
           <div className={styles.socialDivider}><span>{t('or_text')}</span></div>
-          <SocialAuthButtons providers={['google']} theme={theme} disabled={loginLoading} onError={setError} />
+          <SocialAuthButtons providers={['google']} theme={theme} disabled={loginLoading} onError={showError} />
         </form>
       </div>
     </main>

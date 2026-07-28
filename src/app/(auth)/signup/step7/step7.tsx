@@ -64,10 +64,7 @@ export default function SignUpStep7() {
   const [firstname, setFirstname] = useState('');
   const [canGoBack, setCanGoBack] = useState(false);
   const [signUpLoading, setContinueLoading] = useState(false);
-  const [error, setError] = useState('');
   const { showError, close: closeError, errorDialogNode } = useErrorDialog();
-  useEffect(() => { if (error) showError(error); else closeError(); // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [error]);
 
   // PIN states
   const [sixPinInputValue, setSixPinInputValue] = useState('');
@@ -123,17 +120,17 @@ export default function SignUpStep7() {
     // Social onboarding → the auth user already exists (verified email from Google); create
     // the academix profile for it directly (no OTP, no password), then land on /main.
     setContinueLoading(true);
-    setError('');
+    closeError();
     try {
       if (!signup.country || !signup.language || !signup.role || !signup.sixDigitPin || !signup.username || !signup.gender || !signup.authUserId) {
-        setError(t('error_occurred'));
+        showError(t('error_occurred'));
         setContinueLoading(false);
         return;
       }
 
       const jwt = await ensureSession();
       if (!jwt) {
-        setError(t('error_occurred'));
+        showError(t('error_occurred'));
         setContinueLoading(false);
         return;
       }
@@ -163,7 +160,7 @@ export default function SignUpStep7() {
         if (result?.code === 'PROFILE_EXISTS') {
           // fall through to the success path below
         } else {
-          setError(result?.message || t('unable_to_create_account'));
+          showError(result?.message || t('unable_to_create_account'));
           setContinueLoading(false);
           return;
         }
@@ -171,7 +168,7 @@ export default function SignUpStep7() {
 
       const userObj: UserData | null = await fetchUserData(signup.authUserId, lang);
       if (!userObj) {
-        setError(t('error_occurred'));
+        showError(t('error_occurred'));
         setContinueLoading(false);
         return;
       }
@@ -184,7 +181,7 @@ export default function SignUpStep7() {
       router.replace('/main');
     } catch (err) {
       console.error('OAuth profile creation error:', err);
-      setError(t('error_occurred'));
+      showError(t('error_occurred'));
       setContinueLoading(false);
     }
   };
