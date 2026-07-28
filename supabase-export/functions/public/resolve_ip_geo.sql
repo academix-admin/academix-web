@@ -1,15 +1,16 @@
 -- schema: public
--- function: resolve_ip_geo(inet) -> (country_code,state_code). IPv4 range lookup over ip_geo (GeoIP).
+-- function: resolve_ip_geo(inet) -> (country_code,state_code). Reads the lazy ip_geo_cache
+-- (fresh ok entries only; 30-day TTL). Miss -> NULL -> caller falls back (sign-in gate: registration).
 CREATE OR REPLACE FUNCTION public.resolve_ip_geo(p_ip inet)
  RETURNS TABLE(country_code text, state_code text)
  LANGUAGE sql
  STABLE SECURITY DEFINER
  SET search_path TO 'public'
 AS $function$
-  SELECT g.country_code, g.state_code
-    FROM public.ip_geo g
-   WHERE family(p_ip) = 4
-     AND (p_ip - '0.0.0.0'::inet) BETWEEN g.ip_start AND g.ip_end
-   ORDER BY g.ip_start DESC
+  SELECT c.country_code, c.state_code
+    FROM public.ip_geo_cache c
+   WHERE c.ip = p_ip
+     AND c.status = 'ok'
+     AND c.resolved_at > now() - interval '30 days'   -- TTL: re-resolve monthly
    LIMIT 1;
 $function$;

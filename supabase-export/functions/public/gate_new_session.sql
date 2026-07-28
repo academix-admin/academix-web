@@ -1,6 +1,6 @@
 -- schema: public (trigger fn on auth.sessions)
--- Universal sign-in gate: BEFORE INSERT on auth.sessions (password/phone/Google/OAuth). One gate_check
--- call (NEW.user_id + NEW.ip); RAISE to abort a blocked sign-in. FAIL-OPEN.
+-- Universal sign-in gate (all methods). Warms the lazy GeoIP cache (request_ip_geo) + gates via one
+-- gate_check(NEW.user_id, NEW.ip). RAISE aborts a blocked sign-in. FAIL-OPEN.
 CREATE OR REPLACE FUNCTION public.gate_new_session()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -11,14 +11,14 @@ DECLARE
   v_status text;
 BEGIN
   BEGIN
+    PERFORM public.request_ip_geo(NEW.ip);   -- lazy GeoIP: resolve this IP asynchronously
     SELECT status INTO v_status
       FROM public.gate_check('Features.sign_in', 'en', NEW.user_id, NULL, NEW.ip);
   EXCEPTION WHEN OTHERS THEN
-    v_status := NULL;  -- fail-open: a gate error must never block sign-in
+    v_status := NULL;  -- fail-open
   END;
 
   IF v_status IS NOT NULL THEN
-    -- Aborts the INSERT → GoTrue fails the sign-in → no session exists.
     RAISE EXCEPTION 'AX_SIGNIN_GATE:%', v_status USING ERRCODE = 'P0001';
   END IF;
 

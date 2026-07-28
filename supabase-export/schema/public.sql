@@ -1617,17 +1617,22 @@ CREATE INDEX IF NOT EXISTS geo_blocklist_ip_gist   ON public.geo_blocklist USING
 CREATE INDEX IF NOT EXISTS geo_blocklist_geo_btree ON public.geo_blocklist (block_type, country_code, state_code);
 REVOKE ALL ON public.geo_blocklist FROM anon, authenticated;
 
--- IP → country/state GeoIP map (integer IPv4 ranges; matches public GeoIP datasets directly).
--- Lets country/state rules + the sign-in feature gate resolve LIVE country from a raw IP alone
--- (the auth.sessions trigger has NEW.ip but no cf-ipcountry). Populate via scratchpad loader from
--- the jsDelivr dataset @ip-location-db/geo-whois-asn-country/geo-whois-asn-country-ipv4-num.csv
--- (~334k rows: start_num,end_num,iso2). resolve_ip_geo() does the range lookup.
-CREATE TABLE IF NOT EXISTS public.ip_geo (
-  ip_start     bigint NOT NULL,
-  ip_end       bigint NOT NULL,
-  country_code text   NOT NULL,   -- iso2 lower
-  state_code   text,
-  PRIMARY KEY (ip_start)
+-- IP → country/state LAZY resolution CACHE. Lets country/state rules + the sign-in feature gate
+-- resolve LIVE country from a raw IP alone (the auth.sessions trigger has NEW.ip but no cf-ipcountry).
+-- Self-populating: the trigger's request_ip_geo() fires an async ip-api lookup via pg_net on a cache
+-- miss; the pg_cron job `ip_geo_ingest` (every minute, ingest_ip_geo()) folds the response in. Only
+-- ever holds IPs real users hit → tiny + always fresh (30-day TTL re-resolve). `ip_geo_cleanup`
+-- (weekly) prunes entries unused for 90 days. Replaced a 334k-row static GeoIP table (31 MB → ~KB).
+CREATE TABLE IF NOT EXISTS public.ip_geo_cache (
+  ip           inet PRIMARY KEY,
+  country_code text,                 -- iso2 lower (NULL until resolved/failed)
+  state_code   text,                 -- region code lower
+  status       text NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','ok','failed')),
+  request_id   bigint,               -- pg_net request awaiting ingestion
+  resolved_at  timestamptz,          -- drives the TTL
+  requested_at timestamptz NOT NULL DEFAULT now()
 );
-CREATE INDEX IF NOT EXISTS ip_geo_end ON public.ip_geo (ip_end);
-REVOKE ALL ON public.ip_geo FROM anon, authenticated;
+CREATE INDEX IF NOT EXISTS ip_geo_cache_pending ON public.ip_geo_cache (status) WHERE status = 'pending';
+REVOKE ALL ON public.ip_geo_cache FROM anon, authenticated;
+-- Requires: CREATE EXTENSION pg_cron; + jobs ip_geo_ingest ('* * * * *') and ip_geo_cleanup
+-- ('0 3 * * 0'). Full DDL in functions/public/_ip_geo_cache_migration.sql.
