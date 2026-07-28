@@ -6,7 +6,7 @@ import styles from './question-display.module.css';
 import { TextInput } from '@academix-admin/forms';
 import { useLanguage } from '@/context/LanguageContext';
 import { getLastNameOrSingle, capitalize } from '@/utils/textUtils';
-import { ParamaticalData } from '@/utils/checkers';
+
 import { useUserData } from '@/lib/stacks/user-stack';
 import { useDemandState } from '@academix-admin/state-stack';
 import { UserData } from '@/models/user-data';

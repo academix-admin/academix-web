@@ -104,47 +104,9 @@ const getParamatical = async (usersId: string, locale: string, gender: string, b
 };
 
 
-const checkFeatures = async (featureChecker: string, locale: string, gender: string, birthday: string ) : Promise<boolean> => {
-          try {
-                const { data: rpcResult, error } = await supabaseBrowser.rpc('get_feature_status', {
-                  p_feature: featureChecker,
-                  p_locale: locale ,
-                  p_gender: gender === "Gender.male" ? 'm' : 'f' ,
-                  p_age: Math.floor(
-                           (Date.now() - new Date(birthday).getTime()) / (1000 * 60 * 60 * 24 * 365.25)
-                         )
-                });
-                if (error) throw error;
-
-                return rpcResult.features_active;
-
-              } catch (err) {
-                console.error(err);
-                return false;
-              }
-    }
-
-const fetchUserPartialDetails = async (email?: string, phone?: string) => {
-        let params = null;
-        if (email) {
-          params = {
-              p_login_type: 'UserLoginType.email',
-              p_login_check: email
-          }
-        } else if (phone) {
-          params = {
-             p_login_type: 'UserLoginType.phone',
-             p_login_check: phone
-          }
-        }else{
-          console.error('Error getting user details');
-          return null;
-        }
-
-        const { data, error } = await supabaseBrowser.rpc('get_partial_user_record', params);
-        if (error) throw error;
-        return data;
-    };
+// checkFeatures + fetchUserPartialDetails removed: feature/region gating is now enforced
+// server-side (gate_check / the action RPCs return Feature.unavailable / Region.blocked), so
+// the bypassable client-side pre-check and its partial-record lookup are gone.
 
 const fetchUserDetails = async (loginModel: LoginModel): Promise<UserLoginAccount | null> => {
         const { data, error } = await supabaseBrowser.rpc('get_user_login_record', {
@@ -182,4 +144,4 @@ const ensureSession = async (): Promise<string | null> => {
   return jwt;
 };
 
-export { checkLocation, checkFeatures, fetchUserPartialDetails, fetchUserDetails, fetchUserData, getParamatical, ensureSession };
+export { checkLocation, fetchUserDetails, fetchUserData, getParamatical, ensureSession };

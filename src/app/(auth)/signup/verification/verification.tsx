@@ -15,7 +15,6 @@ import { useNav } from "@academix-admin/navigation-stack";
 import { treatSpaces } from '@/utils/textUtils';
 import { formatDateToDBString } from '@/utils/textUtils';
 import { UserData, BackendUserData } from '@/models/user-data';
-import { checkLocation, checkFeatures } from '@/utils/checkers';
 import { useOtp } from '@/lib/stacks/otp-stack';
 import { Header } from '@academix-admin/header';
 
@@ -125,28 +124,7 @@ export default function Verification() {
     setError('');
 
     try {
-      const location = await checkLocation();
-      if (!location) {
-        console.log('location not determined');
-        setError(t('error_occurred'));
-        setContinueLoading(false);
-        return;
-      }
-
-      const feature = await checkFeatures(
-        signUpData.users_login_type === 'UserLoginType.email' ? 'Features.sign_up_email' : 'Features.sign_up_phone',
-        lang,
-        signUpData.users_sex,
-        signUpData.users_dob
-      );
-
-      if (!feature) {
-        console.log('feature not available');
-        setError(t('feature_unavailable'));
-        setContinueLoading(false);
-        return null;
-      }
-
+      // Region/feature gating for sign-up is enforced server-side; no bypassable client pre-check.
       const result = await createAccount(signUpData);
 
       if (!result.user) {

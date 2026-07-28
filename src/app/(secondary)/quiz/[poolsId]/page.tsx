@@ -5,12 +5,12 @@ import { useTheme } from '@/context/ThemeContext';
 import styles from './page.module.css';
 import { useLanguage } from '@/context/LanguageContext';
 import { getLastNameOrSingle, capitalize } from '@/utils/textUtils';
-import { getParamatical, ParamaticalData } from '@/utils/checkers';
+import { getParamatical } from '@/utils/checkers';
 import { useUserData } from '@/lib/stacks/user-stack';
 import { useDemandState } from '@academix-admin/state-stack';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { UserData } from '@/models/user-data';
-import { checkLocation, checkFeatures, fetchUserPartialDetails, fetchUserDetails } from '@/utils/checkers';
+
 import { QuizPool, BackendQuizPool } from '@/models/user-display-quiz-topic-model';
 import { BackendPoolQuestion, PoolQuestion } from '@/models/pool-question-model';
 import { StateStack } from '@academix-admin/state-stack';

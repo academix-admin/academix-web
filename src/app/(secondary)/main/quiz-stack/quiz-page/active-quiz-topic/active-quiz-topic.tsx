@@ -5,7 +5,7 @@ import { useTheme } from '@/context/ThemeContext';
 import styles from './active-quiz-topic.module.css';
 import { useLanguage } from '@/context/LanguageContext';
 import { getLastNameOrSingle, capitalize } from '@/utils/textUtils';
-import { getParamatical, ParamaticalData, ensureSession } from '@/utils/checkers';
+import { getParamatical, ensureSession } from '@/utils/checkers';
 import { useUserData } from '@/lib/stacks/user-stack';
 import { useDemandState } from '@academix-admin/state-stack';
 import { supabaseBrowser } from '@/lib/supabase/client';
@@ -24,7 +24,7 @@ import { BottomViewer, useBottomController } from "@academix-admin/bottom-viewer
 import { TimelapseManager, useTimelapseManager, TimelapseType } from '@/lib/managers/TimelapseManager';
 import DialogCancel from '@/components/DialogCancel';
 import { QRCodeSVG } from 'qrcode.react';
-import { checkLocation, checkFeatures, fetchUserPartialDetails, fetchUserDetails } from '@/utils/checkers';
+import { checkLocation } from '@/utils/checkers';
 import { TransactionModel } from '@/models/transaction-model';
 import { useTransactionModel } from '@/lib/stacks/transactions-stack';
 import { useAwaitableRouter } from "@/hooks/useAwaitableRouter";

@@ -17,7 +17,7 @@ import { useNav } from "@academix-admin/navigation-stack";
 import { UserData } from '@/models/user-data';
 import { LoginModel } from '@/models/user-data';
 import { UserLoginAccount } from '@/models/user-data';
-import { checkLocation, checkFeatures, fetchUserPartialDetails, fetchUserDetails, fetchUserData } from '@/utils/checkers';
+import { fetchUserDetails, fetchUserData } from '@/utils/checkers';
 import { useOtp } from '@/lib/stacks/otp-stack';
 import { useAwaitableRouter } from "@/hooks/useAwaitableRouter";
 import { Header } from '@academix-admin/header';
@@ -173,27 +173,7 @@ export default function LoginUser() {
   const signInWithEmail = async (email: string, password: string): Promise<UserData | null> => {
 
     try {
-      const location = await checkLocation();
-      if (!location) {
-        console.log('location not determined');
-        setError(t('error_occurred'));
-        return null;
-      }
-
-      const partialData = await fetchUserPartialDetails(email);
-      const feature = await checkFeatures(
-        'Features.sign_in',
-        lang,
-        partialData?.users_sex,
-        partialData?.users_dob
-      );
-
-      if (!feature) {
-        console.log('feature not available', location);
-        setError(t('feature_unavailable'));
-        return null;
-      }
-
+      // Region/feature gating for sign-in is enforced server-side; no bypassable client pre-check.
       const { data, error } = await supabaseBrowser.auth.signInWithPassword({
         email: email,
         password: password,
@@ -232,27 +212,7 @@ export default function LoginUser() {
 
   const signInWithPhone = async (phone: string, password: string): Promise<UserData | null> => {
     try {
-      const location = await checkLocation();
-      if (!location) {
-        console.log('location not determined');
-        setError(t('error_occurred'));
-        return null;
-      }
-
-      const partialData = await fetchUserPartialDetails(undefined, phone);
-      const feature = await checkFeatures(
-        'Features.sign_in',
-        lang,
-        partialData?.users_sex,
-        partialData?.users_dob
-      );
-
-      if (!feature) {
-        console.log('feature not available');
-        setError(t('feature_unavailable'));
-        return null;
-      }
-
+      // Region/feature gating for sign-in is enforced server-side; no bypassable client pre-check.
       const { data, error } = await supabaseBrowser.auth.signInWithPassword({
         phone: phone,
         password: password,

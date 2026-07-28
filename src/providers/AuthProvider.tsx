@@ -457,7 +457,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // flash the loader at intervals mid-session. The cold-start empty-home is handled where it
   // belongs — each tab page reveals its sections together (useSettledReveal) — so we only hold
   // the loader while auth itself is settling (init + OAuth profile resolution).
-  const blocking = !initialized || resolving;
+  //
+  // Only PROTECTED routes wait on `initialized` (we must know the session before showing
+  // protected content). Public + internal routes — the landing `/`, /login, /signup, /welcome,
+  // marketing pages — render immediately with NO auth wait; a signed-in visitor is forwarded to
+  // /main reactively by Effect 2 once the session resolves. This kills the "long loading" the
+  // landing page showed while auth initialized. `resolving` still holds the loader during an
+  // OAuth profile resolution (on /auth/callback or a logged-in landing) regardless of route.
+  const onProtectedRoute = matchesRoutePattern(pathname, protectedRoutes);
+  const blocking = (onProtectedRoute && !initialized) || resolving;
 
   return (
     <AuthContext.Provider value={{

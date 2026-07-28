@@ -13,7 +13,7 @@ import { createStateStack, useDemandState, StateStack } from '@academix-admin/st
 import { useAwaitableRouter } from "@/hooks/useAwaitableRouter";
 import { UserData } from '@/models/user-data';
 import { useUserData } from '@/lib/stacks/user-stack';
-import {  fetchUserData } from '@/utils/checkers';
+
 import { useRouter } from "next/navigation";
 import { Header } from '@academix-admin/header';
 import { PinInput, Keypad } from '@academix-admin/pin-input';

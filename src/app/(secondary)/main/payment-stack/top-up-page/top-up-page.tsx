@@ -6,7 +6,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import styles from './top-up-page.module.css';
 import { useNav, useProvideObject } from "@academix-admin/navigation-stack";
 import { StateStack } from '@academix-admin/state-stack';
-import { checkLocation, checkFeatures, ensureSession } from '@/utils/checkers';
+import { ensureSession } from '@/utils/checkers';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useUserData } from '@/lib/stacks/user-stack';
 import PaymentWallet from '../payment-wallet/payment-wallet';

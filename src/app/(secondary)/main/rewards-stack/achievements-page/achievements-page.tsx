@@ -8,7 +8,7 @@ import styles from './achievements-page.module.css';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useNav } from "@academix-admin/navigation-stack";
 import { capitalize } from '@/utils/textUtils';
-import { checkLocation, checkFeatures, fetchUserPartialDetails, fetchUserDetails } from '@/utils/checkers';
+
 import TabMilestone from "@/models/tab-milestone";
 import { useDemandState } from '@academix-admin/state-stack';
 import { useUserData } from '@/lib/stacks/user-stack';
@@ -18,7 +18,7 @@ import { AchievementsModel } from '@/models/achievements-model';
 import { RewardClaimModel } from '@/models/achievements-model';
 import { AchievementsProgressDetails } from '@/models/achievements-model';
 import { PaginateModel } from '@/models/paginate-model';
-import { ParamaticalData } from '@/utils/checkers';
+
 import LoadingView from '@/components/LoadingView/LoadingView';
 import NoResultsView from '@/components/NoResultsView/NoResultsView';
 import ErrorView from '@/components/ErrorView/ErrorView';

@@ -5,7 +5,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import styles from './payment-profile.module.css';
 import { useNav } from "@academix-admin/navigation-stack";
-import { getParamatical, ParamaticalData } from '@/utils/checkers';
+import { getParamatical } from '@/utils/checkers';
 import { useUserData } from '@/lib/stacks/user-stack';
 import { useDemandState } from '@academix-admin/state-stack';
 import { supabaseBrowser } from '@/lib/supabase/client';

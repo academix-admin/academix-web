@@ -12,7 +12,7 @@ import { supabaseBrowser } from '@/lib/supabase/client';
 import { useAccountDetails, VerificationMethodModel } from '@/lib/stacks/login-stack';
 import { StateStack } from '@academix-admin/state-stack';
 import { useNav } from "@academix-admin/navigation-stack";
-import { checkLocation, checkFeatures, fetchUserPartialDetails, fetchUserDetails } from '@/utils/checkers';
+import { fetchUserDetails } from '@/utils/checkers';
 import { LoginModel } from '@/models/user-data';
 import { UserLoginAccount } from '@/models/user-data';
 import { Header } from '@academix-admin/header';
@@ -99,28 +99,7 @@ export default function ForgotPassword() {
         return;
       }
 
-      const location = await checkLocation();
-      if (!location) {
-        console.log('location not determined');
-        setError(t('error_occurred'));
-
-        return null;
-      }
-
-      const partialData = userLoginAccount.users_login_type === 'UserLoginType.email' ? await fetchUserPartialDetails(userLoginAccount.users_email) : await fetchUserPartialDetails(userLoginAccount.users_phone);
-      const feature = await checkFeatures(
-        userLoginAccount.users_login_type === 'UserLoginType.email' ? 'Features.email_recovery' : 'Features.phone_recovery',
-        lang,
-        partialData?.users_sex,
-        partialData?.users_dob
-      );
-
-      if (!feature) {
-        console.log('feature not available');
-        setError(t('feature_unavailable'));
-        return null;
-      }
-
+      // Region/feature gating for account recovery is enforced server-side; no bypassable client pre-check.
       const verificationMethods: VerificationMethodModel[] = [];
 
       if (userLoginAccount.users_login_type === 'UserLoginType.email') {

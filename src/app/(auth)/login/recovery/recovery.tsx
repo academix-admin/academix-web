@@ -12,7 +12,7 @@ import { supabaseBrowser } from '@/lib/supabase/client';
 import { useAccountDetails, VerificationMethodModel } from '@/lib/stacks/login-stack';
 import { StateStack } from '@academix-admin/state-stack';
 import { useNav } from "@academix-admin/navigation-stack";
-import { checkLocation, checkFeatures } from '@/utils/checkers';
+
 import { useOtp } from '@/lib/stacks/otp-stack';
 import NoResultsView from '@/components/NoResultsView/NoResultsView';
 import { Header } from '@academix-admin/header';

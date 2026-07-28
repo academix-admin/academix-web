@@ -8,7 +8,7 @@ import styles from './mission-page.module.css';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useNav } from "@academix-admin/navigation-stack";
 import { capitalize } from '@/utils/textUtils';
-import { checkLocation, checkFeatures, fetchUserPartialDetails, fetchUserDetails } from '@/utils/checkers';
+
 import TabMilestone from "@/models/tab-milestone";
 import { useDemandState } from '@academix-admin/state-stack';
 import { useUserData } from '@/lib/stacks/user-stack';
@@ -18,7 +18,7 @@ import { MissionModel } from '@/models/mission-model';
 import { RewardClaimModel } from '@/models/mission-model';
 import { MissionProgressDetails } from '@/models/mission-model';
 import { PaginateModel } from '@/models/paginate-model';
-import { ParamaticalData } from '@/utils/checkers';
+
 import LoadingView from '@/components/LoadingView/LoadingView';
 import NoResultsView from '@/components/NoResultsView/NoResultsView';
 import ErrorView from '@/components/ErrorView/ErrorView';

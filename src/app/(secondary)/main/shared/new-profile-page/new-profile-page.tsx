@@ -8,7 +8,7 @@ import { TextInput } from '@academix-admin/forms';
 import { useNav } from "@academix-admin/navigation-stack";
 import { StateStack } from '@academix-admin/state-stack';
 import { getParamatical, ensureSession } from '@/utils/checkers';
-import { checkLocation, checkFeatures } from '@/utils/checkers';
+
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useUserData } from '@/lib/stacks/user-stack';
 import PaymentWallet from '../../payment-stack/payment-wallet/payment-wallet';

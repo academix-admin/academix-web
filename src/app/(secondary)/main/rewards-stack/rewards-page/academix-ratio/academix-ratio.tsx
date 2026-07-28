@@ -5,7 +5,7 @@ import { useTheme } from '@/context/ThemeContext';
 import styles from './academix-ratio.module.css';
 import { useLanguage } from '@/context/LanguageContext';
 import { getLastNameOrSingle, capitalize } from '@/utils/textUtils';
-import { ParamaticalData} from '@/utils/checkers';
+
 import { useUserData } from '@/lib/stacks/user-stack';
 import { useAcademixRatio } from '@/lib/stacks/academix-ratio-stack';
 import { useDemandState } from '@academix-admin/state-stack';

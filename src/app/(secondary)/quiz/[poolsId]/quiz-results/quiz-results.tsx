@@ -4,8 +4,8 @@ import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import styles from './quiz-results.module.css';
 import { useLanguage } from '@/context/LanguageContext';
-import { getParamatical, ParamaticalData } from '@/utils/checkers';
-import { checkLocation, checkFeatures, fetchUserPartialDetails, fetchUserDetails } from '@/utils/checkers';
+import { getParamatical } from '@/utils/checkers';
+
 import { useUserData } from '@/lib/stacks/user-stack';
 import { UserData } from '@/models/user-data';
 import { supabaseBrowser } from '@/lib/supabase/client';

@@ -6,8 +6,8 @@ import { useLanguage } from '@/context/LanguageContext';
 import styles from './quiz-redeem-code.module.css';
 import { TextInput } from '@academix-admin/forms';
 import { useNav } from "@academix-admin/navigation-stack";
-import { ParamaticalData } from '@/utils/checkers';
-import { checkLocation, checkFeatures, fetchUserPartialDetails, fetchUserDetails, fetchUserData } from '@/utils/checkers';
+
+
 import { useUserData } from '@/lib/stacks/user-stack';
 import { useDemandState } from '@academix-admin/state-stack';
 import { supabaseBrowser } from '@/lib/supabase/client';

@@ -17,7 +17,7 @@ import LoadingView from '@/components/LoadingView/LoadingView';
 import NoResultsView from '@/components/NoResultsView/NoResultsView';
 import ErrorView from '@/components/ErrorView/ErrorView';
 import DialogCancel from '@/components/DialogCancel';
-import { checkLocation, checkFeatures, fetchUserPartialDetails, fetchUserDetails } from '@/utils/checkers';
+
 import { useDemandState } from '@academix-admin/state-stack';
 import { PaginateModel } from '@/models/paginate-model';
 import { StateStack } from '@academix-admin/state-stack';

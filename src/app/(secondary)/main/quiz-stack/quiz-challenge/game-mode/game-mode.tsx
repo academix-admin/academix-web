@@ -5,7 +5,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import styles from './game-mode.module.css';
 import { useNav } from "@academix-admin/navigation-stack";
-import { ParamaticalData } from '@/utils/checkers';
+
 import { useUserData } from '@/lib/stacks/user-stack';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { UserData } from '@/models/user-data';
