@@ -19,6 +19,7 @@ import { LoginModel } from '@/models/user-data';
 import { UserLoginAccount } from '@/models/user-data';
 import { fetchUserDetails, fetchUserData } from '@/utils/checkers';
 import { signInGateStatus } from '@/utils/gate';
+import { useErrorDialog } from '@/hooks/useErrorDialog';
 import { useOtp } from '@/lib/stacks/otp-stack';
 import { useAwaitableRouter } from "@/hooks/useAwaitableRouter";
 import { Header } from '@academix-admin/header';
@@ -83,6 +84,11 @@ export default function LoginUser() {
   const [passwordChecks, setPasswordChecks] = useState(validatePassword(''));
 
   const [error, setError] = useState('');
+  const { showError, close: closeError, errorDialogNode } = useErrorDialog();
+
+  // Mirror the error state into the shared dialog (replaces the old inline error block).
+  useEffect(() => { if (error) showError(error); else closeError(); // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [error]);
 
 
   useEffect(() => {
@@ -498,11 +504,7 @@ export default function LoginUser() {
             {t('forgot_password')}
           </button>
 
-          {error && (<div className={styles.errorSection}>
-            <p className={styles.errorText}>
-              {error}
-            </p>
-          </div>)}
+          {errorDialogNode}
 
           <button
             type="submit"

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useErrorDialog } from '@/hooks/useErrorDialog';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import Image from 'next/image';
@@ -64,6 +65,9 @@ export default function SignUpStep7() {
   const [canGoBack, setCanGoBack] = useState(false);
   const [signUpLoading, setContinueLoading] = useState(false);
   const [error, setError] = useState('');
+  const { showError, close: closeError, errorDialogNode } = useErrorDialog();
+  useEffect(() => { if (error) showError(error); else closeError(); // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [error]);
 
   // PIN states
   const [sixPinInputValue, setSixPinInputValue] = useState('');
@@ -336,7 +340,7 @@ export default function SignUpStep7() {
             </div>
           )}
 
-          {error && <p className={styles.errorText}>{error}</p>}
+          {errorDialogNode}
 
           <button
             type="submit"
