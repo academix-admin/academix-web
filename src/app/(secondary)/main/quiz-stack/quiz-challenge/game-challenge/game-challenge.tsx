@@ -4,7 +4,6 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import styles from './game-challenge.module.css';
-import { getParamatical } from '@/utils/checkers';
 import { useUserData } from '@/lib/stacks/user-stack';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { UserData } from '@/models/user-data';
@@ -64,21 +63,9 @@ export default function GameChallenge({ onChallengeSelect, topicsId, gameModeId 
     if (!userData) return [];
 
     try {
-      const paramatical = await getParamatical(
-        userData.usersId,
-        lang,
-        userData.usersSex,
-        userData.usersDob
-      );
-
-      if (!paramatical) return [];
 
       const { data, error } = await supabaseBrowser.rpc("fetch_quiz_challenges", {
-        p_owner_id: userData.usersId,
         p_locale: lang,
-        p_country: paramatical.country,
-        p_gender: paramatical.gender,
-        p_age: paramatical.age,
         topic_id: topicsId,
         p_game_mode_id: gameModeId
       });

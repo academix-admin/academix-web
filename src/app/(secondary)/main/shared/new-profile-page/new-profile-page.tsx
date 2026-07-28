@@ -7,7 +7,7 @@ import styles from './new-profile-page.module.css';
 import { TextInput } from '@academix-admin/forms';
 import { useNav } from "@academix-admin/navigation-stack";
 import { StateStack } from '@academix-admin/state-stack';
-import { getParamatical, ensureSession } from '@/utils/checkers';
+import { ensureSession } from '@/utils/checkers';
 
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useUserData } from '@/lib/stacks/user-stack';
@@ -797,23 +797,11 @@ export default function NewProfilePage(props: NewProfileProps) {
     if (!userData) return [];
 
     try {
-      const paramatical = await getParamatical(
-        userData.usersId,
-        lang,
-        userData.usersSex,
-        userData.usersDob
-      );
-
-      if (!paramatical) return [];
 
       const { data, error } = await supabaseBrowser.rpc(
         profileType === 'ProfileType.buy' ? "fetch_top_up_profiles" : "fetch_withdraw_profiles",
         {
-          p_user_id: userData.usersId,
           p_locale: lang,
-          p_country: paramatical.country,
-          p_gender: paramatical.gender,
-          p_age: paramatical.age,
           p_limit_by: 100,
           p_method_id: methodId,
           p_after_profiles: (new PaginateModel()).toJson(),

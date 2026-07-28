@@ -2,13 +2,16 @@
 -- function: fetch_withdraw_wallets(p_limit_by integer, p_after_wallets jsonb, p_country text, p_locale text, p_gender text, p_age text, p_user_id uuid)
 -- generated from Supabase project iewqfmkngcgayxbbnpiz (read-only mirror)
 
-CREATE OR REPLACE FUNCTION public.fetch_withdraw_wallets(p_limit_by integer, p_after_wallets jsonb, p_country text DEFAULT NULL::text, p_locale text DEFAULT NULL::text, p_gender text DEFAULT NULL::text, p_age text DEFAULT NULL::text, p_user_id uuid DEFAULT NULL::uuid)
+CREATE OR REPLACE FUNCTION public.fetch_withdraw_wallets(p_limit_by integer, p_after_wallets jsonb, p_locale text DEFAULT NULL::text)
  RETURNS SETOF jsonb
  LANGUAGE plpgsql
 AS $function$
 DECLARE
+  p_user_id uuid;
     sortID TEXT;
 BEGIN
+  -- [gate] server-authoritative identity via public.gate_check
+  SELECT users_id INTO p_user_id FROM public.gate_check(NULL, p_locale);
     -- Extract sort ID from the passed JSONB object
     sortID := (p_after_wallets->>'sort_id')::TEXT;
 
@@ -36,4 +39,3 @@ BEGIN
 
 END;
 $function$
-

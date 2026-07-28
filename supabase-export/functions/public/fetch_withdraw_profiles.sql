@@ -2,13 +2,16 @@
 -- function: fetch_withdraw_profiles(p_country text, p_locale text, p_gender text, p_age text, p_user_id uuid, p_method_id uuid, p_limit_by integer, p_after_profiles jsonb)
 -- generated from Supabase project iewqfmkngcgayxbbnpiz (read-only mirror)
 
-CREATE OR REPLACE FUNCTION public.fetch_withdraw_profiles(p_country text, p_locale text, p_gender text, p_age text, p_user_id uuid, p_method_id uuid, p_limit_by integer, p_after_profiles jsonb)
+CREATE OR REPLACE FUNCTION public.fetch_withdraw_profiles(p_locale text, p_method_id uuid, p_limit_by integer, p_after_profiles jsonb)
  RETURNS SETOF jsonb
  LANGUAGE plpgsql
 AS $function$
 DECLARE
+  p_user_id uuid;
     sortID TEXT;
 BEGIN
+  -- [gate] server-authoritative identity via public.gate_check
+  SELECT users_id INTO p_user_id FROM public.gate_check(NULL, p_locale);
     -- Extract sort ID from the passed JSONB object
     sortID := (p_after_profiles->>'sort_id')::TEXT;
 
@@ -33,4 +36,3 @@ BEGIN
 
 END;
 $function$
-

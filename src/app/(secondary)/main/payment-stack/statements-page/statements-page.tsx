@@ -7,7 +7,7 @@ import styles from './statements-page.module.css';
 import { TextInput } from '@academix-admin/forms';
 import { useNav } from "@academix-admin/navigation-stack";
 import { useUserData } from '@/lib/stacks/user-stack';
-import { getParamatical, ensureSession } from '@/utils/checkers';
+import { ensureSession } from '@/utils/checkers';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useDialog } from '@academix-admin/dialog-viewer';
 import { BottomViewer, useBottomController } from "@academix-admin/bottom-viewer";
@@ -128,22 +128,6 @@ export default function StatementsPage() {
     setSubmitState('loading');
 
     try {
-      const paramatical = await getParamatical(
-        userData.usersId,
-        lang,
-        userData.usersSex,
-        userData.usersDob
-      );
-
-      if (!paramatical) {
-        setSubmitState('initial');
-        errorDialog.open(
-          <div style={{ textAlign: 'center' }}>
-            <p>{t('error_occurred')}</p>
-          </div>
-        );
-        return;
-      }
 
       const jwt = await ensureSession();
       if (!jwt) {
@@ -164,10 +148,7 @@ export default function StatementsPage() {
         },
         body: JSON.stringify({
           userId: userData.usersId,
-          country: paramatical.country,
           locale: lang,
-          gender: paramatical.gender,
-          age: paramatical.age,
           email: resolvedEmail,
           fromDate: resolvedDateRange.from,
           toDate: resolvedDateRange.to,

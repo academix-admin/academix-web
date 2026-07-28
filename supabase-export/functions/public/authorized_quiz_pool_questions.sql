@@ -2,15 +2,21 @@
 -- function: authorized_quiz_pool_questions(p_user_id uuid, p_locale text, p_country text, p_gender text, p_age text, p_pool_id uuid)
 -- generated from Supabase project iewqfmkngcgayxbbnpiz (read-only mirror)
 
-CREATE OR REPLACE FUNCTION public.authorized_quiz_pool_questions(p_user_id uuid, p_locale text, p_country text, p_gender text, p_age text, p_pool_id uuid)
+CREATE OR REPLACE FUNCTION public.authorized_quiz_pool_questions(p_locale text, p_pool_id uuid)
  RETURNS jsonb
  LANGUAGE plpgsql
 AS $function$
 DECLARE
+  p_user_id uuid;
+  p_country text;
+  p_gender text;
+  p_age text;
     result JSONB := '{"status": null, "pools_question": [], "pools_quiz": null, "error": null, "called": "500"}';
     questions JSONB[];
     pool RECORD;
 BEGIN
+  -- [gate] server-authoritative identity + demographics via public.gate_check
+  SELECT users_id, country, gender, age INTO p_user_id, p_country, p_gender, p_age FROM public.gate_check(NULL, p_locale);
     -- Get pool record
     SELECT * INTO pool 
     FROM pools_table pt 
@@ -113,4 +119,3 @@ EXCEPTION
         RETURN result;
 END;
 $function$
-

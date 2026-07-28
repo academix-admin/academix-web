@@ -5,7 +5,6 @@ import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import styles from './payment-profile.module.css';
 import { useNav } from "@academix-admin/navigation-stack";
-import { getParamatical } from '@/utils/checkers';
 import { useUserData } from '@/lib/stacks/user-stack';
 import { useDemandState } from '@academix-admin/state-stack';
 import { supabaseBrowser } from '@/lib/supabase/client';
@@ -169,21 +168,9 @@ export default function PaymentProfile({ profileType, methodId, methodType, onPr
     if (!userData) return [];
 
     try {
-      const paramatical = await getParamatical(
-        userData.usersId,
-        lang,
-        userData.usersSex,
-        userData.usersDob
-      );
-
-      if (!paramatical) return [];
 
       const { data, error } = await supabaseBrowser.rpc(profileType === 'ProfileType.buy' ? "fetch_top_up_profiles" : "fetch_withdraw_profiles", {
-        p_user_id: userData.usersId,
         p_locale: lang,
-        p_country: paramatical.country,
-        p_gender: paramatical.gender,
-        p_age: paramatical.age,
         p_limit_by: limitBy,
         p_method_id: methodId,
         p_after_profiles: paginateModel.toJson(),

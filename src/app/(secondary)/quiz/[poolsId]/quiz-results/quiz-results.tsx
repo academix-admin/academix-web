@@ -4,7 +4,6 @@ import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import styles from './quiz-results.module.css';
 import { useLanguage } from '@/context/LanguageContext';
-import { getParamatical } from '@/utils/checkers';
 
 import { useUserData } from '@/lib/stacks/user-stack';
 import { UserData } from '@/models/user-data';
@@ -861,26 +860,10 @@ export default function QuizResults({ poolsId, clickMenu, clickExit }: QuizResul
 
     try {
       setResultsLoading(true);
-      const paramatical = await getParamatical(
-        userData.usersId,
-        lang,
-        userData.usersSex,
-        userData.usersDob
-      );
-
-     if (!paramatical){
-         console.error('Error fetching quiz results');
-         setResultsLoading(false);
-         return ;
-     }
 
       const { data, error } = await supabaseBrowser.rpc("get_quiz_result", {
-        p_user_id: userData.usersId,
         p_pool_id: poolsId,
         p_locale: lang,
-        p_country: paramatical.country,
-        p_gender: paramatical.gender,
-        p_age: paramatical.age
       });
 
       if (error) {
@@ -943,18 +926,10 @@ export default function QuizResults({ poolsId, clickMenu, clickExit }: QuizResul
     if (!userData || !poolsId) return [];
 
     try {
-      const paramatical = await getParamatical(
-        userData.usersId,
-        lang,
-        userData.usersSex,
-        userData.usersDob
-      );
-
-      if (!paramatical) return [];
 
       const { data, error } = await supabaseBrowser.rpc("fetch_pool_members", {
         p_pool_id: poolsId,
-        p_locale: paramatical?.locale,
+        p_locale: lang,
         p_limit_by: limitBy,
         p_for_ranking: true,
         p_after_pool_members: paginateModel.toJson()

@@ -6,7 +6,6 @@ import { useLanguage } from '@/context/LanguageContext';
 import styles from './payment-wallet.module.css';
 import { TextInput } from '@academix-admin/forms';
 import { useNav } from "@academix-admin/navigation-stack";
-import { getParamatical } from '@/utils/checkers';
 import { useUserData } from '@/lib/stacks/user-stack';
 import { useDemandState } from '@academix-admin/state-stack';
 import { supabaseBrowser } from '@/lib/supabase/client';
@@ -138,17 +137,6 @@ export default function PaymentWallet({ profileType, onWalletData, onWalletAmoun
 
     try {
       setUserWalletState('loading');
-      const paramatical = await getParamatical(
-        userData.usersId,
-        lang,
-        userData.usersSex,
-        userData.usersDob
-      );
-
-      if (!paramatical) {
-        setUserWalletState('error');
-        return;
-      }
 
       if (!userData.countryTable) {
         console.error("[UserTopUpWallet] error: countryTable is null");
@@ -157,11 +145,7 @@ export default function PaymentWallet({ profileType, onWalletData, onWalletAmoun
       }
 
       const { data, error } = await supabaseBrowser.rpc(profileType === 'ProfileType.buy' ? "fetch_user_top_up_wallet" : "fetch_user_withdraw_wallets", {
-        p_user_id: userData.usersId,
         p_locale: lang,
-        p_country: paramatical.country,
-        p_gender: paramatical.gender,
-        p_age: paramatical.age,
         p_country_id: userData.countryTable.countryId
       });
 
@@ -197,21 +181,9 @@ export default function PaymentWallet({ profileType, onWalletData, onWalletAmoun
     if (!userData) return [];
 
     try {
-      const paramatical = await getParamatical(
-        userData.usersId,
-        lang,
-        userData.usersSex,
-        userData.usersDob
-      );
-
-      if (!paramatical) return [];
 
       const { data, error } = await supabaseBrowser.rpc(profileType === 'ProfileType.buy' ? "fetch_top_up_wallets" : "fetch_withdraw_wallets", {
-        p_user_id: userData.usersId,
         p_locale: lang,
-        p_country: paramatical.country,
-        p_gender: paramatical.gender,
-        p_age: paramatical.age,
         p_limit_by: limitBy,
         p_after_wallets: paginateModel.toJson(),
       });

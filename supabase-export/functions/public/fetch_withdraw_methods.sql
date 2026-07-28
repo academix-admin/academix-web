@@ -2,14 +2,20 @@
 -- function: fetch_withdraw_methods(p_locale text, p_wallet_id uuid, p_limit_by integer, p_after_methods jsonb, p_user_id uuid, p_country text, p_gender text, p_age text)
 -- generated from Supabase project iewqfmkngcgayxbbnpiz (read-only mirror)
 
-CREATE OR REPLACE FUNCTION public.fetch_withdraw_methods(p_locale text, p_wallet_id uuid, p_limit_by integer, p_after_methods jsonb, p_user_id uuid DEFAULT NULL::uuid, p_country text DEFAULT NULL::text, p_gender text DEFAULT NULL::text, p_age text DEFAULT NULL::text)
+CREATE OR REPLACE FUNCTION public.fetch_withdraw_methods(p_locale text, p_wallet_id uuid, p_limit_by integer, p_after_methods jsonb)
  RETURNS SETOF jsonb
  LANGUAGE plpgsql
 AS $function$
 DECLARE
+  p_user_id uuid;
+  p_country text;
+  p_gender text;
+  p_age text;
     sortID TEXT;
 BEGIN
 
+  -- [gate] server-authoritative identity + demographics via public.gate_check
+  SELECT users_id, country, gender, age INTO p_user_id, p_country, p_gender, p_age FROM public.gate_check(NULL, p_locale);
     sortID := (p_after_methods->>'sort_id')::TEXT;
 
     RETURN QUERY
@@ -67,4 +73,3 @@ BEGIN
     FROM filtered_methods fm;
 END;
 $function$
-

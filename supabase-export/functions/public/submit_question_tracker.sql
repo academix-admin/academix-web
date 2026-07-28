@@ -2,11 +2,12 @@
 -- function: submit_question_tracker(p_user_id uuid, p_locale text, p_country text, p_gender text, p_age text, p_submission jsonb)
 -- generated from Supabase project iewqfmkngcgayxbbnpiz (read-only mirror)
 
-CREATE OR REPLACE FUNCTION public.submit_question_tracker(p_user_id uuid, p_locale text, p_country text, p_gender text, p_age text, p_submission jsonb)
+CREATE OR REPLACE FUNCTION public.submit_question_tracker(p_locale text, p_submission jsonb)
  RETURNS jsonb
  LANGUAGE plpgsql
 AS $function$
 DECLARE
+  p_user_id uuid;
     result                  JSONB := '{"status": null, "question_status": null, "pools_details": null, "options_selected": null, "error": null}';
     active_pool             RECORD;
     pool_question_id        UUID;
@@ -30,6 +31,8 @@ DECLARE
     options_selected        TEXT[];   -- ← ADDED
 BEGIN
 
+  -- [gate] server-authoritative identity via public.gate_check
+  SELECT users_id INTO p_user_id FROM public.gate_check(NULL, p_locale);
     -- ── [1] Validate required parameters ─────────────────────────────────────
     IF p_user_id IS NULL OR p_submission IS NULL THEN
         result := jsonb_set(result, '{status}', '"Submission.error"');
@@ -265,4 +268,3 @@ EXCEPTION
         RETURN result;
 END;
 $function$
-

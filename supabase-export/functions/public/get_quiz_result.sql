@@ -2,16 +2,22 @@
 -- function: get_quiz_result(p_user_id uuid, p_locale text, p_country text, p_gender text, p_age text, p_pool_id uuid)
 -- generated from Supabase project iewqfmkngcgayxbbnpiz (read-only mirror)
 
-CREATE OR REPLACE FUNCTION public.get_quiz_result(p_user_id uuid, p_locale text, p_country text, p_gender text, p_age text, p_pool_id uuid)
+CREATE OR REPLACE FUNCTION public.get_quiz_result(p_locale text, p_pool_id uuid)
  RETURNS jsonb
  LANGUAGE plpgsql
 AS $function$
 DECLARE
+  p_user_id uuid;
+  p_country text;
+  p_gender text;
+  p_age text;
     result JSONB := '{"status": null, "members": [], "error": null, "called": "5500"}';
     quiz JSONB;
     question_total_count INT;
     members JSONB[];
 BEGIN
+  -- [gate] server-authoritative identity + demographics via public.gate_check
+  SELECT users_id, country, gender, age INTO p_user_id, p_country, p_gender, p_age FROM public.gate_check(NULL, p_locale);
     -- Get pool status and job
     SELECT ct.challenge_question_count INTO question_total_count
     FROM pools_table pt 
@@ -101,4 +107,3 @@ EXCEPTION
         RETURN result;
 END;
 $function$
-

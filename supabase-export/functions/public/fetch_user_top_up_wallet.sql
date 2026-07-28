@@ -2,14 +2,17 @@
 -- function: fetch_user_top_up_wallet(p_country text, p_locale text, p_gender text, p_age text, p_user_id uuid, p_country_id uuid)
 -- generated from Supabase project iewqfmkngcgayxbbnpiz (read-only mirror)
 
-CREATE OR REPLACE FUNCTION public.fetch_user_top_up_wallet(p_country text, p_locale text, p_gender text, p_age text, p_user_id uuid, p_country_id uuid)
+CREATE OR REPLACE FUNCTION public.fetch_user_top_up_wallet(p_locale text, p_country_id uuid)
  RETURNS jsonb
  LANGUAGE plpgsql
 AS $function$
 DECLARE
+  p_user_id uuid;
     wallet JSONB;
 BEGIN
 
+  -- [gate] server-authoritative identity via public.gate_check
+  SELECT users_id INTO p_user_id FROM public.gate_check(NULL, p_locale);
     IF p_country_id IS NULL THEN 
        RETURN NULL;
     END IF; 
@@ -37,4 +40,3 @@ BEGIN
     RETURN wallet;
 END;
 $function$
-

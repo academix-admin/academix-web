@@ -8,7 +8,7 @@ import styles from './quiz-commitment.module.css';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useNav, usePageLifecycle, useProvideObject, useObject } from "@academix-admin/navigation-stack";
 import { capitalizeWords } from '@/utils/textUtils';
-import { getParamatical, ensureSession } from '@/utils/checkers';
+import { ensureSession } from '@/utils/checkers';
 import { useUserData } from '@/lib/stacks/user-stack';
 import { UserData } from '@/models/user-data';
 import { BackendRedeemCodeModel } from '@/models/redeem-code-model';
@@ -271,18 +271,6 @@ export default function QuizCommitment(props: QuizChallengeProps) {
 
     try {
       setQuizLoading(true);
-      const paramatical = await getParamatical(
-        userData.usersId,
-        lang,
-        userData.usersSex,
-        userData.usersDob
-      );
-
-      if (!paramatical) {
-        setQuizLoading(false);
-        setError(t('error_occurred'));
-        return;
-      }
 
       const jwt = await ensureSession();
 
@@ -296,9 +284,6 @@ export default function QuizCommitment(props: QuizChallengeProps) {
       const requestData = {
         userId: userData.usersId,
         locale: lang,
-        country: paramatical.country,
-        gender: paramatical.gender,
-        age: paramatical.age
       };
 
       const leave = await leaveQuiz(jwt, requestData);

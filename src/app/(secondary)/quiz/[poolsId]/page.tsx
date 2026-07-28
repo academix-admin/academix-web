@@ -5,7 +5,6 @@ import { useTheme } from '@/context/ThemeContext';
 import styles from './page.module.css';
 import { useLanguage } from '@/context/LanguageContext';
 import { getLastNameOrSingle, capitalize } from '@/utils/textUtils';
-import { getParamatical } from '@/utils/checkers';
 import { useUserData } from '@/lib/stacks/user-stack';
 import { useDemandState } from '@academix-admin/state-stack';
 import { supabaseBrowser } from '@/lib/supabase/client';
@@ -268,29 +267,6 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
       return;
     }
 
-    // Get user paramatical data for submission
-    const paramatical = await getParamatical(
-      userData.usersId,
-      lang,
-      userData.usersSex,
-      userData.usersDob
-    );
-
-    if (!paramatical) {
-      setQuizSession(prev => {
-        const newSubmissions = new Map(prev.submissions);
-        newSubmissions.set(question.poolsQuestionId, {
-          status: 'error',
-          questionId: question.poolsQuestionId,
-          time: timeTaken,
-          questionStatus: undefined,
-          options_selected: prev.submissions.get(question.poolsQuestionId)?.options_selected ?? []
-        });
-        return { ...prev, submissions: newSubmissions };
-      });
-      return;
-    }
-
     // Update submission status to loading
     setQuizSession(prev => {
       const newSubmissions = new Map(prev.submissions);
@@ -308,12 +284,8 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
     try {
       // Call backend RPC function to submit question
       const { data, error } = await supabaseBrowser.rpc("submit_question_tracker", {
-        p_user_id: userData.usersId,
         p_submission: question.submission(timeTaken),
         p_locale: lang,
-        p_country: paramatical.country,
-        p_gender: paramatical.gender,
-        p_age: paramatical.age
       });
 
       if (error) throw error;
@@ -654,24 +626,9 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
     demandQuizModel(async ({ get, set }) => {
       setQuizState('loading');
       try {
-        const paramatical = await getParamatical(
-          userData.usersId,
-          lang,
-          userData.usersSex,
-          userData.usersDob
-        );
-
-        if (!paramatical) {
-          setQuizState('error');
-          return;
-        }
 
         const { data, error } = await supabaseBrowser.rpc("authorized_quiz_pool_questions", {
-          p_user_id: userData.usersId,
           p_locale: lang,
-          p_country: paramatical.country,
-          p_gender: paramatical.gender,
-          p_age: paramatical.age,
           p_pool_id: poolsId
         });
 
@@ -782,21 +739,9 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
     try {
       setRefreshLoading(true);
 
-      const paramatical = await getParamatical(
-        userData.usersId,
-        lang,
-        userData.usersSex,
-        userData.usersDob
-      );
-
-      if (!paramatical) return;
 
       const { data, error } = await supabaseBrowser.rpc("result_quiz_pool_update", {
-        p_user_id: userData.usersId,
         p_locale: lang,
-        p_country: paramatical.country,
-        p_gender: paramatical.gender,
-        p_age: paramatical.age,
         p_pool_id: quizModel.poolsId
       });
 

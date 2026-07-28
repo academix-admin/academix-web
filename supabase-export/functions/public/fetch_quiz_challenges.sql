@@ -2,15 +2,21 @@
 -- function: fetch_quiz_challenges(p_owner_id uuid, topic_id uuid, p_locale text, p_country text, p_gender text, p_age text, p_game_mode_id uuid)
 -- generated from Supabase project iewqfmkngcgayxbbnpiz (read-only mirror)
 
-CREATE OR REPLACE FUNCTION public.fetch_quiz_challenges(p_owner_id uuid, topic_id uuid, p_locale text, p_country text, p_gender text, p_age text, p_game_mode_id uuid DEFAULT NULL::uuid)
+CREATE OR REPLACE FUNCTION public.fetch_quiz_challenges(topic_id uuid, p_locale text, p_game_mode_id uuid DEFAULT NULL::uuid)
  RETURNS SETOF jsonb
  LANGUAGE plpgsql
 AS $function$
 DECLARE 
+  p_owner_id uuid;
+  p_country text;
+  p_gender text;
+  p_age text;
     allQuestions INT;
     completedQuestions INT;
     availableQuestions INT;
 BEGIN
+  -- [gate] server-authoritative identity + demographics via public.gate_check
+  SELECT users_id, country, gender, age INTO p_owner_id, p_country, p_gender, p_age FROM public.gate_check(NULL, p_locale);
     -- Get all available questions count
     SELECT COUNT(questions_id)
     INTO allQuestions
@@ -46,4 +52,3 @@ BEGIN
     ORDER BY ct.challenge_rank;
 END;
 $function$
-
