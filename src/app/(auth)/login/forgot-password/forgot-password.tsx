@@ -99,7 +99,8 @@ export default function ForgotPassword() {
         return;
       }
 
-      // Region/feature gating for account recovery is enforced server-side; no bypassable client pre-check.
+      // Client recovery feature/region pre-check removed (bypassable + caused false failures).
+      // Server-side gating for recovery is deferred (the OTP-send endpoint does not gate_check yet).
       const verificationMethods: VerificationMethodModel[] = [];
 
       if (userLoginAccount.users_login_type === 'UserLoginType.email') {

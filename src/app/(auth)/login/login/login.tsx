@@ -173,7 +173,10 @@ export default function LoginUser() {
   const signInWithEmail = async (email: string, password: string): Promise<UserData | null> => {
 
     try {
-      // Region/feature gating for sign-in is enforced server-side; no bypassable client pre-check.
+      // Client sign-in feature/region pre-check removed: it was bypassable and caused false
+      // failures (checkLocation null / feature lookup). NOTE: sign-in runs through Supabase Auth,
+      // not our gated RPCs, so Features.sign_in is NOT enforced server-side yet — deferred until a
+      // Supabase Auth Hook (e.g. custom-access-token / password-verification) is added.
       const { data, error } = await supabaseBrowser.auth.signInWithPassword({
         email: email,
         password: password,
@@ -212,7 +215,9 @@ export default function LoginUser() {
 
   const signInWithPhone = async (phone: string, password: string): Promise<UserData | null> => {
     try {
-      // Region/feature gating for sign-in is enforced server-side; no bypassable client pre-check.
+      // Client sign-in feature/region pre-check removed (bypassable + caused false failures).
+      // Sign-in runs through Supabase Auth, not our gated RPCs — Features.sign_in is NOT enforced
+      // server-side yet (deferred: needs a Supabase Auth Hook).
       const { data, error } = await supabaseBrowser.auth.signInWithPassword({
         phone: phone,
         password: password,

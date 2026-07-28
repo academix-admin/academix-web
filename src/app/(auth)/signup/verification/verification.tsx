@@ -124,7 +124,9 @@ export default function Verification() {
     setError('');
 
     try {
-      // Region/feature gating for sign-up is enforced server-side; no bypassable client pre-check.
+      // Client sign-up feature/region pre-check removed (bypassable + caused false failures).
+      // Server-side gating for sign-up is deferred: it would live in the create-user endpoint
+      // (/api/create-user → create-user Lambda), which does not call gate_check yet.
       const result = await createAccount(signUpData);
 
       if (!result.user) {

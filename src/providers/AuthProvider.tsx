@@ -399,9 +399,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } else {
           const u = session!.user;
           const provider = (u.app_metadata?.provider as string) || '';
-          // Only a social (OAuth) session with no profile means "needs onboarding". A
-          // password (email/phone) session with no profile is an anomaly — don't run people
-          // through social onboarding; send them to /login to re-authenticate.
+          // Only a social (OAuth) session with no profile means "needs onboarding".
           if (provider && provider !== 'email' && provider !== 'phone') {
             const meta = u.user_metadata ?? {};
             const name = meta.full_name || meta.name || '';
@@ -412,9 +410,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               { field: 'email', value: u.email || '' },
             );
             if (pathname !== '/signup') await replaceAndWait('/signup');
-          } else if (!matchesRoutePattern(pathname, publicRoutes)) {
-            await replaceAndWait('/login');
           }
+          // A password (email/phone) session with no profile yet is the normal login RACE:
+          // login.tsx owns email/phone post-login navigation and is about to set userData +
+          // go to /main. We must NOT bounce to /login here — the user is authenticated, and
+          // redirecting them races login.tsx, producing the "logged in, then back to login"
+          // flash. If the profile is genuinely missing, Effect 2 keeps them put (no session →
+          // no forward) and the login screen's own error handling covers a failed sign-in.
         }
       } catch (e) {
         console.error('[AUTH] profile resolution error:', e);
