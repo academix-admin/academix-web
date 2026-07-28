@@ -18,6 +18,7 @@ import { UserData } from '@/models/user-data';
 import { LoginModel } from '@/models/user-data';
 import { UserLoginAccount } from '@/models/user-data';
 import { fetchUserDetails, fetchUserData } from '@/utils/checkers';
+import { signInGateStatus } from '@/utils/gate';
 import { useOtp } from '@/lib/stacks/otp-stack';
 import { useAwaitableRouter } from "@/hooks/useAwaitableRouter";
 import { Header } from '@academix-admin/header';
@@ -88,15 +89,17 @@ export default function LoginUser() {
     setCanGoBack(window.history.length > 1);
   }, []);
 
-  // Surface an OAuth (Google) sign-in that was rejected server-side by the gate trigger — the
-  // /auth/callback route stashes the reason since it comes back with no session, just a URL error.
+  // Returning from an OAuth (Google) attempt: if it was rejected by the sign-in gate, no session
+  // comes back. Resolve the real reason with a server gate_check (cf-ipcountry) and show a clear
+  // message — GoTrue/supabase-js flattens the raw reason to a generic error.
   useEffect(() => {
-    try {
-      const r = sessionStorage.getItem('ax_auth_error');
-      if (!r) return;
-      sessionStorage.removeItem('ax_auth_error');
-      setError(t(r === 'region' ? 'region_blocked' : r === 'feature' ? 'feature_unavailable' : 'error_occurred'));
-    } catch { /* ignore */ }
+    let flagged = false;
+    try { flagged = sessionStorage.getItem('ax_auth_check') === '1'; if (flagged) sessionStorage.removeItem('ax_auth_check'); } catch { /* ignore */ }
+    if (!flagged) return;
+    (async () => {
+      const gs = await signInGateStatus(lang);
+      if (gs) setError(t('region_blocked'));
+    })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -205,11 +208,12 @@ export default function LoginUser() {
     } catch (error: any) {
       console.error('Signin error:', error);
 
-      // Server-side sign-in gate (auth.sessions trigger) rejected this login for a disabled
-      // feature or a blocked region — surface the clean reason instead of a raw DB error.
-      if (typeof error?.message === 'string' && error.message.includes('AX_SIGNIN_GATE')) {
-        setError(t(error.message.trim().endsWith('Region.blocked') ? 'region_blocked' : 'feature_unavailable'));
-        return null;
+      // The auth.sessions sign-in gate raises, but GoTrue/supabase-js flattens it to a generic 500
+      // ("Database error granting user" / unexpected_failure) — the raw reason is lost. Resolve it
+      // server-side with a gate_check (accurate cf-ipcountry) and show a clear message.
+      if (error?.status === 500 || String(error?.code) === 'unexpected_failure') {
+        const gs = await signInGateStatus(lang);
+        if (gs) { setError(t('region_blocked')); return null; }
       }
 
       if (error.code === 'email_not_confirmed') {
@@ -253,11 +257,12 @@ export default function LoginUser() {
     } catch (error: any) {
       console.error('Signin error:', error);
 
-      // Server-side sign-in gate (auth.sessions trigger) rejected this login for a disabled
-      // feature or a blocked region — surface the clean reason instead of a raw DB error.
-      if (typeof error?.message === 'string' && error.message.includes('AX_SIGNIN_GATE')) {
-        setError(t(error.message.trim().endsWith('Region.blocked') ? 'region_blocked' : 'feature_unavailable'));
-        return null;
+      // The auth.sessions sign-in gate raises, but GoTrue/supabase-js flattens it to a generic 500
+      // ("Database error granting user" / unexpected_failure) — the raw reason is lost. Resolve it
+      // server-side with a gate_check (accurate cf-ipcountry) and show a clear message.
+      if (error?.status === 500 || String(error?.code) === 'unexpected_failure') {
+        const gs = await signInGateStatus(lang);
+        if (gs) { setError(t('region_blocked')); return null; }
       }
 
       if (error.code === 'phone_not_confirmed') {

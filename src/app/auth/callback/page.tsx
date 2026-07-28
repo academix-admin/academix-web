@@ -6,26 +6,16 @@
  * Normally does nothing: Supabase parses the returned session and the app-wide AuthProvider resolves
  * the profile and routes (profile → /main, new social user → /signup), under the one AuthBlocker.
  *
- * BUT when the sign-in is rejected server-side (the auth.sessions gate trigger raises — e.g. a blocked
- * region / disabled cohort for Google/OAuth), no session comes back and GoTrue returns an `error` in
- * the URL. We stash a reason so the login screen can show a clear message (AuthProvider then forwards
- * this no-session callback to /login).
+ * When the sign-in is rejected server-side (the auth.sessions gate trigger raises — e.g. a blocked
+ * region / disabled cohort for Google/OAuth), no session comes back and AuthProvider forwards this
+ * route to /login. We drop a marker so /login re-checks the gate (via cf-ipcountry) and shows a clear
+ * message — the raw reason doesn't survive GoTrue/supabase-js, so the login screen resolves it itself.
  */
 import { useEffect } from 'react';
 
 export default function AuthCallback() {
   useEffect(() => {
-    try {
-      const hash = new URLSearchParams(window.location.hash.replace(/^#/, ''));
-      const query = new URLSearchParams(window.location.search);
-      const err = hash.get('error') || query.get('error');
-      if (!err) return;
-      const desc = hash.get('error_description') || query.get('error_description') || '';
-      const reason = /Region\.blocked/i.test(desc) ? 'region'
-        : /AX_SIGNIN_GATE|Feature\.unavailable/i.test(desc) ? 'feature'
-        : 'generic';
-      sessionStorage.setItem('ax_auth_error', reason);
-    } catch { /* ignore */ }
+    try { sessionStorage.setItem('ax_auth_check', '1'); } catch { /* ignore */ }
   }, []);
   return null;
 }

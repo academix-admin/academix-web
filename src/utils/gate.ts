@@ -10,7 +10,27 @@
 //
 // For SETOF-returning list RPCs the status (if any) is the first row: gateMessage(data?.[0]?.status, t).
 
+import { supabaseBrowser } from '@/lib/supabase/client';
+
 export type GateStatus = string | null | undefined;
+
+/**
+ * Resolve WHY sign-in is blocked. The auth.sessions gate trigger raises, but GoTrue/supabase-js
+ * flattens that to a generic "Database error granting user" (code 'unexpected_failure') — the real
+ * reason never reaches the client. So we ask the server with location_gate, a REGION+COUNTRY check
+ * (via cf-ipcountry) that works signed-out — the full gate_check can't be used pre-auth because it
+ * also evaluates gender/age (unknown before sign-in) and would report everyone blocked. Returns
+ * 'Region.blocked' | 'Feature.unavailable' | null.
+ */
+export async function signInGateStatus(locale: string): Promise<GateStatus> {
+  try {
+    const { data, error } = await supabaseBrowser.rpc('location_gate', { p_feature: 'Features.sign_in', p_locale: locale });
+    if (error) return null;
+    return typeof data === 'string' ? data : (data ?? null);
+  } catch {
+    return null;
+  }
+}
 
 export function gateStatusOf(response: any): GateStatus {
   if (!response) return null;
