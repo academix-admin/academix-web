@@ -8,7 +8,6 @@ import styles from './redeem-codes.module.css';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useNav, usePageLifecycle } from "@academix-admin/navigation-stack";
 import { capitalizeWords } from '@/utils/textUtils';
-import { getParamatical } from '@/utils/checkers';
 import { useUserData } from '@/lib/stacks/user-stack';
 import { UserData } from '@/models/user-data';
 import { BackendRedeemCodeModel } from '@/models/redeem-code-model';
@@ -174,21 +173,10 @@ export default function RedeemCodes() {
     if (!userData) return [];
 
     try {
-      const paramatical = await getParamatical(
-        userData.usersId,
-        lang,
-        userData.usersSex,
-        userData.usersDob
-      );
 
-      if (!paramatical) return [];
 
       const { data, error } = await supabaseBrowser.rpc("get_users_redeem_code", {
-        p_user_id: paramatical.usersId,
-        p_locale: paramatical.locale,
-        p_country: paramatical.country,
-        p_gender: paramatical.gender,
-        p_age: paramatical.age,
+        p_locale: lang,
         p_limit_by: limitBy,
         p_after_codes: paginateModel.toJson(),
       });

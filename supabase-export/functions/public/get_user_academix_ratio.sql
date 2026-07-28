@@ -2,11 +2,12 @@
 -- function: get_user_academix_ratio(p_user_id uuid, p_country text, p_locale text, p_gender text, p_age text)
 -- generated from Supabase project iewqfmkngcgayxbbnpiz (read-only mirror)
 
-CREATE OR REPLACE FUNCTION public.get_user_academix_ratio(p_user_id uuid, p_country text, p_locale text, p_gender text, p_age text)
+CREATE OR REPLACE FUNCTION public.get_user_academix_ratio(p_locale text)
  RETURNS jsonb
  LANGUAGE plpgsql
 AS $function$
 DECLARE
+  p_user_id uuid := auth.uid();
     result JSONB := '{"status": null, "error": null, "academix_ratio": null, "called": "9200"}';
 
     -- Raw stats
@@ -107,4 +108,3 @@ EXCEPTION
         RETURN result;
 END;
 $function$
-

@@ -184,7 +184,6 @@ export default function LoginUser() {
       const feature = await checkFeatures(
         'Features.sign_in',
         lang,
-        location.country_code,
         partialData?.users_sex,
         partialData?.users_dob
       );
@@ -244,7 +243,6 @@ export default function LoginUser() {
       const feature = await checkFeatures(
         'Features.sign_in',
         lang,
-        location.country_code,
         partialData?.users_sex,
         partialData?.users_dob
       );

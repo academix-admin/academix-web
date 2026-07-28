@@ -2,14 +2,21 @@
 -- function: get_give_back_code(p_user_id uuid, p_country text, p_locale text, p_gender text, p_age text, p_limit_by integer, p_after_giveback jsonb)
 -- generated from Supabase project iewqfmkngcgayxbbnpiz (read-only mirror)
 
-CREATE OR REPLACE FUNCTION public.get_give_back_code(p_user_id uuid DEFAULT NULL::uuid, p_country text DEFAULT NULL::text, p_locale text DEFAULT 'en'::text, p_gender text DEFAULT NULL::text, p_age text DEFAULT NULL::text, p_limit_by integer DEFAULT 20, p_after_giveback jsonb DEFAULT '{}'::jsonb)
+CREATE OR REPLACE FUNCTION public.get_give_back_code(p_locale text DEFAULT 'en'::text, p_limit_by integer DEFAULT 20, p_after_giveback jsonb DEFAULT '{}'::jsonb)
  RETURNS SETOF jsonb
  LANGUAGE plpgsql
 AS $function$
 DECLARE
+  p_user_id uuid;
+  p_country text;
+  p_gender text;
+  p_age text;
     v_sort_id   TEXT;
     v_direction TEXT;
 BEGIN
+  -- [gate] one server-authoritative derivation (identity + demographics) via public.gate_check
+  SELECT users_id, country, gender, age INTO p_user_id, p_country, p_gender, p_age
+    FROM public.gate_check(NULL, p_locale);
     v_sort_id   := (p_after_giveback->>'sort_id')::TEXT;
     v_direction := (p_after_giveback->>'direction')::TEXT;
  
@@ -146,4 +153,3 @@ BEGIN
  
 END;
 $function$
-

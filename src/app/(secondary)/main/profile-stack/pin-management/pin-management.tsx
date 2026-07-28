@@ -167,15 +167,14 @@ export default function PinManagement(props: { isNew: boolean, returnGroup?: str
 
       if (isNew) {
         // Create new PIN endpoint
-        const response = await fetch('/api/pin/new', {
+        const response = await fetch('https://fz0b8vmhba.execute-api.eu-north-1.amazonaws.com/prod/pin/new', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${jwt}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            userId: userData.usersId,
-            pin: newPinInputValue,
+            userPin: newPinInputValue,
           }),
         });
 
@@ -196,14 +195,13 @@ export default function PinManagement(props: { isNew: boolean, returnGroup?: str
         } else { nav.pop(); }
       } else {
         // Change PIN endpoint
-        const response = await fetch('/api/pin/change', {
+        const response = await fetch('https://fz0b8vmhba.execute-api.eu-north-1.amazonaws.com/prod/pin/change', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${jwt}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            userId: userData.usersId,
             oldPin: oldPinInputValue,
             newPin: newPinInputValue,
           }),

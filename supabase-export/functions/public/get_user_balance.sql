@@ -2,13 +2,16 @@
 -- function: get_user_balance(p_user_id uuid, p_country text, p_locale text, p_gender text, p_age text)
 -- generated from Supabase project iewqfmkngcgayxbbnpiz (read-only mirror)
 
-CREATE OR REPLACE FUNCTION public.get_user_balance(p_user_id uuid, p_country text, p_locale text, p_gender text, p_age text)
+CREATE OR REPLACE FUNCTION public.get_user_balance(p_locale text)
  RETURNS jsonb
  LANGUAGE plpgsql
 AS $function$
 DECLARE 
+    p_user_id uuid := auth.uid();
     result JSONB;
 BEGIN
+
+
     -- Attempt to retrieve the user's balance information
     SELECT jsonb_build_object(
            'users_id', ubt.users_id,
@@ -22,4 +25,3 @@ BEGIN
     
 END;
 $function$
-

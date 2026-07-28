@@ -2,14 +2,19 @@
 -- function: fetch_user_achievements(p_user_id uuid, p_country text, p_locale text, p_gender text, p_age text, p_achievement_tab text, p_limit_by integer, p_after_achievements jsonb)
 -- generated from Supabase project iewqfmkngcgayxbbnpiz (read-only mirror)
 
-CREATE OR REPLACE FUNCTION public.fetch_user_achievements(p_user_id uuid, p_country text, p_locale text, p_gender text, p_age text, p_achievement_tab text, p_limit_by integer, p_after_achievements jsonb)
+CREATE OR REPLACE FUNCTION public.fetch_user_achievements(p_locale text, p_achievement_tab text, p_limit_by integer, p_after_achievements jsonb)
  RETURNS SETOF jsonb
  LANGUAGE plpgsql
 AS $function$
 DECLARE
+  p_user_id uuid;
+  p_country text;
     sortID TEXT;
     direction TEXT;
 BEGIN
+  -- [gate] one server-authoritative derivation via public.gate_check
+  SELECT users_id, country INTO p_user_id, p_country
+    FROM public.gate_check(NULL, p_locale);
     IF p_achievement_tab NOT IN ('AchievementTab.active','AchievementTab.pending','AchievementTab.completed') THEN 
        RETURN QUERY SELECT * FROM jsonb_array_elements('[]'::jsonb);
     END IF;
@@ -87,4 +92,3 @@ BEGIN
     );
 END;
 $function$
-

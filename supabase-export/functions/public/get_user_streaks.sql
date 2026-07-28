@@ -2,11 +2,12 @@
 -- function: get_user_streaks(p_user_id uuid, p_country text, p_locale text, p_gender text, p_age text)
 -- generated from Supabase project iewqfmkngcgayxbbnpiz (read-only mirror)
 
-CREATE OR REPLACE FUNCTION public.get_user_streaks(p_user_id uuid, p_country text, p_locale text, p_gender text, p_age text)
+CREATE OR REPLACE FUNCTION public.get_user_streaks(p_locale text)
  RETURNS SETOF jsonb
  LANGUAGE plpgsql
 AS $function$
 DECLARE
+  p_user_id uuid := auth.uid();
     v_sun_date DATE;
     v_today DATE := CURRENT_DATE;
     v_max_streak INT := 30;
@@ -44,4 +45,3 @@ BEGIN
     ORDER BY days.day;
 END;
 $function$
-

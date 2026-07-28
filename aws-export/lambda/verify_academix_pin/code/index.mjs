@@ -7,10 +7,13 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-export const handler = async (event) => {
+const innerHandler = async (event) => {
   try {
     const body = typeof event.body === "string" ? JSON.parse(event.body) : event.body;
-    const { userId, pin } = body;
+    const { pin } = body;
+    // Identity: prefer the API-Gateway authorizer's verified user_id; fall back to body.userId for
+    // TRUSTED Lambda→Lambda direct invokes (e.g. make_payment passes its own authorizer-derived id).
+    const userId = event.requestContext?.authorizer?.user_id ?? body.userId;
 
     if (!userId || !pin) {
       return { statusCode: 400, body: JSON.stringify({ success: false, message: "Missing fields" }) };
@@ -105,4 +108,15 @@ export const handler = async (event) => {
   } catch (e) {
     return { statusCode: 500, body: JSON.stringify({ success: false, message: e.message }) };
   }
+};
+
+
+// CORS wrapper — this endpoint is now called by the browser directly (no Next proxy), so responses
+// and the OPTIONS preflight must carry CORS headers. All logic stays in innerHandler.
+const _CORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "POST, OPTIONS", "Access-Control-Allow-Headers": "Content-Type, Authorization" };
+export const handler = async (event) => {
+  const method = event.httpMethod || event.requestContext?.http?.method;
+  if (method === "OPTIONS") return { statusCode: 200, headers: _CORS, body: "" };
+  const r = await innerHandler(event);
+  return { ...r, headers: { ...((r && r.headers) || {}), ..._CORS } };
 };

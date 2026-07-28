@@ -15,7 +15,6 @@ import { PaymentDetails } from '@/models/payment-details';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useDialog } from '@academix-admin/dialog-viewer';
 import { useUserData } from '@/lib/stacks/user-stack';
-import { getParamatical } from '@/utils/checkers';
 import LoadingView from '@/components/LoadingView/LoadingView';
 import { Header } from '@academix-admin/header';
 
@@ -44,24 +43,10 @@ export default function ViewTransactionPage(props: ViewTransactionProps) {
     
     try {
       setIsLoading(true);
-      const paramatical = await getParamatical(
-        userData.usersId,
-        lang,
-        userData.usersSex,
-        userData.usersDob
-      );
 
-      if (!paramatical) {
-        setIsLoading(false);
-        return;
-      }
 
       const { data, error } = await supabaseBrowser.rpc('fetch_user_transaction_by_id', {
-        p_user_id: paramatical.usersId,
-        p_country: paramatical.country,
-        p_locale: paramatical.locale,
-        p_gender: paramatical.gender,
-        p_age: paramatical.age,
+        p_locale: lang,
         p_transaction_id: transactionId
       });
 

@@ -2,11 +2,15 @@
 -- function: claim_giveback_code(p_user_id uuid, p_giveback_code text, p_country text, p_locale text, p_gender text, p_age text, p_password text)
 -- generated from Supabase project iewqfmkngcgayxbbnpiz (read-only mirror)
 
-CREATE OR REPLACE FUNCTION public.claim_giveback_code(p_user_id uuid, p_giveback_code text, p_country text, p_locale text, p_gender text, p_age text, p_password text DEFAULT NULL::text)
+CREATE OR REPLACE FUNCTION public.claim_giveback_code(p_giveback_code text, p_locale text, p_password text DEFAULT NULL::text)
  RETURNS jsonb
  LANGUAGE plpgsql
 AS $function$
 DECLARE
+  p_country text;
+  p_gender text;
+  p_age text;
+    p_user_id uuid;
     result             JSONB := '{"status": null, "error": null, "redeem_code_details": null}';
     v_giveback_id      UUID;
     v_unit_amount      NUMERIC;
@@ -27,6 +31,13 @@ DECLARE
     v_new_code_id      UUID;
     v_new_code_expires TIMESTAMPTZ;
 BEGIN
+
+
+
+
+  -- [gate] one server-authoritative derivation (identity + demographics) via public.gate_check
+  SELECT users_id, country, gender, age INTO p_user_id, p_country, p_gender, p_age
+    FROM public.gate_check(NULL, p_locale);
     -- ── [1] Lock and load the giveback row ────────────────────────────────────
     SELECT
         gt.giveback_id,
@@ -175,4 +186,3 @@ EXCEPTION
         RETURN result;
 END;
 $function$
-

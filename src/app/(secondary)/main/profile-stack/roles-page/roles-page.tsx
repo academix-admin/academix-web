@@ -9,7 +9,7 @@ import { useNav, useProvideObject } from "@academix-admin/navigation-stack";
 import { useUserData } from '@/lib/stacks/user-stack';
 import LoadingView from '@/components/LoadingView/LoadingView';
 import ErrorView from '@/components/ErrorView/ErrorView';
-import { checkFeatures, getParamatical } from '@/utils/checkers';
+import { getParamatical, ensureSession } from '@/utils/checkers';
 import { Role } from '@/lib/stacks/signup-stack';
 import { RolesActivation } from '@/models/roles-activation';
 import { PinData } from '@/models/pin-data';
@@ -294,59 +294,39 @@ export default function RolesPage() {
     if (!userData || !activation) return;
     try {
       setBuyInLoading(true);
-      const paramatical = await getParamatical(
-        userData.usersId,
-        lang,
-        userData.usersSex,
-        userData.usersDob
-      );
-      if (!paramatical) { setBuyInLoading(false); return; }
-
-      const feature = await checkFeatures(
-        'Features.buy_in',
-        lang,
-        paramatical.country,
-        userData.usersSex,
-        userData.usersDob
-      );
-      if (!feature) {
-        setBuyInLoading(false);
-        errorDialog.open(<p style={{ textAlign: 'center' }}>{t('feature_unavailable')}</p>);
-        return;
-      }
-
-      const session = await supabaseBrowser.auth.getSession();
-      const jwt = session.data.session?.access_token;
+      // Session expired / revoked → sign out (AuthProvider redirects to /login).
+      const jwt = await ensureSession();
       if (!jwt) { setBuyInLoading(false); return; }
 
+      // Identity, demographics, country and the Features.buy_in gate are enforced server-side in
+      // /api/payment — the client sends only the action's own params (nothing bypassable).
       const requestData = needsPayment && selectedProfileData && academixProfileData ? {
-        userId: userData.usersId,
         senderProfileId: selectedProfileData.paymentProfileId,
         receiverProfileId: academixProfileData.paymentProfileId,
         amount: walletAmount,
         type: 'TransactionType.buy_in',
         paymentSessionId: 'sessionId',
-        locale: paramatical.locale,
-        country: paramatical.country,
-        gender: paramatical.gender,
-        age: paramatical.age,
+        locale: lang,
         userPin,
       } : {
-        userId: userData.usersId,
         type: 'TransactionType.buy_in',
-        locale: paramatical.locale,
-        country: paramatical.country,
-        gender: paramatical.gender,
-        age: paramatical.age,
+        locale: lang,
         userPin,
       };
 
-      const response = await fetch('/api/payment', {
+      // Direct browser → payment API Gateway (no Next proxy) so the Lambda/authorizer see the real client IP.
+      const response = await fetch('https://vsso71jg7d.execute-api.eu-north-1.amazonaws.com/prod/make', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${jwt}`, 'Content-Type': 'application/json' },
         body: JSON.stringify(requestData),
       });
       const payment = await response.json();
+
+      if (payment.status === 'Feature.unavailable' || payment.status === 'Region.blocked') {
+        setBuyInLoading(false);
+        errorDialog.open(<p style={{ textAlign: 'center' }}>{t(payment.status === 'Region.blocked' ? 'region_blocked' : 'feature_unavailable')}</p>);
+        return;
+      }
 
       if (payment.status === 'Payment.pinError') {
         buyInBottomController.close();

@@ -111,7 +111,6 @@ export default function ForgotPassword() {
       const feature = await checkFeatures(
         userLoginAccount.users_login_type === 'UserLoginType.email' ? 'Features.email_recovery' : 'Features.phone_recovery',
         lang,
-        location.country_code,
         partialData?.users_sex,
         partialData?.users_dob
       );

@@ -136,7 +136,6 @@ export default function Verification() {
       const feature = await checkFeatures(
         signUpData.users_login_type === 'UserLoginType.email' ? 'Features.sign_up_email' : 'Features.sign_up_phone',
         lang,
-        location.country_code,
         signUpData.users_sex,
         signUpData.users_dob
       );

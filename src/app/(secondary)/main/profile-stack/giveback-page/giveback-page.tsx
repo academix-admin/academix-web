@@ -7,7 +7,6 @@ import styles from './giveback-page.module.css';
 import { TextInput } from '@academix-admin/forms';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useNav } from "@academix-admin/navigation-stack";
-import { getParamatical } from '@/utils/checkers';
 import { useUserData } from '@/lib/stacks/user-stack';
 import { UserData } from '@/models/user-data';
 import { BackendGiveBackModel, GiveBackModel } from '@/models/redeem-code-model';
@@ -243,17 +242,9 @@ export default function GiveBackPage() {
     paginate: PaginateModel
   ): Promise<GiveBackModel[]> => {
     try {
-      const paramatical = await getParamatical(
-        userData.usersId, lang, userData.usersSex, userData.usersDob
-      );
-      if (!paramatical) return [];
 
       const { data, error } = await supabaseBrowser.rpc('get_give_back_code', {
-        p_user_id: paramatical.usersId,
-        p_locale: paramatical.locale,
-        p_country: paramatical.country,
-        p_gender: paramatical.gender,
-        p_age: paramatical.age,
+        p_locale: lang,
         p_limit_by: limitBy,
         p_after_giveback: paginate.toJson(),
       });
@@ -329,17 +320,9 @@ export default function GiveBackPage() {
     if (!userData) return;
     setClaimingId(giveBack.giveBackId);
     try {
-      const paramatical = await getParamatical(
-        userData.usersId, lang, userData.usersSex, userData.usersDob
-      );
-      if (!paramatical) { setClaimingId(null); return; }
       const { data, error } = await supabaseBrowser.rpc('claim_giveback_code', {
-        p_user_id: paramatical.usersId,
         p_giveback_code: giveBack.giveBackCode,
-        p_country: paramatical.country,
-        p_locale: paramatical.locale,
-        p_gender: paramatical.gender,
-        p_age: paramatical.age,
+        p_locale: lang,
         ...(password ? { p_password: password } : {}),
       });
 

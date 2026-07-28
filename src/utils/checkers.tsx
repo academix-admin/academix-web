@@ -104,12 +104,11 @@ const getParamatical = async (usersId: string, locale: string, gender: string, b
 };
 
 
-const checkFeatures = async (featureChecker: string, locale: string, country: string, gender: string, birthday: string ) : Promise<boolean> => {
+const checkFeatures = async (featureChecker: string, locale: string, gender: string, birthday: string ) : Promise<boolean> => {
           try {
                 const { data: rpcResult, error } = await supabaseBrowser.rpc('get_feature_status', {
                   p_feature: featureChecker,
                   p_locale: locale ,
-                  p_country: country,
                   p_gender: gender === "Gender.male" ? 'm' : 'f' ,
                   p_age: Math.floor(
                            (Date.now() - new Date(birthday).getTime()) / (1000 * 60 * 60 * 24 * 365.25)
@@ -167,4 +166,20 @@ const fetchUserData = async (usersId: string, locale: string): Promise<UserData 
         return userData;
 };
 
-export { checkLocation, checkFeatures, fetchUserPartialDetails, fetchUserDetails, fetchUserData, getParamatical };
+/**
+ * Returns the current access token, or — when the session has expired / been revoked — signs the
+ * user out (AuthProvider's redirect guard then sends them to /login) and returns null. Use this at
+ * the top of any authenticated action instead of a bare `getSession()` + generic error dialog, so a
+ * lost session logs the user out cleanly rather than showing "something went wrong".
+ */
+const ensureSession = async (): Promise<string | null> => {
+  const { data } = await supabaseBrowser.auth.getSession();
+  const jwt = data.session?.access_token;
+  if (!jwt) {
+    try { await supabaseBrowser.auth.signOut(); } catch { /* already gone */ }
+    return null;
+  }
+  return jwt;
+};
+
+export { checkLocation, checkFeatures, fetchUserPartialDetails, fetchUserDetails, fetchUserData, getParamatical, ensureSession };

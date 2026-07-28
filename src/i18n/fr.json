@@ -240,6 +240,8 @@
   "could_not_logout_others": "Impossible de déconnecter les autres appareils.",
   "active_now": "actif maintenant",
   "time_ago": "il y a {value}",
+  "region_blocked": "Ceci n'est pas disponible dans votre région.",
+  "lock_verifying": "Vérification…",
   "lock_enter_pin": "Entrez votre code PIN",
   "lock_subtitle": "Verrouillé pour votre sécurité après inactivité.",
   "lock_incorrect_pin": "Code PIN incorrect — {count} restant(s)",

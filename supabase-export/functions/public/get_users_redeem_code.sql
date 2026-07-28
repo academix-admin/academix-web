@@ -2,14 +2,17 @@
 -- function: get_users_redeem_code(p_user_id uuid, p_locale text, p_country text, p_gender text, p_age text, p_limit_by integer, p_after_codes jsonb)
 -- generated from Supabase project iewqfmkngcgayxbbnpiz (read-only mirror)
 
-CREATE OR REPLACE FUNCTION public.get_users_redeem_code(p_user_id uuid, p_locale text, p_country text, p_gender text, p_age text, p_limit_by integer, p_after_codes jsonb)
+CREATE OR REPLACE FUNCTION public.get_users_redeem_code(p_locale text, p_limit_by integer, p_after_codes jsonb)
  RETURNS SETOF jsonb
  LANGUAGE plpgsql
 AS $function$
 DECLARE
+    p_user_id uuid := auth.uid();
   sortID TEXT;
   direction TEXT;
 BEGIN
+
+
 
   sortID := (p_after_codes->>'sort_id')::TEXT;
   direction := (p_after_codes->>'direction')::TEXT;
@@ -56,4 +59,3 @@ BEGIN
     LIMIT p_limit_by;
 END;
 $function$
-

@@ -2,11 +2,15 @@
 -- function: claim_user_achievements(p_user_id uuid, p_locale text, p_country text, p_gender text, p_age text, p_achievements_id uuid)
 -- generated from Supabase project iewqfmkngcgayxbbnpiz (read-only mirror)
 
-CREATE OR REPLACE FUNCTION public.claim_user_achievements(p_user_id uuid, p_locale text, p_country text, p_gender text, p_age text, p_achievements_id uuid)
+CREATE OR REPLACE FUNCTION public.claim_user_achievements(p_locale text, p_achievements_id uuid)
  RETURNS jsonb
  LANGUAGE plpgsql
 AS $function$
 DECLARE
+  p_country text;
+  p_gender text;
+  p_age text;
+    p_user_id uuid;
     result JSONB := '{"status": null, "reward_claim_details": null, "achievements_count_details": null, "error": null,"called": "1118"}';
     reward_id UUID;
     progress_rewarded BOOLEAN;
@@ -16,6 +20,13 @@ DECLARE
     count_details JSONB;
     achievements_exists BOOLEAN;
 BEGIN
+
+
+
+
+  -- [gate] one server-authoritative derivation (identity + demographics) via public.gate_check
+  SELECT users_id, country, gender, age INTO p_user_id, p_country, p_gender, p_age
+    FROM public.gate_check(NULL, p_locale);
     -- Validate required parameters
     IF p_user_id IS NULL OR p_achievements_id IS NULL THEN
         result := jsonb_set(result, '{status}', '"AchievementReward.invalid_parameters"', false);
@@ -94,4 +105,3 @@ EXCEPTION
         RETURN result;
 END;
 $function$
-

@@ -370,7 +370,6 @@ export default function QuizCommitment(props: QuizChallengeProps) {
       const feature = await checkFeatures(
         'Features.quiz_taking',
         lang,
-        paramatical.country,
         userData.usersSex,
         userData.usersDob
       );

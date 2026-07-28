@@ -2,7 +2,7 @@
 -- function: fetch_user_transactions(p_user_id uuid, p_country text, p_locale text, p_gender text, p_age text, p_limit_by integer, p_after_transactions jsonb)
 -- generated from Supabase project iewqfmkngcgayxbbnpiz (read-only mirror)
 
-CREATE OR REPLACE FUNCTION public.fetch_user_transactions(p_user_id uuid, p_country text, p_locale text, p_gender text, p_age text, p_limit_by integer, p_after_transactions jsonb)
+CREATE OR REPLACE FUNCTION public.fetch_user_transactions(p_user_id uuid DEFAULT NULL, p_country text DEFAULT NULL, p_locale text DEFAULT NULL, p_gender text DEFAULT NULL, p_age text DEFAULT NULL, p_limit_by integer DEFAULT NULL, p_after_transactions jsonb DEFAULT NULL)
  RETURNS SETOF jsonb
  LANGUAGE plpgsql
  STABLE
@@ -11,6 +11,14 @@ DECLARE
     sortID    TEXT;
     direction TEXT;
 BEGIN
+
+  -- [security] server-authoritative identity: ignore any client-supplied id when a JWT user exists, and
+  -- rebind p_user_id to the authenticated user so the rest of the body is unchanged.
+  -- Service-role callers (no auth.uid(), e.g. trusted Lambdas) keep the passed id.
+  IF auth.uid() IS NOT NULL THEN
+    p_user_id := auth.uid();
+  END IF;
+
     sortID    := (p_after_transactions->>'sort_id')::TEXT;
     direction := (p_after_transactions->>'direction')::TEXT;
  
@@ -119,4 +127,3 @@ BEGIN
         CASE WHEN direction = 'latest'                      THEN ft.sort_created_id::TEXT ELSE NULL END ASC;
 END;
 $function$
-

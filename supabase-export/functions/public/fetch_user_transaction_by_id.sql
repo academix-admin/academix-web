@@ -2,13 +2,21 @@
 -- function: fetch_user_transaction_by_id(p_user_id uuid, p_country text, p_locale text, p_gender text, p_age text, p_transaction_id uuid)
 -- generated from Supabase project iewqfmkngcgayxbbnpiz (read-only mirror)
 
-CREATE OR REPLACE FUNCTION public.fetch_user_transaction_by_id(p_user_id uuid, p_country text, p_locale text, p_gender text, p_age text, p_transaction_id uuid)
+CREATE OR REPLACE FUNCTION public.fetch_user_transaction_by_id(p_user_id uuid DEFAULT NULL, p_country text DEFAULT NULL, p_locale text DEFAULT NULL, p_gender text DEFAULT NULL, p_age text DEFAULT NULL, p_transaction_id uuid DEFAULT NULL)
  RETURNS jsonb
  LANGUAGE plpgsql
 AS $function$
 DECLARE
     result jsonb;
 BEGIN
+
+  -- [security] server-authoritative identity: ignore any client-supplied id when a JWT user exists, and
+  -- rebind p_user_id to the authenticated user so the rest of the body is unchanged.
+  -- Service-role callers (no auth.uid(), e.g. trusted Lambdas) keep the passed id.
+  IF auth.uid() IS NOT NULL THEN
+    p_user_id := auth.uid();
+  END IF;
+
     WITH filtered_transactions AS (
         SELECT 
             tt.transaction_id,
@@ -101,4 +109,3 @@ BEGIN
     RETURN result;
 END;
 $function$
-

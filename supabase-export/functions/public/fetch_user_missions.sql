@@ -2,14 +2,19 @@
 -- function: fetch_user_missions(p_user_id uuid, p_country text, p_locale text, p_gender text, p_age text, p_mission_tab text, p_limit_by integer, p_after_missions jsonb)
 -- generated from Supabase project iewqfmkngcgayxbbnpiz (read-only mirror)
 
-CREATE OR REPLACE FUNCTION public.fetch_user_missions(p_user_id uuid, p_country text, p_locale text, p_gender text, p_age text, p_mission_tab text, p_limit_by integer, p_after_missions jsonb)
+CREATE OR REPLACE FUNCTION public.fetch_user_missions(p_locale text, p_mission_tab text, p_limit_by integer, p_after_missions jsonb)
  RETURNS SETOF jsonb
  LANGUAGE plpgsql
 AS $function$
 DECLARE
+  p_user_id uuid;
+  p_country text;
   sortID TEXT;
   direction TEXT;
 BEGIN
+  -- [gate] one server-authoritative derivation via public.gate_check
+  SELECT users_id, country INTO p_user_id, p_country
+    FROM public.gate_check(NULL, p_locale);
   IF p_mission_tab NOT IN ('MissionTab.active', 'MissionTab.pending', 'MissionTab.completed') THEN 
     RETURN QUERY SELECT * FROM jsonb_array_elements('[]'::jsonb);
   END IF;
@@ -87,4 +92,3 @@ BEGIN
   );
 END;
 $function$
-

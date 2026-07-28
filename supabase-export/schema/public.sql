@@ -1585,3 +1585,14 @@ CREATE POLICY "Users can insert their own profile." ON public.users_table AS PER
 CREATE POLICY "Users can update own profile." ON public.users_table AS PERMISSIVE FOR UPDATE TO public USING ((( SELECT auth.uid() AS uid) = users_id));
 
 CREATE POLICY platform_config_service_only ON public.platform_config_table AS PERMISSIVE FOR ALL TO service_role USING (true);
+
+-- ============================================================
+-- GEOBLOCK (server-authoritative region control scaffold)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS public.geo_blocklist (
+  cidr_range cidr PRIMARY KEY,
+  reason     text,
+  added_by   text,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+REVOKE ALL ON public.geo_blocklist FROM anon, authenticated;

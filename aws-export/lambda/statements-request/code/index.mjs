@@ -932,7 +932,7 @@
 
 // // ── Handler ────────────────────────────────────────────────────
 
-// export async function handler(event) {
+// async function innerHandler(event) {
 
 //   let body;
 //   try {
@@ -2005,7 +2005,7 @@ async function sendEmail(toEmail, fromDate, toDate, format, fileBytes, userName,
 
 // ── Handler ────────────────────────────────────────────────────
 
-export async function handler(event) {
+async function innerHandler(event) {
 
   let body;
   try {
@@ -2014,7 +2014,9 @@ export async function handler(event) {
     return respondJson(400, { error: 'Invalid request body' });
   }
 
-  const { userId, country, locale, gender, age, email, fromDate, toDate, format } = body;
+  const { country, locale, gender, age, email, fromDate, toDate, format } = body;
+  // Identity from the API-Gateway authorizer (verified JWT), never the client body.
+  const userId = event.requestContext?.authorizer?.user_id ?? body.userId;
 
   if (!userId || !email || !fromDate || !toDate || !format) {
     return respondJson(400, { error: 'Missing required fields' });
@@ -2121,3 +2123,14 @@ export async function handler(event) {
     count:   allTransactions.length,
   });
 }
+
+
+// CORS wrapper — this endpoint is now called by the browser directly (no Next proxy), so responses
+// and the OPTIONS preflight must carry CORS headers. All logic stays in innerHandler.
+const _CORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "POST, OPTIONS", "Access-Control-Allow-Headers": "Content-Type, Authorization" };
+export const handler = async (event) => {
+  const method = event.httpMethod || event.requestContext?.http?.method;
+  if (method === "OPTIONS") return { statusCode: 200, headers: _CORS, body: "" };
+  const r = await innerHandler(event);
+  return { ...r, headers: { ...((r && r.headers) || {}), ..._CORS } };
+};

@@ -1823,6 +1823,12 @@ const scheduler = new SchedulerClient({});
 const lambda    = new LambdaClient({});
 const sqs       = new SQSClient({ region: 'eu-north-1' });
 
+const CORS_HEADERS = {
+  "Access-Control-Allow-Origin":  "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+};
+
 // ---------------------------------------------------------------------------
 //  Constants
 // ---------------------------------------------------------------------------
@@ -2391,7 +2397,7 @@ async function handleCreditRetry(transactionId, hashKey) {
 //  Handler entry point
 // ---------------------------------------------------------------------------
 
-export const handler = async (event) => {
+const paymentHandler = async (event) => {
   try {
     const body = JSON.parse(event.body);
 
@@ -2402,6 +2408,38 @@ export const handler = async (event) => {
         body.transactionSecuredHashKey
       );
     }
+
+    // ── [gate] server-authoritative identity, demographics & feature gate ────────────────────────
+    // The client sends none of these. userId ← this Lambda's API-Gateway authorizer (verified JWT),
+    // with a body.userId fallback for trusted Lambda→Lambda invokes; gender/age/country ← the user's
+    // profile; feature ← get_feature_status. All unbypassable — the client cannot supply or skip them.
+    const gatedUserId = event.requestContext?.authorizer?.user_id ?? body.userId;
+    if (!gatedUserId) return errorResponse("Unauthorized", 401);
+
+    // country comes from the authorizer (it geolocated the real client IP once, alongside user_id);
+    // '' → gate_check falls back to the registration country.
+    const gatedCountry = event.requestContext?.authorizer?.country || null;
+
+    const FEATURE_BY_TYPE = {
+      "TransactionType.top_up":   "Features.top_up",
+      "TransactionType.withdraw": "Features.withdraw",
+      "TransactionType.buy_in":   "Features.buy_in",
+    };
+    // ONE server-authoritative gate: identity + demographics + region + feature (public.gate_check).
+    const { data: gateRows } = await supabase.rpc("gate_check", {
+      p_feature:          FEATURE_BY_TYPE[body.type] ?? null,
+      p_locale:           body.locale || "en",
+      p_user_id:          gatedUserId,
+      p_country_override: gatedCountry,
+    });
+    const gate = Array.isArray(gateRows) ? gateRows[0] : gateRows;
+    if (gate?.status) {
+      return { statusCode: 200, body: JSON.stringify({ status: gate.status }) };
+    }
+    body.userId  = gate?.users_id ?? gatedUserId;
+    body.country = gate?.country ?? null;
+    body.gender  = gate?.gender ?? null;
+    body.age     = gate?.age ?? null;
 
     // Fresh payment path
     if (!validateFields(body, REQUIRED_FIELDS)) {
@@ -2954,4 +2992,14 @@ const handleNGNWithdrawal = async (profile, data) => {
     PaymentStatus.FAILED,
     failedTransaction
   );
+};
+
+
+// CORS wrapper — the browser calls this API Gateway directly (no Next proxy), so every response
+// (and the OPTIONS preflight) must carry CORS headers. All gating stays in paymentHandler/gate_check.
+export const handler = async (event) => {
+  const method = event.httpMethod || event.requestContext?.http?.method;
+  if (method === "OPTIONS") return { statusCode: 200, headers: CORS_HEADERS, body: "" };
+  const resp = await paymentHandler(event);
+  return { ...resp, headers: { ...(resp?.headers || {}), ...CORS_HEADERS } };
 };

@@ -18,7 +18,7 @@ import { AchievementsModel } from '@/models/achievements-model';
 import { RewardClaimModel } from '@/models/achievements-model';
 import { AchievementsProgressDetails } from '@/models/achievements-model';
 import { PaginateModel } from '@/models/paginate-model';
-import { getParamatical, ParamaticalData } from '@/utils/checkers';
+import { ParamaticalData } from '@/utils/checkers';
 import LoadingView from '@/components/LoadingView/LoadingView';
 import NoResultsView from '@/components/NoResultsView/NoResultsView';
 import ErrorView from '@/components/ErrorView/ErrorView';
@@ -92,25 +92,9 @@ const AchievementsCard: React.FC<{ achievements: AchievementsModel, tab: string,
     try {
       setCollecting(true);
 
-      const paramatical = await getParamatical(
-        userData.usersId,
-        lang,
-        userData.usersSex,
-        userData.usersDob
-      );
-
-      if (!paramatical) {
-        setCollecting(false);
-        errorDialog.open(<p>{t('error_occurred')}</p>);
-        return;
-      }
 
       const { data, error } = await supabaseBrowser.rpc("claim_user_achievements", {
-        p_user_id: paramatical.usersId,
-        p_locale: paramatical.locale,
-        p_country: paramatical.country,
-        p_gender: paramatical.gender,
-        p_age: paramatical.age,
+        p_locale: lang,
         p_achievements_id: achievements.achievementsId
       });
 
@@ -394,21 +378,10 @@ export default function AchievementsPage() {
     if (!userData) return [];
 
     try {
-      const paramatical = await getParamatical(
-        userData.usersId,
-        lang,
-        userData.usersSex,
-        userData.usersDob
-      );
 
-      if (!paramatical) return [];
 
       const { data, error } = await supabaseBrowser.rpc("fetch_user_achievements", {
-        p_user_id: paramatical.usersId,
-        p_locale: paramatical.locale,
-        p_country: paramatical.country,
-        p_gender: paramatical.gender,
-        p_age: paramatical.age,
+        p_locale: lang,
         p_limit_by: limitBy,
         p_achievement_tab: tabId,
         p_after_achievements: paginate.toJson(),

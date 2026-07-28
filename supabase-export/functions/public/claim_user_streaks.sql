@@ -2,11 +2,12 @@
 -- function: claim_user_streaks(p_user_id uuid, p_locale text, p_country text, p_gender text, p_age text)
 -- generated from Supabase project iewqfmkngcgayxbbnpiz (read-only mirror)
 
-CREATE OR REPLACE FUNCTION public.claim_user_streaks(p_user_id uuid, p_locale text, p_country text, p_gender text, p_age text)
+CREATE OR REPLACE FUNCTION public.claim_user_streaks(p_locale text)
  RETURNS jsonb
  LANGUAGE plpgsql
 AS $function$
 DECLARE
+    p_user_id uuid := auth.uid();
     result                 JSONB := '{"status": null, "daily_streaks_details": null, "error": null, "called": "3118"}';
     streaks_details        JSONB;
     today_date             DATE        := CURRENT_DATE;
@@ -24,6 +25,8 @@ DECLARE
     v_max_duration         INT;
     v_reward_expires_hour  INT;
 BEGIN
+
+
     -- ── Fetch role-driven streak config for this user ────────────────────────
     SELECT
         rt.roles_streak_amount,
@@ -185,4 +188,3 @@ EXCEPTION
         RETURN result;
 END;
 $function$
-

@@ -7,7 +7,7 @@ import styles from './top-up-page.module.css';
 import { useNav, useProvideObject } from "@academix-admin/navigation-stack";
 import { StateStack } from '@academix-admin/state-stack';
 import { getParamatical } from '@/utils/checkers';
-import { checkLocation, checkFeatures } from '@/utils/checkers';
+import { checkLocation, checkFeatures, ensureSession } from '@/utils/checkers';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useUserData } from '@/lib/stacks/user-stack';
 import PaymentWallet from '../payment-wallet/payment-wallet';
@@ -188,7 +188,8 @@ export default function TopUpPage() {
 
   // Function to make payment API call
   const makePayment = async (jwt: string, data: any): Promise<PaymentResponse> => {
-    const proxyUrl = '/api/payment';
+    // Direct browser → payment API Gateway (no Next proxy) so the Lambda/authorizer see the real client IP.
+    const proxyUrl = 'https://vsso71jg7d.execute-api.eu-north-1.amazonaws.com/prod/make';
 
     try {
       const response = await fetch(proxyUrl, {
@@ -281,73 +282,39 @@ export default function TopUpPage() {
 
     try {
       setTopUpLoading(true);
-      const location = await checkLocation();
-      const paramatical = await getParamatical(
-        userData.usersId,
-        lang,
-        userData.usersSex,
-        userData.usersDob
-      );
-
-      if (!paramatical) {
-        setTopUpLoading(false);
-        errorDialog.open(
-          <div style={{ textAlign: 'center' }}>
-            <p>{t('error_occurred')}</p>
-          </div>
-        );
-        return;
-      }
-
-      const feature = await checkFeatures(
-        'Features.top_up',
-        lang,
-        paramatical.country,
-        userData.usersSex,
-        userData.usersDob
-      );
-
-      if (!feature) {
-        setTopUpLoading(false);
-        console.log('feature not available');
-        errorDialog.open(
-          <div style={{ textAlign: 'center' }}>
-            <p>{t('feature_unavailable')}</p>
-          </div>
-        );
-        return;
-      }
-
-      const session = await supabaseBrowser.auth.getSession();
-      const jwt = session.data.session?.access_token;
-
+      // Session expired / revoked → sign out (AuthProvider redirects to /login), don't show a
+      // generic error. Reusable across every authed action.
+      const jwt = await ensureSession();
       if (!jwt) {
-        console.log('no JWT token');
         setTopUpLoading(false);
-        errorDialog.open(
-          <div style={{ textAlign: 'center' }}>
-            <p>{t('error_occurred')}</p>
-          </div>
-        );
         return;
       }
 
+      // Identity, demographics, country and the Features.top_up gate are all enforced server-side
+      // in /api/payment — the client sends only the action's own params (nothing bypassable).
       const requestData = {
-        userId: userData.usersId,
         senderProfileId: selectedWalletProfileData.paymentProfileId,
         receiverProfileId: academixProfileData.paymentProfileId,
         amount: amount,
         type: 'TransactionType.top_up',
         paymentSessionId: 'sessionId',
-        locale: paramatical.locale,
-        country: paramatical.country,
-        gender: paramatical.gender,
-        age: paramatical.age,
+        locale: lang,
         userPin: userPin
       };
 
       const payment = await makePayment(jwt, requestData);
       const status = payment.status;
+
+      if (status === 'Feature.unavailable' || status === 'Region.blocked') {
+        topUpBottomController.close();
+        setTopUpLoading(false);
+        errorDialog.open(
+          <div style={{ textAlign: 'center' }}>
+            <p>{t(status === 'Region.blocked' ? 'region_blocked' : 'feature_unavailable')}</p>
+          </div>
+        );
+        return;
+      }
 
       if (status === 'Payment.pinError') {
         topUpBottomController.close();

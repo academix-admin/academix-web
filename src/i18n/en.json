@@ -241,6 +241,8 @@
   "could_not_logout_others": "Could not log out other devices.",
   "active_now": "active now",
   "time_ago": "{value} ago",
+  "region_blocked": "This isn't available in your region.",
+  "lock_verifying": "Verifying…",
   "lock_enter_pin": "Enter your PIN",
   "lock_subtitle": "Locked for your security after inactivity.",
   "lock_incorrect_pin": "Incorrect PIN — {count} left",

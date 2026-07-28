@@ -2,15 +2,25 @@
 -- function: get_code_data(p_user_id uuid, p_locale text, p_country text, p_gender text, p_age text, p_redeem_code text)
 -- generated from Supabase project iewqfmkngcgayxbbnpiz (read-only mirror)
 
-CREATE OR REPLACE FUNCTION public.get_code_data(p_user_id uuid, p_locale text, p_country text, p_gender text, p_age text, p_redeem_code text)
+CREATE OR REPLACE FUNCTION public.get_code_data(p_locale text, p_redeem_code text)
  RETURNS jsonb
  LANGUAGE plpgsql
 AS $function$
 DECLARE
+  p_user_id uuid;
+  v_status  text;
     result      JSONB := '{"status": null, "error": null, "code_data": null, "called": "40"}';
     code_data   JSONB;
     redeemed_id UUID;
 BEGIN
+
+    -- [gate] server-side identity + region + feature (client cannot bypass a blocked feature)
+    SELECT users_id, status INTO p_user_id, v_status
+      FROM public.gate_check('Features.code_search', p_locale);
+    IF v_status IS NOT NULL THEN
+        result := jsonb_set(result, '{status}', to_jsonb(v_status));
+        RETURN result;
+    END IF;
     -- ── [1] Fetch code — must belong to this user, be active, not expired ─────
     SELECT
         jsonb_build_object(
@@ -64,4 +74,3 @@ EXCEPTION
         RETURN result;
 END;
 $function$
-

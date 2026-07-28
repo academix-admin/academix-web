@@ -177,7 +177,6 @@ export const handler = async (event) => {
   try {
     const body = JSON.parse(event.body);
     const {
-      userId,
       locale,
       age,
       gender,
@@ -189,8 +188,15 @@ export const handler = async (event) => {
       userPin
     } = body;
 
+    // Identity is taken from the VERIFIED JWT (API Gateway authorizer context), never the client
+    // body — a caller can't charge/join as another user by passing a different userId.
+    const userId = event.requestContext?.authorizer?.user_id;
+    if (!userId) {
+      return errorResponse(401, "PoolStatus.error", "Unauthorized");
+    }
+
     // ── Required field validation ─────────────────────────────────────────────
-    if (!userId || !locale || !age || !gender || !country
+    if (!locale || !age || !gender || !country
         || !challengeId || !topicsId || !userPin) {
       return errorResponse(400, "PoolStatus.error", "Missing required parameters");
     }

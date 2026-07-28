@@ -6,7 +6,7 @@ import { useTheme } from '@/context/ThemeContext';
 import styles from './rewards-streaks.module.css';
 import { useLanguage } from '@/context/LanguageContext';
 import { getLastNameOrSingle, capitalize } from '@/utils/textUtils';
-import { getParamatical, ParamaticalData } from '@/utils/checkers';
+import { ParamaticalData } from '@/utils/checkers';
 import { useUserData } from '@/lib/stacks/user-stack';
 import { useDemandState } from '@academix-admin/state-stack';
 import { supabaseBrowser } from '@/lib/supabase/client';
@@ -293,21 +293,10 @@ export default function RewardsStreaks({ onStateChange }: ComponentStateProps) {
     demandDailyStreaks(async ({ get, set }) => {
       onStateChange?.('loading');
       try {
-        const paramatical = await getParamatical(
-          userData.usersId,
-          lang,
-          userData.usersSex,
-          userData.usersDob
-        );
 
-        if (!paramatical) return;
 
         const { data, error } = await supabaseBrowser.rpc("get_user_streaks", {
-          p_user_id: paramatical.usersId,
-          p_locale: paramatical.locale,
-          p_country: paramatical.country,
-          p_gender: paramatical.gender,
-          p_age: paramatical.age,
+          p_locale: lang,
         });
 
         if (error || data?.error) throw error || data.error;
@@ -379,24 +368,8 @@ export default function RewardsStreaks({ onStateChange }: ComponentStateProps) {
 
     try {
 
-      const paramatical = await getParamatical(
-        userData.usersId,
-        lang,
-        userData.usersSex,
-        userData.usersDob
-      );
-
-      if (!paramatical) {
-        errorDialog.open(<p>{t('error_occurred')}</p>);
-        return;
-      }
-
       const { data, error } = await supabaseBrowser.rpc("claim_user_streaks", {
-        p_user_id: paramatical.usersId,
-        p_locale: paramatical.locale,
-        p_country: paramatical.country,
-        p_gender: paramatical.gender,
-        p_age: paramatical.age,
+        p_locale: lang,
       });
 
       if (error || data?.error) throw error || data.error;
@@ -415,11 +388,7 @@ export default function RewardsStreaks({ onStateChange }: ComponentStateProps) {
         if (changed && data.status === "StreaksReward.success") {
           //perform something
           const { data, error } = await supabaseBrowser.rpc("get_user_academix_ratio", {
-            p_user_id: paramatical.usersId,
-            p_locale: paramatical.locale,
-            p_country: paramatical.country,
-            p_gender: paramatical.gender,
-            p_age: paramatical.age,
+            p_locale: lang,
           });
 
           if (error || data?.error) return;

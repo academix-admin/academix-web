@@ -157,7 +157,7 @@ export default function StatementsPage() {
         return;
       }
 
-      const response = await fetch('/api/request-statement', {
+      const response = await fetch('https://vsso71jg7d.execute-api.eu-north-1.amazonaws.com/prod/statements/request', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${jwt}`,

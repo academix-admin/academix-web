@@ -6,7 +6,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import styles from './quiz-redeem-code.module.css';
 import { TextInput } from '@academix-admin/forms';
 import { useNav } from "@academix-admin/navigation-stack";
-import { getParamatical, ParamaticalData } from '@/utils/checkers';
+import { ParamaticalData } from '@/utils/checkers';
 import { checkLocation, checkFeatures, fetchUserPartialDetails, fetchUserDetails, fetchUserData } from '@/utils/checkers';
 import { useUserData } from '@/lib/stacks/user-stack';
 import { useDemandState } from '@academix-admin/state-stack';
@@ -182,45 +182,20 @@ const RedeemCodeView = ({
     try {
       setCollecting(true);
 
-      const paramatical = await getParamatical(
-        userData.usersId,
-        lang,
-        userData.usersSex,
-        userData.usersDob
-      );
-
-      if (!paramatical) {
-        setCollecting(false);
-        errorDialog.open(<div style={{ textAlign: 'center' }}><p>{t('error_occurred')}</p></div>);
-        return;
-      }
-
-      const feature = await checkFeatures(
-        'Features.code_search',
-        lang,
-        paramatical.country,
-        userData.usersSex,
-        userData.usersDob
-      );
-
-      if (!feature) {
-        setCollecting(false);
-        errorDialog.open(<div style={{ textAlign: 'center' }}><p>{t('feature_unavailable')}</p></div>);
-        return;
-      }
-
+      // Feature/region gating is enforced server-side inside get_code_data (via gate_check) —
+      // it returns 'Feature.unavailable' / 'Region.blocked', so no bypassable client check.
       const { data: rpcResult, error } = await supabaseBrowser.rpc('get_code_data', {
-        p_user_id: paramatical.usersId,
-        p_locale: paramatical.locale,
-        p_country: paramatical.country,
-        p_gender: paramatical.gender,
-        p_age: paramatical.age,
+        p_locale: lang,
         p_redeem_code: codeText
       });
       if (error) throw error;
 
       if (rpcResult.status === 'RedeemCode.found') {
         onRedeemCodeSelect(new RedeemCodeModel(rpcResult.code_data));
+      } else if (rpcResult.status === 'Feature.unavailable') {
+        errorDialog.open(<div style={{ textAlign: 'center' }}><p>{t('feature_unavailable')}</p></div>);
+      } else if (rpcResult.status === 'Region.blocked') {
+        errorDialog.open(<div style={{ textAlign: 'center' }}><p>{t('region_blocked')}</p></div>);
       } else {
         setCodeText('');
         setIsFormValid(false);
@@ -319,21 +294,10 @@ export default function QuizRedeemCode({ onRedeemCodeSelect, onSkip, onRegisterO
     if (!userData) return [];
 
     try {
-      const paramatical = await getParamatical(
-        userData.usersId,
-        lang,
-        userData.usersSex,
-        userData.usersDob
-      );
 
-      if (!paramatical) return [];
 
       const { data, error } = await supabaseBrowser.rpc("get_users_redeem_code", {
-        p_user_id: paramatical.usersId,
-        p_locale: paramatical.locale,
-        p_country: paramatical.country,
-        p_gender: paramatical.gender,
-        p_age: paramatical.age,
+        p_locale: lang,
         p_limit_by: limitBy,
         p_after_codes: paginateModel.toJson(),
       });

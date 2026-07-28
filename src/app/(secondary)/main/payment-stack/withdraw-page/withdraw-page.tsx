@@ -7,7 +7,7 @@ import styles from './withdraw-page.module.css';
 import { useNav, useProvideObject } from "@academix-admin/navigation-stack";
 import { StateStack } from '@academix-admin/state-stack';
 import { getParamatical } from '@/utils/checkers';
-import { checkLocation, checkFeatures } from '@/utils/checkers';
+import { checkLocation, checkFeatures, ensureSession } from '@/utils/checkers';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useUserData } from '@/lib/stacks/user-stack';
 import PaymentWallet from '../payment-wallet/payment-wallet';
@@ -186,7 +186,8 @@ export default function WithdrawPage() {
 
   // Function to make payment API call
   const makePayment = async (jwt: string, data: any): Promise<PaymentResponse> => {
-    const proxyUrl = '/api/payment';
+    // Direct browser → payment API Gateway (no Next proxy) so the Lambda/authorizer see the real client IP.
+    const proxyUrl = 'https://vsso71jg7d.execute-api.eu-north-1.amazonaws.com/prod/make';
 
     try {
       const response = await fetch(proxyUrl, {
@@ -279,73 +280,37 @@ export default function WithdrawPage() {
 
     try {
       setWithdrawLoading(true);
-      const location = await checkLocation();
-      const paramatical = await getParamatical(
-        userData.usersId,
-        lang,
-        userData.usersSex,
-        userData.usersDob
-      );
-
-      if (!paramatical) {
-        setWithdrawLoading(false);
-        errorDialog.open(
-          <div style={{ textAlign: 'center' }}>
-            <p>{t('error_occurred')}</p>
-          </div>
-        );
-        return;
-      }
-
-      const feature = await checkFeatures(
-        'Features.withdraw',
-        lang,
-        paramatical.country,
-        userData.usersSex,
-        userData.usersDob
-      );
-
-      if (!feature) {
-        setWithdrawLoading(false);
-        console.log('feature not available');
-        errorDialog.open(
-          <div style={{ textAlign: 'center' }}>
-            <p>{t('feature_unavailable')}</p>
-          </div>
-        );
-        return;
-      }
-
-      const session = await supabaseBrowser.auth.getSession();
-      const jwt = session.data.session?.access_token;
-
+      // Session expired / revoked → sign out (AuthProvider redirects to /login).
+      const jwt = await ensureSession();
       if (!jwt) {
-        console.log('no JWT token');
         setWithdrawLoading(false);
-        errorDialog.open(
-          <div style={{ textAlign: 'center' }}>
-            <p>{t('error_occurred')}</p>
-          </div>
-        );
         return;
       }
 
+      // Identity, demographics, country and the Features.withdraw gate are all enforced server-side
+      // in /api/payment — the client sends only the action's own params (nothing bypassable).
       const requestData = {
-        userId: userData.usersId,
         senderProfileId: academixProfileData.paymentProfileId,
         receiverProfileId: selectedWalletProfileData.paymentProfileId,
         amount: amount,
         type: 'TransactionType.withdraw',
         paymentSessionId: 'sessionId',
-        locale: paramatical.locale,
-        country: paramatical.country,
-        gender: paramatical.gender,
-        age: paramatical.age,
+        locale: lang,
         userPin: userPin
       };
 
       const payment = await makePayment(jwt, requestData);
       const status = payment.status;
+
+      if (status === 'Feature.unavailable' || status === 'Region.blocked') {
+        setWithdrawLoading(false);
+        errorDialog.open(
+          <div style={{ textAlign: 'center' }}>
+            <p>{t(status === 'Region.blocked' ? 'region_blocked' : 'feature_unavailable')}</p>
+          </div>
+        );
+        return;
+      }
 
       if (status === 'Payment.pinError') {
         withdrawBottomController.close();
