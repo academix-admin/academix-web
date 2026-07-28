@@ -1,6 +1,6 @@
 -- schema: public (trigger fn on auth.sessions)
--- Universal sign-in gate: BEFORE INSERT on auth.sessions for EVERY method (password/phone/Google/OAuth).
--- Reuses gate_check (NEW.user_id + NEW.ip); raises to abort a blocked sign-in. FAIL-OPEN.
+-- Universal sign-in gate: BEFORE INSERT on auth.sessions (password/phone/Google/OAuth). One gate_check
+-- call (NEW.user_id + NEW.ip); RAISE to abort a blocked sign-in. FAIL-OPEN.
 CREATE OR REPLACE FUNCTION public.gate_new_session()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -24,8 +24,7 @@ BEGIN
 
   RETURN NEW;
 END;
-$function$
-;
+$function$;
 
 DROP TRIGGER IF EXISTS gate_new_session ON auth.sessions;
 CREATE TRIGGER gate_new_session

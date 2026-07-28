@@ -147,7 +147,8 @@ CREATE TABLE public.features_table (
   country_control jsonb NOT NULL,
   language_control jsonb NOT NULL,
   age_control jsonb NOT NULL,
-  gender_control jsonb NOT NULL
+  gender_control jsonb NOT NULL,
+  state_control jsonb   -- optional per-feature state/region allowlist (decontrol, like country_control)
 );
 
 CREATE TABLE public.fraud_logs (
@@ -1587,12 +1588,46 @@ CREATE POLICY "Users can update own profile." ON public.users_table AS PERMISSIV
 CREATE POLICY platform_config_service_only ON public.platform_config_table AS PERMISSIVE FOR ALL TO service_role USING (true);
 
 -- ============================================================
--- GEOBLOCK (server-authoritative region control scaffold)
+-- GEOBLOCK / COMPLIANCE BLOCKLIST (server-authoritative region control)
 -- ============================================================
+-- Block by IP/CIDR set, country, or state/region — with audit (reason/added_by) + optional expiry
+-- for time-bound orders. Enforced via public.region_block_status() ← assert_allowed_region() ←
+-- gate_check(), so it applies to browser RPCs AND the auth.sessions sign-in trigger (all methods).
+-- A rule targets IP/CIDR, country, or state/region — optionally scoped to one `feature`
+-- (NULL = global). Audit (reason/added_by) + optional expiry for time-bound orders.
 CREATE TABLE IF NOT EXISTS public.geo_blocklist (
-  cidr_range cidr PRIMARY KEY,
-  reason     text,
-  added_by   text,
-  created_at timestamptz NOT NULL DEFAULT now()
+  id           uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  block_type   text NOT NULL CHECK (block_type IN ('ip','country','state')),
+  cidr_range   cidr,           -- block_type='ip' (single IP /32, or a range/set of ranges)
+  country_code text,           -- block_type='country'/'state' (iso2 lower)
+  state_code   text,           -- block_type='state' (region code lower)
+  feature      text,           -- NULL = all features; else a features_checker (e.g. 'Features.sign_in')
+  reason       text,
+  added_by     text,
+  active       boolean NOT NULL DEFAULT true,
+  expires_at   timestamptz,
+  created_at   timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT geo_blocklist_shape CHECK (
+    (block_type = 'ip'      AND cidr_range IS NOT NULL AND country_code IS NULL     AND state_code IS NULL) OR
+    (block_type = 'country' AND country_code IS NOT NULL AND cidr_range IS NULL     AND state_code IS NULL) OR
+    (block_type = 'state'   AND country_code IS NOT NULL AND state_code IS NOT NULL AND cidr_range IS NULL)
+  )
 );
+CREATE INDEX IF NOT EXISTS geo_blocklist_ip_gist   ON public.geo_blocklist USING gist (cidr_range inet_ops) WHERE block_type = 'ip';
+CREATE INDEX IF NOT EXISTS geo_blocklist_geo_btree ON public.geo_blocklist (block_type, country_code, state_code);
 REVOKE ALL ON public.geo_blocklist FROM anon, authenticated;
+
+-- IP → country/state GeoIP map (integer IPv4 ranges; matches public GeoIP datasets directly).
+-- Lets country/state rules + the sign-in feature gate resolve LIVE country from a raw IP alone
+-- (the auth.sessions trigger has NEW.ip but no cf-ipcountry). Populate via scratchpad loader from
+-- the jsDelivr dataset @ip-location-db/geo-whois-asn-country/geo-whois-asn-country-ipv4-num.csv
+-- (~334k rows: start_num,end_num,iso2). resolve_ip_geo() does the range lookup.
+CREATE TABLE IF NOT EXISTS public.ip_geo (
+  ip_start     bigint NOT NULL,
+  ip_end       bigint NOT NULL,
+  country_code text   NOT NULL,   -- iso2 lower
+  state_code   text,
+  PRIMARY KEY (ip_start)
+);
+CREATE INDEX IF NOT EXISTS ip_geo_end ON public.ip_geo (ip_end);
+REVOKE ALL ON public.ip_geo FROM anon, authenticated;

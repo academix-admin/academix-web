@@ -1,27 +1,26 @@
 -- schema: public
--- function: assert_allowed_region(p_ip inet DEFAULT NULL) — optional explicit IP (auth.sessions trigger via NEW.ip); else x-forwarded-for header. Returns Region.blocked | NULL.
-CREATE OR REPLACE FUNCTION public.assert_allowed_region(p_ip inet DEFAULT NULL::inet)
+-- function: assert_allowed_region(p_ip,p_feature) — gathers request signals (p_ip or x-forwarded-for
+-- + cf-ipcountry/cf-region) and delegates to region_block_status.
+CREATE OR REPLACE FUNCTION public.assert_allowed_region(p_ip inet DEFAULT NULL::inet, p_feature text DEFAULT NULL::text)
  RETURNS text
  LANGUAGE plpgsql
- SECURITY DEFINER
+ STABLE SECURITY DEFINER
  SET search_path TO 'public'
 AS $function$
 DECLARE
-  v_xff text;
-  v_ip  inet;
+  v_ip inet := p_ip; v_hdr json; v_xff text; v_country text; v_state text;
 BEGIN
-  IF p_ip IS NOT NULL THEN
-    v_ip := p_ip;
-  ELSE
-    v_xff := current_setting('request.headers', true)::json ->> 'x-forwarded-for';
-    IF v_xff IS NULL OR v_xff = '' THEN RETURN NULL; END IF;
-    BEGIN
-      v_ip := split_part(v_xff, ',', 1)::inet;
-    EXCEPTION WHEN others THEN RETURN NULL; END;
+  BEGIN v_hdr := nullif(current_setting('request.headers', true), '')::json; EXCEPTION WHEN others THEN v_hdr := NULL; END;
+  IF v_ip IS NULL AND v_hdr IS NOT NULL THEN
+    v_xff := v_hdr ->> 'x-forwarded-for';
+    IF v_xff IS NOT NULL AND v_xff <> '' THEN
+      BEGIN v_ip := split_part(v_xff, ',', 1)::inet; EXCEPTION WHEN others THEN v_ip := NULL; END;
+    END IF;
   END IF;
-  IF EXISTS (SELECT 1 FROM public.geo_blocklist b WHERE v_ip <<= b.cidr_range) THEN
-    RETURN 'Region.blocked';
+  IF v_hdr IS NOT NULL THEN
+    v_country := nullif(v_hdr ->> 'cf-ipcountry', 'XX');
+    v_state   := COALESCE(v_hdr ->> 'cf-region-code', v_hdr ->> 'cf-region');
   END IF;
-  RETURN NULL;
+  RETURN public.region_block_status(v_ip, v_country, v_state, p_feature);
 END;
 $function$;
