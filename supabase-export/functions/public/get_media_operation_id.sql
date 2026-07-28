@@ -10,6 +10,10 @@ DECLARE
     id UUID;
 BEGIN
     
+
+  -- [idor-guard] spoof-proof identity: a JWT caller's p_user_id is forced to their own id;
+  -- service-role callers (auth.uid() null) keep the passed id. No signature change (non-breaking).
+  IF auth.uid() IS NOT NULL THEN p_user_id := auth.uid(); END IF;
     INSERT INTO media_operation_table (
       users_id,
       media_operation_type,
@@ -24,4 +28,3 @@ BEGIN
 
 END;
 $function$
-

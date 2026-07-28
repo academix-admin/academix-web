@@ -11,6 +11,10 @@ DECLARE
     quiz_count int;
     total_earning NUMERIC;
 BEGIN
+
+  -- [idor-guard] spoof-proof identity: a JWT caller's p_user_id is forced to their own id;
+  -- service-role callers (auth.uid() null) keep the passed id. No signature change (non-breaking).
+  IF auth.uid() IS NOT NULL THEN p_user_id := auth.uid(); END IF;
     -- Get count of quizzes and total earnings for the user in the last 24 hours
     SELECT  
       COUNT(pmt.pools_members_id),
@@ -39,4 +43,3 @@ EXCEPTION
         RETURN result;
 END;
 $function$
-

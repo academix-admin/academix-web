@@ -11,6 +11,10 @@ DECLARE
     sortID    TEXT;
     direction TEXT;
 BEGIN
+
+  -- [idor-guard] spoof-proof identity: a JWT caller's p_user_id is forced to their own id;
+  -- service-role callers (auth.uid() null) keep the passed id. No signature change (non-breaking).
+  IF auth.uid() IS NOT NULL THEN p_user_id := auth.uid(); END IF;
     sortID    := (p_after_quiz_topics->>'sort_id')::TEXT;
     direction := (p_after_quiz_topics->>'direction')::TEXT;
 
@@ -126,4 +130,3 @@ BEGIN
     FROM filtered_topics ft;
 END;
 $function$
-

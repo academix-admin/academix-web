@@ -11,6 +11,10 @@ DECLARE
     formatted_username TEXT;
     updated_username TEXT;
 BEGIN
+
+  -- [idor-guard] spoof-proof identity: a JWT caller's p_user_id is forced to their own id;
+  -- service-role callers (auth.uid() null) keep the passed id. No signature change (non-breaking).
+  IF auth.uid() IS NOT NULL THEN p_user_id := auth.uid(); END IF;
     -- Validate required parameters
     IF p_user_id IS NULL OR p_username IS NULL OR p_username = '' THEN
         result := jsonb_set(result, '{status}', '"ProfileStatus.invalid_parameters"', false);
@@ -49,4 +53,3 @@ EXCEPTION
         RETURN result;
 END;
 $function$
-

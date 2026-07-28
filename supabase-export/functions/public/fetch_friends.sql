@@ -10,6 +10,10 @@ DECLARE
     sortID    TEXT;
     direction TEXT;
 BEGIN
+
+  -- [idor-guard] spoof-proof identity: a JWT caller's p_user_id is forced to their own id;
+  -- service-role callers (auth.uid() null) keep the passed id. No signature change (non-breaking).
+  IF auth.uid() IS NOT NULL THEN p_user_id := auth.uid(); END IF;
     -- Extract cursor fields from the pagination JSONB object
     -- sortID: the last sort_created_id from the previous page (NULL on first page)
     -- direction: 'oldest' = descending order, 'latest' = ascending order
@@ -78,4 +82,3 @@ BEGIN
     FROM filtered_friends;
 END;
 $function$
-

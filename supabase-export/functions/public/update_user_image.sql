@@ -10,6 +10,10 @@ DECLARE
     old_image_path TEXT;
     update_count INTEGER;
 BEGIN
+
+  -- [idor-guard] spoof-proof identity: a JWT caller's p_user_id is forced to their own id;
+  -- service-role callers (auth.uid() null) keep the passed id. No signature change (non-breaking).
+  IF auth.uid() IS NOT NULL THEN p_user_id := auth.uid(); END IF;
     -- Validate required parameters
     IF p_user_id IS NULL OR p_operation_id IS NULL THEN
         RETURN FALSE;
@@ -46,4 +50,3 @@ BEGIN
     RETURN update_count > 0;
 END;
 $function$
-

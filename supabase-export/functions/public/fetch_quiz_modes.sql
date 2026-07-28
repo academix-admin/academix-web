@@ -7,6 +7,10 @@ CREATE OR REPLACE FUNCTION public.fetch_quiz_modes(p_user_id uuid, p_locale text
  LANGUAGE plpgsql
 AS $function$
 BEGIN
+
+  -- [idor-guard] spoof-proof identity: a JWT caller's p_user_id is forced to their own id;
+  -- service-role callers (auth.uid() null) keep the passed id. No signature change (non-breaking).
+  IF auth.uid() IS NOT NULL THEN p_user_id := auth.uid(); END IF;
     RETURN QUERY 
     SELECT jsonb_build_object(
             'game_mode_id', gmt.game_mode_id,
@@ -29,4 +33,3 @@ BEGIN
     );
 END;
 $function$
-

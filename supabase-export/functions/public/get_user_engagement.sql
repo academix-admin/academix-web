@@ -12,6 +12,10 @@ DECLARE
 BEGIN
     
 
+
+  -- [idor-guard] spoof-proof identity: a JWT caller's p_user_id is forced to their own id;
+  -- service-role callers (auth.uid() null) keep the passed id. No signature change (non-breaking).
+  IF auth.uid() IS NOT NULL THEN p_user_id := auth.uid(); END IF;
     SELECT  json_build_object(
       'user_engagement_progress_points_details',get_engagement_level_info_by_points(upt.user_engagement_progress_points,p_locale),
       'user_engagement_progress_questions',upt.user_engagement_progress_questions,
@@ -50,4 +54,3 @@ EXCEPTION
         RETURN result;
 END;
 $function$
-

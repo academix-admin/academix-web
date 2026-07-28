@@ -15,6 +15,10 @@ DECLARE
     is_member  BOOLEAN := false;
 BEGIN
  
+
+  -- [idor-guard] spoof-proof identity: a JWT caller's p_user_id is forced to their own id;
+  -- service-role callers (auth.uid() null) keep the passed id. No signature change (non-breaking).
+  IF auth.uid() IS NOT NULL THEN p_user_id := auth.uid(); END IF;
     SELECT
         jsonb_build_object(
             'topics_id',         tt.topics_id,
@@ -196,4 +200,3 @@ EXCEPTION
         RETURN result;
 END;
 $function$
-

@@ -14,6 +14,10 @@ DECLARE
     method_id UUID;
 BEGIN
 
+
+  -- [idor-guard] spoof-proof identity: a JWT caller's p_user_id is forced to their own id;
+  -- service-role callers (auth.uid() null) keep the passed id. No signature change (non-breaking).
+  IF auth.uid() IS NOT NULL THEN p_user_id := auth.uid(); END IF;
     -- Guard: return NULL if user does not exist
     IF NOT EXISTS (SELECT 1 FROM users_table WHERE users_id = p_user_id) THEN
         RETURN NULL;
@@ -59,4 +63,3 @@ BEGIN
     RETURN profile_details;
 END;
 $function$
-
