@@ -1,7 +1,5 @@
--- schema:   public
--- function: get_feature_status(p_feature, p_locale, p_gender, p_age, p_country_override) RETURNS jsonb
--- Country from cf-ipcountry; service-role callers may override via p_country_override. Synced with iewqfmkngcgayxbbnpiz.
-
+-- schema: public
+-- function: get_feature_status — trusts session_user=supabase_auth_admin for the country override.
 CREATE OR REPLACE FUNCTION public.get_feature_status(p_feature text, p_locale text, p_gender text, p_age text, p_country_override text DEFAULT NULL::text)
  RETURNS jsonb
  LANGUAGE plpgsql
@@ -10,10 +8,7 @@ DECLARE
   p_country text;
   result jsonb;
 BEGIN
-  -- Country = server-observed IP (cf-ipcountry) for direct browser calls. A SERVICE-ROLE caller
-  -- (e.g. the /api/payment Next route, which sees the real client IP) may pass p_country_override;
-  -- a browser (authenticated role) cannot, so the gate stays unspoofable.
-  IF (auth.jwt() ->> 'role') = 'service_role' AND p_country_override IS NOT NULL THEN
+  IF ((auth.jwt() ->> 'role') = 'service_role' OR session_user = 'supabase_auth_admin') AND p_country_override IS NOT NULL THEN
     p_country := lower(p_country_override);
   ELSE
     p_country := lower(nullif(current_setting('request.headers', true)::json ->> 'cf-ipcountry', 'XX'));
@@ -32,4 +27,4 @@ BEGIN
     RETURN jsonb_build_object('features_active', FALSE);
   END IF;
   RETURN result;
-END; $function$
+END; $function$;

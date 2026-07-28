@@ -193,6 +193,13 @@ export default function LoginUser() {
     } catch (error: any) {
       console.error('Signin error:', error);
 
+      // Server-side sign-in gate (auth.sessions trigger) rejected this login for a disabled
+      // feature or a blocked region — surface the clean reason instead of a raw DB error.
+      if (typeof error?.message === 'string' && error.message.includes('AX_SIGNIN_GATE')) {
+        setError(t(error.message.trim().endsWith('Region.blocked') ? 'region_blocked' : 'feature_unavailable'));
+        return null;
+      }
+
       if (error.code === 'email_not_confirmed') {
         await resendTokenForEmail(email);
         otpTimer$.start(300);
@@ -233,6 +240,13 @@ export default function LoginUser() {
       return null;
     } catch (error: any) {
       console.error('Signin error:', error);
+
+      // Server-side sign-in gate (auth.sessions trigger) rejected this login for a disabled
+      // feature or a blocked region — surface the clean reason instead of a raw DB error.
+      if (typeof error?.message === 'string' && error.message.includes('AX_SIGNIN_GATE')) {
+        setError(t(error.message.trim().endsWith('Region.blocked') ? 'region_blocked' : 'feature_unavailable'));
+        return null;
+      }
 
       if (error.code === 'phone_not_confirmed') {
         await resendTokenForPhone(phone);
