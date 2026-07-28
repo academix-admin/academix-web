@@ -7,9 +7,11 @@ import styles from './quiz-page.module.css';
 import Link from 'next/link';
 import CachedLottie from '@/components/CachedLottie';
 import { getLastNameOrSingle, capitalize } from '@/utils/textUtils';
-import { supabaseBrowser } from '@/lib/supabase/client';
 import { useNav } from "@academix-admin/navigation-stack";
-import { useComponentState, ComponentStateProps } from '@/hooks/use-component-state';
+import { useComponentState, ComponentStateProps, getComponentStatus } from '@/hooks/use-component-state';
+import { useEffect, useState, Fragment } from 'react';
+import ErrorView from '@/components/ErrorView/ErrorView';
+import NoResultsView from '@/components/NoResultsView/NoResultsView';
 import QuizPageTitle from "./quiz-page-title/quiz-page-title";
 import AvailableQuizTopics from "./available-quiz-topics/available-quiz-topics";
 import PublicQuizTopics from "./public-quiz-topics/public-quiz-topics";
@@ -20,15 +22,41 @@ export default function QuizPage() {
   const { theme } = useTheme();
   const { t } = useLanguage();
 
-    const { handleStateChange } = useComponentState();
+    const { compState, handleStateChange, resetComponentState } = useComponentState();
 
     // NOTE: no hide-then-reveal here. The quiz topic lists load based on visibility/scroll
     // (paginated), so hiding them with display:none during a reveal window stopped their
     // initial fetch and left the page blank. They render directly and manage their own
     // loading. (Duplicate state key for ActiveQuizTopic fixed → 'activeQuizTopic'.)
 
+    // When every section has settled with NO data (all error / feature-unavailable / empty), the page
+    // would otherwise be blank. Surface one clear aggregate view instead. `nonce` bumps to retry.
+    const status = getComponentStatus(compState);
+    const anyData = status.loadedCount > 0;
+    const anyLoading = status.loadingCount > 0;
+    const [settled, setSettled] = useState(false);
+    const [nonce, setNonce] = useState(0);
+    useEffect(() => {
+      setSettled(false);
+      const timer = window.setTimeout(() => setSettled(true), 3500);
+      return () => window.clearTimeout(timer);
+    }, [compState.size, status.loadedCount, status.errorCount, status.noneCount, status.loadingCount]);
+
+    const nothing   = settled && !anyLoading && !anyData && compState.size > 0;
+    const allErrored = nothing && status.errorCount > 0 && status.noneCount === 0;
+
   return (
     <div className={styles.mainContainer}>
+      {nothing && (
+        allErrored
+          ? <ErrorView text={t('error_occurred')} buttonText={t('try_again')}
+                       onButtonClick={() => { resetComponentState(); setSettled(false); setNonce(n => n + 1); }} />
+          : <NoResultsView text={t('no_content')} buttonText={null} onButtonClick={null} />
+      )}
+
+      {/* Sections stay mounted (they fetch on visibility); the aggregate above is purely additive and
+          disappears the instant any section reports data. `nonce` remounts them on retry. */}
+      <Fragment key={nonce}>
       <QuizPageTitle onStateChange={(state) => handleStateChange('quizPageTitle', state)} />
 
       <ActiveQuizTopic onStateChange={(state) => handleStateChange('activeQuizTopic', state)} />
@@ -44,6 +72,7 @@ export default function QuizPage() {
       <AvailableQuizTopics onStateChange={(state) => handleStateChange('personalizedAvailableQuizTopics', state)} pType={'personalized'} />
 
       <AvailableQuizTopics onStateChange={(state) => handleStateChange('publicAvailableQuizTopics', state)} pType={'public'} />
+      </Fragment>
 
     </div>
   );

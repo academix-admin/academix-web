@@ -88,6 +88,18 @@ export default function LoginUser() {
     setCanGoBack(window.history.length > 1);
   }, []);
 
+  // Surface an OAuth (Google) sign-in that was rejected server-side by the gate trigger — the
+  // /auth/callback route stashes the reason since it comes back with no session, just a URL error.
+  useEffect(() => {
+    try {
+      const r = sessionStorage.getItem('ax_auth_error');
+      if (!r) return;
+      sessionStorage.removeItem('ax_auth_error');
+      setError(t(r === 'region' ? 'region_blocked' : r === 'feature' ? 'feature_unavailable' : 'error_occurred'));
+    } catch { /* ignore */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     setIsFormValid(loginState !== 'error' && loginState !== 'initial' && !!login.password && passwordChecks.valid);
   }, [login.login, login.password, loginState, passwordChecks.valid]);
