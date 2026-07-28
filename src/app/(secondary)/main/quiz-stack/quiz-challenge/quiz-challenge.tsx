@@ -149,72 +149,37 @@ export default function QuizChallenge(props: QuizChallengeProps) {
 
         try {
             setQuizLoading(true);
-            const location = await checkLocation();
-            const paramatical = await getParamatical(
-                userData.usersId,
-                lang,
-                userData.usersSex,
-                userData.usersDob
-            );
-
-            if (!paramatical) {
-                setQuizLoading(false);
-                withdrawBottomController.close();
-                errorDialog.open(
-                    <div style={{ textAlign: 'center' }}>
-                        <p>{t('error_occurred')}</p>
-                    </div>
-                );
-                return;
-            }
-
-            const feature = await checkFeatures(
-                'Features.quiz_taking',
-                lang,
-                userData.usersSex,
-                userData.usersDob
-            );
-
-            if (!feature) {
-                setQuizLoading(false);
-                console.log('feature not available');
-                withdrawBottomController.close();
-                errorDialog.open(
-                    <div style={{ textAlign: 'center' }}>
-                        <p>{t('feature_unavailable')}</p>
-                    </div>
-                );
-                return;
-            }
-
             const jwt = await ensureSession();
-
             if (!jwt) {
-                console.log('no JWT token');
                 setQuizLoading(false);
                 withdrawBottomController.close();
-                errorDialog.open(
-                    <div style={{ textAlign: 'center' }}>
-                        <p>{t('error_occurred')}</p>
-                    </div>
-                );
                 return;
             }
+
+            // Identity, demographics, country and the Features.quiz_taking gate are enforced
+            // server-side (create_or_join via gate_check) — the client sends only action params.
             const requestData = {
-                userId: userData.usersId,
                 topicsId: topicsId,
                 challengeId: selectedChallengeModel.challengeId,
                 poolsId: null,
                 redeemCode: selectedRedeemCodeModel?.redeemCodeValue,
-                locale: paramatical.locale,
-                country: paramatical.country,
-                gender: paramatical.gender,
-                age: paramatical.age,
+                locale: lang,
                 userPin: userPin
             };
 
             const engagement = await engageQuiz(jwt, requestData);
             const status = engagement.status;
+
+            if (status === 'Feature.unavailable' || status === 'Region.blocked') {
+                setQuizLoading(false);
+                withdrawBottomController.close();
+                errorDialog.open(
+                    <div style={{ textAlign: 'center' }}>
+                        <p>{t(status === 'Region.blocked' ? 'region_blocked' : 'feature_unavailable')}</p>
+                    </div>
+                );
+                return;
+            }
 
             if (status === 'PoolStatus.engaged' || status === 'PoolStatus.this_active') {
                 const quizModel = new UserDisplayQuizTopicModel(engagement.quiz_pool);

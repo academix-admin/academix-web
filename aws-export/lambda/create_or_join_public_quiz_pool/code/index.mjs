@@ -178,9 +178,6 @@ export const handler = async (event) => {
     const body = JSON.parse(event.body);
     const {
       locale,
-      age,
-      gender,
-      country,
       challengeId,
       topicsId,
       poolsId,
@@ -196,10 +193,25 @@ export const handler = async (event) => {
     }
 
     // ── Required field validation ─────────────────────────────────────────────
-    if (!locale || !age || !gender || !country
-        || !challengeId || !topicsId || !userPin) {
+    if (!locale || !challengeId || !topicsId || !userPin) {
       return errorResponse(400, "PoolStatus.error", "Missing required parameters");
     }
+
+    // ── Gate: identity + demographics + region + Features.quiz_taking (ONE public.gate_check) ─────
+    // country/gender/age are server-derived here (never from the client); feature/region enforced.
+    const { data: gateRows } = await supabase.rpc("gate_check", {
+      p_feature:          "Features.quiz_taking",
+      p_locale:           locale || "en",
+      p_user_id:          userId,
+      p_country_override: event.requestContext?.authorizer?.country || null,
+    });
+    const gate = Array.isArray(gateRows) ? gateRows[0] : gateRows;
+    if (gate?.status) {
+      return errorResponse(200, gate.status, gate.status);
+    }
+    const country = gate?.country ?? null;
+    const gender  = gate?.gender ?? null;
+    const age     = gate?.age ?? null;
 
 
     // ── Step 1: Verify PIN ────────────────────────────────────────────────────

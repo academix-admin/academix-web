@@ -351,36 +351,6 @@ export default function QuizCommitment(props: QuizChallengeProps) {
     try {
       setQuizLoading(true);
       setError('');
-      const location = await checkLocation();
-      const paramatical = await getParamatical(
-        userData.usersId,
-        lang,
-        userData.usersSex,
-        userData.usersDob
-      );
-
-      if (!paramatical) {
-        setQuizLoading(false);
-        withdrawBottomController.close();
-        setError(t('error_occurred'));
-        return;
-      }
-
-      const feature = await checkFeatures(
-        'Features.quiz_taking',
-        lang,
-        userData.usersSex,
-        userData.usersDob
-      );
-
-      if (!feature) {
-        setQuizLoading(false);
-        console.log('feature not available');
-        withdrawBottomController.close();
-        setError(t('feature_unavailable'));
-        return;
-      }
-
       const jwt = await ensureSession();
 
       if (!jwt) {
@@ -413,20 +383,23 @@ export default function QuizCommitment(props: QuizChallengeProps) {
       }
 
       const requestData = {
-        userId: userData.usersId,
         topicsId: currentQuiz.topicsId,
         challengeId: currentQuiz.quizPool?.challengeModel?.challengeId,
         poolsId: resolvedPoolsId,
         redeemCode: selectedRedeemCodeModel?.redeemCodeValue,
-        locale: paramatical.locale,
-        country: paramatical.country,
-        gender: paramatical.gender,
-        age: paramatical.age,
+        locale: lang,
         userPin: userPin
       };
 
       const engagement = await engageQuiz(jwt, requestData);
       const status = engagement.status;
+
+      if (status === 'Feature.unavailable' || status === 'Region.blocked') {
+        setQuizLoading(false);
+        withdrawBottomController.close();
+        setError(t(status === 'Region.blocked' ? 'region_blocked' : 'feature_unavailable'));
+        return;
+      }
 
 
       if (status === 'PoolStatus.engaged' || status === 'PoolStatus.this_active') {
