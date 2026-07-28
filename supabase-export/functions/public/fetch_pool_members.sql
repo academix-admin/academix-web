@@ -2,17 +2,15 @@
 -- function: fetch_pool_members(p_user_id uuid, p_pool_id uuid, p_country text, p_locale text, p_gender text, p_age text, p_limit_by integer, p_after_pool_members jsonb, p_for_ranking boolean)
 -- generated from Supabase project iewqfmkngcgayxbbnpiz (read-only mirror)
 
-CREATE OR REPLACE FUNCTION public.fetch_pool_members(p_user_id uuid, p_pool_id uuid, p_country text, p_locale text, p_gender text, p_age text, p_limit_by integer, p_after_pool_members jsonb, p_for_ranking boolean DEFAULT false)
+CREATE OR REPLACE FUNCTION public.fetch_pool_members(p_pool_id uuid, p_locale text, p_limit_by integer, p_after_pool_members jsonb, p_for_ranking boolean DEFAULT false)
  RETURNS SETOF jsonb
  LANGUAGE plpgsql
 AS $function$
 DECLARE
+    p_user_id uuid := auth.uid();
     sortID TEXT;
 BEGIN
 
-  -- [idor-guard] spoof-proof identity: a JWT caller's p_user_id is forced to their own id;
-  -- service-role callers (auth.uid() null) keep the passed id. No signature change (non-breaking).
-  IF auth.uid() IS NOT NULL THEN p_user_id := auth.uid(); END IF;
     -- Extract sort ID from the passed JSONB object
     sortID := (p_after_pool_members->>'sort_id')::TEXT;
 

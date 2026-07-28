@@ -13,7 +13,7 @@ import { useDemandState } from '@academix-admin/state-stack';
 import { useUserData } from '@/lib/stacks/user-stack';
 import { UserData } from '@/models/user-data';
 import { PaginateModel } from '@/models/paginate-model';
-import { getParamatical, ParamaticalData} from '@/utils/checkers';
+import { ParamaticalData} from '@/utils/checkers';
 import LoadingView from '@/components/LoadingView/LoadingView';
 import NoResultsView from '@/components/NoResultsView/NoResultsView';
 import ErrorView from '@/components/ErrorView/ErrorView';

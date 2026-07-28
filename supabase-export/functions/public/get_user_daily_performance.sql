@@ -2,19 +2,17 @@
 -- function: get_user_daily_performance(p_user_id uuid, p_country text, p_locale text, p_gender text, p_age text)
 -- generated from Supabase project iewqfmkngcgayxbbnpiz (read-only mirror)
 
-CREATE OR REPLACE FUNCTION public.get_user_daily_performance(p_user_id uuid, p_country text, p_locale text, p_gender text, p_age text)
+CREATE OR REPLACE FUNCTION public.get_user_daily_performance(p_locale text)
  RETURNS jsonb
  LANGUAGE plpgsql
 AS $function$
 DECLARE
+    p_user_id uuid := auth.uid();
     result JSONB := '{"status": null, "error": null, "user_daily_performance": null, "called": "11500"}';
     quiz_count int;
     total_earning NUMERIC;
 BEGIN
 
-  -- [idor-guard] spoof-proof identity: a JWT caller's p_user_id is forced to their own id;
-  -- service-role callers (auth.uid() null) keep the passed id. No signature change (non-breaking).
-  IF auth.uid() IS NOT NULL THEN p_user_id := auth.uid(); END IF;
     -- Get count of quizzes and total earnings for the user in the last 24 hours
     SELECT  
       COUNT(pmt.pools_members_id),

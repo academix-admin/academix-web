@@ -310,7 +310,7 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
       const { data, error } = await supabaseBrowser.rpc("submit_question_tracker", {
         p_user_id: userData.usersId,
         p_submission: question.submission(timeTaken),
-        p_locale: paramatical.locale,
+        p_locale: lang,
         p_country: paramatical.country,
         p_gender: paramatical.gender,
         p_age: paramatical.age
@@ -668,7 +668,7 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
 
         const { data, error } = await supabaseBrowser.rpc("authorized_quiz_pool_questions", {
           p_user_id: userData.usersId,
-          p_locale: paramatical.locale,
+          p_locale: lang,
           p_country: paramatical.country,
           p_gender: paramatical.gender,
           p_age: paramatical.age,
@@ -793,7 +793,7 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
 
       const { data, error } = await supabaseBrowser.rpc("result_quiz_pool_update", {
         p_user_id: userData.usersId,
-        p_locale: paramatical.locale,
+        p_locale: lang,
         p_country: paramatical.country,
         p_gender: paramatical.gender,
         p_age: paramatical.age,

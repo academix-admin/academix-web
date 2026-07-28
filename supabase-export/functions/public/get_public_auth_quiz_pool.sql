@@ -2,12 +2,16 @@
 -- function: get_public_auth_quiz_pool(p_user_id uuid, p_locale text, p_country text, p_gender text, p_age text, p_pool_auth_code text)
 -- generated from Supabase project iewqfmkngcgayxbbnpiz (read-only mirror)
 
-CREATE OR REPLACE FUNCTION public.get_public_auth_quiz_pool(p_user_id uuid, p_locale text, p_country text, p_gender text, p_age text, p_pool_auth_code text)
+CREATE OR REPLACE FUNCTION public.get_public_auth_quiz_pool(p_locale text, p_pool_auth_code text)
  RETURNS jsonb
  LANGUAGE plpgsql
  STABLE
 AS $function$
 DECLARE
+    p_user_id uuid;
+    p_country text;
+    p_gender text;
+    p_age text;
     result     JSONB := '{"status": null, "auth": null, "error": null, "quiz_pool": null, "is_member": null, "called": "30"}';
     quiz_pool  JSONB;
     pool_job   TEXT;
@@ -16,9 +20,9 @@ DECLARE
 BEGIN
  
 
-  -- [idor-guard] spoof-proof identity: a JWT caller's p_user_id is forced to their own id;
-  -- service-role callers (auth.uid() null) keep the passed id. No signature change (non-breaking).
-  IF auth.uid() IS NOT NULL THEN p_user_id := auth.uid(); END IF;
+  -- [gate] identity + demographics via public.gate_check
+  SELECT users_id, country, gender, age INTO p_user_id, p_country, p_gender, p_age
+    FROM public.gate_check(NULL, p_locale);
     SELECT
         jsonb_build_object(
             'topics_id',         tt.topics_id,

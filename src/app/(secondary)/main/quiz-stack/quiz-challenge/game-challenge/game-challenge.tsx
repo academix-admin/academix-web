@@ -74,8 +74,8 @@ export default function GameChallenge({ onChallengeSelect, topicsId, gameModeId 
       if (!paramatical) return [];
 
       const { data, error } = await supabaseBrowser.rpc("fetch_quiz_challenges", {
-        p_owner_id: paramatical.usersId,
-        p_locale: paramatical.locale,
+        p_owner_id: userData.usersId,
+        p_locale: lang,
         p_country: paramatical.country,
         p_gender: paramatical.gender,
         p_age: paramatical.age,

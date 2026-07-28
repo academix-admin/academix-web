@@ -9,7 +9,7 @@ import { useNav, useProvideObject } from "@academix-admin/navigation-stack";
 import { useUserData } from '@/lib/stacks/user-stack';
 import LoadingView from '@/components/LoadingView/LoadingView';
 import ErrorView from '@/components/ErrorView/ErrorView';
-import { getParamatical, ensureSession } from '@/utils/checkers';
+import { ensureSession } from '@/utils/checkers';
 import { Role } from '@/lib/stacks/signup-stack';
 import { RolesActivation } from '@/models/roles-activation';
 import { PinData } from '@/models/pin-data';
@@ -223,17 +223,11 @@ export default function RolesPage() {
     try {
       setContinueState('loading');
       buyInBottomController.open();
-      const paramatical = await getParamatical(userData.usersId, lang, userData.usersSex, userData.usersDob);
-      if (!paramatical) return;
       const { data, error } = await supabaseBrowser.rpc('create_or_get_academix_profile', {
-        p_user_id: paramatical.usersId,
-        p_locale: paramatical.locale,
-        p_country: paramatical.country,
-        p_gender: paramatical.gender,
-        p_age: paramatical.age,
+        p_locale: lang,
       });
       if (error || (data as any)?.error) throw error || (data as any).error;
-      setAcademixProfileData(new PaymentProfileModel(data, paramatical.usersId));
+      setAcademixProfileData(new PaymentProfileModel(data, userData.usersId));
       setContinueState('data');
     } catch {
       setContinueState('error_occurred');

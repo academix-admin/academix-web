@@ -11,7 +11,6 @@ import DialogCancel from '@/components/DialogCancel';
 import { TextInput } from '@academix-admin/forms';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useUserData } from '@/lib/stacks/user-stack';
-import { getParamatical } from '@/utils/checkers';
 import { UserDisplayQuizTopicModel } from '@/models/user-display-quiz-topic-model';
 import dynamic from 'next/dynamic';
 import { useNav, useProvideObject } from "@academix-admin/navigation-stack";
@@ -181,25 +180,9 @@ function QuizJoinContent({ theme, t, onClose, scannedQuizPool, setScannedQuizPoo
     setError(false);
 
     try {
-      const paramatical = await getParamatical(
-        userData.usersId,
-        lang,
-        userData.usersSex,
-        userData.usersDob
-      );
-
-      if (!paramatical) {
-        setError(true);
-        setCode('');
-        return;
-      }
 
       const { data, error: rpcError } = await supabaseBrowser.rpc("get_public_auth_quiz_pool", {
-        p_user_id: paramatical.usersId,
-        p_locale: paramatical.locale ?? "",
-        p_country: paramatical.country ?? "",
-        p_gender: paramatical.gender ?? "",
-        p_age: paramatical.age ?? "",
+        p_locale: lang ?? "",
         p_pool_auth_code: submittedCode.toUpperCase()
       });
 

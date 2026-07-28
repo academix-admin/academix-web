@@ -2,18 +2,22 @@
 -- function: get_active_quiz(p_user_id uuid, p_country text, p_locale text, p_gender text, p_age text)
 -- generated from Supabase project iewqfmkngcgayxbbnpiz (read-only mirror)
 
-CREATE OR REPLACE FUNCTION public.get_active_quiz(p_user_id uuid, p_country text, p_locale text, p_gender text, p_age text)
+CREATE OR REPLACE FUNCTION public.get_active_quiz(p_user_id uuid DEFAULT NULL::uuid, p_locale text DEFAULT NULL::text)
  RETURNS jsonb
  LANGUAGE plpgsql
  STABLE
 AS $function$
 DECLARE
+  p_country text;
+  p_gender text;
+  p_age text;
     result jsonb;
 BEGIN
 
   -- [idor-guard] spoof-proof identity: a JWT caller's p_user_id is forced to their own id;
   -- service-role callers (auth.uid() null) keep the passed id. No signature change (non-breaking).
   IF auth.uid() IS NOT NULL THEN p_user_id := auth.uid(); END IF;
+  SELECT country, gender, age INTO p_country, p_gender, p_age FROM public.gate_check(NULL, p_locale, p_user_id);
     SELECT jsonb_build_object(
         'topics_id',             tt.topics_id,
         'topics_image',          tt.topics_image,

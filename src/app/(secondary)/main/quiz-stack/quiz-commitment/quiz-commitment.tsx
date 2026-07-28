@@ -295,7 +295,7 @@ export default function QuizCommitment(props: QuizChallengeProps) {
 
       const requestData = {
         userId: userData.usersId,
-        locale: paramatical.locale,
+        locale: lang,
         country: paramatical.country,
         gender: paramatical.gender,
         age: paramatical.age

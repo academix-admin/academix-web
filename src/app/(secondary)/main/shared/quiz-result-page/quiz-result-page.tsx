@@ -784,7 +784,7 @@ export default function QuizResultPage(props: QuizResultProps) {
       const { data, error } = await supabaseBrowser.rpc("get_quiz_result", {
         p_user_id: userData.usersId,
         p_pool_id: poolsId,
-        p_locale: paramatical.locale,
+        p_locale: lang,
         p_country: paramatical.country,
         p_gender: paramatical.gender,
         p_age: paramatical.age
@@ -849,12 +849,8 @@ export default function QuizResultPage(props: QuizResultProps) {
       if (!paramatical) return [];
 
       const { data, error } = await supabaseBrowser.rpc("fetch_pool_members", {
-        p_user_id: userData.usersId,
         p_pool_id: poolsId,
         p_locale: paramatical?.locale,
-        p_country: paramatical?.country,
-        p_gender: paramatical?.gender,
-        p_age: paramatical?.age,
         p_limit_by: limitBy,
         p_for_ranking: true,
         p_after_pool_members: paginateModel.toJson()

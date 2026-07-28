@@ -2,18 +2,16 @@
 -- function: fetch_friends(p_user_id uuid, p_country text, p_locale text, p_gender text, p_age text, p_limit_by integer, p_after_friends jsonb, p_search_key text)
 -- generated from Supabase project iewqfmkngcgayxbbnpiz (read-only mirror)
 
-CREATE OR REPLACE FUNCTION public.fetch_friends(p_user_id uuid, p_country text, p_locale text, p_gender text, p_age text, p_limit_by integer, p_after_friends jsonb, p_search_key text DEFAULT NULL::text)
+CREATE OR REPLACE FUNCTION public.fetch_friends(p_locale text, p_limit_by integer, p_after_friends jsonb, p_search_key text DEFAULT NULL::text)
  RETURNS SETOF jsonb
  LANGUAGE plpgsql
 AS $function$
 DECLARE
+    p_user_id uuid := auth.uid();
     sortID    TEXT;
     direction TEXT;
 BEGIN
 
-  -- [idor-guard] spoof-proof identity: a JWT caller's p_user_id is forced to their own id;
-  -- service-role callers (auth.uid() null) keep the passed id. No signature change (non-breaking).
-  IF auth.uid() IS NOT NULL THEN p_user_id := auth.uid(); END IF;
     -- Extract cursor fields from the pagination JSONB object
     -- sortID: the last sort_created_id from the previous page (NULL on first page)
     -- direction: 'oldest' = descending order, 'latest' = ascending order

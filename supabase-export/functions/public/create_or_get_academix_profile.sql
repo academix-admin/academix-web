@@ -2,11 +2,12 @@
 -- function: create_or_get_academix_profile(p_user_id uuid, p_locale text, p_country text, p_gender text, p_age text)
 -- generated from Supabase project iewqfmkngcgayxbbnpiz (read-only mirror)
 
-CREATE OR REPLACE FUNCTION public.create_or_get_academix_profile(p_user_id uuid, p_locale text, p_country text, p_gender text, p_age text)
+CREATE OR REPLACE FUNCTION public.create_or_get_academix_profile(p_locale text)
  RETURNS jsonb
  LANGUAGE plpgsql
 AS $function$
 DECLARE
+    p_user_id uuid := auth.uid();
     profile_details JSONB;
     wallet_id UUID;
     buy_rate numeric;
@@ -15,9 +16,6 @@ DECLARE
 BEGIN
 
 
-  -- [idor-guard] spoof-proof identity: a JWT caller's p_user_id is forced to their own id;
-  -- service-role callers (auth.uid() null) keep the passed id. No signature change (non-breaking).
-  IF auth.uid() IS NOT NULL THEN p_user_id := auth.uid(); END IF;
     -- Guard: return NULL if user does not exist
     IF NOT EXISTS (SELECT 1 FROM users_table WHERE users_id = p_user_id) THEN
         RETURN NULL;

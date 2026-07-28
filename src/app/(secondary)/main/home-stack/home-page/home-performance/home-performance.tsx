@@ -5,7 +5,7 @@ import { useTheme } from '@/context/ThemeContext';
 import styles from './home-performance.module.css';
 import { useLanguage } from '@/context/LanguageContext';
 import { getLastNameOrSingle, capitalize } from '@/utils/textUtils';
-import { getParamatical, ParamaticalData} from '@/utils/checkers';
+import { ParamaticalData} from '@/utils/checkers';
 import { useUserData } from '@/lib/stacks/user-stack';
 import { useDemandState } from '@academix-admin/state-stack';
 import { supabaseBrowser } from '@/lib/supabase/client';
@@ -32,19 +32,8 @@ export default function HomePerformance({ onStateChange }: ComponentStateProps) 
     demandPerformanceData(async ({ get, set }) => {
       try {
         onStateChange?.('loading');
-        const paramatical = await getParamatical(
-          userData.usersId,
-          lang,
-          userData.usersSex,
-          userData.usersDob
-        );
-        if(!paramatical)return;
         const { data, error } = await supabaseBrowser.rpc("get_user_daily_performance", {
-          p_user_id: paramatical.usersId,
-          p_locale: paramatical.locale,
-          p_country: paramatical.country,
-          p_gender: paramatical.gender,
-          p_age: paramatical.age,
+          p_locale: lang,
         });
 
         if (error || data?.error) throw error || data.error;

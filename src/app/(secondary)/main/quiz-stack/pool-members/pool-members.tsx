@@ -8,7 +8,6 @@ import styles from './pool-members.module.css';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useNav } from "@academix-admin/navigation-stack";
 import { capitalizeWords, capitalize } from '@/utils/textUtils';
-import { getParamatical } from '@/utils/checkers';
 import { useUserData } from '@/lib/stacks/user-stack';
 import { UserData } from '@/models/user-data';
 import { BackendPoolMemberModel } from '@/models/pool-member';
@@ -132,22 +131,10 @@ export default function PoolMembers(props: PoolMembersProps) {
     if (!userData) return [];
 
     try {
-      const paramatical = await getParamatical(
-        userData.usersId,
-        lang,
-        userData.usersSex,
-        userData.usersDob
-      );
-
-      if (!paramatical) return [];
 
       const { data, error } = await supabaseBrowser.rpc("fetch_pool_members", {
-        p_user_id: paramatical.usersId,
         p_pool_id: poolsId,
-        p_locale: paramatical.locale,
-        p_country: paramatical.country,
-        p_gender: paramatical.gender,
-        p_age: paramatical.age,
+        p_locale: lang,
         p_limit_by: limitBy,
         p_for_ranking: true,
         p_after_pool_members: paginateModel.toJson(),

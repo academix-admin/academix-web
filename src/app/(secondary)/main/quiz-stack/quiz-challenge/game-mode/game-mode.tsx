@@ -5,7 +5,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import styles from './game-mode.module.css';
 import { useNav } from "@academix-admin/navigation-stack";
-import { getParamatical, ParamaticalData } from '@/utils/checkers';
+import { ParamaticalData } from '@/utils/checkers';
 import { useUserData } from '@/lib/stacks/user-stack';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { UserData } from '@/models/user-data';
@@ -87,21 +87,9 @@ export default function GameMode({ onModeSelect, topicsId }: GameModeProps) {
     if (!userData) return [];
 
     try {
-      const paramatical = await getParamatical(
-        userData.usersId,
-        lang,
-        userData.usersSex,
-        userData.usersDob
-      );
-
-      if (!paramatical) return [];
 
       const { data, error } = await supabaseBrowser.rpc("fetch_quiz_modes", {
-              p_user_id: paramatical.usersId,
-              p_locale: paramatical.locale,
-              p_country: paramatical.country,
-              p_gender: paramatical.gender,
-              p_age: paramatical.age,
+              p_locale: lang,
               p_topic_id: topicsId
             });
 

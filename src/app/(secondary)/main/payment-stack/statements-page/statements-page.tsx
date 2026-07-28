@@ -163,9 +163,9 @@ export default function StatementsPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          userId: paramatical.usersId,
+          userId: userData.usersId,
           country: paramatical.country,
-          locale: paramatical.locale,
+          locale: lang,
           gender: paramatical.gender,
           age: paramatical.age,
           email: resolvedEmail,

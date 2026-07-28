@@ -2,20 +2,18 @@
 -- function: get_user_engagement(p_user_id uuid, p_country text, p_locale text, p_gender text, p_age text)
 -- generated from Supabase project iewqfmkngcgayxbbnpiz (read-only mirror)
 
-CREATE OR REPLACE FUNCTION public.get_user_engagement(p_user_id uuid, p_country text, p_locale text, p_gender text, p_age text)
+CREATE OR REPLACE FUNCTION public.get_user_engagement(p_locale text)
  RETURNS jsonb
  LANGUAGE plpgsql
 AS $function$
 DECLARE
+    p_user_id uuid := auth.uid();
     result JSONB := '{"status": null, "error": null, "user_engagement_details": null, "called": "10200"}';
     user_engagement_details JSONB;
 BEGIN
     
 
 
-  -- [idor-guard] spoof-proof identity: a JWT caller's p_user_id is forced to their own id;
-  -- service-role callers (auth.uid() null) keep the passed id. No signature change (non-breaking).
-  IF auth.uid() IS NOT NULL THEN p_user_id := auth.uid(); END IF;
     SELECT  json_build_object(
       'user_engagement_progress_points_details',get_engagement_level_info_by_points(upt.user_engagement_progress_points,p_locale),
       'user_engagement_progress_questions',upt.user_engagement_progress_questions,

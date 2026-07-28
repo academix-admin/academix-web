@@ -2,11 +2,12 @@
 -- function: submit_or_update_user_profile(p_user_id uuid, p_locale text, p_country text, p_gender text, p_age text, p_method_id uuid, p_profile_data jsonb, p_profile_type text, p_status boolean)
 -- generated from Supabase project iewqfmkngcgayxbbnpiz (read-only mirror)
 
-CREATE OR REPLACE FUNCTION public.submit_or_update_user_profile(p_user_id uuid, p_locale text, p_country text, p_gender text, p_age text, p_method_id uuid, p_profile_data jsonb, p_profile_type text, p_status boolean)
+CREATE OR REPLACE FUNCTION public.submit_or_update_user_profile(p_locale text, p_method_id uuid, p_profile_data jsonb, p_profile_type text, p_status boolean)
  RETURNS jsonb
  LANGUAGE plpgsql
 AS $function$
 DECLARE
+    p_user_id uuid := auth.uid();
     result JSONB := '{"status": null, "payment_profile_details": null, "error": null}'; -- Initialize result JSONB
     profile_details JSONB;
     method_checker TEXT;
@@ -19,9 +20,6 @@ DECLARE
 BEGIN
 
 
-  -- [idor-guard] spoof-proof identity: a JWT caller's p_user_id is forced to their own id;
-  -- service-role callers (auth.uid() null) keep the passed id. No signature change (non-breaking).
-  IF auth.uid() IS NOT NULL THEN p_user_id := auth.uid(); END IF;
     -- Check if both sell and buy are inactive
     IF p_profile_type <> 'PaymentType.buy' AND p_profile_type <> 'PaymentType.sell' THEN
         result := jsonb_set(result, '{status}', '"PaymentProfile.no_type"', false);
@@ -141,11 +139,12 @@ EXCEPTION
 END;
 $function$;
 
-CREATE OR REPLACE FUNCTION public.submit_or_update_user_profile(p_user_id uuid, p_locale text, p_country text, p_gender text, p_age text, p_method_id uuid, p_profile_data jsonb, p_profile_type text, p_buy_status boolean DEFAULT false, p_sell_status boolean DEFAULT true)
+CREATE OR REPLACE FUNCTION public.submit_or_update_user_profile(p_locale text, p_method_id uuid, p_profile_data jsonb, p_profile_type text, p_buy_status boolean DEFAULT false, p_sell_status boolean DEFAULT true)
  RETURNS jsonb
  LANGUAGE plpgsql
 AS $function$
 DECLARE
+    p_user_id uuid := auth.uid();
     result JSONB := '{"status": null, "payment_profile_details": null, "error": null, "called": "119"}';
     profile_details JSONB;
     method_checker TEXT;
@@ -174,9 +173,6 @@ DECLARE
 BEGIN
 
 
-  -- [idor-guard] spoof-proof identity: a JWT caller's p_user_id is forced to their own id;
-  -- service-role callers (auth.uid() null) keep the passed id. No signature change (non-breaking).
-  IF auth.uid() IS NOT NULL THEN p_user_id := auth.uid(); END IF;
     -- Check if we have valid types 
     IF p_profile_type <> 'ProfileType.buy' AND p_profile_type <> 'ProfileType.sell' AND p_profile_type <> 'ProfileType.both' THEN
         result := jsonb_set(result, '{status}', '"PaymentProfile.no_type"', false);

@@ -2,18 +2,16 @@
 -- function: update_user_phone(p_user_id uuid, p_locale text, p_country text, p_gender text, p_age text, p_phone text)
 -- generated from Supabase project iewqfmkngcgayxbbnpiz (read-only mirror)
 
-CREATE OR REPLACE FUNCTION public.update_user_phone(p_user_id uuid, p_locale text, p_country text, p_gender text, p_age text, p_phone text)
+CREATE OR REPLACE FUNCTION public.update_user_phone(p_locale text, p_phone text)
  RETURNS jsonb
  LANGUAGE plpgsql
 AS $function$
 DECLARE
+    p_user_id uuid := auth.uid();
     result JSONB := '{"status": null, "profile_value": null, "error": null}';
     updated_phone TEXT;
 BEGIN
 
-  -- [idor-guard] spoof-proof identity: a JWT caller's p_user_id is forced to their own id;
-  -- service-role callers (auth.uid() null) keep the passed id. No signature change (non-breaking).
-  IF auth.uid() IS NOT NULL THEN p_user_id := auth.uid(); END IF;
     -- Validate required parameters
     IF p_user_id IS NULL OR p_phone IS NULL OR p_phone = '' THEN
         result := jsonb_set(result, '{status}', '"ProfileStatus.invalid_parameters"', false);

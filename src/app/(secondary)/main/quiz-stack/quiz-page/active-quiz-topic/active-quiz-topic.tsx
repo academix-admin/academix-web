@@ -146,21 +146,9 @@ export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) 
     if (!userData) return null;
 
     try {
-      const paramatical = await getParamatical(
-        userData.usersId,
-        lang,
-        userData.usersSex,
-        userData.usersDob
-      );
-
-      if (!paramatical) return null;
 
       const { data, error } = await supabaseBrowser.rpc("get_active_quiz", {
-        p_user_id: paramatical.usersId,
-        p_locale: paramatical.locale,
-        p_country: paramatical.country,
-        p_gender: paramatical.gender,
-        p_age: paramatical.age
+        p_locale: lang,
       });
 
 
@@ -329,7 +317,7 @@ export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) 
 
       const requestData = {
         userId: userData.usersId,
-        locale: paramatical.locale,
+        locale: lang,
         country: paramatical.country,
         gender: paramatical.gender,
         age: paramatical.age

@@ -124,8 +124,8 @@ export default function PaymentMethod({ profileType, walletId, onMethodSelect, p
       if (!paramatical) return [];
 
       const { data, error } = await supabaseBrowser.rpc(profileType === 'ProfileType.buy' ? "fetch_top_up_methods" : "fetch_withdraw_methods", {
-        p_user_id: paramatical.usersId,
-        p_locale: paramatical.locale,
+        p_user_id: userData.usersId,
+        p_locale: lang,
         p_country: paramatical.country,
         p_gender: paramatical.gender,
         p_age: paramatical.age,

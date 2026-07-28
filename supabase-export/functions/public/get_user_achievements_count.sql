@@ -2,11 +2,15 @@
 -- function: get_user_achievements_count(p_user_id uuid, p_country text, p_locale text, p_gender text, p_age text)
 -- generated from Supabase project iewqfmkngcgayxbbnpiz (read-only mirror)
 
-CREATE OR REPLACE FUNCTION public.get_user_achievements_count(p_user_id uuid, p_country text, p_locale text, p_gender text, p_age text)
+CREATE OR REPLACE FUNCTION public.get_user_achievements_count(p_locale text)
  RETURNS jsonb
  LANGUAGE plpgsql
 AS $function$
 DECLARE
+    p_user_id uuid;
+    p_country text;
+    p_gender text;
+    p_age text;
     result JSONB := '{"status": null, "error": null, "achievements_data": null, "called": "5200"}'; -- Default result structure
     achievements_data JSONB;
     achievements_count INT;
@@ -16,9 +20,9 @@ BEGIN
 
 
 
-  -- [idor-guard] spoof-proof identity: a JWT caller's p_user_id is forced to their own id;
-  -- service-role callers (auth.uid() null) keep the passed id. No signature change (non-breaking).
-  IF auth.uid() IS NOT NULL THEN p_user_id := auth.uid(); END IF;
+  -- [gate] identity + demographics via public.gate_check
+  SELECT users_id, country, gender, age INTO p_user_id, p_country, p_gender, p_age
+    FROM public.gate_check(NULL, p_locale);
     -- Get total available achievements count
 
         SELECT COUNT(*) 

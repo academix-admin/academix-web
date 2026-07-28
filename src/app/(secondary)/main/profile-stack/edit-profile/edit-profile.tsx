@@ -9,7 +9,6 @@ import { supabaseBrowser } from '@/lib/supabase/client';
 import { useNav, Scaffold } from "@academix-admin/navigation-stack";
 import { TextInput } from '@academix-admin/forms';
 import { capitalizeWords } from '@/utils/textUtils';
-import { getParamatical } from '@/utils/checkers';
 import { useUserData } from '@/lib/stacks/user-stack';
 import { UserData } from '@/models/user-data';
 import LoadingView from '@/components/LoadingView/LoadingView';
@@ -126,26 +125,10 @@ const UserNameView = ({ onEditing }: ViewProps) => {
     setSaveLoading(true);
 
     try {
-      const paramatical = await getParamatical(
-        userData.usersId,
-        lang,
-        userData.usersSex,
-        userData.usersDob,
-      );
-
-      if (!paramatical) {
-        setSaveLoading(false);
-        errorDialog.open(<p>{t('error_occurred')}</p>);
-        return;
-      }
 
       const { data, error } = await supabaseBrowser.rpc('update_user_username', {
         p_username: `@${editingValue}`,
-        p_user_id: paramatical.usersId,
-        p_locale: paramatical.locale,
-        p_country: paramatical.country,
-        p_gender: paramatical.gender,
-        p_age: paramatical.age,
+        p_locale: lang,
       });
 
       if (error) {
@@ -493,26 +476,10 @@ const PhoneNumberView = ({ onEditing }: ViewProps) => {
     setSaveLoading(true);
 
     try {
-      const paramatical = await getParamatical(
-        userData.usersId,
-        lang,
-        userData.usersSex,
-        userData.usersDob
-      );
-
-      if (!paramatical) {
-        setSaveLoading(false);
-        errorDialog.open(<p>{t('error_occurred')}</p>);
-        return;
-      }
 
       const { data, error } = await supabaseBrowser.rpc('update_user_phone', {
         p_phone: `+${editingValue}`,
-        p_user_id: paramatical.usersId,
-        p_locale: paramatical.locale,
-        p_country: paramatical.country,
-        p_gender: paramatical.gender,
-        p_age: paramatical.age,
+        p_locale: lang,
       });
 
       if (error) {
@@ -629,26 +596,10 @@ const EmailView = ({ onEditing }: ViewProps) => {
     setSaveLoading(true);
 
     try {
-      const paramatical = await getParamatical(
-        userData.usersId,
-        lang,
-        userData.usersSex,
-        userData.usersDob
-      );
-
-      if (!paramatical) {
-        setSaveLoading(false);
-        errorDialog.open(<p>{t('error_occurred')}</p>);
-        return;
-      }
 
       const { data, error } = await supabaseBrowser.rpc('update_user_email', {
         p_email: editingValue,
-        p_user_id: paramatical.usersId,
-        p_locale: paramatical.locale,
-        p_country: paramatical.country,
-        p_gender: paramatical.gender,
-        p_age: paramatical.age,
+        p_locale: lang,
       });
 
       if (error) {
@@ -759,27 +710,10 @@ const FullnameView = ({ onEditing }: ViewProps) => {
     setSaveLoading(true);
 
     try {
-      const paramatical = await getParamatical(
-        userData.usersId,
-        lang,
-        userData.usersSex,
-        userData.usersDob
-      );
-
-      if (!paramatical) {
-        console.error('Fullname Error:');
-        setSaveLoading(false);
-        errorDialog.open(<p>{t('error_occurred')}</p>);
-        return;
-      }
 
       const { data, error } = await supabaseBrowser.rpc('update_user_fullname', {
         p_fullname: capitalizeWords(editingValue),
-        p_user_id: paramatical.usersId,
-        p_locale: paramatical.locale,
-        p_country: paramatical.country,
-        p_gender: paramatical.gender,
-        p_age: paramatical.age,
+        p_locale: lang,
       });
 
       if (error) {
@@ -880,27 +814,10 @@ const ImageView = ({ onEditing }: ViewProps) => {
     setSaveLoading(true);
 
     try {
-      const paramatical = await getParamatical(
-        userData.usersId,
-        lang,
-        userData.usersSex,
-        userData.usersDob
-      );
-
-      if (!paramatical) {
-        console.error('Image Error: No paramatical data');
-        setSaveLoading(false);
-        errorDialog.open(<p>{t('error_occurred')}</p>);
-        return;
-      }
 
       // Get media operation ID
       const { data: operationId, error: operationError } = await supabaseBrowser.rpc('get_media_operation_id', {
-        p_user_id: paramatical.usersId,
-        p_locale: paramatical.locale,
-        p_country: paramatical.country,
-        p_gender: paramatical.gender,
-        p_age: paramatical.age,
+        p_locale: lang,
         p_path: userData.usersImage,
         p_type: 'MediaOperation.change_profile_picture'
       });
@@ -957,11 +874,7 @@ const ImageView = ({ onEditing }: ViewProps) => {
       // Update user record with new image path
       const { data, error } = await supabaseBrowser.rpc('update_user_image', {
         p_image_path: imagePath,
-        p_user_id: paramatical.usersId,
-        p_locale: paramatical.locale,
-        p_country: paramatical.country,
-        p_gender: paramatical.gender,
-        p_age: paramatical.age,
+        p_locale: lang,
         p_operation_id: operationId,
       });
 
@@ -1002,27 +915,10 @@ const ImageView = ({ onEditing }: ViewProps) => {
     setDeleteLoading(true);
 
     try {
-      const paramatical = await getParamatical(
-        userData.usersId,
-        lang,
-        userData.usersSex,
-        userData.usersDob
-      );
-
-      if (!paramatical) {
-        console.error('Image Error: No paramatical data');
-        setDeleteLoading(false);
-        errorDialog.open(<p>{t('error_occurred')}</p>);
-        return;
-      }
 
       // Get media operation ID
       const { data: operationId, error: operationError } = await supabaseBrowser.rpc('get_media_operation_id', {
-        p_user_id: paramatical.usersId,
-        p_locale: paramatical.locale,
-        p_country: paramatical.country,
-        p_gender: paramatical.gender,
-        p_age: paramatical.age,
+        p_locale: lang,
         p_path: userData.usersImage,
         p_type: 'MediaOperation.remove_profile_picture'
       });
@@ -1049,11 +945,7 @@ const ImageView = ({ onEditing }: ViewProps) => {
       // Update user record with null
       const { data, error } = await supabaseBrowser.rpc('update_user_image', {
         p_image_path: null,
-        p_user_id: paramatical.usersId,
-        p_locale: paramatical.locale,
-        p_country: paramatical.country,
-        p_gender: paramatical.gender,
-        p_age: paramatical.age,
+        p_locale: lang,
         p_operation_id: operationId,
       });
 

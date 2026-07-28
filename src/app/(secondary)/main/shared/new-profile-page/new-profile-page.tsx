@@ -720,30 +720,10 @@ export default function NewProfilePage(props: NewProfileProps) {
     setContinueState('loading');
 
     try {
-      const paramatical = await getParamatical(
-        userData.usersId,
-        lang,
-        userData.usersSex,
-        userData.usersDob
-      );
-
-      if (!paramatical) {
-        setContinueState('initial');
-        errorDialog.open(
-          <div style={{ textAlign: 'center' }}>
-            <p>{t('error_occurred')}</p>
-          </div>
-        );
-        return;
-      }
 
       const both = topUp && withdraw;
       const { data, error } = await supabaseBrowser.rpc("submit_or_update_user_profile", {
-        p_user_id: paramatical.usersId,
-        p_locale: paramatical.locale,
-        p_country: paramatical.country,
-        p_gender: paramatical.gender,
-        p_age: paramatical.age,
+        p_locale: lang,
         p_method_id: selectedMethodData.paymentMethodId,
         p_profile_type: !both ? profileType : 'ProfileType.both',
         p_profile_data: selectedPaymentData.toJson(),
@@ -829,8 +809,8 @@ export default function NewProfilePage(props: NewProfileProps) {
       const { data, error } = await supabaseBrowser.rpc(
         profileType === 'ProfileType.buy' ? "fetch_top_up_profiles" : "fetch_withdraw_profiles",
         {
-          p_user_id: paramatical.usersId,
-          p_locale: paramatical.locale,
+          p_user_id: userData.usersId,
+          p_locale: lang,
           p_country: paramatical.country,
           p_gender: paramatical.gender,
           p_age: paramatical.age,

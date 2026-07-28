@@ -6,7 +6,6 @@ import { useLanguage } from '@/context/LanguageContext';
 import styles from './withdraw-page.module.css';
 import { useNav, useProvideObject } from "@academix-admin/navigation-stack";
 import { StateStack } from '@academix-admin/state-stack';
-import { getParamatical } from '@/utils/checkers';
 import { checkLocation, checkFeatures, ensureSession } from '@/utils/checkers';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useUserData } from '@/lib/stacks/user-stack';
@@ -156,26 +155,14 @@ export default function WithdrawPage() {
       setContinueState('loading');
       withdrawBottomController.open();
 
-      const paramatical = await getParamatical(
-        userData.usersId,
-        lang,
-        userData.usersSex,
-        userData.usersDob
-      );
-
-      if (!paramatical) return;
 
       const { data, error } = await supabaseBrowser.rpc("create_or_get_academix_profile", {
-        p_user_id: paramatical.usersId,
-        p_locale: paramatical.locale,
-        p_country: paramatical.country,
-        p_gender: paramatical.gender,
-        p_age: paramatical.age,
+        p_locale: lang,
       });
 
       if (error || (data as any)?.error) throw error || (data as any).error;
 
-      const academixProfile = new PaymentProfileModel(data, paramatical.usersId);
+      const academixProfile = new PaymentProfileModel(data, userData.usersId);
       setContinueState('data');
       setAcademixProfileData(academixProfile);
     } catch (err) {

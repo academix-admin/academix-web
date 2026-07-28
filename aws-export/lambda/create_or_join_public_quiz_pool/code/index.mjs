@@ -333,12 +333,11 @@ export const handler = async (event) => {
     // a failure in one does not block the other. The user already has
     // confirmed membership from Step 3 regardless of what happens here.
     const [activeQuizResult, transactionResult] = await Promise.allSettled([
+      // get_active_quiz now derives country/gender/age server-side via gate_check
+      // (service-role caller → uses the passed p_user_id). Send only id + locale.
       supabase.rpc("get_active_quiz", {
         p_user_id: userId,
-        p_country: country,
-        p_locale:  locale,
-        p_gender:  gender,
-        p_age:     age
+        p_locale:  locale
       }),
       commit.transaction_id
         ? supabase.rpc("fetch_user_transaction_by_id", {

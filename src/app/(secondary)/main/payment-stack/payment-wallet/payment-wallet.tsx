@@ -157,8 +157,8 @@ export default function PaymentWallet({ profileType, onWalletData, onWalletAmoun
       }
 
       const { data, error } = await supabaseBrowser.rpc(profileType === 'ProfileType.buy' ? "fetch_user_top_up_wallet" : "fetch_user_withdraw_wallets", {
-        p_user_id: paramatical.usersId,
-        p_locale: paramatical.locale,
+        p_user_id: userData.usersId,
+        p_locale: lang,
         p_country: paramatical.country,
         p_gender: paramatical.gender,
         p_age: paramatical.age,
@@ -207,8 +207,8 @@ export default function PaymentWallet({ profileType, onWalletData, onWalletAmoun
       if (!paramatical) return [];
 
       const { data, error } = await supabaseBrowser.rpc(profileType === 'ProfileType.buy' ? "fetch_top_up_wallets" : "fetch_withdraw_wallets", {
-        p_user_id: paramatical.usersId,
-        p_locale: paramatical.locale,
+        p_user_id: userData.usersId,
+        p_locale: lang,
         p_country: paramatical.country,
         p_gender: paramatical.gender,
         p_age: paramatical.age,

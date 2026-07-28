@@ -8,7 +8,7 @@ import styles from './quiz-challenge.module.css';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useNav, useProvideObject, useObject } from "@academix-admin/navigation-stack";
 import { capitalizeWords } from '@/utils/textUtils';
-import { getParamatical, ensureSession } from '@/utils/checkers';
+import { ensureSession } from '@/utils/checkers';
 import { useUserData } from '@/lib/stacks/user-stack';
 import { UserData } from '@/models/user-data';
 import { BackendRedeemCodeModel } from '@/models/redeem-code-model';
