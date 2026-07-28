@@ -14,6 +14,7 @@ import { useAwaitableRouter } from "@/hooks/useAwaitableRouter";
 import { UserData } from '@/models/user-data';
 import { useUserData } from '@/lib/stacks/user-stack';
 import { fetchUserData } from '@/utils/checkers';
+import { signInGateStatus } from '@/utils/gate';
 import { useRouter } from "next/navigation";
 import { Header } from '@academix-admin/header';
 import { PinInput, Keypad } from '@academix-admin/pin-input';
@@ -137,6 +138,19 @@ export default function Otp(props: OtpProps) {
       }
 
       if (result?.error) {
+        // Completing OTP creates a session, so a region/cohort-blocked user is rejected by the
+        // auth.sessions gate trigger — which supabase-js flattens to a generic 500. Distinguish that
+        // from a wrong code and show the clear region message (resolved server-side via cf-ipcountry).
+        const e: any = result.error;
+        if (e?.status === 500 || String(e?.code) === 'unexpected_failure') {
+          const gs = await signInGateStatus(lang);
+          if (gs) {
+            setError(t('region_blocked'));
+            if (navigator.vibrate) navigator.vibrate(200);
+            setIsLoading(false);
+            return;
+          }
+        }
         setError(t('incorrect_code'));
         // Vibrate on error
         if (navigator.vibrate) navigator.vibrate(200);
