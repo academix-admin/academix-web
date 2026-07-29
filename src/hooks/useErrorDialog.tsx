@@ -10,6 +10,7 @@
  *   ...
  *   {errorDialogNode}
  */
+import { createPortal } from 'react-dom';
 import { useDialog } from '@academix-admin/dialog-viewer';
 import { useLanguage } from '@/context/LanguageContext';
 import { useTheme } from '@/context/ThemeContext';
@@ -27,7 +28,7 @@ export function useErrorDialog(onDismiss?: () => void) {
   // Dismiss = close + let the caller clear any driving error state (so it can't re-open).
   const dismiss = () => { dialog.close(); onDismiss?.(); };
 
-  const errorDialogNode = (
+  const viewer = (
     <dialog.DialogViewer
       title={t('error_text')}
       buttons={[{ text: t('ok_text'), variant: 'primary', onClick: dismiss }]}
@@ -40,6 +41,11 @@ export function useErrorDialog(onDismiss?: () => void) {
       }}
     />
   );
+
+  // Portal to <body>: the DialogViewer renders inline and its OK button has no type (=submit), so if
+  // the node sits inside a <form>, clicking OK would submit the form and re-run the handler (the
+  // "loading restarts after dismiss" bug). Rendering at body keeps it out of any form.
+  const errorDialogNode = typeof document !== 'undefined' ? createPortal(viewer, document.body) : null;
 
   return { showError, close: dismiss, errorDialogNode };
 }
