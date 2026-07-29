@@ -1,3 +1,5 @@
+import type { BackendHomeEngagementProgress, BackendUserEngagementModel } from '@academix-admin/domain-types';
+export type { BackendHomeEngagementProgress, BackendUserEngagementModel };
 interface HomeEngagementProgress {
   currentPoints: number;
   engagementLevelsId: number;
@@ -6,26 +8,6 @@ interface HomeEngagementProgress {
   nextEngagementLevelsId: number;
   engagementLevelsIdentity: string;
   nextEngagementLevelsIdentity: string;
-}
-
-interface BackendHomeEngagementProgress {
-  current_points: number;
-  engagement_levels_id: number;
-  points_to_next_level: number;
-  current_progress_percent: number;
-  next_engagement_levels_id: number;
-  engagement_levels_identity: string;
-  next_engagement_levels_identity: string;
-}
-
-interface BackendUserEngagementModel {
-  user_engagement_total_time: number;
-  user_engagement_total_questions: number;
-  user_engagement_progress_win_count: number;
-  user_engagement_progress_time: number;
-  user_engagement_progress_questions: number;
-  user_engagement_progress_quiz_count: number;
-  user_engagement_progress_points_details: BackendHomeEngagementProgress;
 }
 
 export class UserEngagementModel {

@@ -1,18 +1,6 @@
+import type { BackendPaymentDetails } from '@academix-admin/domain-types';
+export type { BackendPaymentDetails };
 // ---------------- Backend Interface ----------------
-export interface BackendPaymentDetails {
-  email?: string | null;
-  phone?: string | null;
-  country?: string | null;
-  network?: string | null;
-  fullname?: string | null;
-  private_account?: boolean | null;
-  e_naira?: boolean | null;
-  direct_debit?: boolean | null;
-  opay?: boolean | null;
-  bank_name?: string | null;
-  account_number?: string | null;
-}
-
 // ---------------- Frontend Model ----------------
 export class PaymentDetails {
   email?: string | null;

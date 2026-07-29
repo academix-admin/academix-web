@@ -1,9 +1,6 @@
-// --- Backend Interface ---
-export interface BackendUserBalanceModel {
-  users_id: string;
-  users_balance_amount: number;
-  users_balance_updated_at: string;
-}
+// --- Backend interface: single source of truth @academix-admin/domain-types ---
+import type { BackendUserBalanceModel } from '@academix-admin/domain-types';
+export type { BackendUserBalanceModel };
 
 // --- Frontend Model ---
 export class UserBalanceModel {

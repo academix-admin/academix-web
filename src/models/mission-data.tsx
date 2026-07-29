@@ -1,12 +1,6 @@
+import type { BackendMissionData } from '@academix-admin/domain-types';
+export type { BackendMissionData };
 // --- Backend Interfaces ---
-export interface BackendMissionData {
-  mission_count: number;
-  mission_finished: number;
-  mission_completed: number;
-  mission_not_rewarded: number;
-}
-
-
 // --- Frontend Models ---
 export class MissionData {
   missionCount: number;

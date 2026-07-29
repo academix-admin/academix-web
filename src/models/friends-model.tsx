@@ -1,14 +1,6 @@
+import type { BackendFriendsModel } from '@academix-admin/domain-types';
+export type { BackendFriendsModel };
 // --- Backend Interface ---
-export interface BackendFriendsModel {
-  users_id: string;
-  users_names: string;
-  users_username: string;
-  users_image: string | null;
-  sort_created_id: string;
-  users_created_at: string;
-  users_referred_status: string;
-}
-
 // --- Frontend Model ---
 export class FriendsModel {
   usersId: string;

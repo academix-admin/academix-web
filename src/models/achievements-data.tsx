@@ -1,11 +1,6 @@
+import type { BackendAchievementsData } from '@academix-admin/domain-types';
+export type { BackendAchievementsData };
 // --- Backend Interfaces ---
-export interface BackendAchievementsData {
-  achievements_count: number;
-  achievements_finished: number;
-  achievements_completed: number;
-  achievements_not_rewarded: number;
-}
-
 // --- Frontend Models ---
 export class AchievementsData {
   achievementsCount: number;

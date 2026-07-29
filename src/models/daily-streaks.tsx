@@ -1,22 +1,6 @@
+import type { BackendDailyStreaksModel, BackendRewardRedeemCodeModel } from '@academix-admin/domain-types';
+export type { BackendDailyStreaksModel, BackendRewardRedeemCodeModel };
 // --- Backend Interfaces ---
-export interface BackendRewardRedeemCodeModel {
-  redeem_code_id: string | null;
-  redeem_code_value: string | null;
-  redeem_code_expires: string | null;
-}
-
-export interface BackendDailyStreaksModel {
-  daily_streaks_max: number;
-  daily_streaks_date: string;
-  daily_streaks_count: number;
-  redeem_code_details: BackendRewardRedeemCodeModel | null;
-  daily_streaks_status: string;
-  daily_streaks_awarded: number;
-  daily_streaks_reached: boolean;
-  daily_streaks_created_at: string | null;
-  daily_streaks_date_number: number;
-}
-
 // --- Frontend Interfaces ---
 export interface RewardRedeemCodeModel {
   id?: string;

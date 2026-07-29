@@ -1,34 +1,6 @@
+import type { BackendPoolMemberModel, BackendPoolUserDetails as BackendUserDetails, BackendUserRoleDetails } from '@academix-admin/domain-types';
+export type { BackendPoolMemberModel, BackendUserDetails, BackendUserRoleDetails };
 // Backend Interfaces
-export interface BackendUserRoleDetails {
-  roles_id: string;
-  roles_level: number;
-  roles_identity: string;
-}
-
-export interface BackendUserDetails {
-  users_id: string;
-  users_image: string | null;
-  users_names: string;
-  users_username: string;
-  roles_details: BackendUserRoleDetails;
-}
-
-export interface BackendPoolMemberModel {
-  pools_members_id: string;
-  sort_created_id: string;
-  pools_id: string;
-  users_details: BackendUserDetails;
-  pools_members_rank: number;
-  pools_members_points: number;
-  pools_members_price: number;
-  pools_members_is_user: boolean;
-  pools_members_created_at: string;
-  pools_members_paid_amount: number | null;
-  pools_completed_question_tracker_size: number;
-  pools_completed_question_tracker_time: number;
-  challenge_question_count: number;
-}
-
 // Frontend Models
 export class UserRoleDetails {
   roleId: string;

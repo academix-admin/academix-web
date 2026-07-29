@@ -1,11 +1,6 @@
+import type { BackendRolesActivationData } from '@academix-admin/domain-types';
+export type { BackendRolesActivationData };
 // --- Backend Interfaces ---
-export interface BackendRolesActivationData {
-  roles_activation_amount: number;
-  roles_activation_activated: boolean;
-  transaction_id?: string | null;
-  roles_activation_is_fresh?: boolean;
-}
-
 // --- Frontend Models ---
 export class RolesActivation {
   rolesActivationAmount: number;

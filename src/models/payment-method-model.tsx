@@ -1,28 +1,6 @@
+import type { BackendPaymentMethodModel, BackendPaymentNetworkModel } from '@academix-admin/domain-types';
+export type { BackendPaymentMethodModel, BackendPaymentNetworkModel };
 // ---------------- Backend Interfaces ----------------
-export interface BackendPaymentMethodModel {
-  sort_created_id: string;
-  payment_method_id: string;
-  payment_method_identity: string;
-  payment_method_image?: string | null;
-  payment_method_checker: string;
-  payment_method_network: BackendPaymentNetworkModel[];
-  country_id: string;
-  country_identity: string;
-  country_phone_code: string;
-  country_phone_digit: number;
-  payment_method_sell_multiple: boolean;
-  payment_method_buy_multiple: boolean;
-  payment_method_sell_active: boolean;
-  payment_method_buy_active: boolean;
-  payment_wallet_id: string;
-}
-
-export interface BackendPaymentNetworkModel {
-  identity: string;
-  image?: string | null;
-  active: boolean;
-}
-
 // ---------------- Frontend Models ----------------
 export class PaymentNetworkModel {
   identity: string;

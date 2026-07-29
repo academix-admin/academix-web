@@ -1,46 +1,6 @@
+import type { BackendAchievementsModel, BackendAchievementsProgressDetails, BackendRewardClaimModel, BackendRewardDetails, BackendRewardRedeemCodeModel } from '@academix-admin/domain-types';
+export type { BackendAchievementsModel, BackendAchievementsProgressDetails, BackendRewardClaimModel, BackendRewardDetails, BackendRewardRedeemCodeModel };
 // Backend Interfaces
-export interface BackendAchievementsModel {
-  achievements_id: string;
-  achievements_type: string;
-  reward_details: BackendRewardDetails | null;
-  sort_created_id: number;
-  achievements_requirement: { count: number };
-  achievements_title: string;
-  achievements_image?: string | null;
-  achievements_progress_details: BackendAchievementsProgressDetails | null;
-  achievements_description: string;
-}
-
-export interface BackendRewardDetails {
-  reward_id: string;
-  reward_type: string;
-  reward_limit: number;
-  reward_value: number;
-  reward_instruction: string;
-}
-
-export interface BackendAchievementsProgressDetails {
-  achievements_progress_id?: string | null;
-  achievements_progress_count: number;
-  achievements_progress_required: number;
-  achievements_progress_rewarded: boolean;
-  achievements_progress_completed: boolean;
-  achievements_progress_created_at?: string | null;
-  achievements_progress_updated_at?: string | null;
-  redeem_code_details?: BackendRewardRedeemCodeModel | null;
-}
-
-export interface BackendRewardRedeemCodeModel {
-  redeem_code_id?: string | null;
-  redeem_code_value?: string | null;
-  redeem_code_expires?: string | null;
-}
-
-export interface BackendRewardClaimModel {
-  reward_claim_amount: number;
-  reward_claim_redeem_code?: BackendRewardRedeemCodeModel | null;
-}
-
 export class AchievementsModel {
   achievementsId: string;
   achievementsType: string;

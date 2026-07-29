@@ -1,15 +1,6 @@
+import type { BackendPaymentCompletionData } from '@academix-admin/domain-types';
+export type { BackendPaymentCompletionData };
 // ---------------- Backend Interface ----------------
-export interface BackendPaymentCompletionData {
-  link?: string | null;
-  code?: string | null;
-  bank?: string | null;
-  account?: string | null;
-  amount?: number | null;
-  reference?: string | null;
-  note?: string | null;
-  expire?: string | null;
-}
-
 // ---------------- Frontend Model ----------------
 export class PaymentCompletionData {
   link?: string | null;

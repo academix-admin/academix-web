@@ -1,30 +1,6 @@
+import type { BackendBuyPaymentWalletModel, BackendSellPaymentWalletModel } from '@academix-admin/domain-types';
+export type { BackendBuyPaymentWalletModel, BackendSellPaymentWalletModel };
 // ---------------- Backend Interfaces ----------------
-export interface BackendBuyPaymentWalletModel {
-  sort_created_id: string;
-  payment_wallet_id: string;
-  payment_wallet_image?: string | null;
-  payment_wallet_buy_fee: number;
-  payment_wallet_buy_fee_flat: number;
-  payment_wallet_buy_min: number;
-  payment_wallet_buy_rate: number;
-  payment_wallet_currency: string;
-  payment_wallet_identity: string;
-  payment_wallet_buy_rate_type: string;
-}
-
-export interface BackendSellPaymentWalletModel {
-  sort_created_id: string;
-  payment_wallet_id: string;
-  payment_wallet_image?: string | null;
-  payment_wallet_sell_fee: number;
-  payment_wallet_sell_fee_flat: number;
-  payment_wallet_sell_min: number;
-  payment_wallet_sell_rate: number;
-  payment_wallet_currency: string;
-  payment_wallet_identity: string;
-  payment_wallet_sell_rate_type: string;
-}
-
 // Type guard functions
 function isBuyPaymentWalletModel(data: any): data is BackendBuyPaymentWalletModel {
   return data && 'payment_wallet_buy_min' in data;

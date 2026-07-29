@@ -1,46 +1,6 @@
+import type { BackendMissionModel, BackendMissionProgressDetails, BackendRewardClaimModel, BackendRewardDetails, BackendRewardRedeemCodeModel } from '@academix-admin/domain-types';
+export type { BackendMissionModel, BackendMissionProgressDetails, BackendRewardClaimModel, BackendRewardDetails, BackendRewardRedeemCodeModel };
 // Backend Interfaces
-export interface BackendMissionModel {
-  mission_id: string;
-  mission_type: string;
-  reward_details: BackendRewardDetails | null;
-  sort_created_id: number;
-  mission_requirement: { count: number };
-  mission_title: string;
-  mission_image?: string | null;
-  mission_progress_details: BackendMissionProgressDetails | null;
-  mission_description: string;
-}
-
-export interface BackendRewardDetails {
-  reward_id: string;
-  reward_type: string;
-  reward_limit: number;
-  reward_value: number;
-  reward_instruction: string;
-}
-
-export interface BackendMissionProgressDetails {
-  mission_progress_id?: string | null;
-  mission_progress_count: number;
-  mission_progress_required: number;
-  mission_progress_rewarded: boolean;
-  mission_progress_completed: boolean;
-  mission_progress_created_at?: string | null;
-  mission_progress_updated_at?: string | null;
-  redeem_code_details?: BackendRewardRedeemCodeModel | null;
-}
-
-export interface BackendRewardRedeemCodeModel {
-  redeem_code_id?: string | null;
-  redeem_code_value?: string | null;
-  redeem_code_expires?: string | null;
-}
-
-export interface BackendRewardClaimModel {
-  reward_claim_amount: number;
-  reward_claim_redeem_code?: BackendRewardRedeemCodeModel | null;
-}
-
 export class MissionModel {
   missionId: string;
   missionType: string;

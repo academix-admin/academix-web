@@ -1,48 +1,8 @@
+import type { BackendPaymentMethodDetails, BackendPaymentProfileDetails, BackendPaymentWalletDetails, BackendTransactionModel, BackendUserDetails } from '@academix-admin/domain-types';
+export type { BackendPaymentMethodDetails, BackendPaymentProfileDetails, BackendPaymentWalletDetails, BackendTransactionModel, BackendUserDetails };
 import { PaymentDetails, BackendPaymentDetails } from '@/models/payment-details';
 
 // --- Backend Interfaces ---
-export interface BackendTransactionModel {
-  pools_id: string | null;
-  transaction_id: string;
-  sort_created_id: string;
-  transaction_fee: number;
-  transaction_type: string;
-  transaction_created_at: string;
-  transaction_sender_rate: number;
-  transaction_receiver_rate: number;
-  transaction_sender_amount: number;
-  transaction_sender_status: string;
-  transaction_receiver_amount: number;
-  transaction_receiver_status: string;
-  transaction_sender_reference: string;
-  payment_profile_sender_details: BackendPaymentProfileDetails | null;
-  payment_profile_receiver_details: BackendPaymentProfileDetails | null;
-}
-
-export interface BackendPaymentProfileDetails {
-  users_details: BackendUserDetails;
-  payment_method_details: BackendPaymentMethodDetails;
-  payment_wallet_details: BackendPaymentWalletDetails;
-}
-
-export interface BackendPaymentMethodDetails {
-  payment_method_id: string;
-  payment_method_identity: string;
-  payment_method_checker: string;
-}
-
-export interface BackendPaymentWalletDetails {
-  payment_wallet_id: string;
-  payment_wallet_identity: string;
-  payment_wallet_currency: string;
-}
-
-export interface BackendUserDetails {
-  users_id: string | null;
-  users_names: string;
-  payment_details: BackendPaymentDetails | null;
-}
-
 // --- Frontend Models ---
 
 export class UserDetails {

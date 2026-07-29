@@ -1,15 +1,9 @@
+import type { BackendPaymentProfileModel } from '@academix-admin/domain-types';
+export type { BackendPaymentProfileModel };
 import { PaymentDetails } from '@/models/payment-details';
 import { BackendPaymentDetails } from '@/models/payment-details';
 
 // ---------------- Backend Interfaces ----------------
-export interface BackendPaymentProfileModel {
-  payment_profile_id: string;
-  payment_method_id: string;
-  sort_created_id: string;
-  users_id: string;
-  payment_details: BackendPaymentDetails | null;
-}
-
 // ---------------- Frontend Models ----------------
 export class PaymentProfileModel {
   paymentProfileId: string;

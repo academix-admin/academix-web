@@ -1,25 +1,15 @@
+import type { BackendCountryData, BackendLanguageData, BackendReferredUserData, BackendRoleData, BackendUserData } from '@academix-admin/domain-types';
+export type { BackendCountryData, BackendLanguageData, BackendReferredUserData, BackendRoleData, BackendUserData };
 interface RoleData {
   rolesId: string;
   rolesLevel: number;
   rolesType: string;
 }
 
-interface BackendRoleData {
-  roles_id: string;
-  roles_level: number;
-  roles_checker: string;
-}
-
 interface LanguageData {
   languageId: string;
   languageIdentity: string;
   languageCode: string;
-}
-
-interface BackendLanguageData {
-  language_id: string;
-  language_identity: string;
-  language_code: string;
 }
 
 interface CountryData {
@@ -29,49 +19,12 @@ interface CountryData {
   countryTwoIsoCode: string;
 }
 
-interface BackendCountryData {
-  country_id: string;
-  country_identity: string;
-  country_image: string;
-  country_two_iso_code: string;
-}
-
 interface ReferredUserData {
   usersReferredId: string;
   usersReferredStatus: string;
   usersNames: string;
   usersUsername: string;
   usersImage: string | null;
-}
-
-interface BackendReferredUserData {
-  users_referred_id: string;
-  users_referred_status: string;
-  users_names: string;
-  users_username: string;
-  users_image: string | null;
-}
-
-export interface BackendUserData {
-  users_id: string;
-  users_username: string;
-  users_names: string;
-  users_email: string;
-  users_phone: string | null;
-  users_dob: string;
-  users_sex: string;
-  users_image: string | null;
-  users_referred_id: string | null;
-  users_verified: boolean;
-  country_id: string;
-  language_id: string;
-  users_created_at: string;
-  transaction_id: string | null;
-  users_roles_access: any;
-  roles_table?: BackendRoleData | null;
-  language_table?: BackendLanguageData | null;
-  country_table?: BackendCountryData | null;
-  users_referred_details?: BackendReferredUserData | null;
 }
 
 export class UserData {

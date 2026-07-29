@@ -1,18 +1,5 @@
-export interface BackendQuizHistory {
-  pools_id: string;
-  pools_duration: number;
-  sort_created_id: string;
-  topics_identity: string;
-  topics_image?: string;
-  pools_members_rank: number;
-  pools_members_points: number;
-  challenge_question_count: number;
-  pools_members_created_at: string;
-  pools_members_paid_amount: number;
-  pools_completed_question_tracker_time: number;
-  pools_completed_question_tracker_size: number;
-}
-
+import type { BackendQuizHistory } from '@academix-admin/domain-types';
+export type { BackendQuizHistory };
 export class QuizHistory {
   poolsId: string;
   poolsDuration: number;

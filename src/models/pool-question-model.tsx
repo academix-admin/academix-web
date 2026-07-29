@@ -1,44 +1,8 @@
+import type { BackendOptionModel, BackendPoolQuestion, BackendPoolTimeModel, BackendPoolTypeModel, BackendQuestionModel } from '@academix-admin/domain-types';
+export type { BackendOptionModel, BackendPoolQuestion, BackendPoolTimeModel, BackendPoolTypeModel, BackendQuestionModel };
 // ========================
 // Backend Interfaces
 // ========================
-
-export interface BackendOptionModel {
-  options_id: string;
-  options_image?: string | null;
-  options_max?: number | null;
-  options_min?: number | null;
-  options_unit?: string | null;
-  options_selected: boolean;
-  options_identity: string;
-}
-
-export interface BackendQuestionModel {
-  questions_id: string;
-  questions_image?: string | null;
-  questions_text: string;
-}
-
-export interface BackendPoolTimeModel {
-  question_time_id: string;
-  question_time_value: number;
-}
-
-export interface BackendPoolTypeModel {
-  question_type_id: string;
-  question_type_identity: string;
-  question_type_local_identity: string;
-}
-
-export interface BackendPoolQuestion {
-  pools_question_id: string;
-  question_time?: number | null;
-  question_status?: string | null;
-  options_selected?: string[] | null;
-  question_time_data: BackendPoolTimeModel;
-  question_type_data: BackendPoolTypeModel;
-  question_data: BackendQuestionModel;
-  options_data: BackendOptionModel[];
-}
 
 // ========================
 // Frontend Models

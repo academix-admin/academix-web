@@ -1,11 +1,8 @@
+import type { BackendDailyPerformance } from '@academix-admin/domain-types';
+export type { BackendDailyPerformance };
 interface DailyPerformance {
   dailyPerformanceEarnings: number;
   dailyPerformanceQuiz: number;
-}
-
-interface BackendDailyPerformance {
-  daily_performance_for_earning: number;
-  daily_performance_for_quiz: number;
 }
 
 export class DailyPerformanceModel {

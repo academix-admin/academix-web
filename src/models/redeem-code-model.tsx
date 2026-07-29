@@ -1,20 +1,8 @@
+import type { BackendGiveBackCollectionDetails, BackendGiveBackDetail, BackendGiveBackModel, BackendRedeemCodeModel } from '@academix-admin/domain-types';
+export type { BackendGiveBackCollectionDetails, BackendGiveBackDetail, BackendGiveBackModel, BackendRedeemCodeModel };
 // ========================
 // Backend Interfaces
 // ========================
-export interface BackendRedeemCodeModel {
-  redeem_code_id: string;
-  redeem_code_amount: number;
-  redeem_code_value: string;
-  sort_created_id: string;
-  redeem_code_expires?: string | null;
-  redeem_rule_top: boolean;
-  redeem_rule_mid: boolean;
-  redeem_rule_bot: boolean;
-  redeem_rule_rank1: boolean;
-  redeem_rule_rank2: boolean;
-  redeem_rule_rank3: boolean;
-}
-
 // ========================
 // Frontend Model
 // ========================
@@ -89,38 +77,6 @@ export class RedeemCodeModel {
 // ========================
 // GiveBack Backend Interface
 // ========================
-export interface BackendGiveBackDetail {
-  giveback_id: string;
-  giveback_code: string;
-  giveback_unit_amount: number;
-  giveback_total_usage: number;
-  giveback_total_amount: number;
-  giveback_identifier: string | null;
-  remaining_slots: number;
-  claimed_count: number;
-  sort_created_id: string;
-  redeem_rule_top: boolean;
-  redeem_rule_mid: boolean;
-  redeem_rule_bot: boolean;
-  redeem_rule_rank1: boolean;
-  redeem_rule_rank2: boolean;
-  redeem_rule_rank3: boolean;
-}
-
-export interface BackendGiveBackCollectionDetails {
-  has_claimed: boolean;
-  redeem_code_value: string | null;
-  is_spent: boolean;
-  remaining_slots: number;
-  can_claim: boolean;
-  has_password: boolean;
-}
-
-export interface BackendGiveBackModel {
-  giveback_detail: BackendGiveBackDetail;
-  giveback_collection_details: BackendGiveBackCollectionDetails | null;
-}
-
 // ========================
 // GiveBack Frontend Model
 // ========================

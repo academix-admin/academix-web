@@ -1,71 +1,8 @@
+import type { BackendChallengeModel, BackendGameModeModel, BackendQuizPool, BackendUserDisplayQuizTopicModel } from '@academix-admin/domain-types';
+export type { BackendChallengeModel, BackendGameModeModel, BackendQuizPool, BackendUserDisplayQuizTopicModel };
 // ========================
 // Backend Interfaces
 // ========================
-export interface BackendGameModeModel {
-  game_mode_id: string;
-  game_mode_identity: string;
-  game_mode_checker: string;
-}
-
-export interface BackendChallengeModel {
-  challenge_id: string;
-  challenge_development_charge: number;
-  challenge_price: number;
-  challenge_top_share: number;
-  challenge_mid_share: number;
-  challenge_bot_share: number;
-  challenge_waiting_time?: number | null;
-  challenge_min_participants: number;
-  challenge_max_participants: number;
-  challenge_identity: string;
-  challenge_question_count: number;
-  game_mode_details?: BackendGameModeModel | null;
-}
-
-export interface BackendQuizPool {
-  sort_created_id: string;
-  sort_updated_id: string;
-  pools_id: string;
-  pools_locale: string;
-  pools_visible: boolean;
-  pools_allow_submission?: boolean;
-  pools_status: string;
-  pools_auth: string;
-  pools_code?: string | null;
-  pools_job?: string | null;
-  pools_duration?: number | null;
-  challenge_details?: BackendChallengeModel | null;
-  pools_starting_at?: string | null;
-  pools_job_end_at?: string | null;
-  pools_graded_at?: string | null;
-  pools_ranked_at?: string | null;
-  pools_rewarded_at?: string | null;
-  pools_completed_at?: string | null;
-  pools_members_count: number;
-  question_tracker_count: number;
-}
-
-export interface BackendUserDisplayQuizTopicModel {
-  sort_created_id: string;
-  sort_updated_id: string;
-  topics_id: string;
-  topics_identity: string;
-  topics_created_at: string;
-  topics_updated_at: string;
-  topics_image?: string | null;
-  topics_description?: string;
-  creator_details: {
-    users_id: string;
-    users_image?: string | null;
-    users_names: string;
-    users_username: string;
-  };
-  pools_details?: BackendQuizPool | null;
-  topics_sponsorship?: string;
-  creator_is_followed: boolean;
-  topic_is_personalised: boolean;
-}
-
 // ========================
 // Frontend Models
 // ========================
