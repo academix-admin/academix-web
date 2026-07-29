@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { PinInput, Keypad } from '@academix-admin/pin-input';
+import Image from 'next/image';
 import { useAuthContext } from '@/providers/AuthProvider';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
@@ -46,6 +47,12 @@ export function AppLock({ children }: { children: React.ReactNode }) {
     try { localStorage.setItem(LAST_ACTIVE_KEY, String(Date.now())); } catch { /* ignore */ }
     setLockedState(false);
   }, [setLockedState]);
+
+  // Escape hatch on the lock screen — sign out (local scope so it never hangs; the redirect guard
+  // sends this device to login). Lets a user who can't recall their PIN leave the lock.
+  const signOutFromLock = useCallback(() => {
+    supabaseBrowser.auth.signOut({ scope: 'local' }).catch(() => { /* already gone */ });
+  }, []);
 
   // Typing a fresh PIN after a failure clears the stale error immediately.
   const onPinChange = useCallback((v: string) => {
@@ -149,6 +156,25 @@ export function AppLock({ children }: { children: React.ReactNode }) {
           aria-modal="true"
           aria-label="App locked"
         >
+          <div className={styles.lockHeader}>
+            <Image
+              src="/assets/image/academix-logo.png"
+              alt="Academix"
+              width={36}
+              height={36}
+              className={styles.lockLogo}
+              priority
+            />
+            <button
+              type="button"
+              className={styles.lockSignOut}
+              onClick={signOutFromLock}
+              disabled={busy}
+            >
+              {t('sign_out')}
+            </button>
+          </div>
+
           <div className={styles.top}>
             <h2 className={styles.title}>{t('lock_enter_pin')}</h2>
             <p className={styles.subtitle}>{t('lock_subtitle')}</p>

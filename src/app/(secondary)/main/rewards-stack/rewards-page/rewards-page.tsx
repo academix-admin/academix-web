@@ -31,8 +31,10 @@ export default function RewardsPage() {
       [compState]
     );
 
-    // we have an error but not all loaded yet
-    const error = loadedCount < 5 && errorCount > 0;
+    // Page-level error ONLY on total failure (nothing loaded). If any section has data, show the
+    // content — individual empty/errored sections render their own state, so we never stack a
+    // page error on top of loaded content.
+    const error = loadedCount === 0 && errorCount > 0;
 
     // Reveal the body sections together once loads settle (see useSettledReveal). The title
     // shows early; the rest stay mounted (fetching) but hidden behind one LoadingView.

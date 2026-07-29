@@ -286,7 +286,7 @@ export default function GiveBackPage() {
       setFetchLoading(true);
       const items = await fetchGiveBacks(userData, 10, new PaginateModel());
       extractLatest(items);
-      set(items);
+      set((items == null || (Array.isArray(items) && items.length === 0)) ? get() : items);
       setEmpty(items.length === 0);
       setFetchLoading(false);
     });

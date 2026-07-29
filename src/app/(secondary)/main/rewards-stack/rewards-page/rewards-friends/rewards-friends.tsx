@@ -186,7 +186,7 @@ export default function RewardsFriends({ onStateChange }: ComponentStateProps) {
     demandFriendsModel(async ({ get, set }) => {
       const friendHistories = await fetchFriendsModel(userData, 10, new PaginateModel());
       extractLatest(friendHistories);
-      set(friendHistories);
+      set((friendHistories == null || (Array.isArray(friendHistories) && friendHistories.length === 0)) ? get() : friendHistories);
       setFirstLoaded(true);
     });
   }, [demandFriendsModel, userData]);

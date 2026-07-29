@@ -33,7 +33,8 @@ export default function HomePage() {
   );
 
   // we have an error but not all loaded yet
-  const error = loadedCount < 5 && errorCount > 0;
+  // Page-level error ONLY on total failure (nothing loaded) — never stack an error over loaded content.
+  const error = loadedCount === 0 && errorCount > 0;
 
   // Reveal the body sections TOGETHER once their loads settle, instead of painting them in
   // one-by-one. On a cold start (e.g. right after Google sign-in — a full-page reload) each

@@ -211,7 +211,7 @@ export default function PaymentTransactions({ onStateChange }: ComponentStatePro
     demandTransactionModels(async ({ get, set }) => {
       const models = await fetchTransactionModels(userData, 10, new PaginateModel());
       extractLatest(models);
-      set(models);
+      set((models == null || (Array.isArray(models) && models.length === 0)) ? get() : models);
       setFirstLoaded(true);
       onStateChange?.('data');
     });

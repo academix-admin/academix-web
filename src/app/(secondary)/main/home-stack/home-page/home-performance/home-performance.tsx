@@ -40,7 +40,7 @@ export default function HomePerformance({ onStateChange }: ComponentStateProps) 
         const dailyPerformance = new DailyPerformanceModel(data.user_daily_performance);
 
         if (data.status === "PerformanceStatus.success") {
-          set(dailyPerformance);
+          set((dailyPerformance == null || (Array.isArray(dailyPerformance) && dailyPerformance.length === 0)) ? get() : dailyPerformance);
           onStateChange?.('data');
           return;
         }

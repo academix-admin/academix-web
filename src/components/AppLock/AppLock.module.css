@@ -14,6 +14,25 @@
 .light { background: #ffffff; color: #0f172a; }
 .dark { background: #121212; color: #f1f5f9; }
 
+/* Header: academix logo (left) + sign-out (right) */
+.lockHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+.lockLogo { display: block; height: auto; }
+.lockSignOut {
+  background: none;
+  border: none;
+  color: #FF3B30;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 6px 8px;
+}
+.lockSignOut:disabled { opacity: 0.5; cursor: default; }
+
 /* Top: heading + PIN boxes */
 .top {
   display: flex;

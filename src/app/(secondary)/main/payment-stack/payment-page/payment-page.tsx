@@ -31,7 +31,8 @@ export default function PaymentPage() {
     );
 
     // we have an error but not all loaded yet
-    const error = loadedCount < 4 && errorCount > 0;
+    // Page-level error ONLY on total failure (nothing loaded) — never stack an error over loaded content.
+    const error = loadedCount === 0 && errorCount > 0;
 
     // Title/balance/action show immediately; the transactions list stays mounted (fetching)
     // but hidden until loads settle, then reveals — no empty-then-fill on a cold start.

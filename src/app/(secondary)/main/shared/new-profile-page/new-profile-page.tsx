@@ -375,7 +375,7 @@ const BankView = ({ onSubmit, methodId }: BankViewProps) => {
         return;
       }
       if (banks.length > 0) {
-        set(banks);
+        set((banks == null || (Array.isArray(banks) && banks.length === 0)) ? get() : banks);
         bankSelectController.setSelectionState("data");
       } else {
         bankSelectController.setSelectionState("empty");

@@ -35,7 +35,8 @@ export default function ProfilePage() {
 
 
     // we have an error but not all loaded yet
-    const error = loadedCount < 4 && errorCount > 0;
+    // Page-level error ONLY on total failure (nothing loaded) — never stack an error over loaded content.
+    const error = loadedCount === 0 && errorCount > 0;
 
     // Reveal the body sections together once loads settle. Sections stay mounted (fetching)
     // while hidden — the previous `{show && ...}` gating UNMOUNTED them, so they never
