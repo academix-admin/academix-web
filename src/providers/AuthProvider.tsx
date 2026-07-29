@@ -370,7 +370,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // this device to /login — immediately, instead of the JWT lingering valid for up to its 60-min TTL.
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const onRevoked = () => { supabaseBrowser.auth.signOut().catch(() => { /* already gone */ }); };
+    // scope: 'local' — the session is ALREADY revoked server-side, so a global (server) signOut would
+    // just hang on the dead session and never fire SIGNED_OUT (so no redirect). Clearing locally is
+    // instant and triggers the redirect guard.
+    const onRevoked = () => { supabaseBrowser.auth.signOut({ scope: 'local' }).catch(() => { /* already gone */ }); };
     window.addEventListener('ax:session-revoked', onRevoked);
     return () => window.removeEventListener('ax:session-revoked', onRevoked);
   }, []);

@@ -86,7 +86,7 @@ const ensureSession = async (): Promise<string | null> => {
   const { data } = await supabaseBrowser.auth.getSession();
   const jwt = data.session?.access_token;
   if (!jwt) {
-    try { await supabaseBrowser.auth.signOut(); } catch { /* already gone */ }
+    try { await supabaseBrowser.auth.signOut({ scope: 'local' }); } catch { /* already gone */ }
     return null;
   }
   return jwt;

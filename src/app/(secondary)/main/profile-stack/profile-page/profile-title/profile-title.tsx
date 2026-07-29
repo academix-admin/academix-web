@@ -75,14 +75,17 @@ export default function ProfileTitle({ onStateChange }: ComponentStateProps) {
   };
 
   const confirmSignOut = async () => {
-    if (userData) {
-      try {
-        setSigningOut(true);
-        await supabaseBrowser.auth.signOut();
-      } catch (error) {
-        console.error('Sign out error:', error);
-        setSigningOut(false);
-      }
+    try {
+      setSigningOut(true);
+      // scope: 'local' clears THIS device's session immediately — no server round-trip that can hang
+      // on a slow/already-revoked session (which left the button stuck loading). Clearing the local
+      // session fires onAuthStateChange SIGNED_OUT → AuthProvider's redirect guard sends us out.
+      await supabaseBrowser.auth.signOut({ scope: 'local' });
+    } catch (error) {
+      console.error('Sign out error:', error);
+    } finally {
+      setSigningOut(false);
+      signOutDialog.close();
     }
   };
 
