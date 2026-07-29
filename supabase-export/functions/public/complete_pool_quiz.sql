@@ -1,5 +1,5 @@
 -- schema:   public
--- function: complete_pool_quiz(p_pool_id uuid)
+-- function: complete_pool_quiz
 -- generated from Supabase project iewqfmkngcgayxbbnpiz (read-only mirror)
 
 CREATE OR REPLACE FUNCTION public.complete_pool_quiz(p_pool_id uuid)
@@ -126,7 +126,7 @@ BEGIN
     END IF;
 
     -- ── [4d] Resolve payment profiles ─────────────────────────────────────────
-    SELECT * INTO receiver_profile FROM create_or_get_academix_profile(member,'','','','');
+    SELECT * INTO receiver_profile FROM create_or_get_academix_profile(member);
     SELECT * INTO sender_profile   FROM create_or_get_wallet_profile(member,'','','','');
 
     IF sender_profile IS NULL OR receiver_profile IS NULL THEN

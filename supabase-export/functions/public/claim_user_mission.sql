@@ -1,5 +1,5 @@
 -- schema:   public
--- function: claim_user_mission(p_user_id uuid, p_locale text, p_country text, p_gender text, p_age text, p_mission_id uuid)
+-- function: claim_user_mission
 -- generated from Supabase project iewqfmkngcgayxbbnpiz (read-only mirror)
 
 CREATE OR REPLACE FUNCTION public.claim_user_mission(p_locale text, p_mission_id uuid)
@@ -49,7 +49,7 @@ BEGIN
     WHERE mt.mission_id = p_mission_id;
 
     IF progress_rewarded = TRUE THEN
-        SELECT * INTO count_details FROM public.get_user_missions_count(p_user_id,p_country,p_locale,p_gender,p_age);
+        SELECT * INTO count_details FROM public.get_user_missions_count(p_locale);
 
         IF (count_details->>'mission_data')::JSONB IS NOT NULL THEN
             result := jsonb_set(result, '{mission_count_details}', (count_details->>'mission_data')::JSONB, false);
@@ -83,7 +83,7 @@ BEGIN
             'reward_claim_amount', (reward_data->>'value')::NUMERIC
         ));
 
-        SELECT * INTO count_details FROM public.get_user_missions_count(p_user_id,p_country,p_locale,p_gender,p_age);
+        SELECT * INTO count_details FROM public.get_user_missions_count(p_locale);
 
         IF (count_details->>'mission_data')::JSONB IS NOT NULL THEN
             result := jsonb_set(result, '{mission_count_details}', (count_details->>'mission_data')::JSONB, false);
@@ -104,3 +104,4 @@ EXCEPTION
         RETURN result;
 END;
 $function$
+

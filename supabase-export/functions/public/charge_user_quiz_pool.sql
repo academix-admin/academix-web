@@ -1,5 +1,5 @@
 -- schema:   public
--- function: charge_user_quiz_pool(p_user_id uuid, p_challenge_id uuid, p_locale text, p_country text, p_gender text, p_age text, p_redeem_code text)
+-- function: charge_user_quiz_pool
 -- generated from Supabase project iewqfmkngcgayxbbnpiz (read-only mirror)
 
 CREATE OR REPLACE FUNCTION public.charge_user_quiz_pool(p_user_id uuid, p_challenge_id uuid, p_locale text, p_country text, p_gender text, p_age text, p_redeem_code text DEFAULT NULL::text)
@@ -85,7 +85,7 @@ BEGIN
     IF pay_amount > 0 THEN
  
         SELECT * INTO sender_profile
-        FROM create_or_get_academix_profile(p_user_id, p_locale, p_country, p_gender, p_age);
+        FROM create_or_get_academix_profile(p_user_id);
  
         IF sender_profile IS NULL THEN
             result := jsonb_set(result, '{status}', '"Payment.profile_error"');

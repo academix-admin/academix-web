@@ -1,5 +1,5 @@
 -- schema:   public
--- function: get_quiz_result(p_user_id uuid, p_locale text, p_country text, p_gender text, p_age text, p_pool_id uuid)
+-- function: get_quiz_result
 -- generated from Supabase project iewqfmkngcgayxbbnpiz (read-only mirror)
 
 CREATE OR REPLACE FUNCTION public.get_quiz_result(p_locale text, p_pool_id uuid)
@@ -74,17 +74,7 @@ BEGIN
 
     -- Get pool members
     SELECT array_agg(member) INTO members
-    FROM fetch_pool_members(
-        p_user_id,  
-        p_pool_id,
-        p_country, 
-        p_locale,
-        p_gender,
-        p_age, 
-        p_limit_by => 10,
-        p_after_pool_members => NULL,
-        p_for_ranking => TRUE
-    ) AS member;
+    FROM fetch_pool_members(p_pool_id, p_locale, p_limit_by => 10, p_after_pool_members => NULL, p_for_ranking => TRUE) AS member;
 
     -- Build the result
     IF quiz IS NOT NULL THEN
@@ -107,3 +97,4 @@ EXCEPTION
         RETURN result;
 END;
 $function$
+

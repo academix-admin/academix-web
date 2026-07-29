@@ -1,5 +1,5 @@
 -- schema:   public
--- function: pay_pool_quiz(p_pool_id uuid)
+-- function: pay_pool_quiz
 -- generated from Supabase project iewqfmkngcgayxbbnpiz (read-only mirror)
 
 CREATE OR REPLACE FUNCTION public.pay_pool_quiz(p_pool_id uuid)
@@ -209,7 +209,7 @@ BEGIN
 
     SELECT *
     INTO receiver_profile
-    FROM create_or_get_academix_profile(member_id, '', '', '', '');
+    FROM create_or_get_academix_profile(member_id);
 
     SELECT *
     INTO sender_profile

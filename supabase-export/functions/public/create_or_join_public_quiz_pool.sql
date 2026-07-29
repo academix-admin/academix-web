@@ -1,5 +1,5 @@
 -- schema:   public
--- function: create_or_join_public_quiz_pool(p_user_id uuid, p_topic_id uuid, p_challenge_id uuid, p_locale text, p_country text, p_gender text, p_age text, p_pool_id uuid, p_redeem_code text)
+-- function: create_or_join_public_quiz_pool
 -- generated from Supabase project iewqfmkngcgayxbbnpiz (read-only mirror)
 
 CREATE OR REPLACE FUNCTION public.create_or_join_public_quiz_pool(p_user_id uuid, p_topic_id uuid, p_challenge_id uuid, p_locale text, p_country text, p_gender text, p_age text, p_pool_id uuid DEFAULT NULL::uuid, p_redeem_code text DEFAULT NULL::text)
@@ -470,7 +470,7 @@ BEGIN
     THEN
 
         SELECT * INTO active_pool
-        FROM get_active_quiz(p_user_id, p_country, p_locale, p_gender, p_age);
+        FROM get_active_quiz(p_user_id, p_locale);
 
         IF active_pool IS NOT NULL THEN
             result := jsonb_set(result, '{quiz_pool}', active_pool, false);

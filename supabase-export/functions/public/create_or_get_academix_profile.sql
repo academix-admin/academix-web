@@ -1,13 +1,13 @@
 -- schema:   public
--- function: create_or_get_academix_profile(p_user_id uuid, p_locale text, p_country text, p_gender text, p_age text)
+-- function: create_or_get_academix_profile
 -- generated from Supabase project iewqfmkngcgayxbbnpiz (read-only mirror)
 
-CREATE OR REPLACE FUNCTION public.create_or_get_academix_profile(p_locale text)
+CREATE OR REPLACE FUNCTION public.create_or_get_academix_profile(p_target_user uuid DEFAULT NULL::uuid)
  RETURNS jsonb
  LANGUAGE plpgsql
 AS $function$
 DECLARE
-    p_user_id uuid := auth.uid();
+    p_user_id uuid := CASE WHEN (coalesce(auth.jwt()->>'role','') = 'service_role' OR session_user IN ('service_role','supabase_auth_admin','postgres')) AND p_target_user IS NOT NULL THEN p_target_user ELSE auth.uid() END;
     profile_details JSONB;
     wallet_id UUID;
     buy_rate numeric;
@@ -61,3 +61,4 @@ BEGIN
     RETURN profile_details;
 END;
 $function$
+

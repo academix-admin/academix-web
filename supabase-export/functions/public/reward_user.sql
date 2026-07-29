@@ -1,5 +1,5 @@
 -- schema:   public
--- function: reward_user(p_user_id uuid, p_locale text, p_country text, p_gender text, p_age text, p_title text, p_reward_id uuid, p_source text)
+-- function: reward_user
 -- generated from Supabase project iewqfmkngcgayxbbnpiz (read-only mirror)
 
 CREATE OR REPLACE FUNCTION public.reward_user(p_user_id uuid, p_locale text, p_country text, p_gender text, p_age text, p_title text, p_reward_id uuid, p_source text)
@@ -68,7 +68,7 @@ BEGIN
             paid_amount := ABS(reward_record.reward_value);
             
             -- Get receiver profile (user)
-            SELECT * INTO receiver_profile FROM create_or_get_academix_profile(p_user_id, p_locale, p_country, p_gender, p_age);
+            SELECT * INTO receiver_profile FROM create_or_get_academix_profile(p_user_id);
             
             -- Get sender profile (academix)
             SELECT * INTO sender_profile FROM create_or_get_wallet_profile(p_user_id, p_locale, p_country, p_gender, p_age);

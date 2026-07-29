@@ -1,5 +1,5 @@
 -- schema:   public
--- function: leave_active_quiz_pool(p_user_id uuid, p_locale text, p_country text, p_gender text, p_age text)
+-- function: leave_active_quiz_pool
 -- generated from Supabase project iewqfmkngcgayxbbnpiz (read-only mirror)
 
 CREATE OR REPLACE FUNCTION public.leave_active_quiz_pool(p_user_id uuid, p_locale text, p_country text, p_gender text, p_age text)
@@ -19,13 +19,7 @@ DECLARE
     question_ids UUID[];
 BEGIN
     -- Step 1: Retrieve the active quiz pool for the user
-    SELECT * INTO active_pool FROM get_active_quiz(
-        p_user_id,
-        p_country, -- Country code
-        p_locale,  -- Locale (e.g., 'en' for English)
-        p_gender,  -- Gender filter
-        p_age      -- Age filter
-    );
+    SELECT * INTO active_pool FROM get_active_quiz(p_user_id, p_locale);
 
     -- Step 2: Check if an active pool was found
     IF active_pool IS NOT NULL THEN

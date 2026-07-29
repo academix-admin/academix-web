@@ -1,5 +1,5 @@
 -- schema:   public
--- function: claim_user_achievements(p_user_id uuid, p_locale text, p_country text, p_gender text, p_age text, p_achievements_id uuid)
+-- function: claim_user_achievements
 -- generated from Supabase project iewqfmkngcgayxbbnpiz (read-only mirror)
 
 CREATE OR REPLACE FUNCTION public.claim_user_achievements(p_locale text, p_achievements_id uuid)
@@ -49,7 +49,7 @@ BEGIN
     WHERE at.achievements_id = p_achievements_id;
 
     IF progress_rewarded = TRUE THEN
-        SELECT * INTO count_details FROM public.get_user_achievements_count(p_user_id,p_country,p_locale,p_gender,p_age);
+        SELECT * INTO count_details FROM public.get_user_achievements_count(p_locale);
 
         IF (count_details->>'achievements_data')::JSONB IS NOT NULL THEN
             result := jsonb_set(result, '{achievements_count_details}', (count_details->>'achievements_data')::JSONB, false);
@@ -84,7 +84,7 @@ BEGIN
             'reward_claim_amount', (reward_data->>'value')::NUMERIC
         ));
 
-        SELECT * INTO count_details FROM public.get_user_achievements_count(p_user_id,p_country,p_locale,p_gender,p_age);
+        SELECT * INTO count_details FROM public.get_user_achievements_count(p_locale);
 
         IF (count_details->>'achievements_data')::JSONB IS NOT NULL THEN
             result := jsonb_set(result, '{achievements_count_details}', (count_details->>'achievements_data')::JSONB, false);
@@ -105,3 +105,4 @@ EXCEPTION
         RETURN result;
 END;
 $function$
+

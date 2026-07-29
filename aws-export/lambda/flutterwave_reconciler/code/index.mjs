@@ -46,12 +46,10 @@ async function fetchFlutterwaveBalance(currency) {
  */
 async function writeLedgerEntry(transactionId, currency) {
   try {
-    const fwBalance = await fetchFlutterwaveBalance(currency);
-
+    // write_wallet_ledger_entry reads everything it needs (incl. the stored FW fee) from the
+    // transaction row via p_transaction_id — it no longer accepts balance/source params.
     const { data, error } = await supabase.rpc('write_wallet_ledger_entry', {
-      p_transaction_id:      transactionId,
-      p_flutterwave_balance: fwBalance,
-      p_source:              'reconciler'
+      p_transaction_id: transactionId
     });
 
     if (error) {
