@@ -61,16 +61,11 @@ export function AppLock({ children }: { children: React.ReactNode }) {
     );
   }, [signOutDialog, t]);
   const confirmSignOutFromLock = useCallback(async () => {
-    try {
-      setSigningOut(true);
-      await supabaseBrowser.auth.signOut({ scope: 'local' });
-    } catch {
-      /* already gone */
-    } finally {
-      setSigningOut(false);
-      signOutDialog.close();
-    }
-  }, [signOutDialog]);
+    setSigningOut(true);
+    try { await supabaseBrowser.auth.signOut({ scope: 'local' }); } catch { /* already gone */ }
+    // Hard-navigate straight to login — no flash of the (still-mounted) page behind the lock, no hang.
+    window.location.replace('/login');
+  }, []);
 
   // Typing a fresh PIN after a failure clears the stale error immediately.
   const onPinChange = useCallback((v: string) => {
@@ -187,7 +182,7 @@ export function AppLock({ children }: { children: React.ReactNode }) {
               type="button"
               className={styles.lockSignOut}
               onClick={openSignOutConfirm}
-              disabled={busy}
+              disabled={busy || signingOut}
             >
               {t('sign_out')}
             </button>
@@ -239,6 +234,10 @@ export function AppLock({ children }: { children: React.ReactNode }) {
               }}
             />
           </div>
+
+          {userData?.usersUsername && (
+            <div className={styles.lockUsername}>{userData.usersUsername}</div>
+          )}
         </div>
       )}
 

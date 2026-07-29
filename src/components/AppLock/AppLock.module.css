@@ -33,6 +33,16 @@
 }
 .lockSignOut:disabled { opacity: 0.5; cursor: default; }
 
+/* Signed-in username, pinned to the bottom of the lock */
+.lockUsername {
+  margin-top: auto;
+  padding-top: 16px;
+  text-align: center;
+  font-size: 0.9rem;
+  opacity: 0.6;
+  word-break: break-all;
+}
+
 /* Top: heading + PIN boxes */
 .top {
   display: flex;

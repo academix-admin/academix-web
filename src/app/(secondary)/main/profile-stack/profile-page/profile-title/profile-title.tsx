@@ -75,18 +75,17 @@ export default function ProfileTitle({ onStateChange }: ComponentStateProps) {
   };
 
   const confirmSignOut = async () => {
+    setSigningOut(true);
     try {
-      setSigningOut(true);
       // scope: 'local' clears THIS device's session immediately — no server round-trip that can hang
-      // on a slow/already-revoked session (which left the button stuck loading). Clearing the local
-      // session fires onAuthStateChange SIGNED_OUT → AuthProvider's redirect guard sends us out.
+      // on a slow/already-revoked session.
       await supabaseBrowser.auth.signOut({ scope: 'local' });
     } catch (error) {
       console.error('Sign out error:', error);
-    } finally {
-      setSigningOut(false);
-      signOutDialog.close();
     }
+    // Go straight to login. A hard navigation guarantees we leave (no redirect-guard race / flash of
+    // /main) and can't hang — the local session is already cleared, so /login sees no session.
+    window.location.replace('/login');
   };
 
   const handleLanguageSwitch = () => {

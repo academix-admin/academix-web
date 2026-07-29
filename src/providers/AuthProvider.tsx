@@ -371,9 +371,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     // scope: 'local' — the session is ALREADY revoked server-side, so a global (server) signOut would
-    // just hang on the dead session and never fire SIGNED_OUT (so no redirect). Clearing locally is
-    // instant and triggers the redirect guard.
-    const onRevoked = () => { supabaseBrowser.auth.signOut({ scope: 'local' }).catch(() => { /* already gone */ }); };
+    // just hang on the dead session. Clear locally, then hard-navigate to /login so the device
+    // reliably leaves (the reactive redirect guard can race/miss this).
+    const onRevoked = async () => {
+      try { await supabaseBrowser.auth.signOut({ scope: 'local' }); } catch { /* already gone */ }
+      window.location.replace('/login');
+    };
     window.addEventListener('ax:session-revoked', onRevoked);
     return () => window.removeEventListener('ax:session-revoked', onRevoked);
   }, []);
