@@ -102,7 +102,10 @@ export default function GameChallenge({ onChallengeSelect, topicsId, gameModeId 
 
   // Initial load
   useEffect(() => {
-    if (!userData || challengeModel.length > 0 || challengeLoading) return;
+    // Guard on firstLoaded (not challengeModel.length): an empty or errored fetch leaves length at 0,
+    // which with a length-based guard re-fires this effect endlessly (load → fail → load). firstLoaded
+    // ensures the initial fetch runs exactly once; retries go through refreshData.
+    if (!userData || firstLoaded || challengeLoading) return;
 
     const loadChallenges = async () => {
       setChallengeLoading(true);
@@ -113,7 +116,7 @@ export default function GameChallenge({ onChallengeSelect, topicsId, gameModeId 
     };
 
     loadChallenges();
-  }, [userData, challengeLoading, challengeModel.length, fetchChallengeModel]);
+  }, [userData, challengeLoading, firstLoaded, fetchChallengeModel]);
 
   // Pagination call
   const callPaginate = async () => {

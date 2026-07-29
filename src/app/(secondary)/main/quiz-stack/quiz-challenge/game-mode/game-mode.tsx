@@ -125,7 +125,10 @@ export default function GameMode({ onModeSelect, topicsId }: GameModeProps) {
   };
 
   useEffect(() => {
-    if (!userData || gameModeModel.length > 0 || gameModeLoading) return;
+    // Guard on firstLoaded (not gameModeModel.length): an empty or errored fetch leaves length at 0,
+    // which with a length-based guard re-fires this effect endlessly (load → fail → load). firstLoaded
+    // ensures the initial fetch runs exactly once; retries go through refreshData.
+    if (!userData || firstLoaded || gameModeLoading) return;
 
     const loadGameModes = async () => {
       setGameModeLoading(true);
@@ -136,7 +139,7 @@ export default function GameMode({ onModeSelect, topicsId }: GameModeProps) {
     };
 
     loadGameModes();
-  }, [userData, gameModeLoading, gameModeModel.length]);
+  }, [userData, gameModeLoading, firstLoaded]);
 
 
   const callPaginate = async () => {
