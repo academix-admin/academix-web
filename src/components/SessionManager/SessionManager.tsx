@@ -51,7 +51,7 @@ function placeOf(loc?: Loc): string {
   return [loc.city, loc.country].filter(Boolean).join(', ');
 }
 
-export function SessionManager() {
+export function SessionManager({ onRegisterRefresh }: { onRegisterRefresh?: (refresh: () => Promise<void>) => void } = {}) {
   const { t } = useLanguage();
   const [sessions, setSessions] = useState<Sess[] | null>(null);
   const [locations, setLocations] = useState<Record<string, Loc>>({});
@@ -93,6 +93,9 @@ export function SessionManager() {
   }, [loadLocations, t]);
 
   useEffect(() => { load(); }, [load]);
+
+  // Expose reload to the page header (refresh button), matching the redeem-codes pattern.
+  useEffect(() => { onRegisterRefresh?.(load); }, [onRegisterRefresh, load]);
 
   const revokeOne = useCallback(async (id: string) => {
     setBusyId(id); setError('');

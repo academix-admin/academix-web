@@ -21,6 +21,7 @@ import styles from './AppLock.module.css';
  */
 
 const IDLE_MS = 10 * 60 * 1000; // lock after 10 minutes idle
+const TOUCH_MS = 60 * 1000; // heartbeat to the server gate at most once a minute
 const LAST_ACTIVE_KEY = 'ax:last-active';
 const ACTIVITY_EVENTS = ['pointerdown', 'keydown', 'touchstart', 'click', 'scroll'] as const;
 
@@ -57,12 +58,20 @@ export function AppLock({ children }: { children: React.ReactNode }) {
 
     let idleTimer: number | undefined;
     let lastWrite = 0;
+    let lastTouch = 0;
     const mark = () => {
       const now = Date.now();
       if (now - lastWrite > 5000) { lastWrite = now; try { localStorage.setItem(LAST_ACTIVE_KEY, String(now)); } catch { /* ignore */ } }
     };
+    // Heartbeat: slide the SERVER idle window on genuine user activity (throttled). The server gate is
+    // the source of truth for app-lock; this keeps an actively-used session unlocked. No-ops when the
+    // session is already locked/revoked server-side (session_touch checks the gate).
+    const touch = () => {
+      const now = Date.now();
+      if (now - lastTouch > TOUCH_MS) { lastTouch = now; supabaseBrowser.rpc('session_touch').then(() => {}, () => {}); }
+    };
     const arm = () => { window.clearTimeout(idleTimer); idleTimer = window.setTimeout(() => setLockedState(true), IDLE_MS); };
-    const onActivity = () => { if (lockedRef.current) return; mark(); arm(); };
+    const onActivity = () => { if (lockedRef.current) return; mark(); touch(); arm(); };
     const lockIfStale = () => {
       if (lockedRef.current) return;
       let last = 0; try { last = Number(localStorage.getItem(LAST_ACTIVE_KEY) || 0); } catch { /* ignore */ }
@@ -83,6 +92,17 @@ export function AppLock({ children }: { children: React.ReactNode }) {
       document.removeEventListener('visibilitychange', onVisible);
       window.removeEventListener('focus', onVisible);
     };
+  }, [active, setLockedState]);
+
+  // ─── Server-driven lock ─────────────────────────────────────────────────
+  // If the session gate refuses a request with AX_APP_LOCKED (client fetch interceptor broadcasts
+  // `ax:app-locked`), force the overlay up — even if the DOM overlay was tampered with, the request
+  // already failed server-side and only a fresh PIN (which extends the server window) clears it.
+  useEffect(() => {
+    if (!active) return;
+    const onLocked = () => setLockedState(true);
+    window.addEventListener('ax:app-locked', onLocked);
+    return () => window.removeEventListener('ax:app-locked', onLocked);
   }, [active, setLockedState]);
 
   // ─── Verify entered PIN ─────────────────────────────────────────────────

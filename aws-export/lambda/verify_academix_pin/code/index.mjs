@@ -14,6 +14,15 @@ const innerHandler = async (event) => {
     // Identity: prefer the API-Gateway authorizer's verified user_id; fall back to body.userId for
     // TRUSTED Lambda→Lambda direct invokes (e.g. make_payment passes its own authorizer-derived id).
     const userId = event.requestContext?.authorizer?.user_id ?? body.userId;
+    // session_id is present only on the browser AppLock path (via the authorizer). When we clear the
+    // PIN we also extend that session's server-side app-lock window — this is the ONLY unlock
+    // authority (session_unlock is service_role-only), so deleting the client overlay can't bypass it.
+    const sessionId = event.requestContext?.authorizer?.session_id || body.sessionId || null;
+    const extendAppLock = async () => {
+      if (!sessionId || !userId) return;
+      try { await supabase.rpc('session_unlock', { p_session_id: sessionId, p_user_id: userId }); }
+      catch (e) { console.error('session_unlock failed:', e?.message || e); }
+    };
 
     if (!userId || !pin) {
       return { statusCode: 400, body: JSON.stringify({ success: false, message: "Missing fields" }) };
@@ -51,6 +60,8 @@ const innerHandler = async (event) => {
     }
 
     if (!pin_hash || typeof pin_hash !== "string") {
+      // PIN-less account: never trap it behind the app-lock — clear the server window too.
+      await extendAppLock();
       return {
         statusCode: 500,
         body: JSON.stringify({
@@ -59,7 +70,7 @@ const innerHandler = async (event) => {
           message: "PIN not set for this user"
         })
       };
-    }    
+    }
 
     // Compare PIN with hash
     const match = await bcrypt.compare(pin, pin_hash);
@@ -99,6 +110,9 @@ const innerHandler = async (event) => {
         locked_until: null
       })
       .eq("users_id", userId);
+
+    // Correct PIN → extend the app-lock window for this session before responding.
+    await extendAppLock();
 
     return {
       statusCode: 200,

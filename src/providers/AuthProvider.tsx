@@ -364,6 +364,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
+  // ─── Server-side revocation: another device / "log out" killed this session ───
+  // The Supabase session gate (db_pre_request) refuses this device's requests with AX_SESSION_REVOKED;
+  // the client fetch interceptor broadcasts `ax:session-revoked`. Sign out so the redirect guard sends
+  // this device to /login — immediately, instead of the JWT lingering valid for up to its 60-min TTL.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const onRevoked = () => { supabaseBrowser.auth.signOut().catch(() => { /* already gone */ }); };
+    window.addEventListener('ax:session-revoked', onRevoked);
+    return () => window.removeEventListener('ax:session-revoked', onRevoked);
+  }, []);
+
   // ─── Effect 1b: profile resolution (the single place OAuth is handled) ────
   // A signed-in user without loaded academix `userData` (the classic case: right after a
   // Google/OAuth sign-in — Supabase gives us a session but no profile in state) is resolved

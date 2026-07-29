@@ -28,6 +28,10 @@ export const handler = async (event) => {
       email: decoded.email || '',
       role: decoded.role || '',
       iss: decoded.iss || '',
+      // session_id lets downstream Lambdas extend the app-lock window (session_unlock) and check
+      // liveness. NOTE: this authorizer response is CACHED per-JWT, so revocation must be checked in
+      // the (uncached) handler, not here.
+      session_id: decoded.session_id || '',
       country,
       source_ip: sourceIp || '',
     });
