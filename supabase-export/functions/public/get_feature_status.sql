@@ -1,6 +1,9 @@
 -- schema: public
 -- function: get_feature_status(...,p_country_override,p_state_override) — features allowlist via decontrol
 -- (language/country/gender/age + optional state_control). Trusts service_role|supabase_auth_admin for overrides.
+-- NULL-tolerant: a NULL control INPUT (unknown/not-yet-known — e.g. profile-derived gender/age for a
+-- brand-new signup, or an unresolved country) PASSES that control (mirrors state_control). features_active
+-- (manual on/off) and any NON-null control still enforce.
 CREATE OR REPLACE FUNCTION public.get_feature_status(p_feature text, p_locale text, p_gender text, p_age text, p_country_override text DEFAULT NULL::text, p_state_override text DEFAULT NULL::text)
  RETURNS jsonb
  LANGUAGE plpgsql
@@ -28,9 +31,9 @@ BEGIN
     FROM features_table ft
    WHERE ft.features_checker = p_feature
      AND (SELECT value FROM decontrol(ft.language_control, p_locale,  p_locale)) = TRUE
-     AND (SELECT value FROM decontrol(ft.country_control,  p_country, p_locale)) = TRUE
-     AND (SELECT value FROM decontrol(ft.gender_control,   p_gender,  p_locale)) = TRUE
-     AND (SELECT value FROM decontrol(ft.age_control,      p_age,     p_locale)) = TRUE
+     AND (p_country IS NULL OR (SELECT value FROM decontrol(ft.country_control, p_country, p_locale)) = TRUE)
+     AND (p_gender  IS NULL OR (SELECT value FROM decontrol(ft.gender_control,  p_gender,  p_locale)) = TRUE)
+     AND (p_age     IS NULL OR (SELECT value FROM decontrol(ft.age_control,     p_age,     p_locale)) = TRUE)
      AND (ft.state_control IS NULL OR v_state IS NULL
           OR (SELECT value FROM decontrol(ft.state_control, v_state, p_locale, ARRAY['default']::text[], true)) = TRUE)
    LIMIT 1;
