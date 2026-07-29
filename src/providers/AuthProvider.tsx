@@ -374,7 +374,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // just hang on the dead session. Clear locally, then hard-navigate to /login so the device
     // reliably leaves (the reactive redirect guard can race/miss this).
     const onRevoked = async () => {
-      try { await supabaseBrowser.auth.signOut({ scope: 'local' }); } catch { /* already gone */ }
+      // Cap the local sign-out (a dead/locked session can hang it), then hard-navigate to /login.
+      await Promise.race([
+        supabaseBrowser.auth.signOut({ scope: 'local' }).catch(() => {}),
+        new Promise((res) => setTimeout(res, 2000)),
+      ]);
       window.location.replace('/login');
     };
     window.addEventListener('ax:session-revoked', onRevoked);

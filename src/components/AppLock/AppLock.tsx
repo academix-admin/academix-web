@@ -62,8 +62,11 @@ export function AppLock({ children }: { children: React.ReactNode }) {
   }, [signOutDialog, t]);
   const confirmSignOutFromLock = useCallback(async () => {
     setSigningOut(true);
-    try { await supabaseBrowser.auth.signOut({ scope: 'local' }); } catch { /* already gone */ }
-    // Hard-navigate straight to login — no flash of the (still-mounted) page behind the lock, no hang.
+    // Cap the local sign-out so a stuck auth lock / no internet can't block us, then hard-navigate.
+    await Promise.race([
+      supabaseBrowser.auth.signOut({ scope: 'local' }).catch(() => {}),
+      new Promise((res) => setTimeout(res, 2000)),
+    ]);
     window.location.replace('/login');
   }, []);
 

@@ -76,15 +76,13 @@ export default function ProfileTitle({ onStateChange }: ComponentStateProps) {
 
   const confirmSignOut = async () => {
     setSigningOut(true);
-    try {
-      // scope: 'local' clears THIS device's session immediately — no server round-trip that can hang
-      // on a slow/already-revoked session.
-      await supabaseBrowser.auth.signOut({ scope: 'local' });
-    } catch (error) {
-      console.error('Sign out error:', error);
-    }
-    // Go straight to login. A hard navigation guarantees we leave (no redirect-guard race / flash of
-    // /main) and can't hang — the local session is already cleared, so /login sees no session.
+    // Clear the local session, but NEVER let it block navigation: supabase-js signOut can hang on a
+    // stuck/contended navigator.locks lock or with no internet, which left the button spinning and the
+    // page unmoved. Cap it, then hard-navigate to /login (guaranteed, no flash of /main).
+    await Promise.race([
+      supabaseBrowser.auth.signOut({ scope: 'local' }).catch(() => {}),
+      new Promise((res) => setTimeout(res, 2000)),
+    ]);
     window.location.replace('/login');
   };
 
