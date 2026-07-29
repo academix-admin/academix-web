@@ -132,7 +132,7 @@ set search_path = auth, public
 as $$
 declare
   v_status text;
-  ENABLE_APP_LOCK constant boolean := false; -- flip to true once PIN-verify Lambda calls session_unlock
+  ENABLE_APP_LOCK constant boolean := true; -- LIVE: verify_academix_pin calls session_unlock (deployed 2026-07-29)
 begin
   begin
     v_status := public.session_gate_status();
@@ -162,5 +162,9 @@ grant execute on function public.enforce_session() to anon, authenticated, servi
 alter role authenticator set pgrst.db_pre_request = 'public.enforce_session';
 notify pgrst, 'reload config';
 -- Rollback: alter role authenticator reset pgrst.db_pre_request; notify pgrst,'reload config';
--- App-lock stays OFF (enforce_session ENABLE_APP_LOCK=false) until verify_academix_pin +
--- supabase_flutter_authorizer are deployed; then re-create enforce_session with the flag true.
+-- App-lock is ON (ENABLE_APP_LOCK=true). Activated 2026-07-29 after deploying verify_academix_pin
+-- (calls session_unlock on PIN success/not_set) + supabase_flutter_authorizer (emits session_id).
+-- On activation, seed every current session so nobody locks mid-use until they actually go idle:
+--   insert into public.session_locks(session_id,user_id,unlocked_until)
+--     select id, user_id, now() + public.session_idle_window() from auth.sessions
+--     on conflict(session_id) do nothing;
