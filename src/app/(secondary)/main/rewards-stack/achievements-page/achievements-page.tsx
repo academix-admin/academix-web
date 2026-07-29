@@ -24,7 +24,7 @@ import NoResultsView from '@/components/NoResultsView/NoResultsView';
 import ErrorView from '@/components/ErrorView/ErrorView';
 import { useAchievementsData } from '@/lib/stacks/milestone-stack';
 import { useAchievementsModel } from '@/lib/stacks/achievements-stack';
-import { AchievementsData } from '@/models/achievements-data';
+import { AchievementsData } from '@/models/achievements-model';
 import { StateStack } from '@academix-admin/state-stack';
 import { useDialog } from '@academix-admin/dialog-viewer';
 import { useTopViewer } from '@/lib/TopViewer';

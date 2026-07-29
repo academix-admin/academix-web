@@ -6,6 +6,7 @@ import { useAuthContext } from '@/providers/AuthProvider';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { supabaseBrowser } from '@/lib/supabase/client';
+import { fetchWithTimeout } from '@/utils/timeout';
 import styles from './AppLock.module.css';
 
 /**
@@ -111,11 +112,11 @@ export function AppLock({ children }: { children: React.ReactNode }) {
     try {
       const { data } = await supabaseBrowser.auth.getSession();
       const token = data.session?.access_token;
-      const res = await fetch('https://fz0b8vmhba.execute-api.eu-north-1.amazonaws.com/prod/pin/verify', {
+      const res = await fetchWithTimeout('https://fz0b8vmhba.execute-api.eu-north-1.amazonaws.com/prod/pin/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ pin }),
-      });
+      }, 15000, 'PIN verification');
       const json = await res.json().catch(() => ({}));
       if (json.success || json.not_set) { unlock(); return; } // not_set: never trap a PIN-less account
       if (json.locked_until) {

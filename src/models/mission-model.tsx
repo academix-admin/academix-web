@@ -1,5 +1,5 @@
-import type { BackendMissionModel, BackendMissionProgressDetails, BackendRewardClaimModel, BackendRewardDetails, BackendRewardRedeemCodeModel } from '@academix-admin/domain-types';
-export type { BackendMissionModel, BackendMissionProgressDetails, BackendRewardClaimModel, BackendRewardDetails, BackendRewardRedeemCodeModel };
+import type { BackendMissionData, BackendMissionModel, BackendMissionProgressDetails, BackendRewardClaimModel, BackendRewardDetails, BackendRewardRedeemCodeModel } from '@academix-admin/domain-types';
+export type { BackendMissionData, BackendMissionModel, BackendMissionProgressDetails, BackendRewardClaimModel, BackendRewardDetails, BackendRewardRedeemCodeModel };
 // Backend Interfaces
 export class MissionModel {
   missionId: string;
@@ -211,5 +211,31 @@ export class RewardClaimModel {
       reward_claim_amount: this.amount,
       reward_claim_redeem_code: this.redeemCode?.toBackend() ?? null,
     };
+  }
+}
+
+// --- Frontend Model (folded in from mission-data) ---
+export class MissionData {
+  missionCount: number;
+  missionFinished: number;
+  missionCompleted: number;
+  missionNotRewarded: number;
+
+  constructor(data?: BackendMissionData | null) {
+    this.missionCount = data?.mission_count ?? 0;
+    this.missionFinished = data?.mission_finished ?? 0;
+    this.missionCompleted = data?.mission_completed ?? 0;
+    this.missionNotRewarded = data?.mission_not_rewarded ?? 0;
+  }
+
+  copyWith(data: Partial<MissionData>): MissionData {
+    const backendData: BackendMissionData = {
+      mission_count: data.missionCount ?? this.missionCount,
+      mission_finished: data.missionFinished ?? this.missionFinished,
+      mission_completed: data.missionCompleted ?? this.missionCompleted,
+      mission_not_rewarded: data.missionNotRewarded ?? this.missionNotRewarded,
+    };
+
+    return new MissionData(backendData);
   }
 }

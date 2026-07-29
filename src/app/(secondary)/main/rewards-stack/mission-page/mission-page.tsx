@@ -24,7 +24,7 @@ import NoResultsView from '@/components/NoResultsView/NoResultsView';
 import ErrorView from '@/components/ErrorView/ErrorView';
 import { useMissionData } from '@/lib/stacks/milestone-stack';
 import { useMissionModel } from '@/lib/stacks/mission-stack';
-import { MissionData } from '@/models/mission-data';
+import { MissionData } from '@/models/mission-model';
 import { StateStack } from '@academix-admin/state-stack';
 import { useDialog } from '@academix-admin/dialog-viewer';
 import { useTopViewer } from '@/lib/TopViewer';

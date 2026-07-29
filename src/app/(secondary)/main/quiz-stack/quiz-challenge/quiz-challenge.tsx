@@ -9,6 +9,7 @@ import { supabaseBrowser } from '@/lib/supabase/client';
 import { useNav, useProvideObject, useObject } from "@academix-admin/navigation-stack";
 import { capitalizeWords } from '@/utils/textUtils';
 import { ensureSession } from '@/utils/checkers';
+import { fetchWithTimeout } from '@/utils/timeout';
 import { useUserData } from '@/lib/stacks/user-stack';
 import { UserData } from '@/models/user-data';
 import { BackendRedeemCodeModel } from '@/models/redeem-code-model';
@@ -124,14 +125,14 @@ export default function QuizChallenge(props: QuizChallengeProps) {
         const proxyUrl = '/api/engage';
 
         try {
-            const response = await fetch(proxyUrl, {
+            const response = await fetchWithTimeout(proxyUrl, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${jwt}`,
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify(data),
-            });
+            }, 20000, 'Quiz engagement');
             return await response.json();
         } catch (error) {
             console.error("Engage Quiz API error:", error);
