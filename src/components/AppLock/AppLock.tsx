@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { PinInput, Keypad } from '@academix-admin/pin-input';
+import { useDialog } from '@academix-admin/dialog-viewer';
 import Image from 'next/image';
 import { useAuthContext } from '@/providers/AuthProvider';
 import { useTheme } from '@/context/ThemeContext';
@@ -48,11 +49,28 @@ export function AppLock({ children }: { children: React.ReactNode }) {
     setLockedState(false);
   }, [setLockedState]);
 
-  // Escape hatch on the lock screen — sign out (local scope so it never hangs; the redirect guard
-  // sends this device to login). Lets a user who can't recall their PIN leave the lock.
-  const signOutFromLock = useCallback(() => {
-    supabaseBrowser.auth.signOut({ scope: 'local' }).catch(() => { /* already gone */ });
-  }, []);
+  // Escape hatch on the lock screen — confirm, then sign out (local scope so it never hangs; the
+  // redirect guard sends this device to login). Lets a user who can't recall their PIN leave.
+  const signOutDialog = useDialog();
+  const [signingOut, setSigningOut] = useState(false);
+  const openSignOutConfirm = useCallback(() => {
+    signOutDialog.open(
+      <div style={{ textAlign: 'center' }}>
+        <p>{t('confirm_sign_out')}</p>
+      </div>
+    );
+  }, [signOutDialog, t]);
+  const confirmSignOutFromLock = useCallback(async () => {
+    try {
+      setSigningOut(true);
+      await supabaseBrowser.auth.signOut({ scope: 'local' });
+    } catch {
+      /* already gone */
+    } finally {
+      setSigningOut(false);
+      signOutDialog.close();
+    }
+  }, [signOutDialog]);
 
   // Typing a fresh PIN after a failure clears the stale error immediately.
   const onPinChange = useCallback((v: string) => {
@@ -168,7 +186,7 @@ export function AppLock({ children }: { children: React.ReactNode }) {
             <button
               type="button"
               className={styles.lockSignOut}
-              onClick={signOutFromLock}
+              onClick={openSignOutConfirm}
               disabled={busy}
             >
               {t('sign_out')}
@@ -223,6 +241,32 @@ export function AppLock({ children }: { children: React.ReactNode }) {
           </div>
         </div>
       )}
+
+      <signOutDialog.DialogViewer
+        title={t('sign_out')}
+        buttons={[
+          {
+            text: signingOut ? '' : t('yes_text'),
+            variant: 'primary',
+            loading: signingOut,
+            onClick: async () => { await confirmSignOutFromLock(); },
+          },
+          {
+            text: t('no_text'),
+            variant: 'secondary',
+            disabled: signingOut,
+            onClick: () => signOutDialog.close(),
+          },
+        ]}
+        showCancel={false}
+        closeOnBackdrop={!signingOut}
+        zIndex={2147483647}
+        layoutProp={{
+          backgroundColor: theme === 'light' ? '#fff' : '#121212',
+          margin: '16px 16px',
+          titleColor: theme === 'light' ? '#1a1a1a' : '#fff',
+        }}
+      />
     </>
   );
 }
