@@ -181,7 +181,7 @@ export default function PoolMembers(props: PoolMembersProps) {
       setFetchLoading(true);
       const poolMembersModel = await fetchPoolMembers(userData, 15,  new PaginateModel());
       extractLatest(poolMembersModel);
-      set((poolMembersModel == null || (Array.isArray(poolMembersModel) && poolMembersModel.length === 0)) ? get() : poolMembersModel);
+      set(poolMembersModel);
       setEmpty(poolMembersModel.length === 0);
       setFetchLoading(false);
       if(poolMembersModel.length < 15)refreshData();

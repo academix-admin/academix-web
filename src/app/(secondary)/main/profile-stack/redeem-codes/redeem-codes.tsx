@@ -222,7 +222,7 @@ export default function RedeemCodes() {
   //     setFetchLoading(true);
   //     const redeemCodesModel = await fetchRedeemCodes(userData, 10, new PaginateModel());
   //     extractLatest(redeemCodesModel);
-  //     set((redeemCodesModel == null || (Array.isArray(redeemCodesModel) && redeemCodesModel.length === 0)) ? get() : redeemCodesModel);
+  //     set(redeemCodesModel);
   //     setEmpty(redeemCodesModel.length === 0);
   //     setFetchLoading(false);
   //   });
@@ -260,7 +260,7 @@ export default function RedeemCodes() {
         setFetchLoading(true);
         const redeemCodesModel = await fetchRedeemCodes(userData, 10, new PaginateModel());
         extractLatest(redeemCodesModel);
-        set((redeemCodesModel == null || (Array.isArray(redeemCodesModel) && redeemCodesModel.length === 0)) ? get() : redeemCodesModel);
+        set(redeemCodesModel);
         setEmpty(redeemCodesModel.length === 0);
         setFetchLoading(false);
       });

@@ -304,7 +304,7 @@ export default function RewardsStreaks({ onStateChange }: ComponentStateProps) {
         const dailyStreaksData = (data || []).map((row: BackendDailyStreaksModel) => new DailyStreaksModel(row));
 
         if (dailyStreaksData.length > 0) {
-          set((dailyStreaksData == null || (Array.isArray(dailyStreaksData) && dailyStreaksData.length === 0)) ? get() : dailyStreaksData);
+          set(dailyStreaksData);
           onStateChange?.('data');
         }
       } catch (err) {

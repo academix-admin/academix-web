@@ -118,7 +118,7 @@ export default function HomeQuizHistory({ onStateChange }: ComponentStateProps) 
     demandQuizHistoryData(async ({ get, set }) => {
       const quizHistories = await fetchQuizHistory(userData, 10, new PaginateModel());
       extractLatest(quizHistories);
-      set((quizHistories == null || (Array.isArray(quizHistories) && quizHistories.length === 0)) ? get() : quizHistories);
+      set(quizHistories);
       setFirstLoaded(true);
     });
   }, [demandQuizHistoryData, userData]);

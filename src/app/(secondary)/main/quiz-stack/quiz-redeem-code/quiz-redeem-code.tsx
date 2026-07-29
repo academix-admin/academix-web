@@ -366,7 +366,7 @@ export default function QuizRedeemCode({ onRedeemCodeSelect, onSkip, onRegisterO
 
       extractLatest(redeemCodesModel);
       if (redeemCodesModel.length > 0) {
-        set((redeemCodesModel == null || (Array.isArray(redeemCodesModel) && redeemCodesModel.length === 0)) ? get() : redeemCodesModel);
+        set(redeemCodesModel);
         redeemCodeSelectController.setSelectionState("data");
       } else {
         redeemCodeSelectController.setSelectionState("empty");

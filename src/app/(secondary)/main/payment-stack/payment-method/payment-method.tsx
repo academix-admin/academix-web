@@ -199,7 +199,7 @@ export default function PaymentMethod({ profileType, walletId, onMethodSelect, p
 
       extractLatest(methods);
       if (methods.length > 0) {
-        set((methods == null || (Array.isArray(methods) && methods.length === 0)) ? get() : methods);
+        set(methods);
         methodSelectController.setSelectionState("data");
       } else {
         methodSelectController.setSelectionState("empty");

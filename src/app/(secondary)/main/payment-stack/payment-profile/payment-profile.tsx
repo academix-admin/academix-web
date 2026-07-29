@@ -242,7 +242,7 @@ export default function PaymentProfile({ profileType, methodId, methodType, onPr
 
       extractLatest(profiles);
       if (profiles.length > 0) {
-        set((profiles == null || (Array.isArray(profiles) && profiles.length === 0)) ? get() : profiles);
+        set(profiles);
         profileSelectController.setSelectionState("data");
       } else {
         profileSelectController.setSelectionState("empty");

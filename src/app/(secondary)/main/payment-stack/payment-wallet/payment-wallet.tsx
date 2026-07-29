@@ -330,7 +330,7 @@ export default function PaymentWallet({ profileType, onWalletData, onWalletAmoun
 
       extractLatest(wallets);
       if (wallets.length > 0) {
-        set((wallets == null || (Array.isArray(wallets) && wallets.length === 0)) ? get() : wallets);
+        set(wallets);
         walletSelectController.setSelectionState("data");
       } else {
         walletSelectController.setSelectionState("empty");

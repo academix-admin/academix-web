@@ -69,7 +69,7 @@ export default function UserBalance({ onStateChange }: ComponentStateProps) {
         const balance = new UserBalanceModel(data);
 
         if (balance) {
-          set((balance == null || (Array.isArray(balance) && balance.length === 0)) ? get() : balance);
+          set(balance);
           onStateChange?.('data');
         }
         userBalanceSubscriptionManager.updateSubscription(userData.usersId);

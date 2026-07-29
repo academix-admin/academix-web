@@ -175,7 +175,7 @@ export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) 
     demandActiveQuizTopicModel(async ({ get, set }) => {
       setFirstLoaded(true);
       const active = await fetchActiveQuizTopicModel(userData);
-      set((active == null || (Array.isArray(active) && active.length === 0)) ? get() : active);
+      set(active);
       setFirstLoaded(false);
       onStateChange?.('data');
       // Start the first call

@@ -143,7 +143,7 @@ export default function AvailableQuizTopics({ onStateChange, pType }: AvailableQ
     demandUserDisplayQuizTopicModel(async ({ get, set }) => {
       const quizzesModel = await fetchUserDisplayQuizTopicModel(userData, 10, new PaginateModel());
       extractLatest(quizzesModel);
-      set((quizzesModel == null || (Array.isArray(quizzesModel) && quizzesModel.length === 0)) ? get() : quizzesModel);
+      set(quizzesModel);
       setFirstLoaded(true);
       onStateChange?.('data');
       refreshData();

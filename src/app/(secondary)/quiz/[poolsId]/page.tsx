@@ -647,7 +647,7 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
           const poolQuestions = (data.pools_question || []).map((row: BackendPoolQuestion) => new PoolQuestion(row));
 
           if (getIsContinueEnabled(quizPool)) {
-            set((quizPool == null || (Array.isArray(quizPool) && quizPool.length === 0)) ? get() : quizPool);
+            set(quizPool);
             initializeQuizSession(poolQuestions);
             startQuizStream();
           } else {

@@ -40,7 +40,7 @@ export default function HomeExperience({ onStateChange }: ComponentStateProps) {
 
         const engagement = new UserEngagementModel(data.user_engagement_details);
         if (data.status === "EngagementStatus.success") {
-          set((engagement == null || (Array.isArray(engagement) && engagement.length === 0)) ? get() : engagement);
+          set(engagement);
                 onStateChange?.('data');
 
         }

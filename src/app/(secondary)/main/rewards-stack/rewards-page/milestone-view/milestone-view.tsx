@@ -41,7 +41,7 @@ export default function MilestoneView({ onStateChange }: ComponentStateProps) {
         const missionData = new MissionData(data.mission_data);
 
         if (data.status === "MissionStatus.success") {
-          set((missionData == null || (Array.isArray(missionData) && missionData.length === 0)) ? get() : missionData);
+          set(missionData);
           return;
         }
       } catch (err) {
@@ -65,7 +65,7 @@ export default function MilestoneView({ onStateChange }: ComponentStateProps) {
         const achievementData = new AchievementsData(data.achievements_data);
 
         if (data.status === "AchievementStatus.success") {
-          set((achievementData == null || (Array.isArray(achievementData) && achievementData.length === 0)) ? get() : achievementData);
+          set(achievementData);
           return;
         }
       } catch (err) {
