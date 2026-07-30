@@ -184,9 +184,12 @@ export default function GameMode({ onModeSelect, topicsId }: GameModeProps) {
                    <GameModeItem key={gameMode.gameModeId} gameMode={gameMode} onClick={()=>handleGameModeSelect(gameMode)} isSelected={selectedGameModeModel?.gameModeId === gameMode.gameModeId}/>
            ))}
     </div>
-             {gameModeLoading && gameModeModel.length === 0 && <LoadingView />}
-             {!gameModeLoading && gameModeModel.length === 0 && !error && (<NoResultsView text="No result" buttonText="Try Again" onButtonClick={refreshData} />)}
-             {!gameModeLoading && gameModeModel.length === 0 && error && (<ErrorView text={error} buttonText="Try Again" onButtonClick={refreshData} />)}
+             {/* Show the loader until the first fetch actually settles. Keying the empty/error views on
+                 firstLoaded (not just !loading) avoids a one-frame flash of "No result"/error before the
+                 initial-load effect flips gameModeLoading on mount. */}
+             {(!firstLoaded || gameModeLoading) && gameModeModel.length === 0 && <LoadingView />}
+             {firstLoaded && !gameModeLoading && gameModeModel.length === 0 && !error && (<NoResultsView text="No result" buttonText="Try Again" onButtonClick={refreshData} />)}
+             {firstLoaded && !gameModeLoading && gameModeModel.length === 0 && error && (<ErrorView text={error} buttonText="Try Again" onButtonClick={refreshData} />)}
 
     </div>
   );

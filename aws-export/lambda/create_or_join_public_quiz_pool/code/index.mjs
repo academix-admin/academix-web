@@ -118,6 +118,15 @@ const supabase = createClient(
 
 const lambda = new LambdaClient();
 
+// Browser calls this API Gateway directly (no Next.js proxy), so every response — and the CORS
+// preflight — must carry these headers or the browser blocks the request. The wrapper handler at
+// the bottom merges these onto every response from handlerInner.
+const CORS_HEADERS = {
+  "Access-Control-Allow-Origin":  "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+};
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 // const errorResponse = (statusCode, status, error) => ({
@@ -173,7 +182,7 @@ const successResponse = (data, meta = {}) => {
 
 // ── Handler ───────────────────────────────────────────────────────────────────
 
-export const handler = async (event) => {
+const handlerInner = async (event) => {
   try {
     const body = JSON.parse(event.body);
     const {
@@ -368,4 +377,11 @@ export const handler = async (event) => {
   } catch (e) {
     return errorResponse(500, "PoolStatus.error", e.message);
   }
+};
+
+export const handler = async (event) => {
+  const method = event?.httpMethod || event?.requestContext?.http?.method;
+  if (method === "OPTIONS") return { statusCode: 200, headers: CORS_HEADERS, body: "" };
+  const resp = await handlerInner(event);
+  return { ...resp, headers: { ...(resp?.headers || {}), ...CORS_HEADERS } };
 };

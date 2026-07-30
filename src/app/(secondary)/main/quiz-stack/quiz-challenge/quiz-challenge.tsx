@@ -122,7 +122,9 @@ export default function QuizChallenge(props: QuizChallengeProps) {
 
     // Function to engage quiz API call
     const engageQuiz = async (jwt: string, data: any): Promise<EngageQuizResponse> => {
-        const proxyUrl = '/api/engage';
+        // Direct browser → quiz API Gateway (no Next.js proxy) so the authorizer geolocates the REAL
+        // client IP for the country/region gate. A proxy would send the server's IP → wrong country.
+        const proxyUrl = 'https://elfoxu5sxf.execute-api.eu-north-1.amazonaws.com/prod/join';
 
         try {
             const response = await fetchWithTimeout(proxyUrl, {

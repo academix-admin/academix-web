@@ -218,7 +218,8 @@ export default function QuizCommitment(props: QuizChallengeProps) {
 
   // Function to engage quiz API call
   const engageQuiz = async (jwt: string, data: any): Promise<EngageQuizResponse> => {
-    const proxyUrl = '/api/engage';
+    // Direct → quiz API Gateway so the authorizer sees the real client IP for the country gate.
+    const proxyUrl = 'https://elfoxu5sxf.execute-api.eu-north-1.amazonaws.com/prod/join';
 
     try {
       const response = await fetch(proxyUrl, {
@@ -238,7 +239,7 @@ export default function QuizCommitment(props: QuizChallengeProps) {
 
   // Function to leave quiz API call
   const leaveQuiz = async (jwt: string, data: any): Promise<LeaveQuizResponse> => {
-    const proxyUrl = '/api/leave';
+    const proxyUrl = 'https://elfoxu5sxf.execute-api.eu-north-1.amazonaws.com/prod/leave';
 
     try {
       const response = await fetch(proxyUrl, {

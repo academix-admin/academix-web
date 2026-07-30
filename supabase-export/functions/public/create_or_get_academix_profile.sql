@@ -1,8 +1,13 @@
 -- schema:   public
--- function: create_or_get_academix_profile
+-- function: create_or_get_academix_profile(p_target_user uuid, p_locale text)
+-- Single overload used by BOTH internal SQL callers (positional uuid: charge_user_quiz_pool,
+-- complete_pool_quiz, pay_pool_quiz, reward_user) AND the app clients (web + Flutter) which call
+-- rpc('create_or_get_academix_profile', { p_locale }). p_locale is accepted for client compat and
+-- currently unused. SECURITY INVOKER: RLS on the payment tables permits SELECT (public) + INSERT
+-- (authenticated), and p_user_id is pinned to auth.uid() for non-service callers.
 -- generated from Supabase project iewqfmkngcgayxbbnpiz (read-only mirror)
 
-CREATE OR REPLACE FUNCTION public.create_or_get_academix_profile(p_target_user uuid DEFAULT NULL::uuid)
+CREATE OR REPLACE FUNCTION public.create_or_get_academix_profile(p_target_user uuid DEFAULT NULL::uuid, p_locale text DEFAULT NULL::text)
  RETURNS jsonb
  LANGUAGE plpgsql
 AS $function$
@@ -14,13 +19,11 @@ DECLARE
     sell_rate numeric;
     method_id UUID;
 BEGIN
-
-
     -- Guard: return NULL if user does not exist
     IF NOT EXISTS (SELECT 1 FROM users_table WHERE users_id = p_user_id) THEN
         RETURN NULL;
     END IF;
-    
+
     -- Check if a profile already exists for the user and payment method
     SELECT jsonb_build_object(
         'payment_wallet_id', pwt.payment_wallet_id,
@@ -53,12 +56,13 @@ BEGIN
             ) INTO profile_details;
         ELSE
             -- Handle case where no matching payment method or wallet is found
-            RAISE EXCEPTION 'No matching payment method or wallet found for method_checker: %', p_method_checker;
+            RAISE EXCEPTION 'No matching payment method or wallet found for method_checker: %', 'PaymentMethod.academix_coin';
         END IF;
     END IF;
 
     -- Return the profile details
     RETURN profile_details;
 END;
-$function$
+$function$;
 
+GRANT EXECUTE ON FUNCTION public.create_or_get_academix_profile(uuid, text) TO anon, authenticated, service_role;

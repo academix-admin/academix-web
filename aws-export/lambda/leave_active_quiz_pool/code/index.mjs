@@ -6,7 +6,15 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-export const handler = async (event) => {
+// Browser calls this API Gateway directly (no Next.js proxy), so every response — and the CORS
+// preflight — must carry these headers or the browser blocks the request.
+const CORS_HEADERS = {
+  "Access-Control-Allow-Origin":  "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+};
+
+const handlerInner = async (event) => {
 
 
   console.log("Leave received input:", JSON.stringify(event, undefined, 2));
@@ -52,4 +60,11 @@ export const handler = async (event) => {
     };
   }
 
+};
+
+export const handler = async (event) => {
+  const method = event?.httpMethod || event?.requestContext?.http?.method;
+  if (method === "OPTIONS") return { statusCode: 200, headers: CORS_HEADERS, body: "" };
+  const resp = await handlerInner(event);
+  return { ...resp, headers: { ...(resp?.headers || {}), ...CORS_HEADERS } };
 };

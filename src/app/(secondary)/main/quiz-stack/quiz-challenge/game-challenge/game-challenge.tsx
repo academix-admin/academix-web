@@ -205,12 +205,13 @@ export default function GameChallenge({ onChallengeSelect, topicsId, gameModeId 
         </div>
       )}
 
-      {/* Loading and Error States */}
-      {challengeLoading && challengeModel.length === 0 && <LoadingView />}
-      {!challengeLoading && challengeModel.length === 0 && !error && (
+      {/* Loading and Error States — key the empty/error views on firstLoaded so there is no one-frame
+          flash of "no challenges"/error before the initial-load effect flips challengeLoading on mount. */}
+      {(!firstLoaded || challengeLoading) && challengeModel.length === 0 && <LoadingView />}
+      {firstLoaded && !challengeLoading && challengeModel.length === 0 && !error && (
         <NoResultsView text={t('no_challenges_available')} buttonText={t('try_again')} onButtonClick={refreshData} />
       )}
-      {!challengeLoading && challengeModel.length === 0 && error && (
+      {firstLoaded && !challengeLoading && challengeModel.length === 0 && error && (
         <ErrorView text={error} buttonText={t('try_again')} onButtonClick={refreshData} />
       )}
     </div>

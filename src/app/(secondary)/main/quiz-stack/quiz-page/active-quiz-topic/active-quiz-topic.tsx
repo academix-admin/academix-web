@@ -274,7 +274,7 @@ export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) 
 
   // Function to leave quiz API call
   const leaveQuiz = async (jwt: string, data: any): Promise<LeaveQuizResponse> => {
-    const proxyUrl = '/api/leave';
+    const proxyUrl = 'https://elfoxu5sxf.execute-api.eu-north-1.amazonaws.com/prod/leave';
 
     try {
       const response = await fetch(proxyUrl, {
