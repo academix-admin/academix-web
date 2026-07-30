@@ -27,6 +27,9 @@ const IDLE_MS = 10 * 60 * 1000; // lock after 10 minutes idle
 const TOUCH_MS = 60 * 1000; // heartbeat to the server gate at most once a minute
 const LAST_ACTIVE_KEY = 'ax:last-active';
 const ACTIVITY_EVENTS = ['pointerdown', 'keydown', 'touchstart', 'click', 'scroll'] as const;
+const PIN_VERIFY_URL = 'https://fz0b8vmhba.execute-api.eu-north-1.amazonaws.com/prod/pin/verify';
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 export function AppLock({ children }: { children: React.ReactNode }) {
   const { hasValidSession, userData } = useAuthContext();
@@ -132,27 +135,57 @@ export function AppLock({ children }: { children: React.ReactNode }) {
   // ─── Verify entered PIN ─────────────────────────────────────────────────
   const verify = useCallback(async (pin: string) => {
     setBusy(true); setError('');
+    // Right after login — especially OAuth/Google — the freshly-issued access token can be briefly
+    // rejected by the API Gateway authorizer while it propagates. That denial (401/403) used to surface
+    // as a "network error" and made a correct PIN look wrong until the user retried. Retry a few times,
+    // refreshing the session between attempts, so we ride out that window before showing any error.
+    const MAX_ATTEMPTS = 4;
     try {
-      const { data } = await supabaseBrowser.auth.getSession();
-      const token = data.session?.access_token;
-      const res = await fetchWithTimeout('https://fz0b8vmhba.execute-api.eu-north-1.amazonaws.com/prod/pin/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ pin }),
-      }, 15000, 'PIN verification');
-      const json = await res.json().catch(() => ({}));
-      if (json.success || json.not_set) { unlock(); return; } // not_set: never trap a PIN-less account
-      if (json.locked_until) {
-        setError(t('lock_too_many_attempts'));
-      } else if (typeof json.attempts_left === 'number') {
-        setError(t('lock_incorrect_pin', { count: String(json.attempts_left) }));
-      } else {
-        setError(t('lock_generic_error'));
+      for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+        const isLast = attempt === MAX_ATTEMPTS - 1;
+
+        let token: string | undefined;
+        try {
+          const { data } = await supabaseBrowser.auth.getSession();
+          token = data.session?.access_token;
+          if (!token && attempt > 0) {
+            const refreshed = await supabaseBrowser.auth.refreshSession();
+            token = refreshed.data.session?.access_token;
+          }
+        } catch { /* no token this round — the request will 401 and we retry */ }
+
+        let res: Response;
+        try {
+          res = await fetchWithTimeout(PIN_VERIFY_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token ?? ''}` },
+            body: JSON.stringify({ pin }),
+          }, 15000, 'PIN verification');
+        } catch {
+          // Real network/timeout failure — back off and retry a couple times before giving up.
+          if (!isLast) { await sleep(300 * (attempt + 1)); continue; }
+          setError(t('lock_network_error')); setValue(''); return;
+        }
+
+        // Authorizer rejected the token (not yet valid post-login) — refresh the session and retry.
+        if (res.status === 401 || res.status === 403) {
+          try { await supabaseBrowser.auth.refreshSession(); } catch { /* ignore */ }
+          if (!isLast) { await sleep(300 * (attempt + 1)); continue; }
+          setError(t('lock_network_error')); setValue(''); return;
+        }
+
+        const json = await res.json().catch(() => ({}));
+        if (json.success || json.not_set) { unlock(); return; } // not_set: never trap a PIN-less account
+        if (json.locked_until) {
+          setError(t('lock_too_many_attempts'));
+        } else if (typeof json.attempts_left === 'number') {
+          setError(t('lock_incorrect_pin', { count: String(json.attempts_left) }));
+        } else {
+          setError(t('lock_generic_error'));
+        }
+        setValue('');
+        return;
       }
-      setValue('');
-    } catch {
-      setError(t('lock_network_error'));
-      setValue('');
     } finally {
       setBusy(false);
     }
