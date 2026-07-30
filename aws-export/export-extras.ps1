@@ -32,7 +32,10 @@ try {
     $resources   = aws apigateway get-resources --rest-api-id $api.id --region $Region --output json | ConvertFrom-Json
     $stages      = aws apigateway get-stages --rest-api-id $api.id --region $Region --output json | ConvertFrom-Json
     $authorizers = aws apigateway get-authorizers --rest-api-id $api.id --region $Region --output json 2>$null | ConvertFrom-Json
-    $apigw.RestApis += [ordered]@{ Api = $api; Resources = $resources.items; Stages = $stages.item; Authorizers = $authorizers.items }
+    # Gateway responses carry the CORS headers for error/authorizer-denial paths (401/403/4XX/5XX) so
+    # browsers can read them instead of seeing opaque "network errors". Capture them in the mirror too.
+    $gatewayResponses = aws apigateway get-gateway-responses --rest-api-id $api.id --region $Region --output json 2>$null | ConvertFrom-Json
+    $apigw.RestApis += [ordered]@{ Api = $api; Resources = $resources.items; Stages = $stages.item; Authorizers = $authorizers.items; GatewayResponses = $gatewayResponses.items }
   }
 } catch { Write-Host "  (no REST APIs / not accessible)" -ForegroundColor DarkYellow }
 
