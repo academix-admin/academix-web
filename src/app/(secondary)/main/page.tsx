@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import styles from './page.module.css';
-import { GroupNavigationStack, scrollBroadcaster } from "@academix-admin/navigation-stack";
+import { GroupNavigationStack, scrollBroadcaster, popStackToRoot } from "@academix-admin/navigation-stack";
 import NavigationBar, { NavigationBarScrollEvent } from "@academix-admin/navigation-bar";
 import SideBar from "@academix-admin/sidebar";
 import { HomeStack } from './home-stack/home-stack';
@@ -191,6 +191,8 @@ const Main = () => {
           floatingButtonRadius="50%"
           floatingButtonShadow={theme === 'light' ? "0 6px 12px rgba(0,0,0,0.25)" : "0 6px 12px rgba(0,0,0,0.4)"}
           onChange={(id) => setActive(id)}
+          // Re-tap the active tab → return that tab's stack to its root page (native tab-bar gesture).
+          onReselect={(id) => { popStackToRoot(id); }}
           className={styles.mainNavigation}
         />
       </div>
