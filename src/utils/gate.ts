@@ -12,7 +12,7 @@
 
 import { supabaseBrowser } from '@/lib/supabase/client';
 
-export type GateStatus = string | null | undefined;
+export type StatusValue = string | null | undefined;
 
 /**
  * Resolve WHY sign-in is blocked. The auth.sessions gate trigger raises, but GoTrue/supabase-js
@@ -22,7 +22,7 @@ export type GateStatus = string | null | undefined;
  * also evaluates gender/age (unknown before sign-in) and would report everyone blocked. Returns
  * 'Region.blocked' | 'Feature.unavailable' | null.
  */
-export async function signInGateStatus(locale: string): Promise<GateStatus> {
+export async function signInGateStatus(locale: string): Promise<StatusValue> {
   try {
     const { data, error } = await supabaseBrowser.rpc('location_gate', { p_feature: 'Features.sign_in', p_locale: locale });
     if (error) return null;
@@ -32,14 +32,14 @@ export async function signInGateStatus(locale: string): Promise<GateStatus> {
   }
 }
 
-export function gateStatusOf(response: any): GateStatus {
+export function gateStatusOf(response: any): StatusValue {
   if (!response) return null;
   if (Array.isArray(response)) return response[0]?.status ?? null;
   return response.status ?? null;
 }
 
 /** Returns a translated message for a blocked gate status, or null when not blocked. */
-export function gateMessage(status: GateStatus, t: (key: string) => string): string | null {
+export function gateMessage(status: StatusValue, t: (key: string) => string): string | null {
   if (status === 'Region.blocked') return t('region_blocked');
   if (status === 'Feature.unavailable') return t('feature_unavailable');
   return null;
