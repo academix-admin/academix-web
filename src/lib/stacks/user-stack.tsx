@@ -20,7 +20,7 @@ export const { useStack } = createStateStack(methods);
 export const userDataConfig: StackConfig<UserData | null> = {
   initial: null as UserData | null,
   persist: true,
-//   ttl: 3600,
+  ttl: 3600, // profile changes rarely; expire persisted copy after 1h so a stale identity can't linger
   historyDepth: 1,
   clearOnZeroSubscribers: false,
 };

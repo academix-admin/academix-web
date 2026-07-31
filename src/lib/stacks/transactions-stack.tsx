@@ -7,7 +7,7 @@ export const useTransactionModel = (lang: string) => {
              {
                key: "transactionModels",
                persist: true,
-//                ttl: 3600,
+               ttl: 900, // transaction history: refresh the persisted copy after 15m
                scope: "secondary_flow",
                deps: [lang],
              }
