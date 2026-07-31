@@ -26,7 +26,6 @@ export default function LandingPage() {
       <LandingAccounting />
       <LandingShortAbout />
       <LandingRoles />
-      {/* <LandingMoreAbout /> */}
       <CachedSuspense cached={true}>
         <Instructions searchParams={Promise.resolve({ req: 'landing' })} />
       </CachedSuspense>
