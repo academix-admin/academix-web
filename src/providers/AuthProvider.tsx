@@ -349,6 +349,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const valid = freshSession && !isSessionExpired(freshSession);
         setSession(valid ? freshSession : null);
         setUser(valid ? (freshSession!.user ?? null) : null);
+        // Free-plan JWTs are effectively non-expiring, so a locally-"valid" session can still have been
+        // revoked/locked SERVER-SIDE while we were backgrounded. Proactively exercise the session gate so
+        // that surfaces NOW (interceptor → ax:session-revoked/ax:app-locked) instead of the user meeting a
+        // wall of errored operations that never redirect. Fire-and-forget; the interceptor does the rest.
+        if (valid) supabaseBrowser.rpc('session_touch').then(() => {}, () => {});
       } catch {
         /* offline — leave state as-is; the auth subscription will catch up on reconnect */
       }

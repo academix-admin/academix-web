@@ -149,7 +149,9 @@ export default function WithdrawPage() {
   const [continueState, setContinueState] = useState('initial');
 
   const handleSubmit = async () => {
-    if (!userData) return;
+    // Re-entrancy guard: ignore taps while a fetch is in flight so the sheet can't flip
+    // loading↔error from overlapping calls (dead-session 401s now redirect via the client gate).
+    if (!userData || continueState === 'loading') return;
 
     try {
       setContinueState('loading');

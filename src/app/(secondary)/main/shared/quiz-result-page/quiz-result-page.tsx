@@ -12,6 +12,8 @@ import { UserData } from '@/models/user-data';
 import { PaginateModel } from '@/models/paginate-model';
 import { BackendPoolMemberModel, PoolMemberModel } from '@/models/pool-member';
 import { Header } from '@academix-admin/header';
+import LoadingView from '@/components/LoadingView/LoadingView';
+import ErrorView from '@/components/ErrorView/ErrorView';
 
 interface QuizResultProps {
   poolsId: string;
@@ -756,6 +758,11 @@ export default function QuizResultPage(props: QuizResultProps) {
   const [quizResult, setQuizResult] = useState<PoolMemberModel | null>(null);
   const [poolMembers, setPoolMembers] = useState<PoolMemberModel[]>([]);
   const [resultViewType, setResultViewType] = useState<'reward' | 'rank'>('rank');
+  // firstLoaded gates the terminal empty/error UI so we never render a blank page (the old bug: any
+  // RPC error / null data / non-success status just cleared loading and showed nothing). `error` also
+  // catches a stale/expired session — the RPC fails and we surface a retry instead of a blank screen.
+  const [firstLoaded, setFirstLoaded] = useState(false);
+  const [error, setError] = useState(false);
 
   const goBack = async () => {
     await nav.pop();
@@ -767,33 +774,35 @@ export default function QuizResultPage(props: QuizResultProps) {
 
     try {
       setResultsLoading(true);
+      setError(false);
 
-      const { data, error } = await supabaseBrowser.rpc("get_quiz_result", {
+      const { data, error: rpcError } = await supabaseBrowser.rpc("get_quiz_result", {
         p_pool_id: poolsId,
         p_locale: lang,
       });
 
-      if (error) {
-        console.error("[TransactionModel] error:", error);
-        setResultsLoading(false);
+      // Guard null data (would throw on data.status) — treat any RPC error / missing data / non-success
+      // status as an error state so the UI shows a retry instead of a blank page.
+      if (rpcError || !data || data.status !== 'Pool.success' || !data.quiz) {
+        if (rpcError) console.error("[QuizResult] rpc error:", rpcError);
+        setError(true);
         return;
       }
 
-      if (data.status === 'Pool.success' && data.quiz) {
-        setQuizResult(new PoolMemberModel(data.quiz));
-
-        if (data.members) {
-          const members = (data.members || []).map((row: BackendPoolMemberModel) => new PoolMemberModel(row))
-          if (members.length > 0) {
-            extractLatest(members);
-            processPoolMemberModelsPaginate(members);
-          }
+      setQuizResult(new PoolMemberModel(data.quiz));
+      if (data.members) {
+        const members = (data.members || []).map((row: BackendPoolMemberModel) => new PoolMemberModel(row))
+        if (members.length > 0) {
+          extractLatest(members);
+          processPoolMemberModelsPaginate(members);
         }
       }
+    } catch (err) {
+      console.error('Error fetching quiz results:', err);
+      setError(true);
+    } finally {
       setResultsLoading(false);
-    } catch (error) {
-      console.error('Error fetching quiz results:', error);
-      setResultsLoading(false);
+      setFirstLoaded(true);
     }
   }, [userData, poolsId, lang]);
 
@@ -922,6 +931,14 @@ export default function QuizResultPage(props: QuizResultProps) {
     <main className={`${applyTheme(styles, 'container')}`}>
       <Header title={t('quiz_results')} theme={theme} onBack={goBack} />
 
+      {/* Terminal states — never a blank page. Loading until the first fetch settles; on failure/no
+          result (incl. an expired session) show a retry instead of empty podium/participants. */}
+      {(!firstLoaded || (resultsLoading && !quizResult)) && !error && !quizResult ? (
+        <LoadingView />
+      ) : firstLoaded && !quizResult ? (
+        <ErrorView text={t('error_occurred')} buttonText={t('try_again')} onButtonClick={fetchQuizResults} />
+      ) : (
+      <>
       {/* Web View */}
       <div className={styles.webOnly}>
         <WebView
@@ -963,6 +980,8 @@ export default function QuizResultPage(props: QuizResultProps) {
           callPaginate={callPaginate}
         />
       </div>
+      </>
+      )}
     </main>
   );
 }

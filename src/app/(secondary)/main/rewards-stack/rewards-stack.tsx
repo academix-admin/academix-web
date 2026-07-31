@@ -19,7 +19,7 @@ const rewardsStackNavLink = {
 
 export const RewardsStack = () => (
   <NavigationStack
-    id="rewards-stacks"
+    id="rewards-stack"
     navLink={rewardsStackNavLink}
     entry="reward_page"
     syncHistory
