@@ -1,26 +1,12 @@
 // =====================================================
 // =============== BACKEND INTERFACES ==================
 // =====================================================
-export interface BackendChallengeOption {
-  challenge_price: number;
-  challenge_identity: string;
-  challenge_bot_share: number;
-  challenge_mid_share: number;
-  challenge_top_share: number;
-  challenge_role_share: Record<string, number>; // DYNAMIC ROLES
-  challenge_creator_share: number;
-  challenge_question_count: number;
-  challenge_reviewer_share: number;
-  challenge_max_participants: number;
-  challenge_min_participants: number;
-  challenge_development_charge: number;
-}
-
-export interface BackendChallengeConfig {
-  challenge_options: BackendChallengeOption[];
-  game_mode_checker: string;
-  game_mode_identity: string;
-}
+// Single source of truth for the wire contracts is @academix-admin/domain-types (Phase 2).
+// Imported for the models below and re-exported so existing importers (e.g. payout/page) keep
+// working. BackendRoot is a local composition (map of game-mode-checker → challenge config),
+// not (yet) in domain-types — it builds on the shared BackendChallengeConfig.
+import type { BackendChallengeOption, BackendChallengeConfig } from '@academix-admin/domain-types';
+export type { BackendChallengeOption, BackendChallengeConfig };
 
 export interface BackendRoot {
   [key: string]: BackendChallengeConfig;
