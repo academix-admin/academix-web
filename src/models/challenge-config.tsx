@@ -2,15 +2,9 @@
 // =============== BACKEND INTERFACES ==================
 // =====================================================
 // Single source of truth for the wire contracts is @academix-admin/domain-types (Phase 2).
-// Imported for the models below and re-exported so existing importers (e.g. payout/page) keep
-// working. BackendRoot is a local composition (map of game-mode-checker → challenge config),
-// not (yet) in domain-types — it builds on the shared BackendChallengeConfig.
+// Imported for the models below and re-exported so existing importers (e.g. payout/page) keep working.
 import type { BackendChallengeOption, BackendChallengeConfig } from '@academix-admin/domain-types';
 export type { BackendChallengeOption, BackendChallengeConfig };
-
-export interface BackendRoot {
-  [key: string]: BackendChallengeConfig;
-}
 
 // =====================================================
 // ================= FRONTEND MODELS ====================
@@ -180,55 +174,6 @@ export class ChallengeConfig {
       gameModeChecker: data.gameModeChecker ?? this.gameModeChecker,
       gameModeIdentity: data.gameModeIdentity ?? this.gameModeIdentity,
     });
-  }
-}
-
-// -------------------------
-export class RootModel {
-  private data: Record<string, ChallengeConfig> = {};
-
-  constructor(input?: BackendRoot | null) {
-    if (!input) return;
-
-    for (const key of Object.keys(input)) {
-      this.data[key] = new ChallengeConfig(input[key]);
-    }
-  }
-
-  /** Access model like a dictionary */
-  get(key: string): ChallengeConfig | undefined {
-    return this.data[key];
-  }
-
-  /** Set/replace a challenge config */
-  set(key: string, value: ChallengeConfig): void {
-    this.data[key] = value;
-  }
-
-  /** Allow iteration: Object.keys(rootModel.data) */
-  keys(): string[] {
-    return Object.keys(this.data);
-  }
-
-  /** Convert back to backend shape */
-  toBackend(): BackendRoot {
-    const obj: BackendRoot = {};
-    for (const key of Object.keys(this.data)) {
-      obj[key] = this.data[key].toBackend();
-    }
-    return obj;
-  }
-
-  /** Factory */
-  static from(data: any): RootModel {
-    const model = new RootModel();
-    if (!data) return model;
-
-    for (const key of Object.keys(data)) {
-      model.set(key, ChallengeConfig.from(data[key]));
-    }
-
-    return model;
   }
 }
 
