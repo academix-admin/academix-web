@@ -9,6 +9,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { fetchWithTimeout } from '@/utils/timeout';
+import { hardLocalSignOut } from '@/utils/checkers';
 import styles from './AppLock.module.css';
 
 /**
@@ -65,11 +66,9 @@ export function AppLock({ children }: { children: React.ReactNode }) {
   }, [signOutDialog, t]);
   const confirmSignOutFromLock = useCallback(async () => {
     setSigningOut(true);
-    // Cap the local sign-out so a stuck auth lock / no internet can't block us, then hard-navigate.
-    await Promise.race([
-      supabaseBrowser.auth.signOut({ scope: 'local' }).catch(() => {}),
-      new Promise((res) => setTimeout(res, 2000)),
-    ]);
+    // hardLocalSignOut caps the (possibly-hanging) signOut AND force-removes the sb-* token so a stale
+    // session can't bounce this device back into the app, then hard-navigate to /login.
+    await hardLocalSignOut();
     window.location.replace('/login');
   }, []);
 

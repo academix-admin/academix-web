@@ -6,7 +6,7 @@ import styles from './profile-title.module.css';
 import { useLanguage, SUPPORTED_LANGUAGES, LANGUAGE_NAMES, SupportedLang } from '@/context/LanguageContext';
 import { ComponentStateProps } from '@/hooks/use-component-state';
 import { useUserData } from '@/lib/stacks/user-stack';
-import { supabaseBrowser } from '@/lib/supabase/client';
+import { hardLocalSignOut } from '@/utils/checkers';
 import { useDialog } from '@academix-admin/dialog-viewer';
 import { SelectionViewer, useSelectionController } from "@/lib/SelectionViewer";
 import DialogCancel from '@/components/DialogCancel';
@@ -76,13 +76,9 @@ export default function ProfileTitle({ onStateChange }: ComponentStateProps) {
 
   const confirmSignOut = async () => {
     setSigningOut(true);
-    // Clear the local session, but NEVER let it block navigation: supabase-js signOut can hang on a
-    // stuck/contended navigator.locks lock or with no internet, which left the button spinning and the
-    // page unmoved. Cap it, then hard-navigate to /login (guaranteed, no flash of /main).
-    await Promise.race([
-      supabaseBrowser.auth.signOut({ scope: 'local' }).catch(() => {}),
-      new Promise((res) => setTimeout(res, 2000)),
-    ]);
+    // hardLocalSignOut caps the (possibly-hanging) signOut AND force-removes the sb-* token so the
+    // session can't linger and bounce us back to /main. Then hard-navigate to /login.
+    await hardLocalSignOut();
     window.location.replace('/login');
   };
 

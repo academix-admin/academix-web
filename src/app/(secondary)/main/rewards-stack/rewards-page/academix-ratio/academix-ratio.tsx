@@ -46,14 +46,15 @@ export default function AcademixRatio({ onStateChange }: ComponentStateProps) {
   }, [lang, userData, demandAcademixRatio]);
 
     useEffect(() => {
-        if(academixRatioData){
+        // Distinguish "not loaded" (null) from a real ratio of 0 — 0 is valid data and must show.
+        if(academixRatioData != null){
             onStateChange?.('data');
         }else{
            onStateChange?.('none');
         }
     }, [academixRatioData]);
 
-  if (!academixRatioData) return null;
+  if (academixRatioData == null) return null;
 
   const openRewardInfo = () =>{
       nav.push('rewards_info', {sectionId: 'academix'});

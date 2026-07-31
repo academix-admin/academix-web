@@ -207,7 +207,7 @@ import { UserData } from '@/models/user-data';
 import { useUserData } from '@/lib/stacks/user-stack';
 import { StateStack } from '@academix-admin/state-stack';
 import { useLanguage } from '@/context/LanguageContext';
-import { fetchUserData } from '@/utils/checkers';
+import { fetchUserData, hardLocalSignOut } from '@/utils/checkers';
 import { useSignup } from '@/lib/stacks/signup-stack';
 import { capitalizeWords } from '@/utils/textUtils';
 
@@ -379,11 +379,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // just hang on the dead session. Clear locally, then hard-navigate to /login so the device
     // reliably leaves (the reactive redirect guard can race/miss this).
     const onRevoked = async () => {
-      // Cap the local sign-out (a dead/locked session can hang it), then hard-navigate to /login.
-      await Promise.race([
-        supabaseBrowser.auth.signOut({ scope: 'local' }).catch(() => {}),
-        new Promise((res) => setTimeout(res, 2000)),
-      ]);
+      // Clear cached app state (persisted userData etc.) so a rehydrated profile can't keep this device
+      // looking "logged in" after the session is dead.
+      try { await clearAllScopes(); } catch { /* ignore */ }
+      // hardLocalSignOut caps the signOut AND force-removes any lingering sb-* token — without this the
+      // stale JWT survived (signOut hung), so /login forwarded back to /main → a /login↔/main loop that
+      // persisted across browser restarts until browsing data was wiped.
+      await hardLocalSignOut();
       window.location.replace('/login');
     };
     window.addEventListener('ax:session-revoked', onRevoked);
