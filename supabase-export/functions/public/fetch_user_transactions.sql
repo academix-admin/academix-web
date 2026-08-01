@@ -2,7 +2,11 @@
 -- function: fetch_user_transactions(p_user_id uuid, p_country text, p_locale text, p_gender text, p_age text, p_limit_by integer, p_after_transactions jsonb)
 -- generated from Supabase project iewqfmkngcgayxbbnpiz (read-only mirror)
 
-CREATE OR REPLACE FUNCTION public.fetch_user_transactions(p_user_id uuid DEFAULT NULL, p_country text DEFAULT NULL, p_locale text DEFAULT NULL, p_gender text DEFAULT NULL, p_age text DEFAULT NULL, p_limit_by integer DEFAULT NULL, p_after_transactions jsonb DEFAULT NULL)
+-- p_search_key added (SearchViewer server search: type, reference, or amount). New param → new signature,
+-- so the old 7-arg overload is dropped and EXECUTE re-granted below.
+DROP FUNCTION IF EXISTS public.fetch_user_transactions(uuid, text, text, text, text, integer, jsonb);
+
+CREATE OR REPLACE FUNCTION public.fetch_user_transactions(p_user_id uuid DEFAULT NULL, p_country text DEFAULT NULL, p_locale text DEFAULT NULL, p_gender text DEFAULT NULL, p_age text DEFAULT NULL, p_limit_by integer DEFAULT NULL, p_after_transactions jsonb DEFAULT NULL, p_search_key text DEFAULT NULL)
  RETURNS SETOF jsonb
  LANGUAGE plpgsql
  STABLE
@@ -46,6 +50,11 @@ BEGIN
         JOIN payment_profile_table rppt ON rppt.payment_profile_id = tt.payment_profile_receiver_id
         WHERE
             (sppt.users_id = p_user_id OR rppt.users_id = p_user_id)
+            AND (p_search_key IS NULL OR p_search_key = '' OR
+                 tt.transaction_type ILIKE '%' || p_search_key || '%' OR
+                 tt.transaction_sender_reference ILIKE '%' || p_search_key || '%' OR
+                 tt.transaction_sender_amount::text ILIKE '%' || p_search_key || '%' OR
+                 tt.transaction_receiver_amount::text ILIKE '%' || p_search_key || '%')
             -- Pagination filter applied HERE so LIMIT sees only valid cursor rows
             AND (sortID IS NULL OR (
                 (direction = 'oldest' AND tt.sort_created_id::TEXT < sortID)
@@ -126,4 +135,7 @@ BEGIN
         CASE WHEN direction = 'oldest' OR direction IS NULL THEN ft.sort_created_id::TEXT ELSE NULL END DESC,
         CASE WHEN direction = 'latest'                      THEN ft.sort_created_id::TEXT ELSE NULL END ASC;
 END;
-$function$
+$function$;
+
+REVOKE ALL ON FUNCTION public.fetch_user_transactions(uuid, text, text, text, text, integer, jsonb, text) FROM public, anon;
+GRANT EXECUTE ON FUNCTION public.fetch_user_transactions(uuid, text, text, text, text, integer, jsonb, text) TO authenticated, service_role;

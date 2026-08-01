@@ -17,6 +17,11 @@ import Image from 'next/image';
 import { ComponentStateProps } from '@/hooks/use-component-state';
 import { usePinnedState } from '@/hooks/pinned-state-hook';
 import { useNav, useInfiniteScrollObserver } from '@academix-admin/navigation-stack';
+import { SearchViewer, useSearchController } from '@academix-admin/search-viewer';
+import type { SearchResult } from '@academix-admin/search-viewer';
+import LoadingView from '@/components/LoadingView/LoadingView';
+import NoResultsView from '@/components/NoResultsView/NoResultsView';
+import ErrorView from '@/components/ErrorView/ErrorView';
 
 export default function HomeQuizHistory({ onStateChange }: ComponentStateProps) {
   const { theme, applyTheme } = useTheme();
@@ -212,6 +217,34 @@ useEffect(() => {
     nav.push('quiz_result_page',{poolsId: quiz.poolsId});
   };
 
+  // ── Search (SearchViewer): local filter of the loaded history + server fetch_user_quiz_history ──
+  const [searchId, searchOps, isSearchOpen] = useSearchController();
+  const [searchResults, setSearchResults] = useState<SearchResult<QuizHistory>[]>([]);
+
+  const queryHistory = useCallback(
+    async (cursor: PaginateModel | undefined, text: string): Promise<{ data: QuizHistory[]; cursor?: PaginateModel }> => {
+      if (!userData) return { data: [] };
+      const after = cursor ?? new PaginateModel();
+      const { data, error } = await supabaseBrowser.rpc('fetch_user_quiz_history', {
+        p_locale: lang,
+        p_limit_by: 20,
+        p_after_histories: after.toJson(),
+        p_search_key: text || null,
+      });
+      if (error || !data) return { data: [] };
+      const rows = (data as BackendQuizHistory[]).map((row) => new QuizHistory(row));
+      const last = rows[rows.length - 1];
+      return { data: rows, cursor: last ? new PaginateModel({ sortId: last.sortCreatedId }) : undefined };
+    },
+    [userData, lang],
+  );
+
+  const searchIcon = (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3" />
+    </svg>
+  );
+
   return (
     <div className={styles.historyContainer}>
 
@@ -219,6 +252,15 @@ useEffect(() => {
         <h2 ref={pinnedRef} className={`${applyTheme(styles, 'historyTitle')}`} style={{ margin: 0 }}>
           {t('history_text')}
         </h2>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+        <button
+          onClick={searchOps.open}
+          className={`${styles[`refreshIcon_${theme}`]}`}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          aria-label={t('search_text')}
+        >
+          {searchIcon}
+        </button>
         <button
           onClick={() => refreshData()}
           className={`${styles[`refreshIcon_${theme}`]}`}
@@ -251,6 +293,7 @@ useEffect(() => {
             </svg>
           )}
         </button>
+        </div>
       </div>
 
       <div className={styles.historyList}>
@@ -338,6 +381,64 @@ useEffect(() => {
       { historyLoading && <div className={styles.moreSpinnerContainer}><span className={styles.moreSpinner}></span></div>}
       { !historyLoading && quizHistoryData.length === 0 && <span className={`${applyTheme(styles, 'refreshContainer')}`}>{t('history_empty')} <span role="button" onClick={refreshData} className={`${applyTheme(styles, 'refreshButton')}`}> {t('refresh')} </span></span>}
       { quizHistoryData.length > 0 && <div ref={loaderRef} className={styles.loadMoreSentinel}></div>}
+
+      <SearchViewer<QuizHistory, PaginateModel>
+        id={searchId}
+        isOpen={isSearchOpen}
+        onClose={searchOps.close}
+        debounceMs={350}
+        minQueryLength={1}
+        onInitialData={(text) => {
+          if (!text) return quizHistoryData;
+          const q = text.toLowerCase();
+          return quizHistoryData.filter((h) => h.topicsIdentity.toLowerCase().includes(q));
+        }}
+        localDataDeps={[quizHistoryData]}
+        queryData={queryHistory}
+        onRemoveDuplicateBy={(h) => h.poolsId}
+        onResult={setSearchResults}
+        searchProp={{
+          text: t('search_text'),
+          textColor: theme === 'light' ? '#000' : '#fff',
+          autoFocus: true,
+          background: theme === 'light' ? '#f5f5f5' : '#272727',
+          padding: { l: '4px', r: '4px', t: '0px', b: '0px' },
+        }}
+        loadingProp={{ view: <LoadingView text={t('loading')} /> }}
+        noResultProp={{ view: <NoResultsView text={t('no_result_text')} /> }}
+        errorProp={{ view: <ErrorView text={t('error_occurred')} /> }}
+        layoutProp={{
+          gapBetweenSearchAndContent: '12px',
+          searchBackground: theme === 'light' ? '#fff' : '#121212',
+          maxWidth: '800px',
+        }}
+        childrenDirection="vertical"
+      >
+        {searchResults.map((r) => {
+          const quiz = r.data;
+          return (
+            <div key={quiz.poolsId} className={styles.historyItemContainer} onClick={() => handleQuizClick(quiz)} style={{ padding: '0 12px' }}>
+              {quiz.topicsImage ? (
+                <Image className={styles.logo} src={quiz.topicsImage} alt="Topic" width={40} height={40} />
+              ) : (
+                <div className={styles.initials}>{getInitials(quiz.topicsIdentity)}</div>
+              )}
+              <div className={styles.historyItem}>
+                <div className={styles.historyMain}>
+                  <span className={`${applyTheme(styles, 'topicName')}`}>{quiz.topicsIdentity}</span>
+                  <span className={styles.historyTime}>{formatDate(quiz.poolsMembersCreatedAt)}</span>
+                </div>
+                <div className={`${applyTheme(styles, 'historyDetails')}`}>
+                  <span>● {t('duration_text', { value: quiz.challengeQuestionCount })}</span>
+                  <span className={quiz.poolsMembersPaidAmount < 0 ? `${applyTheme(styles, 'crossText')}` : `${applyTheme(styles, 'earnings')}`}>
+                    {formatAmount(quiz.poolsMembersPaidAmount)}
+                  </span>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </SearchViewer>
 
     </div>
   );

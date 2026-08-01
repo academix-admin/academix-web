@@ -19,6 +19,11 @@ import { ComponentStateProps } from '@/hooks/use-component-state';
 import { usePinnedState } from '@/hooks/pinned-state-hook';
 import { useTransactionModel } from '@/lib/stacks/transactions-stack';
 import { useNav, usePageLifecycle, useInfiniteScrollObserver } from '@academix-admin/navigation-stack';
+import { SearchViewer, useSearchController } from '@academix-admin/search-viewer';
+import type { SearchResult } from '@academix-admin/search-viewer';
+import LoadingView from '@/components/LoadingView/LoadingView';
+import NoResultsView from '@/components/NoResultsView/NoResultsView';
+import ErrorView from '@/components/ErrorView/ErrorView';
 import { transactionSubscriptionManager } from '@/lib/managers/TransactionSubscriptionManager';
 import { TransactionChangeEvent } from '@/lib/managers/TransactionSubscriptionManager';
 import { poolsSubscriptionManager } from '@/lib/managers/PoolsQuizTopicSubscriptionManager';
@@ -387,6 +392,39 @@ export default function PaymentTransactions({ onStateChange }: ComponentStatePro
     nav.push('view_transaction', { transactionId: transaction.transactionId });
   };
 
+  // ── Search (SearchViewer): local filter of loaded transactions + server fetch_user_transactions ──
+  const [searchId, searchOps, isSearchOpen] = useSearchController();
+  const [searchResults, setSearchResults] = useState<SearchResult<TransactionModel>[]>([]);
+
+  const matchesLocal = (m: TransactionModel, q: string) =>
+    (getTransactionTypeText(m.transactionType) || '').toLowerCase().includes(q) ||
+    (m.transactionSenderReference || '').toLowerCase().includes(q) ||
+    String(getTransactionAmount(m)).toLowerCase().includes(q);
+
+  const queryTransactions = useCallback(
+    async (cursor: PaginateModel | undefined, text: string): Promise<{ data: TransactionModel[]; cursor?: PaginateModel }> => {
+      if (!userData) return { data: [] };
+      const after = cursor ?? new PaginateModel();
+      const { data, error } = await supabaseBrowser.rpc('fetch_user_transactions', {
+        p_locale: lang,
+        p_limit_by: 20,
+        p_after_transactions: after.toJson(),
+        p_search_key: text || null,
+      });
+      if (error || !data) return { data: [] };
+      const rows = (data as BackendTransactionModel[]).map((row) => new TransactionModel(row));
+      const last = rows[rows.length - 1];
+      return { data: rows, cursor: last ? new PaginateModel({ sortId: last.sortCreatedId }) : undefined };
+    },
+    [userData, lang],
+  );
+
+  const searchIcon = (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3" />
+    </svg>
+  );
+
   if (!firstLoaded && transactionModels.length <= 0) return null;
 
   return (
@@ -395,6 +433,15 @@ export default function PaymentTransactions({ onStateChange }: ComponentStatePro
         <h2 className={`${applyTheme(styles, 'historyTitle')}`} style={{ margin: 0 }}>
           {t('transactions_text')}
         </h2>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+        <button
+          onClick={searchOps.open}
+          className={`${styles[`refreshIcon_${theme}`]}`}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          aria-label={t('search_text')}
+        >
+          {searchIcon}
+        </button>
         <button
           onClick={() => refreshData()}
           className={`${styles[`refreshIcon_${theme}`]}`}
@@ -427,6 +474,7 @@ export default function PaymentTransactions({ onStateChange }: ComponentStatePro
             </svg>
           )}
         </button>
+        </div>
       </div>
 
       <div className={styles.historyList}>
@@ -494,6 +542,71 @@ export default function PaymentTransactions({ onStateChange }: ComponentStatePro
 
       {transactionModels.length > 0 && <div ref={loaderRef} className={styles.loadMoreSentinel}></div>}
       {transactionsLoading && <div className={styles.moreSpinnerContainer}><span className={styles.moreSpinner}></span></div>}
+
+      <SearchViewer<TransactionModel, PaginateModel>
+        id={searchId}
+        isOpen={isSearchOpen}
+        onClose={searchOps.close}
+        debounceMs={350}
+        minQueryLength={1}
+        onInitialData={(text) => {
+          if (!text) return transactionModels;
+          const q = text.toLowerCase();
+          return transactionModels.filter((m) => matchesLocal(m, q));
+        }}
+        localDataDeps={[transactionModels]}
+        queryData={queryTransactions}
+        onRemoveDuplicateBy={(m) => m.transactionId}
+        onResult={setSearchResults}
+        searchProp={{
+          text: t('search_text'),
+          textColor: theme === 'light' ? '#000' : '#fff',
+          autoFocus: true,
+          background: theme === 'light' ? '#f5f5f5' : '#272727',
+          padding: { l: '4px', r: '4px', t: '0px', b: '0px' },
+        }}
+        loadingProp={{ view: <LoadingView text={t('loading')} /> }}
+        noResultProp={{ view: <NoResultsView text={t('no_result_text')} /> }}
+        errorProp={{ view: <ErrorView text={t('error_occurred')} /> }}
+        layoutProp={{
+          gapBetweenSearchAndContent: '12px',
+          searchBackground: theme === 'light' ? '#fff' : '#121212',
+          maxWidth: '800px',
+        }}
+        childrenDirection="vertical"
+      >
+        {searchResults.map((r) => {
+          const transaction = r.data;
+          return (
+            <div key={transaction.transactionId} className={`${styles.historyItemContainer}`} onClick={() => handleTransactionClick(transaction)} style={{ padding: '0 12px' }}>
+              <div className={styles.historyLayout}>
+                <div className={styles.transactionIcon}>{getTransactionIcon(transaction.transactionType)}</div>
+                <div className={styles.historyItem}>
+                  <div className={styles.historyMain}>
+                    <span className={`${applyTheme(styles, 'topicName')}`}>
+                      {getPaymentMethodName(transaction.paymentProfileSenderDetails?.paymentMethodDetails.paymentMethodChecker)} {getTransactionTypeText(transaction.transactionType)}
+                    </span>
+                    <div className={styles.amountContainer}>
+                      <CurrencySymbol className={`${styles.currencyIcon} ${getStatusClass(getTransactionStatus(transaction), transaction.transactionType)}`} size={20} />
+                      <span className={`${styles.amount} ${getStatusClass(getTransactionStatus(transaction), transaction.transactionType)}`}>
+                        {getTransactionAmount(transaction).toFixed(2).replace('-', '').replace('.00', '')}
+                      </span>
+                    </div>
+                  </div>
+                  <div className={styles.historyContent}>
+                    <div className={styles.historyDetails}>
+                      <span className={`${styles.historyDetail} ${styles[`historyDetails_${theme}`]}`}>{formatDate(transaction.transactionCreatedAt)}</span>
+                      <span style={{ fontStyle: 'normal', textDecoration: 'none' }} className={`${styles.historyTime} ${getStatusClass(getTransactionStatus(transaction), null)}`}>
+                        {capitalize(getTransactionStatusClass(getTransactionStatus(transaction)))}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </SearchViewer>
     </div>
   );
 }
