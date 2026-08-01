@@ -12,16 +12,18 @@ CREATE OR REPLACE FUNCTION public.assert_can_contribute(p_user_id uuid DEFAULT N
  SET search_path TO 'public'
 AS $function$
 DECLARE
-  v_service  boolean := (auth.jwt() ->> 'role') = 'service_role' OR session_user IN ('service_role','supabase_auth_admin','postgres');
-  v_uid      uuid    := CASE WHEN v_service AND p_user_id IS NOT NULL THEN p_user_id ELSE auth.uid() END;
   v_level    int;
   v_personal boolean;
 BEGIN
+  -- [idor-guard] (same as the money/pool RPCs): a JWT caller acts as their own id; service-role callers
+  -- (the content Lambdas, auth.uid() null) keep the authorizer-verified passed id. Client can't spoof.
+  IF auth.uid() IS NOT NULL THEN p_user_id := auth.uid(); END IF;
+
   SELECT rt.roles_level, rt.roles_is_personal_entry
     INTO v_level, v_personal
   FROM users_table ut
   JOIN roles_table rt ON rt.roles_id = ut.roles_id
-  WHERE ut.users_id = v_uid;
+  WHERE ut.users_id = p_user_id;
 
   IF v_level IS NULL OR v_level < 2 THEN
     RAISE EXCEPTION 'not_authorized: contribution requires a creator or higher role'
