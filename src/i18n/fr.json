@@ -719,6 +719,7 @@
   "create_public_sub": "Ajoutez des catégories, des sujets et des questions à la bibliothèque publique (vérifiés avant publication).",
   "create_private_text": "Contenu privé",
   "create_private_sub": "Créez vos propres catégories, sujets et questions privés.",
+  "create_text": "Créer",
   "review_text": "Réviser",
   "review_sub": "Évaluez le contenu proposé en attente d'approbation.",
   "library_text": "Bibliothèque",
@@ -726,5 +727,8 @@
   "reload_text": "Recharger",
   "approval_approved": "Approuvé",
   "approval_rejected": "Rejeté",
-  "approval_pending": "En attente"
+  "approval_pending": "En attente",
+  "recents_text": "Récents",
+  "favourite_text": "Favoris",
+  "public_text": "Public"
 }

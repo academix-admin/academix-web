@@ -719,6 +719,7 @@
   "create_public_sub": "Add categories, topics and questions to the public library (reviewed before going live).",
   "create_private_text": "Private content",
   "create_private_sub": "Build your own private categories, topics and questions.",
+  "create_text": "Create",
   "review_text": "Review",
   "review_sub": "Evaluate contributed content awaiting approval.",
   "library_text": "Library",
@@ -726,5 +727,8 @@
   "reload_text": "Reload",
   "approval_approved": "Approved",
   "approval_rejected": "Rejected",
-  "approval_pending": "Pending"
+  "approval_pending": "Pending",
+  "recents_text": "Recents",
+  "favourite_text": "Favourite",
+  "public_text": "Public"
 }
