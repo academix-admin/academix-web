@@ -15,7 +15,7 @@ BEGIN
   -- [gate] one server-authoritative derivation via public.gate_check
   SELECT users_id, country INTO p_user_id, p_country
     FROM public.gate_check(NULL, p_locale);
-  IF p_mission_tab NOT IN ('MissionTab.active', 'MissionTab.pending', 'MissionTab.completed') THEN 
+  IF p_mission_tab NOT IN ('MissionTab.all', 'MissionTab.active', 'MissionTab.pending', 'MissionTab.completed') THEN
     RETURN QUERY SELECT * FROM jsonb_array_elements('[]'::jsonb);
   END IF;
 
@@ -86,9 +86,10 @@ BEGIN
     )
   FROM missions_with_progress m
   WHERE (
+    p_mission_tab = 'MissionTab.all' OR
     (p_mission_tab = 'MissionTab.completed' AND (m.progress->>'mission_progress_rewarded')::BOOLEAN = TRUE) OR
     (p_mission_tab = 'MissionTab.pending' AND (m.progress->>'mission_progress_rewarded')::BOOLEAN = FALSE AND (m.progress->>'mission_progress_count')::INT = (m.progress->>'mission_progress_required')::INT) OR
-    (p_mission_tab = 'MissionTab.active' AND (m.progress->>'mission_progress_count')::INT <> (m.progress->>'mission_progress_required')::INT) 
+    (p_mission_tab = 'MissionTab.active' AND (m.progress->>'mission_progress_count')::INT <> (m.progress->>'mission_progress_required')::INT)
   );
 END;
 $function$

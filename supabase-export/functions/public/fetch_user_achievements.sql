@@ -15,7 +15,7 @@ BEGIN
   -- [gate] one server-authoritative derivation via public.gate_check
   SELECT users_id, country INTO p_user_id, p_country
     FROM public.gate_check(NULL, p_locale);
-    IF p_achievement_tab NOT IN ('AchievementTab.active','AchievementTab.pending','AchievementTab.completed') THEN 
+    IF p_achievement_tab NOT IN ('AchievementTab.all','AchievementTab.active','AchievementTab.pending','AchievementTab.completed') THEN
        RETURN QUERY SELECT * FROM jsonb_array_elements('[]'::jsonb);
     END IF;
 
@@ -86,9 +86,10 @@ BEGIN
     )
     FROM achievements_with_progress a
     WHERE (
+        p_achievement_tab = 'AchievementTab.all' OR
         (p_achievement_tab = 'AchievementTab.completed' AND (a.progress->>'achievements_progress_rewarded')::BOOLEAN = TRUE) OR
         (p_achievement_tab = 'AchievementTab.pending' AND (a.progress->>'achievements_progress_rewarded')::BOOLEAN = FALSE AND (a.progress->>'achievements_progress_count')::INT = (a.progress->>'achievements_progress_required')::INT) OR
-        (p_achievement_tab = 'AchievementTab.active' AND (a.progress->>'achievements_progress_count')::INT <> (a.progress->>'achievements_progress_required')::INT) 
+        (p_achievement_tab = 'AchievementTab.active' AND (a.progress->>'achievements_progress_count')::INT <> (a.progress->>'achievements_progress_required')::INT)
     );
 END;
 $function$

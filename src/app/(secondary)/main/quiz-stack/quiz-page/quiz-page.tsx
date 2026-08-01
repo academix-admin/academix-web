@@ -35,6 +35,11 @@ export default function QuizPage() {
     const status = getComponentStatus(compState);
     const anyData = status.loadedCount > 0;
     const anyLoading = status.loadingCount > 0;
+    // Content sections tracked below (keep in sync with the JSX): active + 3 public + 3 available.
+    const EXPECTED_SECTIONS = 7;
+    const allReported = compState.size >= EXPECTED_SECTIONS;
+    // `settled` is now only a SAFETY fallback for the rare case a section never reports at all — the
+    // verdict normally shows the instant every section has reported (no artificial 3.5s wait).
     const [settled, setSettled] = useState(false);
     const [nonce, setNonce] = useState(0);
     useEffect(() => {
@@ -43,7 +48,7 @@ export default function QuizPage() {
       return () => window.clearTimeout(timer);
     }, [compState.size, status.loadedCount, status.errorCount, status.noneCount, status.loadingCount]);
 
-    const nothing   = settled && !anyLoading && !anyData && compState.size > 0;
+    const nothing   = (allReported || settled) && !anyLoading && !anyData && compState.size > 0;
     const allErrored = nothing && status.errorCount > 0 && status.noneCount === 0;
     // Before any section has data and before we've settled into an empty/error verdict, show one loader
     // instead of a blank page (sections report 'none' while fetching, so a plain "any loading?" is false).
