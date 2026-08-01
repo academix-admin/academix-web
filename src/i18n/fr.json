@@ -744,5 +744,6 @@
   "stat_questions": "Questions",
   "stat_review_queue": "En file",
   "stat_reviewed": "Révisés",
-  "region_blocked_or_error": "Ceci peut être indisponible dans votre région, ou une erreur s'est produite."
+  "region_blocked_or_error": "Ceci peut être indisponible dans votre région, ou une erreur s'est produite.",
+  "quiz_none_or_region": "Aucun quiz à afficher pour le moment — certains contenus peuvent être indisponibles dans votre région."
 }

@@ -8,7 +8,7 @@ import QuizChallenge from "./quiz-challenge/quiz-challenge";
 import QuizCommitment from "./quiz-commitment/quiz-commitment";
 import PoolMembers from "./pool-members/pool-members";
 import Pin from "../shared/pin/pin";
-import ContributionPage from "./contribution-page/contribution-page";
+import ContributionDashboardPage from "./contribution-dashboard-page/contribution-dashboard-page";
 import CreatorLibrary from "./creator-library/creator-library";
 
 const quizStackNavLink = {
@@ -17,7 +17,7 @@ const quizStackNavLink = {
   quiz_commitment: QuizCommitment,
   pool_members: PoolMembers,
   pin: Pin,
-  contribution_page: ContributionPage,
+  contribution_page: ContributionDashboardPage,
   creator_library: CreatorLibrary,
   reviewer_library: CreatorLibrary,
 };

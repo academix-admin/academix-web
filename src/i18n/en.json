@@ -744,5 +744,6 @@
   "stat_questions": "Questions",
   "stat_review_queue": "In queue",
   "stat_reviewed": "Reviewed",
-  "region_blocked_or_error": "This may be unavailable in your region, or something went wrong."
+  "region_blocked_or_error": "This may be unavailable in your region, or something went wrong.",
+  "quiz_none_or_region": "No quizzes to show right now — some content may not be available in your region."
 }

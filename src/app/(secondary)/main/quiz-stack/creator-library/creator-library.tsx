@@ -1,11 +1,11 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Image from 'next/image';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import styles from './creator-library.module.css';
-import { useNav, Scaffold } from '@academix-admin/navigation-stack';
+import { useNav, Scaffold, useInfiniteScrollObserver } from '@academix-admin/navigation-stack';
 import { useDemandState } from '@academix-admin/state-stack';
 import { useDialog } from '@academix-admin/dialog-viewer';
 import { Header } from '@academix-admin/header';
@@ -246,10 +246,11 @@ function CategoryList({
     deps: [lang, reviewerTab ?? ''],
   });
 
+  const PAGE = 20;
   const [viewState, setViewState] = useState<ViewState>('loading');
   const [paginate, setPaginate] = useState<PaginateModel>(new PaginateModel());
   const [paginating, setPaginating] = useState(false);
-  const loaderRef = useRef<HTMLDivElement | null>(null);
+  const [hasMore, setHasMore] = useState(true);
 
   const load = useCallback(
     (override = false) => {
@@ -257,6 +258,7 @@ function CategoryList({
         try {
           const list = await fetchCategories(lang, pType, 12, new PaginateModel(), reviewerTab);
           setPaginate(new PaginateModel({ sortId: nextSortId(list, pType) }));
+          setHasMore(list.length >= 12); // a short first page means there's nothing more to fetch
           set(list, override ? { override: true } : undefined);
           setViewState(list.length > 0 ? 'data' : 'empty');
         } catch {
@@ -280,11 +282,14 @@ function CategoryList({
     if (paginating || items.length === 0) return;
     setPaginating(true);
     try {
-      const more = await fetchCategories(lang, pType, 20, paginate, reviewerTab);
-      if (more.length > 0) {
+      const more = await fetchCategories(lang, pType, PAGE, paginate, reviewerTab);
+      const seen = new Set(items.map((c) => c.topicCategoryId));
+      const fresh = more.filter((c) => !seen.has(c.topicCategoryId));
+      // Stop when a page brings nothing new or is short — this is what kills the loadMore loop.
+      setHasMore(fresh.length > 0 && more.length >= PAGE);
+      if (fresh.length > 0) {
         setPaginate(new PaginateModel({ sortId: nextSortId(more, pType) }));
-        const seen = new Set(items.map((c) => c.topicCategoryId));
-        setItems([...items, ...more.filter((c) => !seen.has(c.topicCategoryId))]);
+        setItems([...items, ...fresh]);
       }
     } catch {
       /* keep current list on pagination error */
@@ -293,12 +298,9 @@ function CategoryList({
     }
   }, [paginating, items, paginate, lang, pType, reviewerTab, setItems]);
 
-  useEffect(() => {
-    if (!loaderRef.current) return;
-    const observer = new IntersectionObserver((entries) => { if (entries[0].isIntersecting) loadMore(); }, { threshold: 1.0 });
-    observer.observe(loaderRef.current);
-    return () => observer.disconnect();
-  }, [loadMore]);
+  // Stable, library-level infinite scroll (drop-in for the loaderRef+IntersectionObserver pattern, but the
+  // observer is created once + guarded by hasMore/loading, so it never loops when unchanged/exhausted).
+  const sentinelRef = useInfiniteScrollObserver({ onLoadMore: loadMore, hasMore, loading: paginating, rootMargin: '320px' });
 
   if (viewState === 'loading') return <LoadingView />;
   if (viewState === 'error') return <ErrorView text={t('error_occurred')} buttonText={t('reload_text')} onButtonClick={() => { setViewState('loading'); load(true); }} />;
@@ -309,7 +311,7 @@ function CategoryList({
       {items.map((cat) => (
         <ListRow key={cat.topicCategoryId} category={cat} />
       ))}
-      <div ref={loaderRef} className={styles.sentinel} />
+      {hasMore && <div ref={sentinelRef} className={styles.sentinel} />}
       {paginating && <div className={styles.moreSpinner}><span /></div>}
     </div>
   );

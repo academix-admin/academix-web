@@ -277,7 +277,9 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
       extractLatest(quizzesModel);
       set(quizzesModel);
       setFirstLoaded(true);
-      onStateChange?.('data');
+      // Report the REAL emptiness — reporting 'data' on an empty result made the whole quiz page render
+      // blank (e.g. region-limited content). 'none' lets the page settle into its loader/empty aggregate.
+      onStateChange?.(quizzesModel.length > 0 ? 'data' : 'none');
       refreshData();
     });
   }, [demandUserDisplayQuizTopicModel, userData]);

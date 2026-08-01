@@ -59,7 +59,7 @@ export default function QuizPage() {
         allErrored
           ? <ErrorView text={t('region_blocked_or_error')} buttonText={t('try_again')}
                        onButtonClick={() => { resetComponentState(); setSettled(false); setNonce(n => n + 1); }} />
-          : <NoResultsView text={t('no_content')} buttonText={null} onButtonClick={null} />
+          : <NoResultsView text={t('quiz_none_or_region')} buttonText={null} onButtonClick={null} />
       )}
 
       {/* Sections stay mounted (they fetch on visibility); the aggregate above is purely additive and

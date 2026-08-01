@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
-import styles from './contribution-page.module.css';
+import styles from './contribution-dashboard-page.module.css';
 import { useUserData } from '@/lib/stacks/user-stack';
 import { useNav, Scaffold } from '@academix-admin/navigation-stack';
 import { useDemandState } from '@academix-admin/state-stack';
@@ -37,7 +37,7 @@ interface RoleDashboard {
   reviewed: number;
 }
 
-export default function ContributionPage() {
+export default function ContributionDashboardPage() {
   const { theme } = useTheme();
   const { t } = useLanguage();
   const { userData, __meta } = useUserData();
