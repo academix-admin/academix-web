@@ -1,14 +1,23 @@
 -- schema:   public
--- function: fetch_categories(p_country text, p_locale text, p_gender text, p_age text, p_user_id uuid, p_type text, p_limit_by integer, p_after_categories jsonb, p_reviewer_tab text, p_group_id uuid)
+-- function: fetch_categories(p_locale, p_type, p_limit_by, p_after_categories, p_reviewer_tab)
+-- identity + demographics (user_id/country/gender/age) are derived server-side via gate_check, NOT client-sent.
 -- generated from Supabase project iewqfmkngcgayxbbnpiz (read-only mirror)
 
-CREATE OR REPLACE FUNCTION public.fetch_categories(p_country text, p_locale text, p_gender text, p_age text, p_user_id uuid, p_type text, p_limit_by integer, p_after_categories jsonb, p_reviewer_tab text DEFAULT NULL::text, p_group_id uuid DEFAULT NULL::uuid)
+CREATE OR REPLACE FUNCTION public.fetch_categories(p_locale text, p_type text, p_limit_by integer, p_after_categories jsonb, p_reviewer_tab text DEFAULT NULL::text)
  RETURNS SETOF jsonb
  LANGUAGE plpgsql
 AS $function$
 DECLARE
     sortID TEXT;
+    p_user_id uuid;
+    p_country text;
+    p_gender  text;
+    p_age     text;
 BEGIN
+    -- [gate] server-authoritative identity + demographics (never client-sent), same as the money RPCs
+    -- (fetch_user_top_up_wallet / get_active_quiz). Prevents spoofing country/gender/age to bypass gating.
+    SELECT users_id, country, gender, age INTO p_user_id, p_country, p_gender, p_age
+    FROM public.gate_check(NULL, p_locale);
     sortID := (p_after_categories->>'sort_id')::TEXT;
 
     RETURN QUERY

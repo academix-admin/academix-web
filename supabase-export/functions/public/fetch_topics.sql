@@ -1,14 +1,22 @@
 -- schema:   public
--- function: fetch_topics(p_user_id uuid, p_country text, p_locale text, p_gender text, p_age text, p_limit_by integer, p_after_topics jsonb, p_type text, p_category_id uuid, p_reviewer_tab text)
+-- function: fetch_topics(p_locale, p_limit_by, p_after_topics, p_type, p_category_id, p_reviewer_tab)
+-- identity + demographics derived server-side via gate_check, NOT client-sent.
 -- generated from Supabase project iewqfmkngcgayxbbnpiz (read-only mirror)
 
-CREATE OR REPLACE FUNCTION public.fetch_topics(p_user_id uuid, p_country text, p_locale text, p_gender text, p_age text, p_limit_by integer, p_after_topics jsonb, p_type text, p_category_id uuid DEFAULT NULL::uuid, p_reviewer_tab text DEFAULT NULL::text)
+CREATE OR REPLACE FUNCTION public.fetch_topics(p_locale text, p_limit_by integer, p_after_topics jsonb, p_type text, p_category_id uuid DEFAULT NULL::uuid, p_reviewer_tab text DEFAULT NULL::text)
  RETURNS SETOF jsonb
  LANGUAGE plpgsql
 AS $function$
 DECLARE
     sortID TEXT;
+    p_user_id uuid;
+    p_country text;
+    p_gender  text;
+    p_age     text;
 BEGIN
+    -- [gate] server-authoritative identity + demographics (never client-sent), via gate_check.
+    SELECT users_id, country, gender, age INTO p_user_id, p_country, p_gender, p_age
+    FROM public.gate_check(NULL, p_locale);
     sortID := (p_after_topics->>'sort_id')::TEXT;
     
     RETURN QUERY
