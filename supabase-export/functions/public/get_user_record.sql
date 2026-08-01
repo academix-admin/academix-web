@@ -47,7 +47,12 @@ BEGIN
         'roles_table',           jsonb_build_object(
             'roles_id',              rt.roles_id,
             'roles_level',           rt.roles_level,
-            'roles_checker',         rt.roles_checker
+            'roles_checker',         rt.roles_checker,
+            -- server-authoritative contribution capabilities (mirror assert_can_contribute),
+            -- so the client never hard-codes role levels/checkers.
+            'roles_can_contribute',     COALESCE(rt.roles_level >= 2, false),
+            'roles_can_create_private', COALESCE(rt.roles_is_personal_entry, false),
+            'roles_can_review',         COALESCE(rt.roles_checker IN ('Roles.reviewer', 'Roles.academix_reviewer'), false)
         )
     )
     INTO result

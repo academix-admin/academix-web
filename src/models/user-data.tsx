@@ -4,6 +4,11 @@ interface RoleData {
   rolesId: string;
   rolesLevel: number;
   rolesType: string;
+  // server-authoritative contribution capabilities (computed by get_user_record,
+  // mirroring assert_can_contribute) — the client never derives these from level/checker.
+  rolesCanContribute: boolean;
+  rolesCanCreatePrivate: boolean;
+  rolesCanReview: boolean;
 }
 
 interface LanguageData {
@@ -69,6 +74,9 @@ export class UserData {
           rolesId: data.roles_table.roles_id,
           rolesLevel: data.roles_table.roles_level,
           rolesType: data.roles_table.roles_checker,
+          rolesCanContribute: data.roles_table.roles_can_contribute ?? false,
+          rolesCanCreatePrivate: data.roles_table.roles_can_create_private ?? false,
+          rolesCanReview: data.roles_table.roles_can_review ?? false,
         }
       : null;
     this.languageTable = data?.language_table
@@ -119,12 +127,18 @@ export class UserData {
             roles_id: data.usersRole.rolesId,
             roles_level: data.usersRole.rolesLevel,
             roles_checker: data.usersRole.rolesType,
+            roles_can_contribute: data.usersRole.rolesCanContribute,
+            roles_can_create_private: data.usersRole.rolesCanCreatePrivate,
+            roles_can_review: data.usersRole.rolesCanReview,
           }
         : this.usersRole
         ? {
             roles_id: this.usersRole.rolesId,
             roles_level: this.usersRole.rolesLevel,
             roles_checker: this.usersRole.rolesType,
+            roles_can_contribute: this.usersRole.rolesCanContribute,
+            roles_can_create_private: this.usersRole.rolesCanCreatePrivate,
+            roles_can_review: this.usersRole.rolesCanReview,
           }
         : null,
       language_table: data.languageTable
@@ -198,6 +212,9 @@ export class UserData {
                                               roles_id: this.usersRole.rolesId,
                                               roles_level: this.usersRole.rolesLevel,
                                               roles_checker: this.usersRole.rolesType,
+                                              roles_can_contribute: this.usersRole.rolesCanContribute,
+                                              roles_can_create_private: this.usersRole.rolesCanCreatePrivate,
+                                              roles_can_review: this.usersRole.rolesCanReview,
                                             }
                                           : null,
       language_table: this.languageTable ? {
@@ -251,6 +268,9 @@ export class UserData {
               roles_id: data.usersRole.rolesId,
               roles_level: data.usersRole.rolesLevel,
               roles_checker: data.usersRole.rolesType,
+              roles_can_contribute: data.usersRole.rolesCanContribute,
+              roles_can_create_private: data.usersRole.rolesCanCreatePrivate,
+              roles_can_review: data.usersRole.rolesCanReview,
             }
           : null,
         language_table: data.languageTable

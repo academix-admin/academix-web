@@ -711,5 +711,20 @@
   "country_description": "Your primary country we process payment",
   "confirm_claim_giveback": "Are you sure you want to claim {code} for {amount} ADC?",
   "view_transaction_text": "View Transaction",
-  "or_text": "or"
+  "or_text": "or",
+  "contribute_text": "Contribute",
+  "contribution_locked_title": "Contribution is locked",
+  "contribution_locked_sub": "Only creators and higher roles can contribute content. Unlock a creator role to start building quizzes.",
+  "create_public_text": "Create public content",
+  "create_public_sub": "Add categories, topics and questions to the public library (reviewed before going live).",
+  "create_private_text": "Private content",
+  "create_private_sub": "Build your own private categories, topics and questions.",
+  "review_text": "Review",
+  "review_sub": "Evaluate contributed content awaiting approval.",
+  "library_text": "Library",
+  "contribute_first": "Nothing here yet — contribute first",
+  "reload_text": "Reload",
+  "approval_approved": "Approved",
+  "approval_rejected": "Rejected",
+  "approval_pending": "Pending"
 }

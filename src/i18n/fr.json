@@ -711,5 +711,20 @@
   "country_description": "Votre pays principal où nous traitons les paiements",
   "confirm_claim_giveback": "Êtes-vous sûr de vouloir réclamer {code} pour {amount} ADC ?",
   "view_transaction_text": "Voir la transaction",
-  "or_text": "ou"
+  "or_text": "ou",
+  "contribute_text": "Contribuer",
+  "contribution_locked_title": "La contribution est verrouillée",
+  "contribution_locked_sub": "Seuls les créateurs et les rôles supérieurs peuvent contribuer du contenu. Débloquez un rôle de créateur pour commencer à créer des quiz.",
+  "create_public_text": "Créer du contenu public",
+  "create_public_sub": "Ajoutez des catégories, des sujets et des questions à la bibliothèque publique (vérifiés avant publication).",
+  "create_private_text": "Contenu privé",
+  "create_private_sub": "Créez vos propres catégories, sujets et questions privés.",
+  "review_text": "Réviser",
+  "review_sub": "Évaluez le contenu proposé en attente d'approbation.",
+  "library_text": "Bibliothèque",
+  "contribute_first": "Rien ici pour l'instant — contribuez d'abord",
+  "reload_text": "Recharger",
+  "approval_approved": "Approuvé",
+  "approval_rejected": "Rejeté",
+  "approval_pending": "En attente"
 }

@@ -73,7 +73,8 @@ export default function QuizPageTitle({ onStateChange }: ComponentStateProps) {
   }, []);
 
   const handleQuizClick = () => {
-    console.log('Quiz icon clicked');
+    // Academix Engine: open the role-gated contribution hub (server enforces via assert_can_contribute).
+    nav.push('contribution_page');
   };
 
   const handleAddClick = () => {
