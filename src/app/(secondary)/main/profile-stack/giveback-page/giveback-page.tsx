@@ -6,7 +6,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import styles from './giveback-page.module.css';
 import { TextInput } from '@academix-admin/forms';
 import { supabaseBrowser } from '@/lib/supabase/client';
-import { useNav } from "@academix-admin/navigation-stack";
+import { useNav, useInfiniteScrollObserver } from '@academix-admin/navigation-stack';
 import { useUserData } from '@/lib/stacks/user-stack';
 import { UserData } from '@/models/user-data';
 import { BackendGiveBackModel, GiveBackModel } from '@/models/redeem-code-model';
@@ -199,7 +199,7 @@ export default function GiveBackPage() {
   const { t, lang } = useLanguage();
   const nav = useNav();
   const { userData, __meta } = useUserData();
-  const loaderRef = useRef<HTMLDivElement | null>(null);
+  const loaderRef = useInfiniteScrollObserver({ onLoadMore: () => callPaginate() });
 
   const [activeTab, setActiveTab] = useState<Tab>('unclaimed');
   const [paginateModel, setPaginateModel] = useState<PaginateModel>(new PaginateModel());
@@ -225,15 +225,6 @@ export default function GiveBackPage() {
   const isActiveListEmpty = activeList.length === 0;
 
   // ── Intersection observer for pagination ──────────────────────────────────
-  useEffect(() => {
-    if (!loaderRef.current) return;
-    const observer = new IntersectionObserver(
-      (entries) => { if (entries[0].isIntersecting) callPaginate(); },
-      { threshold: 1.0 }
-    );
-    observer.observe(loaderRef.current);
-    return () => { if (loaderRef.current) observer.unobserve(loaderRef.current); };
-  }, [giveBacks, paginateModel]);
 
   // ── Fetch ──────────────────────────────────────────────────────────────────
   const fetchGiveBacks = useCallback(async (

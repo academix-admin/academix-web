@@ -6,7 +6,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import Image from 'next/image';
 import styles from './redeem-codes.module.css';
 import { supabaseBrowser } from '@/lib/supabase/client';
-import { useNav, usePageLifecycle } from "@academix-admin/navigation-stack";
+import { useNav, usePageLifecycle, useInfiniteScrollObserver } from '@academix-admin/navigation-stack';
 import { capitalizeWords } from '@/utils/textUtils';
 import { useUserData } from '@/lib/stacks/user-stack';
 import { UserData } from '@/models/user-data';
@@ -138,7 +138,7 @@ export default function RedeemCodes() {
   const { t, lang } = useLanguage();
   const nav = useNav();
   const { userData, userData$ } = useUserData();
-  const loaderRef = useRef<HTMLDivElement | null>(null);
+  const loaderRef = useInfiniteScrollObserver({ onLoadMore: () => callPaginate() });
 
   const [paginateModel, setPaginateModel] = useState<PaginateModel>(new PaginateModel());
   const [fetchLoading, setFetchLoading] = useState(false);
@@ -150,24 +150,6 @@ export default function RedeemCodes() {
   const [isRefreshing, setIsRefreshing] = useState(false);
 
 
-  useEffect(() => {
-    if (!loaderRef.current) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          callPaginate();
-        }
-      },
-      { threshold: 1.0 }
-    );
-
-    observer.observe(loaderRef.current);
-
-    return () => {
-      if (loaderRef.current) observer.unobserve(loaderRef.current);
-    };
-  }, [redeemCodes, paginateModel]);
 
   const fetchRedeemCodes = useCallback(async (userData: UserData, limitBy: number, paginateModel: PaginateModel): Promise<RedeemCodeModel[]> => {
     if (!userData) return [];

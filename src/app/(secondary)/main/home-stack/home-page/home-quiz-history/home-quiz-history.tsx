@@ -16,7 +16,7 @@ import { PaginateModel } from '@/models/paginate-model';
 import Image from 'next/image';
 import { ComponentStateProps } from '@/hooks/use-component-state';
 import { usePinnedState } from '@/hooks/pinned-state-hook';
-import { useNav } from '@academix-admin/navigation-stack';
+import { useNav, useInfiniteScrollObserver } from '@academix-admin/navigation-stack';
 
 export default function HomeQuizHistory({ onStateChange }: ComponentStateProps) {
   const { theme, applyTheme } = useTheme();
@@ -24,7 +24,7 @@ export default function HomeQuizHistory({ onStateChange }: ComponentStateProps) 
   const nav = useNav();
   const { userData, userData$ } = useUserData();
   const { ref: pinnedRef, stuck } = usePinnedState<HTMLHeadingElement>({ offset: 0 });
-  const loaderRef = useRef<HTMLDivElement | null>(null);
+  const loaderRef = useInfiniteScrollObserver({ onLoadMore: () => callPaginate() });
 
 
   const [paginateModel, setPaginateModel] = useState<PaginateModel>(new PaginateModel());
@@ -49,24 +49,6 @@ export default function HomeQuizHistory({ onStateChange }: ComponentStateProps) 
 //     console.log('stuck',stuck);
 //   }, [stuck]);
 
-  useEffect(() => {
-        if (!loaderRef.current) return;
-
-     const observer = new IntersectionObserver(
-        (entries) => {
-            if (entries[0].isIntersecting) {
-                callPaginate();
-            }
-        },
-        { threshold: 1.0 }
-    );
-
-    observer.observe(loaderRef.current);
-
-        return () => {
-            if (loaderRef.current) observer.unobserve(loaderRef.current);
-        };
-    }, [quizHistoryData, paginateModel]);
 
   const fetchQuizHistory = useCallback(async (userData: UserData, limitBy: number, paginateModel: PaginateModel): Promise<QuizHistory[]> => {
     if (!userData) return [];

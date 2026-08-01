@@ -6,7 +6,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import Image from 'next/image';
 import styles from './quiz-result-page.module.css';
 import { supabaseBrowser } from '@/lib/supabase/client';
-import { useNav } from "@academix-admin/navigation-stack";
+import { useNav, useInfiniteScrollObserver } from "@academix-admin/navigation-stack";
 import { useUserData } from '@/lib/stacks/user-stack';
 import { UserData } from '@/models/user-data';
 import { PaginateModel } from '@/models/paginate-model';
@@ -26,7 +26,7 @@ interface ResultViewProps {
   membersLoading: boolean;
   quizResult: PoolMemberModel | null;
   poolMembers: PoolMemberModel[];
-  loaderRef: React.RefObject<HTMLDivElement | null>;
+  loaderRef: React.Ref<HTMLDivElement>;
   callPaginate: () => void;
 }
 
@@ -748,9 +748,10 @@ export default function QuizResultPage(props: QuizResultProps) {
   const nav = useNav();
   const { poolsId } = props;
   const { userData } = useUserData();
-  const mobileLoaderRef = useRef<HTMLDivElement>(null);
-  const tabLoaderRef = useRef<HTMLDivElement>(null);
-  const webLoaderRef = useRef<HTMLDivElement>(null);
+  // Stable infinite scroll for each responsive layout (see @academix-admin/navigation-stack).
+  const mobileLoaderRef = useInfiniteScrollObserver({ onLoadMore: () => callPaginate() });
+  const tabLoaderRef = useInfiniteScrollObserver({ onLoadMore: () => callPaginate() });
+  const webLoaderRef = useInfiniteScrollObserver({ onLoadMore: () => callPaginate() });
 
   const [resultsLoading, setResultsLoading] = useState(false);
   const [membersLoading, setMembersLoading] = useState(false);
@@ -857,66 +858,10 @@ export default function QuizResultPage(props: QuizResultProps) {
   }, [fetchQuizResults]);
 
 
-  useEffect(() => {
-    if (!mobileLoaderRef.current || membersLoading) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          callPaginate();
-        }
-      },
-      { threshold: 1 }
-    );
-
-    observer.observe(mobileLoaderRef.current);
-
-    return () => {
-      if (mobileLoaderRef.current) observer.unobserve(mobileLoaderRef.current);
-    };
-  }, [poolMembers, paginateModel, membersLoading]);
-
-  useEffect(() => {
-    if (!tabLoaderRef.current || membersLoading) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          callPaginate();
-        }
-      },
-      { threshold: 1 }
-    );
-
-    observer.observe(tabLoaderRef.current);
-
-    return () => {
-      if (tabLoaderRef.current) observer.unobserve(tabLoaderRef.current);
-    };
-  }, [poolMembers, paginateModel, membersLoading]);
-
-  useEffect(() => {
-    if (!webLoaderRef.current || membersLoading) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          callPaginate();
-        }
-      },
-      { threshold: 1 }
-    );
-
-    observer.observe(webLoaderRef.current);
-
-    return () => {
-      if (webLoaderRef.current) observer.unobserve(webLoaderRef.current);
-    };
-  }, [poolMembers, paginateModel, membersLoading]);
 
 
   const callPaginate = async () => {
-    if (!userData || poolMembers.length <= 0) return;
+    if (!userData || poolMembers.length <= 0 || membersLoading) return;
     setMembersLoading(true);
     const models = await fetchPoolMembers(userData, 20, paginateModel);
     setMembersLoading(false);

@@ -6,7 +6,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import Image from 'next/image';
 import styles from './achievements-page.module.css';
 import { supabaseBrowser } from '@/lib/supabase/client';
-import { useNav } from "@academix-admin/navigation-stack";
+import { useNav, useInfiniteScrollObserver } from '@academix-admin/navigation-stack';
 import { capitalize } from '@/utils/textUtils';
 
 import TabMilestone from "@/models/tab-milestone";
@@ -288,26 +288,8 @@ const AchievementsContainer: React.FC<AchievementsContainerProps> = ({
   const { theme, applyTheme } = useTheme();
   const { t } = useLanguage();
 
-  const loaderRef = useRef<HTMLDivElement | null>(null);
+  const loaderRef = useInfiniteScrollObserver({ onLoadMore: () => onLoadMore(), loading: isLoading });
 
-  useEffect(() => {
-    if (!loaderRef.current) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && achievementsModel.length > 0 && !isLoading) {
-          onLoadMore();
-        }
-      },
-      { threshold: 1.0 }
-    );
-
-    observer.observe(loaderRef.current);
-
-    return () => {
-      if (loaderRef.current) observer.unobserve(loaderRef.current);
-    };
-  }, [achievementsModel, isLoading, onLoadMore]);
 
   const refreshData = () => {
     // Parent will handle refresh

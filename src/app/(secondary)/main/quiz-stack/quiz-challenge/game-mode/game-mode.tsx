@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import styles from './game-mode.module.css';
-import { useNav } from "@academix-admin/navigation-stack";
+import { useNav, useInfiniteScrollObserver } from '@academix-admin/navigation-stack';
 
 import { useUserData } from '@/lib/stacks/user-stack';
 import { supabaseBrowser } from '@/lib/supabase/client';
@@ -54,7 +54,7 @@ export default function GameMode({ onModeSelect, topicsId }: GameModeProps) {
   const { t, lang } = useLanguage();
   const { userData } = useUserData();
 
-  const loaderRef = useRef<HTMLDivElement | null>(null);
+  const loaderRef = useInfiniteScrollObserver({ onLoadMore: () => callPaginate() });
   const [firstLoaded, setFirstLoaded] = useState(false);
   const [gameModeLoading, setGameModeLoading] = useState(false);
   const [error, setError] = useState('');
@@ -64,24 +64,6 @@ export default function GameMode({ onModeSelect, topicsId }: GameModeProps) {
 
 
 
-  useEffect(() => {
-    if (!loaderRef.current) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && gameModeModel.length > 0 && !gameModeLoading) {
-          callPaginate();
-        }
-      },
-      { threshold: 1.0 }
-    );
-
-    observer.observe(loaderRef.current);
-
-    return () => {
-      if (loaderRef.current) observer.unobserve(loaderRef.current);
-    };
-  }, [gameModeModel, gameModeLoading]);
 
   const fetchGameModeModel = useCallback(async (userData: UserData): Promise<GameModeModel[]> => {
     if (!userData) return [];

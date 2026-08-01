@@ -6,6 +6,7 @@ import styles from './quiz-results.module.css';
 import { useLanguage } from '@/context/LanguageContext';
 
 import { useUserData } from '@/lib/stacks/user-stack';
+import { useInfiniteScrollObserver } from '@academix-admin/navigation-stack';
 import { UserData } from '@/models/user-data';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { PaginateModel } from '@/models/paginate-model';
@@ -26,7 +27,7 @@ interface ResultViewProps extends QuizResultsProps {
   membersLoading: boolean;
   quizResult: PoolMemberModel | null;
   poolMembers: PoolMemberModel[];
-  loaderRef: React.RefObject<HTMLDivElement | null>;
+  loaderRef: React.Ref<HTMLDivElement>;
   callPaginate: () => void;
 }
 
@@ -843,9 +844,10 @@ export default function QuizResults({ poolsId, clickMenu, clickExit }: QuizResul
   const { theme, applyTheme } = useTheme();
   const { t, lang } = useLanguage();
   const { userData } = useUserData();
-  const mobileLoaderRef = useRef<HTMLDivElement>(null);
-  const tabLoaderRef = useRef<HTMLDivElement>(null);
-  const webLoaderRef = useRef<HTMLDivElement>(null);
+  // Stable infinite scroll for each responsive layout (see @academix-admin/navigation-stack).
+  const mobileLoaderRef = useInfiniteScrollObserver({ onLoadMore: () => callPaginate() });
+  const tabLoaderRef = useInfiniteScrollObserver({ onLoadMore: () => callPaginate() });
+  const webLoaderRef = useInfiniteScrollObserver({ onLoadMore: () => callPaginate() });
 
   const [resultsLoading, setResultsLoading] = useState(false);
   const [membersLoading, setMembersLoading] = useState(false);
@@ -911,7 +913,7 @@ export default function QuizResults({ poolsId, clickMenu, clickExit }: QuizResul
   };
 
   const callPaginate = async () => {
-    if (!userData || poolMembers.length <= 0) return;
+    if (!userData || poolMembers.length <= 0 || membersLoading) return;
     setMembersLoading(true);
     const models = await fetchPoolMembers(userData, 20, paginateModel);
     setMembersLoading(false);
@@ -951,62 +953,6 @@ export default function QuizResults({ poolsId, clickMenu, clickExit }: QuizResul
     fetchQuizResults();
   }, [fetchQuizResults]);
 
-  useEffect(() => {
-    if (!mobileLoaderRef.current || membersLoading) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          callPaginate();
-        }
-      },
-      { threshold: 1 }
-    );
-
-    observer.observe(mobileLoaderRef.current);
-
-    return () => {
-      if (mobileLoaderRef.current) observer.unobserve(mobileLoaderRef.current);
-    };
-  }, [poolMembers, paginateModel, membersLoading]);
-
-  useEffect(() => {
-    if (!tabLoaderRef.current || membersLoading) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          callPaginate();
-        }
-      },
-      { threshold: 1 }
-    );
-
-    observer.observe(tabLoaderRef.current);
-
-    return () => {
-      if (tabLoaderRef.current) observer.unobserve(tabLoaderRef.current);
-    };
-  }, [poolMembers, paginateModel, membersLoading]);
-
-  useEffect(() => {
-    if (!webLoaderRef.current || membersLoading) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          callPaginate();
-        }
-      },
-      { threshold: 1 }
-    );
-
-    observer.observe(webLoaderRef.current);
-
-    return () => {
-      if (webLoaderRef.current) observer.unobserve(webLoaderRef.current);
-    };
-  }, [poolMembers, paginateModel, membersLoading]);
 
 
   if(!poolsId)return null;

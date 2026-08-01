@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useInfiniteScrollObserver } from '@academix-admin/navigation-stack';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import styles from './game-challenge.module.css';
@@ -29,7 +30,7 @@ export default function GameChallenge({ onChallengeSelect, topicsId, gameModeId 
   const { t, lang } = useLanguage();
   const { userData } = useUserData();
 
-  const loaderRef = useRef<HTMLDivElement | null>(null);
+  const loaderRef = useInfiniteScrollObserver({ onLoadMore: () => callPaginate() });
   const [firstLoaded, setFirstLoaded] = useState(false);
   const [challengeLoading, setChallengeLoading] = useState(false);
   const [error, setError] = useState('');
@@ -39,24 +40,6 @@ export default function GameChallenge({ onChallengeSelect, topicsId, gameModeId 
 
 
   // Intersection Observer for infinite scroll
-  useEffect(() => {
-    if (!loaderRef.current) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && challengeModel.length > 0 && !challengeLoading) {
-          callPaginate();
-        }
-      },
-      { threshold: 1.0 }
-    );
-
-    observer.observe(loaderRef.current);
-
-    return () => {
-      if (loaderRef.current) observer.unobserve(loaderRef.current);
-    };
-  }, [challengeModel, challengeLoading]);
 
   // Fetch challenges
   const fetchChallengeModel = useCallback(async (userData: UserData): Promise<ChallengeModel[]> => {

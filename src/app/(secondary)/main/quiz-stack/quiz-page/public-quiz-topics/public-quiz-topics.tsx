@@ -17,7 +17,7 @@ import { PaginateModel } from '@/models/paginate-model';
 import Image from 'next/image';
 import { ComponentStateProps } from '@/hooks/use-component-state';
 import { usePinnedState } from '@/hooks/pinned-state-hook';
-import { useNav, useProvideObject } from "@academix-admin/navigation-stack";
+import { useNav, useProvideObject, useInfiniteScrollObserver } from '@academix-admin/navigation-stack';
 import { usePublicQuiz } from "@/lib/stacks/public-quiz-stack";
 import { poolsSubscriptionManager } from '@/lib/managers/PoolsQuizTopicSubscriptionManager';
 import { PoolChangeEvent } from '@/lib/managers/PoolsQuizTopicSubscriptionManager';
@@ -39,7 +39,7 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
   const { t, lang, tNode } = useLanguage();
   const nav = useNav();
   const { userData, userData$ } = useUserData();
-  const loaderRef = useRef<HTMLDivElement | null>(null);
+  const loaderRef = useInfiniteScrollObserver({ onLoadMore: () => callPaginate(), root: () => scrollContainerRef.current });
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isMountedRef = useRef(true);
@@ -201,24 +201,6 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
     }
   }, [quizModels]);
 
-  useEffect(() => {
-    if (!loaderRef.current) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          callPaginate();
-        }
-      },
-      { threshold: 1.0, root: scrollContainerRef.current }
-    );
-
-    observer.observe(loaderRef.current);
-
-    return () => {
-      if (loaderRef.current) observer.unobserve(loaderRef.current);
-    };
-  }, [filteredQuizModels, paginateModel]);
 
   const fetchUserDisplayQuizTopicModel = useCallback(async (userData: UserData, limitBy: number, paginateModel: PaginateModel): Promise<UserDisplayQuizTopicModel[]> => {
     if (!userData) return [];

@@ -6,7 +6,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import Image from 'next/image';
 import styles from './pool-members.module.css';
 import { supabaseBrowser } from '@/lib/supabase/client';
-import { useNav } from "@academix-admin/navigation-stack";
+import { useNav, useInfiniteScrollObserver } from '@academix-admin/navigation-stack';
 import { capitalizeWords, capitalize } from '@/utils/textUtils';
 import { useUserData } from '@/lib/stacks/user-stack';
 import { UserData } from '@/models/user-data';
@@ -95,7 +95,7 @@ export default function PoolMembers(props: PoolMembersProps) {
   const nav = useNav();
   const { poolsId } = props;
   const { userData, userData$ } = useUserData();
-  const loaderRef = useRef<HTMLDivElement | null>(null);
+  const loaderRef = useInfiniteScrollObserver({ onLoadMore: () => callPaginate() });
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isMountedRef = useRef(true);
 
@@ -108,24 +108,6 @@ export default function PoolMembers(props: PoolMembersProps) {
   const [poolMembers, demandPoolMembers, setPoolMembers] = usePoolMemberModel(lang);
 
 
-  useEffect(() => {
-        if (!loaderRef.current) return;
-
-     const observer = new IntersectionObserver(
-        (entries) => {
-            if (entries[0].isIntersecting) {
-                callPaginate();
-            }
-        },
-        { threshold: 1.0 }
-    );
-
-    observer.observe(loaderRef.current);
-
-        return () => {
-            if (loaderRef.current) observer.unobserve(loaderRef.current);
-        };
-    }, [poolMembers, paginateModel]);
 
   const fetchPoolMembers = useCallback(async (userData: UserData, limitBy: number, paginateModel: PaginateModel): Promise<PoolMemberModel[]> => {
     if (!userData) return [];

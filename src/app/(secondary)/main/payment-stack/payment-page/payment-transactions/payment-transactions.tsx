@@ -18,7 +18,7 @@ import Image from 'next/image';
 import { ComponentStateProps } from '@/hooks/use-component-state';
 import { usePinnedState } from '@/hooks/pinned-state-hook';
 import { useTransactionModel } from '@/lib/stacks/transactions-stack';
-import { useNav, usePageLifecycle } from "@academix-admin/navigation-stack";
+import { useNav, usePageLifecycle, useInfiniteScrollObserver } from '@academix-admin/navigation-stack';
 import { transactionSubscriptionManager } from '@/lib/managers/TransactionSubscriptionManager';
 import { TransactionChangeEvent } from '@/lib/managers/TransactionSubscriptionManager';
 import { poolsSubscriptionManager } from '@/lib/managers/PoolsQuizTopicSubscriptionManager';
@@ -30,7 +30,7 @@ export default function PaymentTransactions({ onStateChange }: ComponentStatePro
   const { theme, applyTheme } = useTheme();
   const { t, lang, tNode } = useLanguage();
   const { userData } = useUserData();
-  const loaderRef = useRef<HTMLDivElement | null>(null);
+  const loaderRef = useInfiniteScrollObserver({ onLoadMore: () => callPaginate() });
   const nav = useNav();
 
   const [paginateModel, setPaginateModel] = useState<PaginateModel>(new PaginateModel());
@@ -141,24 +141,6 @@ export default function PaymentTransactions({ onStateChange }: ComponentStatePro
     }
   }, [transactionModels]);
 
-  useEffect(() => {
-    if (!loaderRef.current) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          callPaginate();
-        }
-      },
-      { threshold: 1.0 }
-    );
-
-    observer.observe(loaderRef.current);
-
-    return () => {
-      if (loaderRef.current) observer.unobserve(loaderRef.current);
-    };
-  }, [transactionModels, paginateModel]);
 
   const fetchTransactionModels = useCallback(async (userData: UserData, limitBy: number, paginateModel: PaginateModel): Promise<TransactionModel[]> => {
     if (!userData) return [];
