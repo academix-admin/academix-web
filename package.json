@@ -21,7 +21,7 @@
     "@academix-admin/navigation-stack": "^0.6.8",
     "@academix-admin/pin-input": "^0.2.0",
     "@academix-admin/scroll-date-picker": "^0.1.1",
-    "@academix-admin/search-viewer": "^0.1.0",
+    "@academix-admin/search-viewer": "^0.1.1",
     "@academix-admin/side-drawer": "^0.1.0",
     "@academix-admin/sidebar": "^0.1.1",
     "@academix-admin/state-stack": "^0.2.1",
