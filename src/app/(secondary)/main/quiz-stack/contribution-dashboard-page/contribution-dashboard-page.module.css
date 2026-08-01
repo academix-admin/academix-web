@@ -3,7 +3,6 @@
   flex-direction: column;
   min-height: 100vh;
   position: relative;
-  padding-bottom: var(--nav-height);
 }
 
 .container_light {
@@ -35,6 +34,9 @@
   width: 100%;
   padding: 1rem 2.5rem;
   padding-top: 1rem;
+  /* Bottom-nav clearance on the content block, not the ColumnBody flex scroller (browsers drop a flex
+     scroll container's padding-bottom, leaving content under the nav bar). */
+  padding-bottom: var(--nav-height);
   box-sizing: border-box;
   display: flex;
   flex-direction: column;

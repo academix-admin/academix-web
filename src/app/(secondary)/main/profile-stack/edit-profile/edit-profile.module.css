@@ -2,9 +2,7 @@
 .container {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
   position: relative;
-  padding-bottom: var(--nav-height);
 }
 
 .header {
@@ -122,6 +120,9 @@
     /* Header is the Scaffold appBar (pinned above the scroll body), so no
        fixed-header clearance is needed (Workstream F). */
     padding-top: 1rem;
+    /* Bottom-nav clearance goes on this content BLOCK, not the ColumnBody flex scroller — browsers drop
+       padding-bottom from a flex scroll container's scroll height (content ends up under the nav bar). */
+    padding-bottom: var(--nav-height);
   box-sizing: border-box;
 }
 
