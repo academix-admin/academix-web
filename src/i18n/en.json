@@ -247,7 +247,7 @@
   "feature_unavailable_title": "Currently unavailable",
   "access_signout": "Sign out",
   "no_content": "Nothing to show yet",
-  "try_again": "Try again",
+  "try_again": "Try Again",
   "lock_verifying": "Verifying…",
   "lock_enter_pin": "Enter your PIN",
   "lock_subtitle": "Locked for your security after inactivity.",
@@ -276,7 +276,6 @@
   "payment_profile_text": "Payment profile",
   "select_payment_profile": "Select payment profile",
   "no_results": "No results found",
-  "try_again": "Try Again",
   "error_text": "Error",
   "private_account": "Private Account",
   "direct_debit_text": "Direct Debit",
@@ -746,5 +745,6 @@
   "stat_review_queue": "In queue",
   "stat_reviewed": "Reviewed",
   "region_blocked_or_error": "This may be unavailable in your region, or something went wrong.",
-  "quiz_none_or_region": "No quizzes to show right now — some content may not be available in your region."
+  "quiz_none_or_region": "No quizzes to show right now — some content may not be available in your region.",
+  "search_text": "Search"
 }

@@ -3,7 +3,11 @@
 -- identity + demographics (user_id/country/gender/age) are derived server-side via gate_check, NOT client-sent.
 -- generated from Supabase project iewqfmkngcgayxbbnpiz (read-only mirror)
 
-CREATE OR REPLACE FUNCTION public.fetch_categories(p_locale text, p_type text, p_limit_by integer, p_after_categories jsonb, p_reviewer_tab text DEFAULT NULL::text)
+-- p_search_key added (SearchViewer server search on the category name). New param → new signature, so the
+-- old 5-arg overload is dropped and EXECUTE re-granted below.
+DROP FUNCTION IF EXISTS public.fetch_categories(text, text, integer, jsonb, text);
+
+CREATE OR REPLACE FUNCTION public.fetch_categories(p_locale text, p_type text, p_limit_by integer, p_after_categories jsonb, p_reviewer_tab text DEFAULT NULL::text, p_search_key text DEFAULT NULL::text)
  RETURNS SETOF jsonb
  LANGUAGE plpgsql
 AS $function$
@@ -46,6 +50,8 @@ BEGIN
         LEFT JOIN topic_settings_table tst ON tct.topic_category_id = tst.topic_category_id
         WHERE
         ((SELECT translation FROM translate(tct.topic_category_identity, p_locale)) IS NOT NULL)
+            AND (p_search_key IS NULL OR p_search_key = '' OR
+                 (SELECT translation FROM translate(tct.topic_category_identity, p_locale)) ILIKE '%' || p_search_key || '%')
             AND
             (SELECT * FROM fetch_general_content_check(
                 (SELECT translation::uuid FROM translate(tct.topic_category_created_by, p_locale)),
@@ -136,5 +142,8 @@ BEGIN
         )
     FROM filtered_categories fc;
 END;
-$function$
+$function$;
+
+REVOKE ALL ON FUNCTION public.fetch_categories(text, text, integer, jsonb, text, text) FROM public, anon;
+GRANT EXECUTE ON FUNCTION public.fetch_categories(text, text, integer, jsonb, text, text) TO authenticated, service_role;
 

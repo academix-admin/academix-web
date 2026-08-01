@@ -8,6 +8,8 @@ import styles from './creator-library.module.css';
 import { useNav, Scaffold, useInfiniteScrollObserver } from '@academix-admin/navigation-stack';
 import { useDemandState } from '@academix-admin/state-stack';
 import { useDialog } from '@academix-admin/dialog-viewer';
+import { SearchViewer, useSearchController } from '@academix-admin/search-viewer';
+import type { SearchResult } from '@academix-admin/search-viewer';
 import { Header } from '@academix-admin/header';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useUserData } from '@/lib/stacks/user-stack';
@@ -71,12 +73,44 @@ function getInitials(text: string): string {
 
 export default function CreatorLibrary({ pType = 'creator', reviewerTab = null }: CreatorLibraryProps) {
   const { theme } = useTheme();
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const nav = useNav();
   const dialog = useDialog();
 
   const isReviewer = pType === 'reviewer';
   const title = isReviewer ? t('review_text') : t('library_text');
+  const searchType = isReviewer ? 'reviewer' : 'creator';
+
+  const [searchId, searchOps, isSearchOpen] = useSearchController();
+  const [searchResults, setSearchResults] = useState<SearchResult<UserQuizCreatorCategoryModel>[]>([]);
+  // Read the already-loaded list (shared demand-state) so search can filter it locally, instantly.
+  const [loadedItems] = useDemandState<UserQuizCreatorCategoryModel[]>([], {
+    key: `lib_list_${searchType}`,
+    persist: true,
+    scope: 'secondary_flow',
+    deps: [lang, reviewerTab ?? ''],
+  });
+
+  // Server search (fetch_categories now takes p_search_key; matches the category name). Cursor = PaginateModel.
+  const queryCategories = useCallback(
+    async (cursor: PaginateModel | undefined, text: string): Promise<{ data: UserQuizCreatorCategoryModel[]; cursor?: PaginateModel }> => {
+      const after = cursor ?? new PaginateModel();
+      const { data, error } = await supabaseBrowser.rpc('fetch_categories', {
+        p_locale: lang,
+        p_type: searchType,
+        p_limit_by: 20,
+        p_after_categories: after.toJson(),
+        p_search_key: text || null,
+        ...(reviewerTab ? { p_reviewer_tab: reviewerTab } : {}),
+      });
+      if (error || !data) return { data: [] };
+      const rows = (data as BackendCreatorCategoryRow[]).map((r) => new UserQuizCreatorCategoryModel(r));
+      const last = rows[rows.length - 1];
+      const nextSort = last ? nextSortId(rows, searchType) : null;
+      return { data: rows, cursor: nextSort ? new PaginateModel({ sortId: nextSort }) : undefined };
+    },
+    [lang, searchType, reviewerTab],
+  );
 
   // Authoring (create category) is Phase 2 — surface a clear notice for now (Flutter opens categoryAddition).
   const onNew = () =>
@@ -88,24 +122,79 @@ export default function CreatorLibrary({ pType = 'creator', reviewerTab = null }
       </div>,
     );
 
+  const searchIcon = (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3" />
+    </svg>
+  );
+
   return (
-    <Scaffold
-      bodyClassName={theme === 'dark' ? styles.container_dark : styles.container_light}
-      appBar={<Header title={title} theme={theme} onBack={() => nav.pop()} position="static" />}
-    >
-      <div className={styles.content}>
-        {isReviewer ? (
-          <CategoryList pType="reviewer" reviewerTab={reviewerTab} standalone />
-        ) : (
-          <>
-            <RecentStrip onNew={onNew} />
-            <CardStrip pType="favourite" title={t('favourite_text')} />
-            <CardStrip pType="private" title={t('create_private_text')} />
-            <PublicSection />
-          </>
-        )}
-      </div>
-    </Scaffold>
+    <>
+      <Scaffold
+        bodyClassName={theme === 'dark' ? styles.container_dark : styles.container_light}
+        appBar={
+          <Header
+            title={title}
+            theme={theme}
+            onBack={() => nav.pop()}
+            position="static"
+            actions={[{ icon: searchIcon, onClick: searchOps.open, ariaLabel: t('search_text') }]}
+          />
+        }
+      >
+        <div className={styles.content}>
+          {isReviewer ? (
+            <CategoryList pType="reviewer" reviewerTab={reviewerTab} standalone />
+          ) : (
+            <>
+              <RecentStrip onNew={onNew} />
+              <CardStrip pType="favourite" title={t('favourite_text')} />
+              <CardStrip pType="private" title={t('create_private_text')} />
+              <PublicSection />
+            </>
+          )}
+        </div>
+      </Scaffold>
+
+      <SearchViewer<UserQuizCreatorCategoryModel, PaginateModel>
+        id={searchId}
+        isOpen={isSearchOpen}
+        onClose={searchOps.close}
+        debounceMs={350}
+        minQueryLength={1}
+        onInitialData={(text) => {
+          if (!text) return loadedItems;
+          const q = text.toLowerCase();
+          return loadedItems.filter((c) => c.topicCategoryIdentity.toLowerCase().includes(q));
+        }}
+        localDataDeps={[loadedItems]}
+        queryData={queryCategories}
+        onRemoveDuplicateBy={(c) => c.topicCategoryId}
+        onResult={setSearchResults}
+        searchProp={{
+          text: t('search_text'),
+          textColor: theme === 'light' ? '#000' : '#fff',
+          autoFocus: true,
+          background: theme === 'light' ? '#f5f5f5' : '#272727',
+          padding: { l: '4px', r: '4px', t: '0px', b: '0px' },
+        }}
+        loadingProp={{ view: <LoadingView text={t('loading')} /> }}
+        noResultProp={{ view: <NoResultsView text={t('no_result_text')} /> }}
+        errorProp={{ view: <ErrorView text={t('error_occurred')} /> }}
+        layoutProp={{
+          gapBetweenSearchAndContent: '12px',
+          searchBackground: theme === 'light' ? '#fff' : '#121212',
+          maxWidth: '800px',
+        }}
+        childrenDirection="vertical"
+      >
+        {searchResults.map((r) => (
+          <div key={r.data.topicCategoryId} style={{ padding: '0 12px' }}>
+            <ListRow category={r.data} />
+          </div>
+        ))}
+      </SearchViewer>
+    </>
   );
 }
 
