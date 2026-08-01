@@ -306,7 +306,6 @@ const BankView = ({ onSubmit, methodId }: BankViewProps) => {
     {
       key: "banksModel",
       persist: true,
-      ttl: 3600,
       scope: "payment_flow",
       deps: [lang],
     }

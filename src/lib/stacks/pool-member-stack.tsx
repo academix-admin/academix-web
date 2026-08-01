@@ -7,7 +7,6 @@ export const usePoolMemberModel = (lang: string) => {
              {
                key: "poolMembers",
                persist: true,
-               ttl: 600,
                scope: "pool_member_flow",
                deps: [lang],
              }

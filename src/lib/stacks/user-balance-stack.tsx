@@ -7,7 +7,6 @@ export const useUserBalance = (lang: string) => {
              {
                key: "userBalance",
                persist: true,
-               ttl: 300, // wallet balance: expire the persisted copy after 5m so a stale balance can't show on reload (realtime keeps it live while open)
                scope: "secondary_flow",
                deps: [lang],
              }

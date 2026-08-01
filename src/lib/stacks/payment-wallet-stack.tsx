@@ -7,7 +7,6 @@ export const usePaymentWalletModel = (lang: string, scopeKey: string = 'payment_
              {
                key: "walletsModel",
                persist: true,
-               ttl: 3600,
                scope: scopeKey,
                deps: [lang],
              }

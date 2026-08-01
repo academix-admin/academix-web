@@ -130,7 +130,6 @@ function RecentStrip({ onNew }: { onNew: () => void }) {
   const [items, demandItems] = useDemandState<UserQuizCreatorCategoryModel[]>([], {
     key: 'lib_strip_recent',
     persist: true,
-    ttl: 3600,
     scope: 'secondary_flow',
     deps: [lang],
   });
@@ -187,7 +186,6 @@ function CardStrip({ pType, title }: { pType: string; title: string }) {
   const [items, demandItems] = useDemandState<UserQuizCreatorCategoryModel[]>([], {
     key: `lib_strip_${pType}`,
     persist: true,
-    ttl: 3600,
     scope: 'secondary_flow',
     deps: [lang],
   });
@@ -241,7 +239,6 @@ function CategoryList({
   const [items, demandItems, setItems] = useDemandState<UserQuizCreatorCategoryModel[]>([], {
     key: `lib_list_${pType}`,
     persist: true,
-    ttl: 3600,
     scope: 'secondary_flow',
     deps: [lang, reviewerTab ?? ''],
   });

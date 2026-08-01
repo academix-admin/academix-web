@@ -23,7 +23,6 @@ export default function HomeStatistics({ onStateChange }: ComponentStateProps) {
     {
       key: "engagementData",
       persist: true,
-      ttl: 3600,
       scope: "secondary_flow",
       deps: [lang],
     }

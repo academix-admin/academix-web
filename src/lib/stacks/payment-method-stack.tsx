@@ -7,7 +7,6 @@ export const usePaymentMethodModel = (lang: string, scopeKey: string = 'payment_
              {
                key: "methodsModel",
                persist: true,
-               ttl: 3600,
                scope: scopeKey,
                deps: [lang],
              }

@@ -7,7 +7,6 @@ export const usePublicQuiz = (lang: string, pType: string) => {
              {
                key: `${pType}_publicQuizModels`,
                persist: true,
-               ttl: 3600,
                scope: "secondary_flow",
                deps: [lang],
              }

@@ -7,7 +7,6 @@ export const usePaymentProfileModel = (lang: string, scopeKey: string = 'payment
              {
                key: "profilesModel",
                persist: true,
-               ttl: 3600,
                scope: scopeKey,
                deps: [lang],
              }

@@ -62,9 +62,6 @@ function DashboardBody() {
   const [dash, demandDash] = useDemandState<RoleDashboard | null>(null, {
     key: 'role_dashboard',
     persist: true,
-    // TTL must exceed the 10-min idle app-lock window (AppLock IDLE_MS) so cached stats survive a
-    // lock/unlock instead of cold-refetching to a blank state. persist+SWR shows cached data on return.
-    ttl: 3600,
     scope: 'secondary_flow',
     deps: [lang],
   });

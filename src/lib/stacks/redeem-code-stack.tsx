@@ -8,7 +8,6 @@ export const useRedeemCodeModel = (lang: string) => {
     {
       key: "redeemCodes",
       persist: true,
-      ttl: 600,
       scope: "redeem_code_flow",
       deps: [lang],
     }
