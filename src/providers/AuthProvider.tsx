@@ -225,6 +225,12 @@ interface AuthContextType {
    *  waiting for hydration lets /main paint fully instead of flashing empty (email login is a
    *  warm client nav, so it's already hydrated and never waits here). Public routes never wait. */
   blocking: boolean;
+  /** COLD start only: a protected route whose session isn't resolved yet (pre-`initialized`, e.g. the fresh
+   *  mount after a mobile background-eviction reload). This is the ONLY case where AuthBlocker withholds
+   *  children — we must not render protected content before we know the session. `resolving` (the profile
+   *  refetch when a persisted userData came back null) must NOT unmount the app — that remounts every page
+   *  and reloads all cached lists; AuthBlocker overlays the loader instead. */
+  coldStart: boolean;
   session: Session | null;
   userData: UserData | null;
   hasValidSession: boolean;
@@ -495,13 +501,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // landing page showed while auth initialized. `resolving` still holds the loader during an
   // OAuth profile resolution (on /auth/callback or a logged-in landing) regardless of route.
   const onProtectedRoute = matchesRoutePattern(pathname, protectedRoutes);
-  const blocking = (onProtectedRoute && !initialized) || resolving;
+  const coldStart = onProtectedRoute && !initialized;
+  const blocking = coldStart || resolving;
 
   return (
     <AuthContext.Provider value={{
       initialized,
       resolving,
       blocking,
+      coldStart,
       session,
       userData,
       hasValidSession: !!session && !isSessionExpired(session),

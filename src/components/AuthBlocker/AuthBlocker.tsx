@@ -32,9 +32,11 @@ import { useAuthContext } from '@/providers/AuthProvider';
 export default function AuthBlocker({ children }: { children: React.ReactNode }) {
   const { theme, applyTheme } = useTheme();
   const { t } = useLanguage();
-  const { blocking } = useAuthContext();
+  const { coldStart, resolving } = useAuthContext();
 
-  if (blocking) {
+  // COLD start (protected route, session not yet known): withhold children entirely — we must not render
+  // protected content before the session resolves.
+  if (coldStart) {
     return (
       <div className={`${applyTheme(styles, 'overlay')}`}>
         <LoadingView text={t('loading')} />
@@ -42,5 +44,18 @@ export default function AuthBlocker({ children }: { children: React.ReactNode })
     );
   }
 
-  return <>{children}</>;
+  // `resolving` = the profile-resolve effect refetching userData (a signed-in user whose persisted profile
+  // was null — e.g. after a full reload where the userData TTL had expired). OVERLAY the loader but KEEP
+  // children mounted: unmounting here tears down and remounts every page, reloading all cached lists.
+  // (A genuine live resume never reaches here — userData stays in memory, so `resolving` doesn't fire.)
+  return (
+    <>
+      <div style={{ display: resolving ? 'none' : 'contents' }}>{children}</div>
+      {resolving && (
+        <div className={`${applyTheme(styles, 'overlay')}`}>
+          <LoadingView text={t('loading')} />
+        </div>
+      )}
+    </>
+  );
 }

@@ -292,6 +292,7 @@ export default function WithdrawPage() {
       const status = payment.status;
 
       if (status === 'Feature.unavailable' || status === 'Region.blocked') {
+        withdrawBottomController.close();
         setWithdrawLoading(false);
         errorDialog.open(
           <div style={{ textAlign: 'center' }}>
@@ -304,7 +305,7 @@ export default function WithdrawPage() {
       if (status === 'Payment.pinError') {
         withdrawBottomController.close();
         setWithdrawLoading(false);
-
+ 
         if (payment.not_set) {
           setPinErrorType('not_set');
           pinErrorDialog.open(
