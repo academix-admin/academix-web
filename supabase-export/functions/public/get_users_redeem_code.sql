@@ -2,7 +2,10 @@
 -- function: get_users_redeem_code(p_user_id uuid, p_locale text, p_country text, p_gender text, p_age text, p_limit_by integer, p_after_codes jsonb)
 -- generated from Supabase project iewqfmkngcgayxbbnpiz (read-only mirror)
 
-CREATE OR REPLACE FUNCTION public.get_users_redeem_code(p_locale text, p_limit_by integer, p_after_codes jsonb)
+-- p_search_key added (SearchViewer server search: code value or amount). New param → new signature.
+DROP FUNCTION IF EXISTS public.get_users_redeem_code(text, integer, jsonb);
+
+CREATE OR REPLACE FUNCTION public.get_users_redeem_code(p_locale text, p_limit_by integer, p_after_codes jsonb, p_search_key text DEFAULT NULL)
  RETURNS SETOF jsonb
  LANGUAGE plpgsql
 AS $function$
@@ -43,6 +46,9 @@ BEGIN
             AND rt.users_id = p_user_id
       )
       AND (rct.redeem_code_expires IS NULL OR rct.redeem_code_expires > NOW())
+      AND (p_search_key IS NULL OR p_search_key = '' OR
+           rct.redeem_code_value ILIKE '%' || p_search_key || '%' OR
+           rct.redeem_code_amount::text ILIKE '%' || p_search_key || '%')
       AND (
         sortID IS NULL OR (
           (direction = 'oldest' AND (rct.sort_created_id)::TEXT < sortID)
@@ -58,4 +64,7 @@ BEGIN
       END ASC
     LIMIT p_limit_by;
 END;
-$function$
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_users_redeem_code(text, integer, jsonb, text) FROM public, anon;
+GRANT EXECUTE ON FUNCTION public.get_users_redeem_code(text, integer, jsonb, text) TO authenticated, service_role;

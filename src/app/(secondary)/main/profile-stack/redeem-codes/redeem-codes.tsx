@@ -23,6 +23,8 @@ import { useRedeemCodeModel } from '@/lib/stacks/redeem-code-stack';
 import { useTopViewer } from '@/lib/TopViewer';
 import { copyToClipboard } from '@/utils/clipboard';
 import { Header } from '@academix-admin/header';
+import { SearchViewer, useSearchController } from '@academix-admin/search-viewer';
+import type { SearchResult } from '@academix-admin/search-viewer';
 
 
 const RedeemCodeCard: React.FC<{ redeemCode: RedeemCodeModel }> = ({ redeemCode }) => {
@@ -257,6 +259,28 @@ export default function RedeemCodes() {
     StateStack.core.clearScope('redeem_code_flow');
   };
 
+  // ── Search (SearchViewer): local filter of loaded codes + server get_users_redeem_code ──
+  const [searchId, searchOps, isSearchOpen] = useSearchController();
+  const [searchResults, setSearchResults] = useState<SearchResult<RedeemCodeModel>[]>([]);
+
+  const queryRedeemCodes = useCallback(
+    async (cursor: PaginateModel | undefined, text: string): Promise<{ data: RedeemCodeModel[]; cursor?: PaginateModel }> => {
+      if (!userData) return { data: [] };
+      const after = cursor ?? new PaginateModel();
+      const { data, error } = await supabaseBrowser.rpc('get_users_redeem_code', {
+        p_locale: lang,
+        p_limit_by: 20,
+        p_after_codes: after.toJson(),
+        p_search_key: text || null,
+      });
+      if (error || !data) return { data: [] };
+      const rows = (data as BackendRedeemCodeModel[]).map((row) => new RedeemCodeModel(row));
+      const last = rows[rows.length - 1];
+      return { data: rows, cursor: last ? new PaginateModel({ sortId: last.sortCreatedId }) : undefined };
+    },
+    [userData, lang],
+  );
+
   return (
     <main className={applyTheme(styles, 'container')}>
       <Header
@@ -264,6 +288,16 @@ export default function RedeemCodes() {
         theme={theme}
         onBack={goBack}
         actions={[
+          {
+            key: 'search',
+            icon: (
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3" />
+              </svg>
+            ),
+            onClick: searchOps.open,
+            ariaLabel: t('search_text'),
+          },
           {
             icon: (
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -314,6 +348,45 @@ export default function RedeemCodes() {
         ))}
         {redeemCodes.length > 0 && <div ref={loaderRef} className={styles.loadMoreSentinel}></div>}
       </div>
+
+      <SearchViewer<RedeemCodeModel, PaginateModel>
+        id={searchId}
+        isOpen={isSearchOpen}
+        onClose={searchOps.close}
+        debounceMs={350}
+        minQueryLength={1}
+        onInitialData={(text) => {
+          if (!text) return redeemCodes;
+          const q = text.toLowerCase();
+          return redeemCodes.filter(
+            (c) => (c.redeemCodeValue || '').toLowerCase().includes(q) || String(c.redeemCodeAmount).includes(q),
+          );
+        }}
+        localDataDeps={[redeemCodes]}
+        queryData={queryRedeemCodes}
+        onRemoveDuplicateBy={(c) => c.redeemCodeId}
+        onResult={setSearchResults}
+        searchProp={{
+          text: t('search_text'),
+          textColor: theme === 'light' ? '#000' : '#fff',
+          autoFocus: true,
+          background: theme === 'light' ? '#f5f5f5' : '#272727',
+          padding: { l: '4px', r: '4px', t: '0px', b: '0px' },
+        }}
+        loadingProp={{ view: <LoadingView text={t('loading')} /> }}
+        noResultProp={{ view: <NoResultsView text={t('no_result_text')} /> }}
+        errorProp={{ view: <ErrorView text={t('error_occurred')} /> }}
+        layoutProp={{
+          gapBetweenSearchAndContent: '12px',
+          searchBackground: theme === 'light' ? '#fff' : '#121212',
+          maxWidth: '800px',
+        }}
+        childrenDirection="vertical"
+      >
+        {searchResults.map((r) => (
+          <RedeemCodeCard key={r.data.redeemCodeId} redeemCode={r.data} />
+        ))}
+      </SearchViewer>
     </main>
   );
 }

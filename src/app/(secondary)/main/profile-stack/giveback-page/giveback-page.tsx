@@ -20,6 +20,8 @@ import { useDialog } from '@academix-admin/dialog-viewer';
 import { useTopViewer } from '@/lib/TopViewer';
 import { copyToClipboard } from '@/utils/clipboard';
 import { Header } from '@academix-admin/header';
+import { SearchViewer, useSearchController } from '@academix-admin/search-viewer';
+import type { SearchResult } from '@academix-admin/search-viewer';
 
 type Tab = 'unclaimed' | 'claimed';
 
@@ -453,6 +455,34 @@ export default function GiveBackPage() {
     StateStack.core.clearScope('give_back_flow');
   };
 
+  // ── Search (SearchViewer): local filter of loaded give-backs + server get_give_back_code ──
+  const [searchId, searchOps, isSearchOpen] = useSearchController();
+  const [searchResults, setSearchResults] = useState<SearchResult<GiveBackModel>[]>([]);
+
+  const queryGiveBacks = useCallback(
+    async (cursor: PaginateModel | undefined, text: string): Promise<{ data: GiveBackModel[]; cursor?: PaginateModel }> => {
+      if (!userData) return { data: [] };
+      const after = cursor ?? new PaginateModel();
+      const { data, error } = await supabaseBrowser.rpc('get_give_back_code', {
+        p_locale: lang,
+        p_limit_by: 20,
+        p_after_giveback: after.toJson(),
+        p_search_key: text || null,
+      });
+      if (error || !data) return { data: [] };
+      const rows = (data as BackendGiveBackModel[]).map((row) => new GiveBackModel(row));
+      const last = rows[rows.length - 1];
+      return { data: rows, cursor: last ? new PaginateModel({ sortId: last.sortCreatedId }) : undefined };
+    },
+    [userData, lang],
+  );
+
+  const searchIcon = (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3" />
+    </svg>
+  );
+
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <main className={`${applyTheme(styles, 'container')}`}>
@@ -464,6 +494,12 @@ export default function GiveBackPage() {
           position="static"
           style={{ background: 'none', borderBottom: 'none', backdropFilter: 'none' }}
           actions={[
+            {
+              key: 'search',
+              icon: searchIcon,
+              onClick: searchOps.open,
+              ariaLabel: t('search_text'),
+            },
             {
               key: 'refresh',
               icon: (
@@ -544,6 +580,59 @@ export default function GiveBackPage() {
           titleColor: theme === 'light' ? '#1a1a1a' : '#fff',
         }}
       />
+
+      <SearchViewer<GiveBackModel, PaginateModel>
+        id={searchId}
+        isOpen={isSearchOpen}
+        onClose={searchOps.close}
+        debounceMs={350}
+        minQueryLength={1}
+        onInitialData={(text) => {
+          if (!text) return giveBacks;
+          const q = text.toLowerCase();
+          return giveBacks.filter((g) => (g.giveBackCode || '').toLowerCase().includes(q));
+        }}
+        localDataDeps={[giveBacks]}
+        queryData={queryGiveBacks}
+        onRemoveDuplicateBy={(g) => g.giveBackId}
+        onResult={setSearchResults}
+        searchProp={{
+          text: t('search_text'),
+          textColor: theme === 'light' ? '#000' : '#fff',
+          autoFocus: true,
+          background: theme === 'light' ? '#f5f5f5' : '#272727',
+          padding: { l: '4px', r: '4px', t: '0px', b: '0px' },
+        }}
+        loadingProp={{ view: <LoadingView text={t('loading')} /> }}
+        noResultProp={{ view: <NoResultsView text={t('no_result_text')} /> }}
+        errorProp={{ view: <ErrorView text={t('error_occurred')} /> }}
+        layoutProp={{
+          gapBetweenSearchAndContent: '12px',
+          searchBackground: theme === 'light' ? '#fff' : '#121212',
+          maxWidth: '800px',
+        }}
+        childrenDirection="vertical"
+      >
+        {searchResults.map((r) => {
+          const giveBack = r.data;
+          return (
+            <GiveBackCard
+              key={giveBack.giveBackId}
+              giveBack={giveBack}
+              onClaim={handleClaim}
+              claiming={claimingId === giveBack.giveBackId}
+              passwordMode={showPasswordForId === giveBack.giveBackId}
+              passwordValue={showPasswordForId === giveBack.giveBackId ? passwordValue : ''}
+              onPasswordChange={setPasswordValue}
+              onPasswordCancel={handlePasswordCancel}
+              onPasswordSubmit={handlePasswordSubmit}
+              showPassword={showPassword}
+              onTogglePasswordVisibility={togglePasswordVisibility}
+              passwordSaving={claimingId === giveBack.giveBackId}
+            />
+          );
+        })}
+      </SearchViewer>
 
     </main>
   );
