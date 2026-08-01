@@ -73,7 +73,8 @@ export default function QuizPage() {
                          onButtonClick={() => { resetComponentState(); setSettled(false); setNonce(n => n + 1); }} />
             </div>
           : <div className={styles.aggregateState}>
-              <NoResultsView text={t('quiz_none_or_region')} buttonText={null} onButtonClick={null} />
+              <NoResultsView text={t('quiz_none_or_region')} buttonText={t('try_again')}
+                             onButtonClick={() => { resetComponentState(); setSettled(false); setNonce(n => n + 1); }} />
             </div>
       )}
 

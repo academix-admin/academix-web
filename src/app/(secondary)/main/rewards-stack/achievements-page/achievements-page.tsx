@@ -319,37 +319,57 @@ export default function AchievementsPage() {
   const { userData } = useUserData();
 
   const [activeTabs, setActiveTabs] = useState<TabMilestone[]>([
-    { id: 'AchievementTab.active', label: t('active_text'), active: true },
+    { id: 'AchievementTab.all', label: t('all_text'), active: true },
+    { id: 'AchievementTab.active', label: t('active_text'), active: false },
     { id: 'AchievementTab.pending', label: t('pending_text'), active: false },
     { id: 'AchievementTab.completed', label: t('completed_text'), active: false }
   ]);
 
   const [tabCounts, setTabCounts] = useState<Record<string, number>>({
+    'AchievementTab.all': 0,
     'AchievementTab.active': 0,
     'AchievementTab.pending': 0,
     'AchievementTab.completed': 0
   });
 
   const [achievementsData, demandAchievementsData] = useAchievementsData(lang);
-  
+
   // Store data for all tabs
+  const [allModel, , setAllModel] = useAchievementsModel(lang, 'AchievementTab.all');
   const [activeModel, , setActiveModel] = useAchievementsModel(lang, 'AchievementTab.active');
   const [pendingModel, , setPendingModel] = useAchievementsModel(lang, 'AchievementTab.pending');
   const [completedModel, , setCompletedModel] = useAchievementsModel(lang, 'AchievementTab.completed');
 
+  // tab → model / setter maps (so 'all' and the status tabs are handled uniformly, no ternary sprawl)
+  const modelsByTab: Record<string, AchievementsModel[]> = {
+    'AchievementTab.all': allModel,
+    'AchievementTab.active': activeModel,
+    'AchievementTab.pending': pendingModel,
+    'AchievementTab.completed': completedModel,
+  };
+  const setModelsByTab: Record<string, (m: AchievementsModel[]) => void> = {
+    'AchievementTab.all': setAllModel,
+    'AchievementTab.active': setActiveModel,
+    'AchievementTab.pending': setPendingModel,
+    'AchievementTab.completed': setCompletedModel,
+  };
+
   const [paginateModels, setPaginateModels] = useState<Record<string, PaginateModel>>({
+    'AchievementTab.all': new PaginateModel(),
     'AchievementTab.active': new PaginateModel(),
     'AchievementTab.pending': new PaginateModel(),
     'AchievementTab.completed': new PaginateModel()
   });
 
   const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>({
+    'AchievementTab.all': false,
     'AchievementTab.active': false,
     'AchievementTab.pending': false,
     'AchievementTab.completed': false
   });
 
   const [errorStates, setErrorStates] = useState<Record<string, string>>({
+    'AchievementTab.all': '',
     'AchievementTab.active': '',
     'AchievementTab.pending': '',
     'AchievementTab.completed': ''
@@ -389,13 +409,19 @@ export default function AchievementsPage() {
     if (!userData) return;
 
     const fetchAllTabs = async () => {
+      // Show ALL first (the default tab the user lands on), THEN load the status tabs in the background.
+      setLoadingStates(prev => ({ ...prev, 'AchievementTab.all': true }));
+      const allModels = await fetchTabData('AchievementTab.all', 10, new PaginateModel());
+      if (allModels.length > 0) {
+        const last = allModels[allModels.length - 1];
+        setPaginateModels(prev => ({ ...prev, 'AchievementTab.all': new PaginateModel({ sortId: last.sortCreatedId }) }));
+      }
+      setAllModel(allModels);
+      setLoadingStates(prev => ({ ...prev, 'AchievementTab.all': false }));
+
       const tabs = ['AchievementTab.active', 'AchievementTab.pending', 'AchievementTab.completed'];
-      
-      setLoadingStates({
-        'AchievementTab.active': true,
-        'AchievementTab.pending': true,
-        'AchievementTab.completed': true
-      });
+
+      setLoadingStates(prev => ({ ...prev, 'AchievementTab.active': true, 'AchievementTab.pending': true, 'AchievementTab.completed': true }));
 
       const results = await Promise.all(
         tabs.map(async (tabId) => {
@@ -419,34 +445,32 @@ export default function AchievementsPage() {
         else if (tab === 'AchievementTab.completed') setCompletedModel(models);
       });
 
-      setLoadingStates({
-        'AchievementTab.active': false,
-        'AchievementTab.pending': false,
-        'AchievementTab.completed': false
-      });
+      setLoadingStates(prev => ({ ...prev, 'AchievementTab.active': false, 'AchievementTab.pending': false, 'AchievementTab.completed': false }));
     };
 
     fetchAllTabs();
-  }, [userData, fetchTabData, setActiveModel, setPendingModel, setCompletedModel]);
+  }, [userData, fetchTabData, setAllModel, setActiveModel, setPendingModel, setCompletedModel]);
 
   // Update counts from models (only when models actually change)
   useEffect(() => {
     const newCounts = {
+      'AchievementTab.all': allModel.length,
       'AchievementTab.active': activeModel.length,
       'AchievementTab.pending': pendingModel.length,
       'AchievementTab.completed': completedModel.length
     };
-    
+
     // Only update if counts actually changed
     if (JSON.stringify(newCounts) !== JSON.stringify(tabCounts)) {
       setTabCounts(newCounts);
     }
-  }, [activeModel.length, pendingModel.length, completedModel.length]);
+  }, [allModel.length, activeModel.length, pendingModel.length, completedModel.length]);
 
   // Update counts when achievementsData changes
   useEffect(() => {
     if (achievementsData) {
       setTabCounts({
+        'AchievementTab.all': achievementsData.achievementsCount,
         'AchievementTab.active': achievementsData.achievementsCount - achievementsData.achievementsFinished,
         'AchievementTab.pending': achievementsData.achievementsNotRewarded,
         'AchievementTab.completed': achievementsData.achievementsCompleted
@@ -461,16 +485,23 @@ export default function AchievementsPage() {
 
     setLoadingStates(prev => ({ ...prev, [currentTab]: true }));
 
-    const currentModel = currentTab === 'AchievementTab.active' ? activeModel :
-                         currentTab === 'AchievementTab.pending' ? pendingModel : completedModel;
-    
+    const byTab: Record<string, AchievementsModel[]> = {
+      'AchievementTab.all': allModel, 'AchievementTab.active': activeModel,
+      'AchievementTab.pending': pendingModel, 'AchievementTab.completed': completedModel,
+    };
+    const setByTab: Record<string, (m: AchievementsModel[]) => void> = {
+      'AchievementTab.all': setAllModel, 'AchievementTab.active': setActiveModel,
+      'AchievementTab.pending': setPendingModel, 'AchievementTab.completed': setCompletedModel,
+    };
+    const currentModel = byTab[currentTab] ?? [];
+
     if (currentModel.length === 0) {
       setLoadingStates(prev => ({ ...prev, [currentTab]: false }));
       return;
     }
 
     const newModels = await fetchTabData(currentTab, 20, paginateModels[currentTab]);
-    
+
     if (newModels.length > 0) {
       const lastItem = newModels[newModels.length - 1];
       setPaginateModels(prev => ({
@@ -481,20 +512,16 @@ export default function AchievementsPage() {
       const oldIds = currentModel.map((e: AchievementsModel) => e.achievementsId);
       const merged = [...currentModel, ...newModels.filter((m: AchievementsModel) => !oldIds.includes(m.achievementsId))];
 
-      if (currentTab === 'AchievementTab.active') setActiveModel(merged);
-      else if (currentTab === 'AchievementTab.pending') setPendingModel(merged);
-      else if (currentTab === 'AchievementTab.completed') setCompletedModel(merged);
+      setByTab[currentTab]?.(merged);
     }
 
     setLoadingStates(prev => ({ ...prev, [currentTab]: false }));
-  }, [activeTabs, activeModel, pendingModel, completedModel, loadingStates, paginateModels, fetchTabData, setActiveModel, setPendingModel, setCompletedModel]);
+  }, [activeTabs, allModel, activeModel, pendingModel, completedModel, loadingStates, paginateModels, fetchTabData, setAllModel, setActiveModel, setPendingModel, setCompletedModel]);
 
   // Get active tab
-  const activeTab = activeTabs.find(tab => tab.active)?.id || 'AchievementTab.active';
-  const currentModel = activeTab === 'AchievementTab.active' ? activeModel :
-                       activeTab === 'AchievementTab.pending' ? pendingModel : completedModel;
-  const currentSetModel = activeTab === 'AchievementTab.active' ? setActiveModel :
-                          activeTab === 'AchievementTab.pending' ? setPendingModel : setCompletedModel;
+  const activeTab = activeTabs.find(tab => tab.active)?.id || 'AchievementTab.all';
+  const currentModel = modelsByTab[activeTab] ?? [];
+  const currentSetModel = setModelsByTab[activeTab] ?? setAllModel;
 
   // Set active tab
   const setActiveTab = (id: string) => {

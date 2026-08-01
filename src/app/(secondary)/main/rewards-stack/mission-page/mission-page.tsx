@@ -319,37 +319,57 @@ export default function MissionPage() {
   const { userData } = useUserData();
 
   const [activeTabs, setActiveTabs] = useState<TabMilestone[]>([
-    { id: 'MissionTab.active', label: t('active_text'), active: true },
+    { id: 'MissionTab.all', label: t('all_text'), active: true },
+    { id: 'MissionTab.active', label: t('active_text'), active: false },
     { id: 'MissionTab.pending', label: t('pending_text'), active: false },
     { id: 'MissionTab.completed', label: t('completed_text'), active: false }
   ]);
 
   const [tabCounts, setTabCounts] = useState<Record<string, number>>({
+    'MissionTab.all': 0,
     'MissionTab.active': 0,
     'MissionTab.pending': 0,
     'MissionTab.completed': 0
   });
 
   const [missionData, demandMissionData] = useMissionData(lang);
-  
+
   // Store data for all tabs
+  const [allModel, , setAllModel] = useMissionModel(lang, 'MissionTab.all');
   const [activeModel, , setActiveModel] = useMissionModel(lang, 'MissionTab.active');
   const [pendingModel, , setPendingModel] = useMissionModel(lang, 'MissionTab.pending');
   const [completedModel, , setCompletedModel] = useMissionModel(lang, 'MissionTab.completed');
 
+  // tab → model / setter maps (so 'all' and the status tabs are handled uniformly, no ternary sprawl)
+  const modelsByTab: Record<string, MissionModel[]> = {
+    'MissionTab.all': allModel,
+    'MissionTab.active': activeModel,
+    'MissionTab.pending': pendingModel,
+    'MissionTab.completed': completedModel,
+  };
+  const setModelsByTab: Record<string, (m: MissionModel[]) => void> = {
+    'MissionTab.all': setAllModel,
+    'MissionTab.active': setActiveModel,
+    'MissionTab.pending': setPendingModel,
+    'MissionTab.completed': setCompletedModel,
+  };
+
   const [paginateModels, setPaginateModels] = useState<Record<string, PaginateModel>>({
+    'MissionTab.all': new PaginateModel(),
     'MissionTab.active': new PaginateModel(),
     'MissionTab.pending': new PaginateModel(),
     'MissionTab.completed': new PaginateModel()
   });
 
   const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>({
+    'MissionTab.all': false,
     'MissionTab.active': false,
     'MissionTab.pending': false,
     'MissionTab.completed': false
   });
 
   const [errorStates, setErrorStates] = useState<Record<string, string>>({
+    'MissionTab.all': '',
     'MissionTab.active': '',
     'MissionTab.pending': '',
     'MissionTab.completed': ''
@@ -389,13 +409,19 @@ export default function MissionPage() {
     if (!userData) return;
 
     const fetchAllTabs = async () => {
+      // Show ALL first (the default tab the user lands on), THEN load the status tabs in the background.
+      setLoadingStates(prev => ({ ...prev, 'MissionTab.all': true }));
+      const allModels = await fetchTabData('MissionTab.all', 10, new PaginateModel());
+      if (allModels.length > 0) {
+        const last = allModels[allModels.length - 1];
+        setPaginateModels(prev => ({ ...prev, 'MissionTab.all': new PaginateModel({ sortId: last.sortCreatedId }) }));
+      }
+      setAllModel(allModels);
+      setLoadingStates(prev => ({ ...prev, 'MissionTab.all': false }));
+
       const tabs = ['MissionTab.active', 'MissionTab.pending', 'MissionTab.completed'];
-      
-      setLoadingStates({
-        'MissionTab.active': true,
-        'MissionTab.pending': true,
-        'MissionTab.completed': true
-      });
+
+      setLoadingStates(prev => ({ ...prev, 'MissionTab.active': true, 'MissionTab.pending': true, 'MissionTab.completed': true }));
 
       const results = await Promise.all(
         tabs.map(async (tabId) => {
@@ -419,34 +445,32 @@ export default function MissionPage() {
         else if (tab === 'MissionTab.completed') setCompletedModel(models);
       });
 
-      setLoadingStates({
-        'MissionTab.active': false,
-        'MissionTab.pending': false,
-        'MissionTab.completed': false
-      });
+      setLoadingStates(prev => ({ ...prev, 'MissionTab.active': false, 'MissionTab.pending': false, 'MissionTab.completed': false }));
     };
 
     fetchAllTabs();
-  }, [userData, fetchTabData, setActiveModel, setPendingModel, setCompletedModel]);
+  }, [userData, fetchTabData, setAllModel, setActiveModel, setPendingModel, setCompletedModel]);
 
   // Update counts from models (only when models actually change)
   useEffect(() => {
     const newCounts = {
+      'MissionTab.all': allModel.length,
       'MissionTab.active': activeModel.length,
       'MissionTab.pending': pendingModel.length,
       'MissionTab.completed': completedModel.length
     };
-    
+
     // Only update if counts actually changed
     if (JSON.stringify(newCounts) !== JSON.stringify(tabCounts)) {
       setTabCounts(newCounts);
     }
-  }, [activeModel.length, pendingModel.length, completedModel.length]);
+  }, [allModel.length, activeModel.length, pendingModel.length, completedModel.length]);
 
   // Update counts when missionData changes
   useEffect(() => {
     if (missionData) {
       setTabCounts({
+        'MissionTab.all': missionData.missionCount,
         'MissionTab.active': missionData.missionCount - missionData.missionFinished,
         'MissionTab.pending': missionData.missionNotRewarded,
         'MissionTab.completed': missionData.missionCompleted
@@ -461,16 +485,23 @@ export default function MissionPage() {
 
     setLoadingStates(prev => ({ ...prev, [currentTab]: true }));
 
-    const currentModel = currentTab === 'MissionTab.active' ? activeModel :
-                         currentTab === 'MissionTab.pending' ? pendingModel : completedModel;
-    
+    const byTab: Record<string, MissionModel[]> = {
+      'MissionTab.all': allModel, 'MissionTab.active': activeModel,
+      'MissionTab.pending': pendingModel, 'MissionTab.completed': completedModel,
+    };
+    const setByTab: Record<string, (m: MissionModel[]) => void> = {
+      'MissionTab.all': setAllModel, 'MissionTab.active': setActiveModel,
+      'MissionTab.pending': setPendingModel, 'MissionTab.completed': setCompletedModel,
+    };
+    const currentModel = byTab[currentTab] ?? [];
+
     if (currentModel.length === 0) {
       setLoadingStates(prev => ({ ...prev, [currentTab]: false }));
       return;
     }
 
     const newModels = await fetchTabData(currentTab, 20, paginateModels[currentTab]);
-    
+
     if (newModels.length > 0) {
       const lastItem = newModels[newModels.length - 1];
       setPaginateModels(prev => ({
@@ -481,20 +512,16 @@ export default function MissionPage() {
       const oldIds = currentModel.map((e: MissionModel) => e.missionId);
       const merged = [...currentModel, ...newModels.filter((m: MissionModel) => !oldIds.includes(m.missionId))];
 
-      if (currentTab === 'MissionTab.active') setActiveModel(merged);
-      else if (currentTab === 'MissionTab.pending') setPendingModel(merged);
-      else if (currentTab === 'MissionTab.completed') setCompletedModel(merged);
+      setByTab[currentTab]?.(merged);
     }
 
     setLoadingStates(prev => ({ ...prev, [currentTab]: false }));
-  }, [activeTabs, activeModel, pendingModel, completedModel, loadingStates, paginateModels, fetchTabData, setActiveModel, setPendingModel, setCompletedModel]);
+  }, [activeTabs, allModel, activeModel, pendingModel, completedModel, loadingStates, paginateModels, fetchTabData, setAllModel, setActiveModel, setPendingModel, setCompletedModel]);
 
   // Get active tab
-  const activeTab = activeTabs.find(tab => tab.active)?.id || 'MissionTab.active';
-  const currentModel = activeTab === 'MissionTab.active' ? activeModel :
-                       activeTab === 'MissionTab.pending' ? pendingModel : completedModel;
-  const currentSetModel = activeTab === 'MissionTab.active' ? setActiveModel :
-                          activeTab === 'MissionTab.pending' ? setPendingModel : setCompletedModel;
+  const activeTab = activeTabs.find(tab => tab.active)?.id || 'MissionTab.all';
+  const currentModel = modelsByTab[activeTab] ?? [];
+  const currentSetModel = setModelsByTab[activeTab] ?? setAllModel;
 
   // Set active tab
   const setActiveTab = (id: string) => {
