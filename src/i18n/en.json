@@ -730,5 +730,19 @@
   "approval_pending": "Pending",
   "recents_text": "Recents",
   "favourite_text": "Favourite",
-  "public_text": "Public"
+  "public_text": "Public",
+  "new_text": "New",
+  "coming_soon_text": "Authoring is coming soon.",
+  "creator_library_text": "Creator library",
+  "review_queue_text": "Review queue",
+  "contribution_dashboard_sub": "Your contribution overview",
+  "stat_authored": "Authored",
+  "stat_pending": "Pending",
+  "stat_approved": "Approved",
+  "stat_categories": "Categories",
+  "stat_topics": "Topics",
+  "stat_questions": "Questions",
+  "stat_review_queue": "In queue",
+  "stat_reviewed": "Reviewed",
+  "region_blocked_or_error": "This may be unavailable in your region, or something went wrong."
 }

@@ -2,9 +2,13 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
+import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import styles from './creator-library.module.css';
+import { useNav, Scaffold } from '@academix-admin/navigation-stack';
 import { useDemandState } from '@academix-admin/state-stack';
+import { useDialog } from '@academix-admin/dialog-viewer';
+import { Header } from '@academix-admin/header';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useUserData } from '@/lib/stacks/user-stack';
 import LoadingView from '@/components/LoadingView/LoadingView';
@@ -18,17 +22,16 @@ import {
 import { capitalize } from '@/utils/textUtils';
 
 /**
- * Creator / reviewer library BODY (Academix Engine web surface — port of Flutter
- * user_quiz_creator_library_screen / user_quiz_reviewer_library_screen). Rendered inside the role
- * dashboard (contribution-page), which owns the Scaffold + Header. Reads `fetch_categories`
- * (identity + demographics are derived server-side; the client sends neither p_user_id nor
- * p_country/p_gender/p_age).
+ * Creator / reviewer library (Academix Engine web surface — port of Flutter
+ * user_quiz_creator_library_screen / user_quiz_reviewer_library_screen). Reached from the role dashboard
+ * (contribution-page); owns its OWN Scaffold. Reads `fetch_categories` (identity + demographics derived
+ * server-side, §2.5 — the client sends no p_user_id/p_country/p_gender/p_age).
  *
- * pType 'creator'  → the full creator library: Recents / Favourite / Private horizontal strips
- *                    (mirroring Flutter) followed by the paginated public list.
- * pType 'reviewer' → the review queue (needs reviewerTab; paginated list).
+ * creator  → Recents (with the "New" add button, à la Flutter recentNewWidget) + Favourite + Private card
+ *            strips + a paginated Public list.
+ * reviewer → the review queue list (needs reviewerTab).
  */
-type CreatorLibraryBodyProps = {
+type CreatorLibraryProps = {
   pType?: string;
   reviewerTab?: string | null;
 };
@@ -61,32 +64,125 @@ function nextSortId(list: UserQuizCreatorCategoryModel[], pType: string): string
   return pType === 'private' ? last.sortCreatedId : last.sortUpdatedId;
 }
 
-export function CreatorLibraryBody({ pType = 'creator', reviewerTab = null }: CreatorLibraryBodyProps) {
-  const { t } = useLanguage();
-
-  if (pType === 'reviewer') {
-    return <CategoryList pType="reviewer" reviewerTab={reviewerTab} title={t('review_text')} standalone />;
-  }
-
-  // creator dashboard: Recents / Favourite / Private strips (hidden when empty) + paginated public list.
-  return (
-    <>
-      <CategoryStrip pType="recent" title={t('recents_text')} />
-      <CategoryStrip pType="favourite" title={t('favourite_text')} />
-      <CategoryStrip pType="private" title={t('create_private_text')} />
-      <CategoryList pType="creator" title={t('public_text')} />
-    </>
-  );
-}
-
 function getInitials(text: string): string {
   if (!text) return '?';
   return text.split(' ').map((w) => w.charAt(0).toUpperCase()).slice(0, 2).join('');
 }
 
-/* ---------------- horizontal strip (recent / favourite / private) ---------------- */
-function CategoryStrip({ pType, title }: { pType: string; title: string }) {
+export default function CreatorLibrary({ pType = 'creator', reviewerTab = null }: CreatorLibraryProps) {
+  const { theme } = useTheme();
+  const { t } = useLanguage();
+  const nav = useNav();
+  const dialog = useDialog();
+
+  const isReviewer = pType === 'reviewer';
+  const title = isReviewer ? t('review_text') : t('library_text');
+
+  // Authoring (create category) is Phase 2 — surface a clear notice for now (Flutter opens categoryAddition).
+  const onNew = () =>
+    dialog.open(
+      <div className={styles.dialog}>
+        <p className={styles.dialogTitle}>{t('create_public_text')}</p>
+        <p className={styles.dialogSub}>{t('coming_soon_text')}</p>
+        <button className={styles.dialogBtn} onClick={() => dialog.close()}>{t('ok_text')}</button>
+      </div>,
+    );
+
+  return (
+    <Scaffold
+      bodyClassName={theme === 'dark' ? styles.container_dark : styles.container_light}
+      appBar={<Header title={title} theme={theme} onBack={() => nav.pop()} position="static" />}
+    >
+      <div className={styles.content}>
+        {isReviewer ? (
+          <CategoryList pType="reviewer" reviewerTab={reviewerTab} standalone />
+        ) : (
+          <>
+            <RecentStrip onNew={onNew} />
+            <CardStrip pType="favourite" title={t('favourite_text')} />
+            <CardStrip pType="private" title={t('create_private_text')} />
+            <PublicSection />
+          </>
+        )}
+      </div>
+    </Scaffold>
+  );
+}
+
+/* ---------------- section header ---------------- */
+function SectionHead({ title, more }: { title: string; more?: boolean }) {
+  return (
+    <div className={styles.sectionHead}>
+      <span className={styles.sectionTitle}>{title}</span>
+      {more && (
+        <span className={styles.sectionMore} aria-hidden>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6" /></svg>
+        </span>
+      )}
+    </div>
+  );
+}
+
+/* ---------------- Recents strip (circular avatars + New add button) ---------------- */
+function RecentStrip({ onNew }: { onNew: () => void }) {
   const { t, lang } = useLanguage();
+  const { userData } = useUserData();
+  const [items, demandItems] = useDemandState<UserQuizCreatorCategoryModel[]>([], {
+    key: 'lib_strip_recent',
+    persist: true,
+    ttl: 3600,
+    scope: 'secondary_flow',
+    deps: [lang],
+  });
+
+  useEffect(() => {
+    if (!userData) return;
+    demandItems(async ({ set }) => {
+      try { set(await fetchCategories(lang, 'recent', 10, new PaginateModel())); } catch { set([]); }
+    });
+  }, [demandItems, userData, lang]);
+
+  return (
+    <section>
+      <SectionHead title={t('recents_text')} more={items.length >= 9} />
+      <div className={styles.strip}>
+        {/* New: create a category (Flutter recentNewWidget) */}
+        <button className={styles.recentItem} onClick={onNew}>
+          <span className={`${styles.recentCircle} ${styles.newCircle}`}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14" /></svg>
+          </span>
+          <span className={styles.recentName}>{t('new_text')}</span>
+        </button>
+
+        {items.map((cat) => (
+          <RecentCard key={cat.topicCategoryId} category={cat} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function RecentCard({ category }: { category: UserQuizCreatorCategoryModel }) {
+  const [imgError, setImgError] = useState(false);
+  const pending = category.approvalBucket === 'pending';
+  return (
+    <div className={styles.recentItem} role="button">
+      <span className={styles.recentCircle}>
+        {category.topicCategoryImageUrl && !imgError ? (
+          <Image src={category.topicCategoryImageUrl} alt={category.topicCategoryIdentity} width={64} height={64} onError={() => setImgError(true)} />
+        ) : (
+          <span className={styles.recentInitials}>{getInitials(category.topicCategoryIdentity)}</span>
+        )}
+        {pending && <span className={styles.recentPending} aria-label="pending">⏱</span>}
+      </span>
+      <span className={styles.recentName}>{capitalize(category.topicCategoryIdentity)}</span>
+    </div>
+  );
+}
+
+/* ---------------- Favourite / Private card strips ---------------- */
+function CardStrip({ pType, title }: { pType: string; title: string }) {
+  const { lang } = useLanguage();
   const { userData } = useUserData();
   const [items, demandItems] = useDemandState<UserQuizCreatorCategoryModel[]>([], {
     key: `lib_strip_${pType}`,
@@ -99,11 +195,7 @@ function CategoryStrip({ pType, title }: { pType: string; title: string }) {
   useEffect(() => {
     if (!userData) return;
     demandItems(async ({ set }) => {
-      try {
-        set(await fetchCategories(lang, pType, 10, new PaginateModel()));
-      } catch {
-        set([]);
-      }
+      try { set(await fetchCategories(lang, pType, 10, new PaginateModel())); } catch { set([]); }
     });
   }, [demandItems, userData, lang, pType]);
 
@@ -111,51 +203,36 @@ function CategoryStrip({ pType, title }: { pType: string; title: string }) {
 
   return (
     <section>
-      <div className={styles.sectionHead}>
-        <span className={styles.sectionTitle}>{title}</span>
-        {items.length >= 9 && (
-          <span className={styles.sectionMore} aria-hidden>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6" /></svg>
-          </span>
-        )}
-      </div>
+      <SectionHead title={title} more={items.length >= 9} />
       <div className={styles.strip}>
         {items.map((cat) => (
-          <StripCard key={cat.topicCategoryId} category={cat} />
+          <CategoryCard key={cat.topicCategoryId} category={cat} variant="strip" />
         ))}
       </div>
     </section>
   );
 }
 
-function StripCard({ category }: { category: UserQuizCreatorCategoryModel }) {
-  const [imgError, setImgError] = useState(false);
+/* ---------------- Public paginated section ---------------- */
+type ViewState = 'loading' | 'data' | 'error' | 'empty';
+
+function PublicSection() {
+  const { t } = useLanguage();
   return (
-    <div className={styles.stripCard} role="button">
-      <div className={styles.stripImage}>
-        {category.topicCategoryImageUrl && !imgError ? (
-          <Image src={category.topicCategoryImageUrl} alt={category.topicCategoryIdentity} width={130} height={84} onError={() => setImgError(true)} />
-        ) : (
-          <span className={styles.stripInitials}>{getInitials(category.topicCategoryIdentity)}</span>
-        )}
-      </div>
-      <span className={styles.stripName}>{capitalize(category.topicCategoryIdentity)}</span>
-    </div>
+    <section>
+      <SectionHead title={t('public_text')} />
+      <CategoryList pType="creator" />
+    </section>
   );
 }
-
-/* ---------------- vertical paginated list (public / private / reviewer) ---------------- */
-type ViewState = 'loading' | 'data' | 'error' | 'empty';
 
 function CategoryList({
   pType,
   reviewerTab = null,
-  title,
   standalone = false,
 }: {
   pType: string;
   reviewerTab?: string | null;
-  title: string;
   standalone?: boolean;
 }) {
   const { t, lang } = useLanguage();
@@ -225,24 +302,39 @@ function CategoryList({
 
   if (viewState === 'loading') return <LoadingView />;
   if (viewState === 'error') return <ErrorView text={t('error_occurred')} buttonText={t('reload_text')} onButtonClick={() => { setViewState('loading'); load(true); }} />;
-  // In the sectioned creator view, an empty public list shouldn't blank the whole screen.
-  if (viewState === 'empty') return standalone ? <NoResultsView text={t('contribute_first')} /> : null;
+  if (viewState === 'empty') return standalone ? <NoResultsView text={t('contribute_first')} /> : <p className={styles.emptyInline}>{t('contribute_first')}</p>;
 
   return (
-    <section>
-      {!standalone && (
-        <div className={styles.sectionHead}>
-          <span className={styles.sectionTitle}>{title}</span>
-        </div>
-      )}
-      <div className={styles.list}>
-        {items.map((cat) => (
-          <ListRow key={cat.topicCategoryId} category={cat} />
-        ))}
-        <div ref={loaderRef} className={styles.sentinel} />
-        {paginating && <div className={styles.moreSpinner}><span /></div>}
+    <div className={styles.list}>
+      {items.map((cat) => (
+        <ListRow key={cat.topicCategoryId} category={cat} />
+      ))}
+      <div ref={loaderRef} className={styles.sentinel} />
+      {paginating && <div className={styles.moreSpinner}><span /></div>}
+    </div>
+  );
+}
+
+/* ---------------- cards ---------------- */
+function CategoryCard({ category }: { category: UserQuizCreatorCategoryModel; variant?: 'strip' }) {
+  const { t } = useLanguage();
+  const [imgError, setImgError] = useState(false);
+  const approvalKey = category.approvalBucket;
+  return (
+    <div className={styles.stripCard} role="button">
+      <div className={styles.stripImage}>
+        {category.topicCategoryImageUrl && !imgError ? (
+          <Image src={category.topicCategoryImageUrl} alt={category.topicCategoryIdentity} width={130} height={84} onError={() => setImgError(true)} />
+        ) : (
+          <span className={styles.stripInitials}>{getInitials(category.topicCategoryIdentity)}</span>
+        )}
       </div>
-    </section>
+      <span className={styles.stripName}>{capitalize(category.topicCategoryIdentity)}</span>
+      <div className={styles.stripMeta}>
+        <span className={`${styles.badge} ${styles[`badge_${approvalKey}`]}`}>{t(`approval_${approvalKey}`)}</span>
+        <span className={styles.counts}>{category.topicsCount} · {category.questionsCount}</span>
+      </div>
+    </div>
   );
 }
 

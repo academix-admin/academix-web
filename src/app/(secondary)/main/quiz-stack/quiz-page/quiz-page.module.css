@@ -1,3 +1,10 @@
+.aggregateState {
+  min-height: 55vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .mainContainer {
   display: flex;
   flex-direction: column;

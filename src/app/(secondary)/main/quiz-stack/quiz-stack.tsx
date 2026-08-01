@@ -9,6 +9,7 @@ import QuizCommitment from "./quiz-commitment/quiz-commitment";
 import PoolMembers from "./pool-members/pool-members";
 import Pin from "../shared/pin/pin";
 import ContributionPage from "./contribution-page/contribution-page";
+import CreatorLibrary from "./creator-library/creator-library";
 
 const quizStackNavLink = {
   quiz_page: QuizPage,
@@ -17,6 +18,8 @@ const quizStackNavLink = {
   pool_members: PoolMembers,
   pin: Pin,
   contribution_page: ContributionPage,
+  creator_library: CreatorLibrary,
+  reviewer_library: CreatorLibrary,
 };
 
 export const QuizStack = () => (

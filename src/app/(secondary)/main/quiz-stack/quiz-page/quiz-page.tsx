@@ -12,6 +12,7 @@ import { useComponentState, ComponentStateProps, getComponentStatus } from '@/ho
 import { useEffect, useState, Fragment } from 'react';
 import ErrorView from '@/components/ErrorView/ErrorView';
 import NoResultsView from '@/components/NoResultsView/NoResultsView';
+import LoadingView from '@/components/LoadingView/LoadingView';
 import QuizPageTitle from "./quiz-page-title/quiz-page-title";
 import AvailableQuizTopics from "./available-quiz-topics/available-quiz-topics";
 import PublicQuizTopics from "./public-quiz-topics/public-quiz-topics";
@@ -44,12 +45,19 @@ export default function QuizPage() {
 
     const nothing   = settled && !anyLoading && !anyData && compState.size > 0;
     const allErrored = nothing && status.errorCount > 0 && status.noneCount === 0;
+    // Before any section has data and before we've settled into an empty/error verdict, show one loader
+    // instead of a blank page (sections report 'none' while fetching, so a plain "any loading?" is false).
+    const initialLoading = !anyData && !nothing;
 
   return (
     <div className={styles.mainContainer}>
+      {initialLoading && (
+        <div className={styles.aggregateState}><LoadingView /></div>
+      )}
+
       {nothing && (
         allErrored
-          ? <ErrorView text={t('error_occurred')} buttonText={t('try_again')}
+          ? <ErrorView text={t('region_blocked_or_error')} buttonText={t('try_again')}
                        onButtonClick={() => { resetComponentState(); setSettled(false); setNonce(n => n + 1); }} />
           : <NoResultsView text={t('no_content')} buttonText={null} onButtonClick={null} />
       )}

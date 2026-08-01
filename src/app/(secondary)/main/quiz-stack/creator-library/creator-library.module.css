@@ -119,6 +119,86 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.stripMeta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+
+/* ---- recents (circular avatars + New) ---- */
+.recentItem {
+  flex: 0 0 auto;
+  width: 76px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+.recentCircle {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--accent);
+}
+.recentCircle img { width: 100%; height: 100%; object-fit: cover; }
+.recentInitials { font-size: 1.2rem; font-weight: 700; color: var(--accent); }
+.newCircle {
+  border: 1.5px dashed var(--accent);
+  background: transparent;
+}
+.recentPending {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #ffffff;
+  color: #d97706;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 0 1px var(--border-color);
+}
+.recentName {
+  font-size: 0.78rem;
+  color: var(--text-color);
+  text-align: center;
+  max-width: 76px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.emptyInline {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  padding: 8px 2px;
+}
+
+/* ---- "New" (authoring Phase 2) notice dialog ---- */
+.dialog { display: flex; flex-direction: column; gap: 8px; padding: 8px 4px; text-align: center; max-width: 300px; }
+.dialogTitle { font-size: 1rem; font-weight: 700; color: inherit; }
+.dialogSub { font-size: 0.85rem; color: inherit; opacity: 0.72; }
+.dialogBtn {
+  margin-top: 6px;
+  align-self: center;
+  border: none;
+  background: #1c6b1e;
+  color: #fff;
+  font-weight: 600;
+  padding: 8px 22px;
+  border-radius: 10px;
+  cursor: pointer;
+}
 
 /* ---- vertical list ---- */
 .list { display: flex; flex-direction: column; gap: 10px; }

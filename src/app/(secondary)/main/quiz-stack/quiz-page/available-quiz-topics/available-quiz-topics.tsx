@@ -105,7 +105,10 @@ export default function AvailableQuizTopics({ onStateChange, pType }: AvailableQ
 
 
       if (error) {
+        // Region-block / gate rejection comes back as an rpc error (not a throw) — surface it as an error
+        // state so the quiz page shows a clear message instead of a silent "no content".
         console.error("[UserDisplayQuizTopicModel] error:", error);
+        onStateChange?.('error');
         return [];
       }
       return (data || []).map((row: BackendUserDisplayQuizTopicModel) => new UserDisplayQuizTopicModel(row));
