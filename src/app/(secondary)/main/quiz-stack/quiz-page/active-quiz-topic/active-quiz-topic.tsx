@@ -177,7 +177,9 @@ export default function ActiveQuizTopic({ onStateChange }: ComponentStateProps) 
       const active = await fetchActiveQuizTopicModel(userData);
       set(active);
       setFirstLoaded(false);
-      onStateChange?.('data');
+      // Report the REAL state — 'data' only when there's actually an active quiz. Reporting 'data' on an
+      // empty result inflated the quiz page's aggregate so its loader/empty/error state never showed.
+      onStateChange?.(active ? 'data' : 'none');
       // Start the first call
       refreshData();
     });

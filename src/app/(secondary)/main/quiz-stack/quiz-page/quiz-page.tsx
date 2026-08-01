@@ -51,22 +51,30 @@ export default function QuizPage() {
 
   return (
     <div className={styles.mainContainer}>
+      {/* The title ALWAYS renders and is deliberately NOT part of the content aggregate — it always has
+          "data", so counting it kept anyData permanently true and suppressed the loader/empty/error state
+          (a region-blocked page then showed a title over a blank body). It also stays outside the `nonce`
+          Fragment so a retry doesn't remount it. */}
+      <QuizPageTitle />
+
       {initialLoading && (
         <div className={styles.aggregateState}><LoadingView /></div>
       )}
 
       {nothing && (
         allErrored
-          ? <ErrorView text={t('region_blocked_or_error')} buttonText={t('try_again')}
-                       onButtonClick={() => { resetComponentState(); setSettled(false); setNonce(n => n + 1); }} />
-          : <NoResultsView text={t('quiz_none_or_region')} buttonText={null} onButtonClick={null} />
+          ? <div className={styles.aggregateState}>
+              <ErrorView text={t('region_blocked_or_error')} buttonText={t('try_again')}
+                         onButtonClick={() => { resetComponentState(); setSettled(false); setNonce(n => n + 1); }} />
+            </div>
+          : <div className={styles.aggregateState}>
+              <NoResultsView text={t('quiz_none_or_region')} buttonText={null} onButtonClick={null} />
+            </div>
       )}
 
-      {/* Sections stay mounted (they fetch on visibility); the aggregate above is purely additive and
-          disappears the instant any section reports data. `nonce` remounts them on retry. */}
+      {/* Content sections stay mounted (they fetch on visibility); the aggregate above is purely additive
+          and disappears the instant any section reports data. `nonce` remounts them on retry. */}
       <Fragment key={nonce}>
-      <QuizPageTitle onStateChange={(state) => handleStateChange('quizPageTitle', state)} />
-
       <ActiveQuizTopic onStateChange={(state) => handleStateChange('activeQuizTopic', state)} />
 
       <PublicQuizTopics onStateChange={(state) => handleStateChange('creatorPublicQuizTopics', state)} pType={'creator'} />
