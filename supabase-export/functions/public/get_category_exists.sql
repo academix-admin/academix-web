@@ -10,7 +10,6 @@ DECLARE
     is_personal BOOLEAN;
     check_public BOOLEAN;
     exists BOOLEAN;
-    group_text TEXT;
 BEGIN
 
    SELECT rt.roles_is_personal_entry INTO is_personal
@@ -18,23 +17,19 @@ BEGIN
    LEFT JOIN roles_table rt ON rt.roles_id = ut.roles_id
    WHERE ut.users_id = p_user_id;
 
-   SELECT (translate(category_group_identity, p_locale)).translation INTO group_text FROM category_group_table
-   WHERE category_group_id = p_group_id;
-
-   IF is_personal IS NULL OR group_text IS NULL THEN 
+   IF is_personal IS NULL THEN
       RETURN jsonb_build_object(
         'is_public', false,
         'exists', NULL,
-        'allowed', false,
-        'group', null
+        'allowed', false
       );
-   ELSIF is_personal = TRUE THEN 
+   ELSIF is_personal = TRUE THEN
           check_public := COALESCE(p_public, FALSE);
    ELSE 
          check_public := TRUE;     
    END IF;
 
-   -- Check if any value in the category_group_identity JSONB matches p_name
+   -- Check if any value in the topic_category_identity JSONB matches p_name (by visibility)
    IF check_public = TRUE THEN 
         SELECT EXISTS (
             SELECT 1 FROM topic_category_table tct
@@ -42,25 +37,24 @@ BEGIN
                 SELECT translation FROM translate(tct.topic_category_identity, p_locale) 
                 WHERE UNACCENT(LOWER(translation)) = UNACCENT(LOWER(p_name))
             )
-            AND tct.category_group_id = p_group_id
+            AND tct.visibility = 'public'
         ) INTO exists;
-    ELSE 
+    ELSE
         SELECT EXISTS (
             SELECT 1 FROM topic_category_table tct
             WHERE EXISTS (
                 SELECT translation FROM translate(tct.topic_category_identity, p_locale) 
                 WHERE UNACCENT(LOWER(translation)) = UNACCENT(LOWER(p_name))
             )
-            AND tct.category_group_id = p_group_id
+            AND tct.visibility = 'private'
             AND (SELECT (translation::uuid) FROM translate(tct.topic_category_created_by, p_locale)) = p_user_id
         ) INTO exists;
-     END IF;    
+     END IF;
 
     RETURN jsonb_build_object(
         'is_public', check_public,
         'exists', exists,
-        'allowed', true,
-        'group', group_text
+        'allowed', true
       );
 END;
 $function$

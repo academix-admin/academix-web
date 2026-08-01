@@ -75,14 +75,7 @@ BEGIN
                 'age_control',        (SELECT jsonb_agg(control) FROM build_control(topic_category_table.age_control,      p_locale) AS control),
                 'country_control',    (SELECT jsonb_agg(control) FROM build_control(topic_category_table.country_control,  p_locale) AS control),
                 'language_control',   (SELECT jsonb_agg(control) FROM build_control(topic_category_table.language_control, p_locale) AS control),
-                'gender_control',     (SELECT jsonb_agg(control) FROM build_control(topic_category_table.gender_control,   p_locale) AS control),
-                'category_group_details', (
-                    SELECT jsonb_build_object(
-                        'category_group_id',       cgt.category_group_id,
-                        'category_group_identity', (SELECT translation FROM translate(cgt.category_group_identity, p_locale))
-                    ) FROM category_group_table cgt
-                    WHERE cgt.category_group_id = p_group_id
-                )
+                'gender_control',     (SELECT jsonb_agg(control) FROM build_control(topic_category_table.gender_control,   p_locale) AS control)
             ) INTO category_details;
 
     ELSE
@@ -93,7 +86,6 @@ BEGIN
             topic_category_identity,
             topic_category_created_by,
             topic_category_reviewed_by,
-            category_group_id,
             age_control,
             language_control,
             gender_control,
@@ -105,7 +97,6 @@ BEGIN
             jsonb_build_object(p_locale, p_topic_category_text),
             jsonb_build_object(p_locale, p_user_id),
             '{}'::jsonb,
-            p_group_id,
             age_control_json,
             language_control_json,
             gender_control_json,
@@ -135,14 +126,7 @@ BEGIN
                 'age_control',        (SELECT jsonb_agg(control) FROM build_control(age_control,      p_locale) AS control),
                 'country_control',    (SELECT jsonb_agg(control) FROM build_control(country_control,  p_locale) AS control),
                 'language_control',   (SELECT jsonb_agg(control) FROM build_control(language_control, p_locale) AS control),
-                'gender_control',     (SELECT jsonb_agg(control) FROM build_control(gender_control,   p_locale) AS control),
-                'category_group_details', (
-                    SELECT jsonb_build_object(
-                        'category_group_id',       cgt.category_group_id,
-                        'category_group_identity', (SELECT translation FROM translate(cgt.category_group_identity, p_locale))
-                    ) FROM category_group_table cgt
-                    WHERE cgt.category_group_id = p_group_id
-                )
+                'gender_control',     (SELECT jsonb_agg(control) FROM build_control(gender_control,   p_locale) AS control)
             ) INTO category_details;
     END IF;
 

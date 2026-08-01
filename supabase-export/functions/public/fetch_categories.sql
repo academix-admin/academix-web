@@ -30,15 +30,12 @@ BEGIN
             tst.topic_settings_updated_at,
             tst.sort_created_id AS tst_sort_created_id,
             tst.sort_updated_id AS tst_sort_updated_id,
-            cgt.category_group_id,
-            cgt.category_group_identity,
-            cgt.approval_status,
+            tct.approval_status,
             (SELECT translation::uuid FROM translate(tct.topic_category_created_by, p_locale)) AS users_creator_id,
             (SELECT translation::uuid FROM translate(tct.topic_category_reviewed_by, p_locale)) AS users_reviewer_id
         FROM topic_category_table tct
         LEFT JOIN topic_settings_table tst ON tct.topic_category_id = tst.topic_category_id
-        LEFT JOIN category_group_table cgt ON cgt.category_group_id = tct.category_group_id
-        WHERE 
+        WHERE
         ((SELECT translation FROM translate(tct.topic_category_identity, p_locale)) IS NOT NULL)
             AND
             (SELECT * FROM fetch_general_content_check(
@@ -54,9 +51,7 @@ BEGIN
                 (SELECT translation FROM translate(tct.approval_status, p_locale))
             )) = true
 
-            AND (p_group_id IS NULL OR p_group_id = tct.category_group_id)
-
-            AND (p_type <> 'reviewer' OR (p_type = 'reviewer' 
+            AND (p_type <> 'reviewer' OR (p_type = 'reviewer'
                 AND p_reviewer_tab IS NOT NULL 
                 AND get_approval_checker(
                     p_user_id,
@@ -128,11 +123,7 @@ BEGIN
             'age_control', (SELECT jsonb_agg(control) FROM build_control(fc.age_control, p_locale) AS control),
             'country_control', (SELECT jsonb_agg(control) FROM build_control(fc.country_control, p_locale) AS control),
             'language_control', (SELECT jsonb_agg(control) FROM build_control(fc.language_control, p_locale) AS control),
-            'gender_control', (SELECT jsonb_agg(control) FROM build_control(fc.gender_control, p_locale) AS control),
-            'category_group_details', jsonb_build_object(
-                'category_group_id', fc.category_group_id,
-                'category_group_identity', (SELECT translation FROM translate(fc.category_group_identity, p_locale))
-            )
+            'gender_control', (SELECT jsonb_agg(control) FROM build_control(fc.gender_control, p_locale) AS control)
         )
     FROM filtered_categories fc;
 END;

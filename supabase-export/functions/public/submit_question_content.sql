@@ -108,9 +108,9 @@ BEGIN
     END IF;
 
 
-    -- Get group_id and category_id from topic
-    SELECT tct.category_group_id, tct.topic_category_id INTO group_id, category_id 
-    FROM topics_table tt 
+    -- Get category_id from topic
+    SELECT tct.topic_category_id INTO category_id
+    FROM topics_table tt
     LEFT JOIN topic_category_table tct ON tt.topic_category_id = tct.topic_category_id
     WHERE tt.topics_id = p_topic_id;
 
@@ -180,7 +180,6 @@ BEGIN
         INSERT INTO questions_table (
             questions_identity,
             topics_id,
-            category_group_id,
             topic_category_id,
             age_control,
             language_control,
@@ -196,7 +195,6 @@ BEGIN
         VALUES (
             questions_identity_json,
             p_topic_id,
-            group_id,
             category_id,
             age_control_json,
             language_control_json,

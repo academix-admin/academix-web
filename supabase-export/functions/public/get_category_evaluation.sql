@@ -14,7 +14,6 @@ BEGIN
     SELECT jsonb_build_object(
         'topic_category_id', tct.topic_category_id,
         'topic_category_image', tct.topic_category_image,
-        'category_group_id', tct.category_group_id,
         -- 'approval_table', json_build_object(
         --     'approval_id', tat.approval_id,
         --     'approval_status_code', tat.approval_status_code

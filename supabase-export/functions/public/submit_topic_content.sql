@@ -33,11 +33,6 @@ BEGIN
     END IF;
 
 
-    -- Get group_id from category
-    SELECT tct.category_group_id INTO group_id 
-    FROM topic_category_table tct 
-    WHERE tct.topic_category_id = p_category_id;
-
     -- Generate control JSON objects
     age_control_json      := save_control_details('Control.age',      p_age_control,      p_locale);
     language_control_json := save_control_details('Control.language', p_language_control, p_locale);
@@ -93,7 +88,6 @@ BEGIN
             topics_identity,
             topics_created_by,
             topics_reviewed_by,
-            category_group_id,
             topic_category_id,
             age_control,
             language_control,
@@ -106,7 +100,6 @@ BEGIN
             jsonb_build_object(p_locale, p_topic_text),
             jsonb_build_object(p_locale, p_user_id),
             '{}'::jsonb,
-            group_id,
             p_category_id,
             age_control_json,
             language_control_json,
