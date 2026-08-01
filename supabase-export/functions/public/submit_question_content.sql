@@ -37,6 +37,8 @@ DECLARE
   missing_option_ids TEXT := '';
   actual_option_count INT;
 BEGIN
+    -- Server-authoritative role gate: only a creator+ role may author (client can't spoof p_user_id).
+    PERFORM public.assert_can_contribute(p_user_id, 'public');
 
     -- ---------------------------------------------------------------
     -- UPDATE MODE VALIDATION

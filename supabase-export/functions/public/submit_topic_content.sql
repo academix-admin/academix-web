@@ -16,6 +16,8 @@ DECLARE
   gender_control_json JSONB;
   country_control_json JSONB;
 BEGIN
+  -- Server-authoritative role gate: only a creator+ role may author (client can't spoof p_user_id).
+  PERFORM public.assert_can_contribute(p_user_id, 'public');
 
     -- ---------------------------------------------------------------
     -- UPDATE MODE VALIDATION
