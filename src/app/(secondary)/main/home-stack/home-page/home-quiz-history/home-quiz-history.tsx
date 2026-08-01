@@ -211,13 +211,8 @@ useEffect(() => {
 
 }, [quizHistoryData]);
 
-  if(!firstLoaded && quizHistoryData.length <= 0)return null;
-
-  const handleQuizClick = (quiz: QuizHistory) => {
-    nav.push('quiz_result_page',{poolsId: quiz.poolsId});
-  };
-
   // ── Search (SearchViewer): local filter of the loaded history + server fetch_user_quiz_history ──
+  // Hooks MUST run before the early return below — otherwise hook order varies (React #310).
   const [searchId, searchOps, isSearchOpen] = useSearchController();
   const [searchResults, setSearchResults] = useState<SearchResult<QuizHistory>[]>([]);
 
@@ -238,6 +233,12 @@ useEffect(() => {
     },
     [userData, lang],
   );
+
+  if(!firstLoaded && quizHistoryData.length <= 0)return null;
+
+  const handleQuizClick = (quiz: QuizHistory) => {
+    nav.push('quiz_result_page',{poolsId: quiz.poolsId});
+  };
 
   const searchIcon = (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
