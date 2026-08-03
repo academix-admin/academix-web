@@ -341,10 +341,12 @@
 
     .innerBody_profile {
         padding: 6rem;
+        padding-bottom: var(--nav-height); /* keep nav clearance; shorthand resets it */
     }
 
     .innerBody_quiz {
         padding: 1rem;
+        padding-bottom: var(--nav-height); /* keep nav clearance; shorthand resets it */
     }
 
     .rulesContainer {
@@ -377,6 +379,7 @@
 
     .innerBody_quiz {
         padding: 16px;
+        padding-bottom: var(--nav-height); /* keep nav clearance; shorthand resets it */
     }
 
     .backIcon {

@@ -288,6 +288,7 @@
     .innerBody {
         width: 100%;
         padding: 1rem;
+        padding-bottom: var(--nav-height); /* keep nav clearance; the shorthand above resets it */
     }
 
   .headerContent {

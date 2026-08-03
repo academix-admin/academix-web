@@ -44,7 +44,8 @@
 }
 
 @media screen and (max-width: 500px) {
-  .content { padding: 16px; }
+  /* re-assert nav clearance; the `padding` shorthand resets the base var(--nav-height) */
+  .content { padding: 16px; padding-bottom: var(--nav-height); }
 }
 
 /* role header */

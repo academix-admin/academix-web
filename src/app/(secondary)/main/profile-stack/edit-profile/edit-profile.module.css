@@ -614,6 +614,9 @@
   padding: 0;
         padding-top: 6rem;
           max-width: 800px;
+    /* Re-assert bottom-nav clearance: the `padding: 0` shorthand above resets padding-bottom, which
+       would otherwise drop the var(--nav-height) clearance from the base rule (content under the nav). */
+    padding-bottom: var(--nav-height);
   }
 
   .profileImageSection {
@@ -681,6 +684,7 @@
     padding: 0;
     padding-top: 5rem;
     max-width: 500px;
+    padding-bottom: var(--nav-height); /* keep nav clearance; the `padding: 0` shorthand resets it */
   }
 
   .actionsRow {

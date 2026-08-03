@@ -389,6 +389,7 @@ export default function PaymentTransactions({ onStateChange }: ComponentStatePro
   };
 
   const handleTransactionClick = (transaction: TransactionModel) => {
+    searchOps.close(); // drop the search sheet when a result is opened (no-op if search isn't open)
     nav.push('view_transaction', { transactionId: transaction.transactionId });
   };
 

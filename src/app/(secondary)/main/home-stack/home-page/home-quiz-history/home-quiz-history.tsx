@@ -237,6 +237,7 @@ useEffect(() => {
   if(!firstLoaded && quizHistoryData.length <= 0)return null;
 
   const handleQuizClick = (quiz: QuizHistory) => {
+    searchOps.close(); // drop the search sheet when a result is opened (no-op if search isn't open)
     nav.push('quiz_result_page',{poolsId: quiz.poolsId});
   };
 

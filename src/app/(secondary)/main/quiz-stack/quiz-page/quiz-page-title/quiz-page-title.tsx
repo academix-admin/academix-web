@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useEffect, useState } from 'react';
+import { use, useEffect, useState, useCallback } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import styles from './quiz-page-title.module.css';
 import { useLanguage } from '@/context/LanguageContext';
@@ -11,21 +11,69 @@ import DialogCancel from '@/components/DialogCancel';
 import { TextInput } from '@academix-admin/forms';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useUserData } from '@/lib/stacks/user-stack';
-import { UserDisplayQuizTopicModel } from '@/models/user-display-quiz-topic-model';
+import { UserDisplayQuizTopicModel, BackendUserDisplayQuizTopicModel } from '@/models/user-display-quiz-topic-model';
 import dynamic from 'next/dynamic';
+import Image from 'next/image';
 import { useNav, useProvideObject } from "@academix-admin/navigation-stack";
 import { Header } from '@academix-admin/header';
+import { SearchViewer, useSearchController } from '@academix-admin/search-viewer';
+import type { SearchResult } from '@academix-admin/search-viewer';
+import { PaginateModel } from '@/models/paginate-model';
+import { usePublicQuiz } from '@/lib/stacks/public-quiz-stack';
+import LoadingView from '@/components/LoadingView/LoadingView';
+import ErrorView from '@/components/ErrorView/ErrorView';
+import NoResultsView from '@/components/NoResultsView/NoResultsView';
 
 const Scanner = dynamic(() => import('@yudiel/react-qr-scanner').then(mod => ({ default: mod.Scanner })), { ssr: false });
 
 export default function QuizPageTitle({ onStateChange }: ComponentStateProps) {
   const { theme, applyTheme } = useTheme();
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const [bottomViewerId, bottomController, bottomIsOpen] = useBottomController();
   const [scannedQuizPool, setScannedQuizPool] = useState<UserDisplayQuizTopicModel | null>(null);
   const [isActivated, setIsActivated] = useState(false);
   const nav = useNav();
   const { userData } = useUserData();
+
+  // ── Search across public quizzes (SearchViewer: local instant + server pagination) ──────────
+  const [searchId, searchOps, isSearchOpen] = useSearchController();
+  const [searchResults, setSearchResults] = useState<SearchResult<UserDisplayQuizTopicModel>[]>([]);
+  // Already-loaded public quizzes (shared demand-state) → filtered locally for an instant first paint.
+  const [loadedPublicQuizzes] = usePublicQuiz(lang, 'public');
+
+  const queryQuizzes = useCallback(
+    async (cursor: PaginateModel | undefined, text: string): Promise<{ data: UserDisplayQuizTopicModel[]; cursor?: PaginateModel }> => {
+      const after = cursor ?? new PaginateModel();
+      const { data, error } = await supabaseBrowser.rpc('fetch_public_quizzes', {
+        p_locale: lang,
+        p_type: 'public',
+        p_limit_by: 20,
+        p_after_quiz_topics: after.toJson(),
+        p_search_key: text || null,
+      });
+      if (error || !data) return { data: [] };
+      const rows = (data as BackendUserDisplayQuizTopicModel[]).map((r) => new UserDisplayQuizTopicModel(r));
+      const last = rows[rows.length - 1];
+      return { data: rows, cursor: last ? new PaginateModel({ sortId: last.sortCreatedId }) : undefined };
+    },
+    [lang],
+  );
+
+  const handleSearchQuizClick = (topic: UserDisplayQuizTopicModel) => {
+    nav.provideObject(
+      'getQuizByPoolsId',
+      () => (poolsId: string) => searchResults.find((r) => r.data.quizPool?.poolsId === poolsId)?.data,
+      { global: true, scope: 'quiz-topics' },
+    );
+    nav.push('quiz_commitment', { poolsId: topic.quizPool?.poolsId, action: 'public' });
+    searchOps.close();
+  };
+
+  const searchIcon = (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3" />
+    </svg>
+  );
 
   useEffect(() => {
     if (!userData?.usersId) return;
@@ -130,6 +178,12 @@ export default function QuizPageTitle({ onStateChange }: ComponentStateProps) {
                 },
               ]
             : []),
+          // Search sits at the END of the icon list on the quiz page.
+          {
+            icon: searchIcon,
+            onClick: searchOps.open,
+            ariaLabel: t('search_text'),
+          },
         ]}
       />
 
@@ -154,6 +208,116 @@ export default function QuizPageTitle({ onStateChange }: ComponentStateProps) {
       >
         <QuizJoinContent theme={theme} t={t} onClose={handleDisplayClose} scannedQuizPool={scannedQuizPool} setScannedQuizPool={setScannedQuizPool} />
       </BottomViewer>
+
+      <SearchViewer<UserDisplayQuizTopicModel, PaginateModel>
+        id={searchId}
+        isOpen={isSearchOpen}
+        onClose={searchOps.close}
+        debounceMs={350}
+        minQueryLength={1}
+        onInitialData={(text) => {
+          if (!text) return loadedPublicQuizzes;
+          const q = text.toLowerCase();
+          return loadedPublicQuizzes.filter(
+            (m) =>
+              m.topicsIdentity?.toLowerCase().includes(q) ||
+              m.quizPool?.poolsCode?.toLowerCase().includes(q) ||
+              m.quizPool?.challengeModel?.challengeIdentity?.toLowerCase().includes(q),
+          );
+        }}
+        localDataDeps={[loadedPublicQuizzes]}
+        queryData={queryQuizzes}
+        onRemoveDuplicateBy={(m) => m.topicsId}
+        onResult={setSearchResults}
+        searchProp={{
+          text: t('search_text'),
+          textColor: theme === 'light' ? '#000' : '#fff',
+          autoFocus: true,
+          background: theme === 'light' ? '#f5f5f5' : '#272727',
+          padding: { l: '4px', r: '4px', t: '0px', b: '0px' },
+        }}
+        loadingProp={{ view: <LoadingView text={t('loading')} /> }}
+        noResultProp={{ view: <NoResultsView text={t('no_result_text')} /> }}
+        errorProp={{ view: <ErrorView text={t('error_occurred')} /> }}
+        layoutProp={{
+          gapBetweenSearchAndContent: '12px',
+          searchBackground: theme === 'light' ? '#fff' : '#121212',
+          maxWidth: '800px',
+        }}
+        childrenDirection="vertical"
+      >
+        {searchResults.map((r) => {
+          const topic = r.data;
+          const sub = [topic.quizPool?.challengeModel?.challengeIdentity, topic.quizPool?.poolsCode]
+            .filter(Boolean)
+            .join(' • ');
+          return (
+            <div
+              key={topic.topicsId}
+              role="button"
+              tabIndex={0}
+              onClick={() => handleSearchQuizClick(topic)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                padding: '10px 12px',
+                cursor: 'pointer',
+              }}
+            >
+              <div
+                style={{
+                  position: 'relative',
+                  width: '48px',
+                  height: '48px',
+                  borderRadius: '10px',
+                  overflow: 'hidden',
+                  flexShrink: 0,
+                  background: theme === 'light' ? '#e9e9e9' : '#2a2a2a',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontWeight: 600,
+                  color: theme === 'light' ? '#555' : '#bbb',
+                }}
+              >
+                {topic.topicsImageUrl ? (
+                  <Image src={topic.topicsImageUrl} alt={topic.topicsIdentity} fill sizes="48px" style={{ objectFit: 'cover' }} />
+                ) : (
+                  (topic.topicsIdentity?.charAt(0) || '?').toUpperCase()
+                )}
+              </div>
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <div
+                  style={{
+                    fontWeight: 600,
+                    fontSize: '15px',
+                    color: theme === 'light' ? '#111' : '#f0f0f0',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                  }}
+                >
+                  {topic.topicsIdentity}
+                </div>
+                {sub && (
+                  <div
+                    style={{
+                      fontSize: '12px',
+                      color: theme === 'light' ? '#777' : '#999',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    }}
+                  >
+                    {sub}
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </SearchViewer>
     </>
   );
 }

@@ -56,7 +56,9 @@
 }
 
 @media screen and (max-width: 500px) {
-  .content { padding: 12px; gap: 1rem; }
+  /* Keep the bottom-nav clearance: the `padding` shorthand resets padding-bottom, so re-assert
+     var(--nav-height) or the last row ends up hidden under the navigation bar. */
+  .content { padding: 12px; gap: 1rem; padding-bottom: var(--nav-height); }
 }
 
 /* ---- section (shared) ---- */

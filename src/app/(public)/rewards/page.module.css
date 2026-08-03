@@ -786,6 +786,7 @@
   .innerBody_reward {
     padding: 1rem;
     padding-top: 6rem;
+    padding-bottom: var(--nav-height); /* keep nav clearance; shorthand above resets it */
   }
 
   .quickNav {
@@ -884,6 +885,7 @@
     padding: 16px;
     padding-top: 5rem;
     box-sizing: border-box;
+    padding-bottom: var(--nav-height); /* keep nav clearance; shorthand above resets it */
   }
 
   .backIcon {
