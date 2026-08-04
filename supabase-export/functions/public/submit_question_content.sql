@@ -1,8 +1,8 @@
 -- schema:   public
--- function: submit_question_content(p_country text, p_locale text, p_gender text, p_age text, p_country_control jsonb[], p_language_control jsonb[], p_gender_control jsonb[], p_age_control jsonb[], p_topic_id uuid, p_time_id uuid, p_type_id uuid, p_user_id uuid, p_public boolean, p_question_text text, p_options jsonb[], p_questions_id uuid)
+-- function: submit_question_content(p_locale text, p_country_control jsonb[], p_language_control jsonb[], p_gender_control jsonb[], p_age_control jsonb[], p_topic_id uuid, p_time_id uuid, p_type_id uuid, p_user_id uuid, p_public boolean, p_question_text text, p_options jsonb[], p_questions_id uuid)
 -- generated from Supabase project iewqfmkngcgayxbbnpiz (read-only mirror)
 
-CREATE OR REPLACE FUNCTION public.submit_question_content(p_country text, p_locale text, p_gender text, p_age text, p_country_control jsonb[], p_language_control jsonb[], p_gender_control jsonb[], p_age_control jsonb[], p_topic_id uuid, p_time_id uuid, p_type_id uuid, p_user_id uuid, p_public boolean, p_question_text text, p_options jsonb[], p_questions_id uuid DEFAULT NULL::uuid)
+CREATE OR REPLACE FUNCTION public.submit_question_content(p_locale text, p_country_control jsonb[], p_language_control jsonb[], p_gender_control jsonb[], p_age_control jsonb[], p_topic_id uuid, p_time_id uuid, p_type_id uuid, p_user_id uuid, p_public boolean, p_question_text text, p_options jsonb[], p_questions_id uuid DEFAULT NULL::uuid)
  RETURNS jsonb
  LANGUAGE plpgsql
 AS $function$

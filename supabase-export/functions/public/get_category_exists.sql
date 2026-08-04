@@ -1,8 +1,8 @@
 -- schema:   public
--- function: get_category_exists(p_name text, p_user_id uuid, p_group_id uuid, p_public boolean, p_locale text)
+-- function: get_category_exists(p_name text, p_user_id uuid, p_public boolean, p_locale text)
 -- generated from Supabase project iewqfmkngcgayxbbnpiz (read-only mirror)
 
-CREATE OR REPLACE FUNCTION public.get_category_exists(p_name text, p_user_id uuid, p_group_id uuid, p_public boolean, p_locale text)
+CREATE OR REPLACE FUNCTION public.get_category_exists(p_name text, p_user_id uuid, p_public boolean, p_locale text)
  RETURNS jsonb
  LANGUAGE plpgsql
 AS $function$

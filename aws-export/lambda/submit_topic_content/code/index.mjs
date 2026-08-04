@@ -269,14 +269,19 @@ export const handler = async (event) => {
   console.log("Submit Topic received input:", JSON.stringify(event, undefined, 2));
 
   try {
+    // Identity from the VERIFIED JWT (API Gateway authorizer), never the client body.
+    const userId = event.requestContext?.authorizer?.user_id;
+    if (!userId) {
+      return {
+        statusCode: 401,
+        body: JSON.stringify({ status: "ContentSubmission.unauthorized" }),
+      };
+    }
+
     const body = JSON.parse(event.body);
     const {
-      userId,
       locale,
       setPublic,
-      age,
-      gender,
-      country,
       categoryId,
       topicsName,
       languageControl,
@@ -361,10 +366,7 @@ export const handler = async (event) => {
 
     // Send name, supports, controls for saving
     const { data: submission, error: submissionError } = await supabase.rpc("submit_topic_content", {
-      p_country: country,
       p_locale: locale,
-      p_gender: gender,
-      p_age: age,
       p_country_control: countryControl,
       p_language_control: languageControl,
       p_gender_control: genderControl,
