@@ -39,6 +39,7 @@ interface AchievementsContainerProps {
   error: string;
   handleCollected: () => void;
   onLoadMore: () => void;
+  onRefresh: () => void;
 }
 
 
@@ -276,25 +277,29 @@ const AchievementsCard: React.FC<{ achievements: AchievementsModel, tab: string,
 }
 
 
-const AchievementsContainer: React.FC<AchievementsContainerProps> = ({ 
-  tab, 
-  achievementsModel, 
+const AchievementsContainer: React.FC<AchievementsContainerProps> = ({
+  tab,
+  achievementsModel,
   setAchievementsModel,
-  isLoading, 
-  error, 
+  isLoading,
+  error,
   handleCollected,
-  onLoadMore 
+  onLoadMore,
+  onRefresh
 }) => {
   const { theme, applyTheme } = useTheme();
   const { t } = useLanguage();
 
   const loaderRef = useInfiniteScrollObserver({ onLoadMore: () => onLoadMore(), loading: isLoading });
 
-
-  const refreshData = () => {
-    // Parent will handle refresh
-  };
-
+  // Exactly one status view at a time (data > loading > error > empty).
+  const viewState = achievementsModel.length > 0
+    ? 'data'
+    : isLoading
+      ? 'loading'
+      : error
+        ? 'error'
+        : 'empty';
 
   return (
     <div className={styles.achievementsList}>
@@ -302,12 +307,10 @@ const AchievementsContainer: React.FC<AchievementsContainerProps> = ({
         <AchievementsCard key={achievements.achievementsId} achievements={achievements} tab={tab} handleCollected={handleCollected} />
       ))}
 
-      {achievementsModel.length > 10 && <div ref={loaderRef} className={styles.loadMoreSentinel}></div>}
-      {isLoading && achievementsModel.length === 0 && <LoadingView />}
-      {!isLoading && achievementsModel.length === 0 && !error && (<NoResultsView text="No result" buttonText="Try Again" onButtonClick={refreshData} />)}
-      {!isLoading && achievementsModel.length === 0 && error && (<ErrorView text="Error occurred." buttonText="Try Again" onButtonClick={refreshData} />)}
-
-
+      {viewState === 'data' && achievementsModel.length > 10 && <div ref={loaderRef} className={styles.loadMoreSentinel}></div>}
+      {viewState === 'loading' && <LoadingView />}
+      {viewState === 'error' && (<ErrorView text={t('error_occurred')} buttonText={t('try_again')} onButtonClick={onRefresh} />)}
+      {viewState === 'empty' && (<NoResultsView text={t('no_result_text')} buttonText={t('try_again')} onButtonClick={onRefresh} />)}
     </div>
   );
 };
@@ -536,6 +539,20 @@ export default function AchievementsPage() {
     setActiveTab('AchievementTab.completed');
   };
 
+  // Re-fetch the active tab from scratch (drives the empty/error "Try Again" button).
+  const handleRefresh = useCallback(async () => {
+    const tab = activeTab;
+    if (loadingStates[tab]) return;
+    setLoadingStates(prev => ({ ...prev, [tab]: true }));
+    const models = await fetchTabData(tab, 10, new PaginateModel());
+    if (models.length > 0) {
+      const last = models[models.length - 1];
+      setPaginateModels(prev => ({ ...prev, [tab]: new PaginateModel({ sortId: last.sortCreatedId }) }));
+    }
+    (setModelsByTab[tab] ?? setAllModel)(models);
+    setLoadingStates(prev => ({ ...prev, [tab]: false }));
+  }, [activeTab, loadingStates, fetchTabData, setAllModel, setActiveModel, setPendingModel, setCompletedModel]);
+
   const goBack = async () => {
     await nav.pop();
     StateStack.core.clearScope('achievements_flow');
@@ -563,14 +580,15 @@ export default function AchievementsPage() {
           ))}
         </div>
 
-        <AchievementsContainer 
-          tab={activeTab} 
+        <AchievementsContainer
+          tab={activeTab}
           achievementsModel={currentModel}
           setAchievementsModel={currentSetModel}
           isLoading={loadingStates[activeTab]}
           error={errorStates[activeTab]}
           handleCollected={handleCollected}
           onLoadMore={handleLoadMore}
+          onRefresh={handleRefresh}
         />
       </div>
     </main>

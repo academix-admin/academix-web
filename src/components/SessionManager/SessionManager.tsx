@@ -4,6 +4,9 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { supabaseBrowser } from '@/lib/supabase/client';
+import LoadingView from '@/components/LoadingView/LoadingView';
+import NoResultsView from '@/components/NoResultsView/NoResultsView';
+import ErrorView from '@/components/ErrorView/ErrorView';
 import styles from './SessionManager.module.css';
 
 /**
@@ -56,6 +59,7 @@ export function SessionManager({ onRegisterRefresh }: { onRegisterRefresh?: (ref
   const [sessions, setSessions] = useState<Sess[] | null>(null);
   const [locations, setLocations] = useState<Record<string, Loc>>({});
   const [error, setError] = useState('');
+  const [loadError, setLoadError] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [busyAll, setBusyAll] = useState(false);
 
@@ -85,12 +89,13 @@ export function SessionManager({ onRegisterRefresh }: { onRegisterRefresh?: (ref
 
   const load = useCallback(async () => {
     setError('');
+    setLoadError(false);
     const { data, error } = await supabaseBrowser.rpc('get_my_sessions');
-    if (error) { setError(t('could_not_load_devices') || 'Could not load your devices.'); setSessions([]); return; }
+    if (error) { setLoadError(true); setSessions([]); return; }
     const list = (data as Sess[]) ?? [];
     setSessions(list);
     loadLocations(list);
-  }, [loadLocations, t]);
+  }, [loadLocations]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -130,46 +135,60 @@ export function SessionManager({ onRegisterRefresh }: { onRegisterRefresh?: (ref
       <h3 className={styles.heading}>{t('active_devices') || 'Active devices'}</h3>
       <p className={styles.subtext}>{t('devices_subtitle') || "Where you're signed in. Log out any device you don't recognise."}</p>
 
+      {/* Exactly one status view at a time (data > loading > error > empty). */}
       {sessions === null ? (
-        <div className={styles.rowMuted}>{t('loading_devices') || 'Loading devices…'}</div>
+        <LoadingView text={t('loading') || 'Loading…'} />
+      ) : loadError ? (
+        <ErrorView
+          text={t('could_not_load_devices') || 'Could not load your devices.'}
+          buttonText={t('try_again') || 'Try Again'}
+          onButtonClick={load}
+        />
       ) : sessions.length === 0 ? (
-        <div className={styles.rowMuted}>{t('no_sessions') || 'No active sessions found.'}</div>
+        <NoResultsView
+          text={t('no_sessions') || 'No active sessions found.'}
+          buttonText={t('try_again') || 'Try Again'}
+          onButtonClick={load}
+        />
       ) : (
-        <ul className={styles.list}>
-          {sessions.map((s) => (
-            <li key={s.id} className={styles.row}>
-              <div className={styles.info}>
-                <div className={styles.deviceLine}>
-                  <span className={styles.device}>{describeDevice(s.user_agent)}</span>
-                  {s.is_current && <span className={styles.currentBadge}>{t('this_device') || 'This device'}</span>}
+        <>
+          <ul className={styles.list}>
+            {sessions.map((s) => (
+              <li key={s.id} className={styles.row}>
+                <div className={styles.info}>
+                  <div className={styles.deviceLine}>
+                    <span className={styles.device}>{describeDevice(s.user_agent)}</span>
+                    {s.is_current && <span className={styles.currentBadge}>{t('this_device') || 'This device'}</span>}
+                  </div>
+                  <div className={styles.meta}>
+                    {[placeOf(s.ip ? locations[s.ip] : undefined), s.ip, rel(s.refreshed_at || s.created_at)]
+                      .filter(Boolean)
+                      .join(' · ')}
+                  </div>
                 </div>
-                <div className={styles.meta}>
-                  {[placeOf(s.ip ? locations[s.ip] : undefined), s.ip, rel(s.refreshed_at || s.created_at)]
-                    .filter(Boolean)
-                    .join(' · ')}
-                </div>
-              </div>
-              {!s.is_current && (
-                <button
-                  type="button"
-                  className={styles.logoutBtn}
-                  onClick={() => revokeOne(s.id)}
-                  disabled={busyId === s.id || busyAll}
-                >
-                  {busyId === s.id ? '…' : (t('log_out') || 'Log out')}
-                </button>
-              )}
-            </li>
-          ))}
-        </ul>
-      )}
+                {!s.is_current && (
+                  <button
+                    type="button"
+                    className={styles.logoutBtn}
+                    onClick={() => revokeOne(s.id)}
+                    disabled={busyId === s.id || busyAll}
+                  >
+                    {busyId === s.id ? '…' : (t('log_out') || 'Log out')}
+                  </button>
+                )}
+              </li>
+            ))}
+          </ul>
 
-      {error && <p className={styles.error}>{error}</p>}
+          {/* Action (revoke) errors are shown alongside the list only. */}
+          {error && <p className={styles.error}>{error}</p>}
 
-      {others.length > 0 && (
-        <button type="button" className={styles.logoutAllBtn} onClick={revokeOthers} disabled={busyAll}>
-          {busyAll ? (t('logging_out') || 'Logging out…') : (t('log_out_all_others') || 'Log out all other devices')}
-        </button>
+          {others.length > 0 && (
+            <button type="button" className={styles.logoutAllBtn} onClick={revokeOthers} disabled={busyAll}>
+              {busyAll ? (t('logging_out') || 'Logging out…') : (t('log_out_all_others') || 'Log out all other devices')}
+            </button>
+          )}
+        </>
       )}
     </div>
   );

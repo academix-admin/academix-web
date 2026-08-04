@@ -16,6 +16,7 @@ import { TransactionModel } from '@/models/transaction-model';
 import { PaginateModel } from '@/models/paginate-model';
 import Image from 'next/image';
 import { ComponentStateProps } from '@/hooks/use-component-state';
+import { useViewState } from '@/hooks/use-view-state';
 import { usePinnedState } from '@/hooks/pinned-state-hook';
 import { useTransactionModel } from '@/lib/stacks/transactions-stack';
 import { useNav, usePageLifecycle, useInfiniteScrollObserver } from '@academix-admin/navigation-stack';
@@ -42,6 +43,7 @@ export default function PaymentTransactions({ onStateChange }: ComponentStatePro
   const [firstLoaded, setFirstLoaded] = useState(false);
   const [transactionsLoading, setTransactionsLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [hasError, setHasError] = useState(false);
 
   const [transactionModels, demandTransactionModels, setTransactionModels, { isHydrated }] = useTransactionModel(lang);
 
@@ -161,12 +163,14 @@ export default function PaymentTransactions({ onStateChange }: ComponentStatePro
 
       if (error) {
         console.error("[TransactionModel] error:", error);
+        setHasError(true);
         return [];
       }
+      setHasError(false);
       return (data || []).map((row: BackendTransactionModel) => new TransactionModel(row));
     } catch (err) {
       console.error("[TransactionModel] error:", err);
-      onStateChange?.('error');
+      setHasError(true);
       setTransactionsLoading(false);
       return [];
     }
@@ -196,19 +200,22 @@ export default function PaymentTransactions({ onStateChange }: ComponentStatePro
     if (!userData) return;
 
     demandTransactionModels(async ({ get, set }) => {
+      setHasError(false);
       const models = await fetchTransactionModels(userData, 10, new PaginateModel());
       extractLatest(models);
       set(models);
       setFirstLoaded(true);
-      onStateChange?.('data');
     });
   }, [demandTransactionModels, userData]);
 
-  useEffect(() => {
-    if (transactionModels.length > 0) {
-      onStateChange?.('data');
-    }
-  }, [transactionModels]);
+  // Single mutually-exclusive view state (data > loading > error > empty).
+  const viewState = useViewState({
+    hasData: transactionModels.length > 0,
+    loading: isRefreshing,
+    error: hasError,
+    ready: firstLoaded,
+    onStateChange,
+  });
 
   const callPaginate = async () => {
     if (!userData || transactionModels.length <= 0 || isRefreshing) return;
@@ -532,17 +539,27 @@ export default function PaymentTransactions({ onStateChange }: ComponentStatePro
         ))}
       </div>
 
-      {!transactionsLoading && transactionModels.length === 0 &&
+      {/* Exactly one status view at a time (data > loading > error > empty). */}
+      {viewState === 'data' ? (
+        <>
+          <div ref={loaderRef} className={styles.loadMoreSentinel}></div>
+          {transactionsLoading && <div className={styles.moreSpinnerContainer}><span className={styles.moreSpinner}></span></div>}
+        </>
+      ) : viewState === 'error' ? (
+        <span className={`${applyTheme(styles, 'refreshContainer')}`}>
+          {t('error_occurred')}
+          <span role="button" onClick={() => refreshData()} className={`${applyTheme(styles, 'refreshButton')}`}>
+            {t('refresh')}
+          </span>
+        </span>
+      ) : viewState === 'empty' ? (
         <span className={`${applyTheme(styles, 'refreshContainer')}`}>
           {t('transaction_empty')}
           <span role="button" onClick={() => refreshData()} className={`${applyTheme(styles, 'refreshButton')}`}>
             {t('refresh')}
           </span>
         </span>
-      }
-
-      {transactionModels.length > 0 && <div ref={loaderRef} className={styles.loadMoreSentinel}></div>}
-      {transactionsLoading && <div className={styles.moreSpinnerContainer}><span className={styles.moreSpinner}></span></div>}
+      ) : null}
 
       <SearchViewer<TransactionModel, PaginateModel>
         id={searchId}

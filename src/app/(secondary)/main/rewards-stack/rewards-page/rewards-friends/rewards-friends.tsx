@@ -16,6 +16,7 @@ import { FriendsModel } from '@/models/friends-model';
 import { PaginateModel } from '@/models/paginate-model';
 import Image from 'next/image';
 import { ComponentStateProps } from '@/hooks/use-component-state';
+import { useViewState } from '@/hooks/use-view-state';
 import { usePinnedState } from '@/hooks/pinned-state-hook';
 import { friendsSubscriptionManager } from '@/lib/managers/FriendsSubscriptionManager';
 import { FriendsChangeEvent } from '@/lib/managers/FriendsSubscriptionManager';
@@ -40,6 +41,7 @@ export default function RewardsFriends({ onStateChange }: ComponentStateProps) {
   const [firstLoaded, setFirstLoaded] = useState(false);
   const [friendsLoading, setFriendsLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [hasError, setHasError] = useState(false);
   const [searchResults, setSearchResults] = useState<SearchResult<FriendsModel>[]>([]);
 
   const [searchId, searchOps, isSearchOpen, searchState] = useSearchController();
@@ -132,12 +134,14 @@ export default function RewardsFriends({ onStateChange }: ComponentStateProps) {
 
       if (error) {
         console.error("[FriendsModel] error:", error);
+        setHasError(true);
         return [];
       }
+      setHasError(false);
       return (data || []).map((row: BackendFriendsModel) => new FriendsModel(row));
     } catch (err) {
       console.error("[FriendsModel] error:", err);
-      onStateChange?.('error');
+      setHasError(true);
       setFriendsLoading(false);
       return [];
     }
@@ -167,6 +171,7 @@ export default function RewardsFriends({ onStateChange }: ComponentStateProps) {
   useEffect(() => {
     if (!userData) return;
     demandFriendsModel(async ({ get, set }) => {
+      setHasError(false);
       const friendHistories = await fetchFriendsModel(userData, 10, new PaginateModel());
       extractLatest(friendHistories);
       set(friendHistories);
@@ -314,14 +319,14 @@ export default function RewardsFriends({ onStateChange }: ComponentStateProps) {
     }
   };
 
-  // ✅ After
-  useEffect(() => {
-
-    if (friendsModel.length > 0) {
-      onStateChange?.("data");
-    }
-
-  }, [friendsModel]);
+  // Single mutually-exclusive view state (data > loading > error > empty).
+  const viewState = useViewState({
+    hasData: friendsModel.length > 0,
+    loading: isRefreshing,
+    error: hasError,
+    ready: firstLoaded,
+    onStateChange,
+  });
 
   if (!firstLoaded && friendsModel.length <= 0) return null;
 
@@ -463,25 +468,35 @@ export default function RewardsFriends({ onStateChange }: ComponentStateProps) {
         ))}
       </div>
 
-      {!friendsLoading && friendsModel.length === 0 && <div className={`${applyTheme(styles, 'rewardInfo')}`}>
-        {t('referral_reward_info_username', {
-          amount: '300',
-          threshold: '1000',
-          username: userData?.usersUsername || '@username'
-        })}
-        <div className={styles.refreshHint}>
-          <span
-            role="button"
-            onClick={() => refreshData()}
-            className={`${applyTheme(styles, 'refreshText')}`}
-          >
-            {t('click_to_refresh')}
-          </span>
-
+      {/* Exactly one status view at a time (data > loading > error > empty). */}
+      {viewState === 'data' ? (
+        <>
+          <div ref={loaderRef} className={styles.loadMoreSentinel}></div>
+          {friendsLoading && <div className={styles.moreSpinnerContainer}><span className={styles.moreSpinner}></span></div>}
+        </>
+      ) : viewState === 'error' ? (
+        <div className={`${applyTheme(styles, 'rewardInfo')}`}>
+          {t('error_occurred')}
+          <div className={styles.refreshHint}>
+            <span role="button" onClick={() => refreshData()} className={`${applyTheme(styles, 'refreshText')}`}>
+              {t('click_to_refresh')}
+            </span>
+          </div>
         </div>
-      </div>}
-      {friendsModel.length > 0 && <div ref={loaderRef} className={styles.loadMoreSentinel}></div>}
-      {friendsLoading && <div className={styles.moreSpinnerContainer}><span className={styles.moreSpinner}></span></div>}
+      ) : viewState === 'empty' ? (
+        <div className={`${applyTheme(styles, 'rewardInfo')}`}>
+          {t('referral_reward_info_username', {
+            amount: '300',
+            threshold: '1000',
+            username: userData?.usersUsername || '@username'
+          })}
+          <div className={styles.refreshHint}>
+            <span role="button" onClick={() => refreshData()} className={`${applyTheme(styles, 'refreshText')}`}>
+              {t('click_to_refresh')}
+            </span>
+          </div>
+        </div>
+      ) : null}
 
       <SearchViewer<FriendsModel, PaginateModel>
         id={searchId}

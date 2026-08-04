@@ -15,6 +15,7 @@ import { QuizHistory } from '@/models/quiz-history';
 import { PaginateModel } from '@/models/paginate-model';
 import Image from 'next/image';
 import { ComponentStateProps } from '@/hooks/use-component-state';
+import { useViewState } from '@/hooks/use-view-state';
 import { usePinnedState } from '@/hooks/pinned-state-hook';
 import { useNav, useInfiniteScrollObserver } from '@academix-admin/navigation-stack';
 import { SearchViewer, useSearchController } from '@academix-admin/search-viewer';
@@ -36,6 +37,7 @@ export default function HomeQuizHistory({ onStateChange }: ComponentStateProps) 
   const [firstLoaded, setFirstLoaded] = useState(false);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [hasError, setHasError] = useState(false);
 
 
   const [quizHistoryData, demandQuizHistoryData, setQuizHistoryData, { isHydrated }] = useDemandState<QuizHistory[]>(
@@ -68,12 +70,14 @@ export default function HomeQuizHistory({ onStateChange }: ComponentStateProps) 
 
       if (error) {
         console.error("[HomeQuizHistory] error:", error);
+        setHasError(true);
         return [];
       }
+      setHasError(false);
       return (data || []).map((row: BackendQuizHistory) => new QuizHistory(row));
     } catch (err) {
       console.error("[HomeQuizHistory] error:", err);
-      onStateChange?.('error');
+      setHasError(true);
       setHistoryLoading(false);
       return [];
     }
@@ -103,6 +107,7 @@ export default function HomeQuizHistory({ onStateChange }: ComponentStateProps) 
   useEffect(() => {
     if (!userData) return;
     demandQuizHistoryData(async ({ get, set }) => {
+      setHasError(false);
       const quizHistories = await fetchQuizHistory(userData, 10, new PaginateModel());
       extractLatest(quizHistories);
       set(quizHistories);
@@ -202,14 +207,14 @@ export default function HomeQuizHistory({ onStateChange }: ComponentStateProps) 
     return t('rank_other', { rank });
   };
 
-// ✅ After
-useEffect(() => {
-
-  if (quizHistoryData.length > 0) {
-    onStateChange?.("data");
-  }
-
-}, [quizHistoryData]);
+// Single mutually-exclusive view state (data > loading > error > empty).
+const viewState = useViewState({
+  hasData: quizHistoryData.length > 0,
+  loading: isRefreshing,
+  error: hasError,
+  ready: firstLoaded,
+  onStateChange,
+});
 
   // ── Search (SearchViewer): local filter of the loaded history + server fetch_user_quiz_history ──
   // Hooks MUST run before the early return below — otherwise hook order varies (React #310).
@@ -380,9 +385,17 @@ useEffect(() => {
         ))}
       </div>
 
-      { historyLoading && <div className={styles.moreSpinnerContainer}><span className={styles.moreSpinner}></span></div>}
-      { !historyLoading && quizHistoryData.length === 0 && <span className={`${applyTheme(styles, 'refreshContainer')}`}>{t('history_empty')} <span role="button" onClick={refreshData} className={`${applyTheme(styles, 'refreshButton')}`}> {t('refresh')} </span></span>}
-      { quizHistoryData.length > 0 && <div ref={loaderRef} className={styles.loadMoreSentinel}></div>}
+      {/* Exactly one status view at a time (data > loading > error > empty). */}
+      {viewState === 'data' ? (
+        <>
+          <div ref={loaderRef} className={styles.loadMoreSentinel}></div>
+          {historyLoading && <div className={styles.moreSpinnerContainer}><span className={styles.moreSpinner}></span></div>}
+        </>
+      ) : viewState === 'error' ? (
+        <span className={`${applyTheme(styles, 'refreshContainer')}`}>{t('error_occurred')} <span role="button" onClick={refreshData} className={`${applyTheme(styles, 'refreshButton')}`}> {t('refresh')} </span></span>
+      ) : viewState === 'empty' ? (
+        <span className={`${applyTheme(styles, 'refreshContainer')}`}>{t('history_empty')} <span role="button" onClick={refreshData} className={`${applyTheme(styles, 'refreshButton')}`}> {t('refresh')} </span></span>
+      ) : null}
 
       <SearchViewer<QuizHistory, PaginateModel>
         id={searchId}
