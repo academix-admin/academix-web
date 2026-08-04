@@ -1,14 +1,19 @@
 -- schema:   public
--- function: get_user_record(p_user_id uuid, p_locale text)
+-- function: get_user_record(p_locale text)
 -- generated from Supabase project iewqfmkngcgayxbbnpiz (read-only mirror)
 
-CREATE OR REPLACE FUNCTION public.get_user_record(p_user_id uuid, p_locale text)
+CREATE OR REPLACE FUNCTION public.get_user_record(p_locale text)
  RETURNS jsonb
  LANGUAGE plpgsql
 AS $function$
 DECLARE
+    v_user_id uuid := auth.uid();
     result JSONB;
 BEGIN
+    IF v_user_id IS NULL THEN
+        RETURN NULL;
+    END IF;
+
     SELECT jsonb_build_object(
         'users_id',              ut.users_id,
         'users_names',           ut.users_names,
@@ -48,8 +53,6 @@ BEGIN
             'roles_id',              rt.roles_id,
             'roles_level',           rt.roles_level,
             'roles_checker',         rt.roles_checker,
-            -- server-authoritative contribution capabilities (mirror assert_can_contribute),
-            -- so the client never hard-codes role levels/checkers.
             'roles_can_contribute',     COALESCE(rt.roles_level >= 2, false),
             'roles_can_create_private', COALESCE(rt.roles_is_personal_entry, false),
             'roles_can_review',         COALESCE(rt.roles_checker IN ('Roles.reviewer', 'Roles.academix_reviewer'), false)
@@ -60,7 +63,7 @@ BEGIN
     LEFT JOIN  roles_table   rt ON rt.roles_id   = ut.roles_id
     LEFT JOIN  country_table ct ON ct.country_id = ut.country_id
     LEFT JOIN  language_table lt ON lt.language_id = ut.language_id
-    WHERE ut.users_id = p_user_id;
+    WHERE ut.users_id = v_user_id;
 
     RETURN result;
 END;

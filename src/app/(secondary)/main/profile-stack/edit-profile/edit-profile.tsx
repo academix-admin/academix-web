@@ -1200,7 +1200,6 @@ export default function EditProfile() {
       setError('');
 
       const { data, error } = await supabaseBrowser.rpc("get_user_record", {
-        p_user_id: userData.usersId,
         p_locale: lang
       });
 

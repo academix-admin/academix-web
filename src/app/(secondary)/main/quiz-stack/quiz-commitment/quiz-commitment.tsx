@@ -482,7 +482,6 @@ export default function QuizCommitment(props: QuizChallengeProps) {
     try {
 
       const { data, error } = await supabaseBrowser.rpc("get_pools_members_count", {
-        p_user_id: userData.usersId,
         p_pools_id: currentQuiz.quizPool.poolsId,
         p_topics_id: currentQuiz.topicsId
       });

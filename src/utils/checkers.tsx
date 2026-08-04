@@ -66,9 +66,10 @@ const fetchUserDetails = async (loginModel: LoginModel): Promise<UserLoginAccoun
         return data;
 };
 
-const fetchUserData = async (usersId: string, locale: string): Promise<UserData | null> => {
+// get_user_record derives the user from auth.uid() (JWT); usersId is retained only for the
+// existing call-shape and is no longer sent to the RPC.
+const fetchUserData = async (_usersId: string, locale: string): Promise<UserData | null> => {
         const { data: userData, error: userError } = await supabaseBrowser.rpc("get_user_record", {
-          p_user_id: usersId,
           p_locale: locale
         });
 
