@@ -64,8 +64,10 @@ export class UserData {
     this.usersImage = data?.users_image ?? null;
     this.usersReferredId = data?.users_referred_id ?? null;
     this.usersVerified = data?.users_verified ?? false;
-    this.countryId = data?.country_id ?? "";
-    this.languageId = data?.language_id ?? "";
+    // country_id/language_id are not returned at top level by get_user_record —
+    // they live only nested under country_table/language_table (single-source contract).
+    this.countryId = data?.country_table?.country_id ?? "";
+    this.languageId = data?.language_table?.language_id ?? "";
     this.usersCreatedAt = data?.users_created_at ?? new Date().toISOString();
     this.transactionId = data?.transaction_id ?? null;
     this.usersRolesAccess = data?.users_roles_access ?? null;
@@ -117,8 +119,6 @@ export class UserData {
       users_image: data.usersImage ?? this.usersImage,
       users_referred_id: data.usersReferredId ?? this.usersReferredId,
       users_verified: data.usersVerified ?? this.usersVerified,
-      country_id: data.countryId ?? this.countryId,
-      language_id: data.languageId ?? this.languageId,
       users_created_at: data.usersCreatedAt ?? this.usersCreatedAt,
       transaction_id: data.transactionId ?? this.transactionId,
       users_roles_access: data.usersRolesAccess ?? this.usersRolesAccess,
@@ -203,8 +203,6 @@ export class UserData {
       users_image: newUsersImage,
       users_referred_id: this.usersReferredId,
       users_verified: this.usersVerified,
-      country_id: this.countryId,
-      language_id: this.languageId,
       users_created_at: this.usersCreatedAt,
       transaction_id: this.transactionId,
       users_roles_access: this.usersRolesAccess,
@@ -258,8 +256,6 @@ export class UserData {
         users_image: data.usersImage,
         users_referred_id: data.usersReferredId,
         users_verified: data.usersVerified,
-        country_id: data.countryId,
-        language_id: data.languageId,
         users_created_at: data.usersCreatedAt,
         transaction_id: data.transactionId,
         users_roles_access: data.usersRolesAccess,
