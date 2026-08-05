@@ -15,6 +15,7 @@ import { RedeemCodeModel } from '@/models/redeem-code-model';
 import LoadingView from '@/components/LoadingView/LoadingView';
 import NoResultsView from '@/components/NoResultsView/NoResultsView';
 import ErrorView from '@/components/ErrorView/ErrorView';
+import { useViewState } from '@/hooks/use-view-state';
 
 import { useDemandState } from '@academix-admin/state-stack';
 import { PaginateModel } from '@/models/paginate-model';
@@ -281,6 +282,14 @@ export default function RedeemCodes() {
     [userData, lang],
   );
 
+  // Single mutually-exclusive view state (data > loading > error > empty).
+  const viewState = useViewState({
+    hasData: redeemCodes.length > 0,
+    loading: fetchLoading,
+    error: !!error,
+    ready: empty || !!error,
+  });
+
   return (
     <main className={applyTheme(styles, 'container')}>
       <Header
@@ -325,20 +334,19 @@ export default function RedeemCodes() {
       />
 
       <div className={styles.content}>
-        {redeemCodes.length === 0 && fetchLoading && <LoadingView />}
-
-        {redeemCodes.length === 0 && error && (
+        {/* Exactly one status view at a time (data > loading > error > empty). */}
+        {viewState === 'loading' && <LoadingView />}
+        {viewState === 'error' && (
           <ErrorView
-            text={error}
-            buttonText="Try Again"
+            text={error || t('error_occurred')}
+            buttonText={t('try_again')}
             onButtonClick={refreshData}
           />
         )}
-
-        {empty && !error && !fetchLoading && (
+        {viewState === 'empty' && (
           <NoResultsView
-            text="No result"
-            buttonText="Try Again"
+            text={t('no_result_text')}
+            buttonText={t('try_again')}
             onButtonClick={refreshData}
           />
         )}

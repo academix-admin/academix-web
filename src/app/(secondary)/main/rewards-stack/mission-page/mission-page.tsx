@@ -569,7 +569,7 @@ export default function MissionPage() {
           {activeTabs.map((tab) => (
             <button
               key={tab.id}
-              className={`${styles.tab} ${tab.active ? styles.tab_active : ''} ${styles[`tab_${theme}`]}`}
+              className={`${styles.tab} ${tab.active ? styles.tab_active : ''} ${applyTheme(styles, 'tab')}`}
               onClick={() => setActiveTab(tab.id)}
             >
               {capitalize(tab.label)}

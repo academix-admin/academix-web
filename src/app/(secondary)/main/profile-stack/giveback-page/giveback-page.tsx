@@ -13,6 +13,7 @@ import { BackendGiveBackModel, GiveBackModel } from '@/models/redeem-code-model'
 import LoadingView from '@/components/LoadingView/LoadingView';
 import NoResultsView from '@/components/NoResultsView/NoResultsView';
 import ErrorView from '@/components/ErrorView/ErrorView';
+import { useViewState } from '@/hooks/use-view-state';
 import { PaginateModel } from '@/models/paginate-model';
 import { StateStack } from '@academix-admin/state-stack';
 import { useGiveBackModel } from '@/lib/stacks/redeem-code-stack';
@@ -484,6 +485,15 @@ export default function GiveBackPage() {
   );
 
   // ── Render ─────────────────────────────────────────────────────────────────
+  // Single mutually-exclusive view state (data > loading > error > empty).
+  // Data is the active tab's list; `ready` waits for the fetch to resolve.
+  const viewState = useViewState({
+    hasData: activeList.length > 0,
+    loading: giveBacks.length === 0 && fetchLoading,
+    error: !!error,
+    ready: giveBacks.length > 0 || empty || !!error,
+  });
+
   return (
     <main className={`${applyTheme(styles, 'container')}`}>
       <header className={`${applyTheme(styles, 'header')}`}>
@@ -517,13 +527,13 @@ export default function GiveBackPage() {
         {/* Tabs */}
         <div className={`${applyTheme(styles, 'tabBar')}`}>
           <button
-            className={`${styles.tab} ${activeTab === 'unclaimed' ? styles.tabActive : ''} ${styles[`tab_${theme}`]}`}
+            className={`${styles.tab} ${activeTab === 'unclaimed' ? styles.tabActive : ''} ${applyTheme(styles, 'tab')}`}
             onClick={() => setActiveTab('unclaimed')}
           >
             {t('unclaimed_text')} {unclaimedList.length > 0 && <span className={styles.tabBadge}>{unclaimedList.length}</span>}
           </button>
           <button
-            className={`${styles.tab} ${activeTab === 'claimed' ? styles.tabActive : ''} ${styles[`tab_${theme}`]}`}
+            className={`${styles.tab} ${activeTab === 'claimed' ? styles.tabActive : ''} ${applyTheme(styles, 'tab')}`}
             onClick={() => setActiveTab('claimed')}
           >
             {t('claimed_text')} {claimedList.length > 0 && <span className={styles.tabBadge}>{claimedList.length}</span>}
@@ -532,14 +542,13 @@ export default function GiveBackPage() {
       </header>
 
       <div className={styles.content}>
-        {giveBacks.length === 0 && fetchLoading && <LoadingView />}
-
-        {giveBacks.length === 0 && error && (
-          <ErrorView text={error} buttonText="Try Again" onButtonClick={refreshData} />
+        {/* Exactly one status view at a time (data > loading > error > empty). */}
+        {viewState === 'loading' && <LoadingView />}
+        {viewState === 'error' && (
+          <ErrorView text={error || t('error_occurred')} buttonText={t('try_again')} onButtonClick={refreshData} />
         )}
-
-        {isActiveListEmpty && !error && !fetchLoading && (
-          <NoResultsView text="No result" buttonText="Try Again" onButtonClick={refreshData} />
+        {viewState === 'empty' && (
+          <NoResultsView text={t('no_result_text')} buttonText={t('try_again')} onButtonClick={refreshData} />
         )}
 
         {activeList.map(giveBack => (

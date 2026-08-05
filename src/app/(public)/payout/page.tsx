@@ -346,7 +346,7 @@ const RoleSelector = ({
         {roles.map((role) => (
           <button
             key={role}
-            className={`${styles.role} ${selectedRole === role ? styles.role_active : ''} ${styles[`role_${theme}`]}`}
+            className={`${styles.role} ${selectedRole === role ? styles.role_active : ''} ${applyTheme(styles, 'role')}`}
             onClick={() => onSelect(role)}
             aria-selected={selectedRole === role}
           >
@@ -419,14 +419,14 @@ const OneVsOneView = ({ data, roles }: { data: ChallengeConfig; roles: string[] 
 
       <div className={`${styles.carouselContainer} ${styles[`carouselContainer_quiz`]}`}>
         {data.challengeOptions.length > 3 && (
-          <div className={`${styles.navButton} ${styles.navPrev} ${styles[`navButton_${theme}`]}`}>
+          <div className={`${styles.navButton} ${styles.navPrev} ${applyTheme(styles, 'navButton')}`}>
             <svg viewBox="0 0 24 24" width="24" height="24">
               <path fill="currentColor" d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6z" />
             </svg>
           </div>
         )}
         {data.challengeOptions.length > 3 && (
-          <div className={`${styles.navButton} ${styles.navNext} ${styles[`navButton_${theme}`]}`}>
+          <div className={`${styles.navButton} ${styles.navNext} ${applyTheme(styles, 'navButton')}`}>
             <svg viewBox="0 0 24 24" width="24" height="24">
               <path fill="currentColor" d="M8.59 16.59L13.17 12l-4.58-4.59L10 6l6 6-6 6z" />
             </svg>
@@ -455,7 +455,7 @@ const OneVsOneView = ({ data, roles }: { data: ChallengeConfig; roles: string[] 
                   selectedQuestion.challengeIdentity === option.challengeIdentity
                     ? styles.q_selected
                     : ''
-                } ${styles[`q_button_${theme}`]}`}
+                } ${applyTheme(styles, 'q_button')}`}
                 onClick={() => setSelectedQuestion(option)}
               >
                 {option.challengeIdentity}
@@ -653,14 +653,14 @@ const MultiplayerView = ({ data, roles }: { data: ChallengeConfig; roles: string
 
       <div className={`${styles.carouselContainer} ${styles[`carouselContainer_quiz`]}`}>
         {data.challengeOptions.length > 3 && (
-          <div className={`${styles.navButton} ${styles.navPrev} ${styles[`navButton_${theme}`]}`}>
+          <div className={`${styles.navButton} ${styles.navPrev} ${applyTheme(styles, 'navButton')}`}>
             <svg viewBox="0 0 24 24" width="24" height="24">
               <path fill="currentColor" d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6z" />
             </svg>
           </div>
         )}
         {data.challengeOptions.length > 3 && (
-          <div className={`${styles.navButton} ${styles.navNext} ${styles[`navButton_${theme}`]}`}>
+          <div className={`${styles.navButton} ${styles.navNext} ${applyTheme(styles, 'navButton')}`}>
             <svg viewBox="0 0 24 24" width="24" height="24">
               <path fill="currentColor" d="M8.59 16.59L13.17 12l-4.58-4.59L10 6l6 6-6 6z" />
             </svg>
@@ -689,7 +689,7 @@ const MultiplayerView = ({ data, roles }: { data: ChallengeConfig; roles: string
                   selectedChallenge.challengeIdentity === challenge.challengeIdentity
                     ? styles.q_selected
                     : ''
-                } ${styles[`q_button_${theme}`]}`}
+                } ${applyTheme(styles, 'q_button')}`}
                 onClick={() => handleChallengeChange(challenge)}
               >
                 {challenge.challengeIdentity}
@@ -813,7 +813,7 @@ const MultiplayerView = ({ data, roles }: { data: ChallengeConfig; roles: string
                 key={pageNum}
                 className={`${styles.page_button} ${
                   currentPage === pageNum ? styles.page_button_active : ''
-                } ${styles[`page_button_${theme}`]}`}
+                } ${applyTheme(styles, 'page_button')}`}
                 onClick={() => setCurrentPage(pageNum)}
               >
                 {pageNum}
@@ -1020,7 +1020,7 @@ export default function Payout({ searchParams }: PayoutPageProps) {
                 key={challenge.gameModeChecker}
                 className={`${styles.tab} ${
                   activeTab === challenge.gameModeChecker ? styles.tab_active : ''
-                } ${styles[`tab_${theme}`]}`}
+                } ${applyTheme(styles, 'tab')}`}
                 onClick={() => setActiveTab(challenge.gameModeChecker)}
               >
                 {challenge.gameModeIdentity}

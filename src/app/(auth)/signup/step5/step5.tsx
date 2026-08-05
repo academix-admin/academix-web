@@ -40,7 +40,7 @@ const RoleItem = ({ onClick, role, selected }: RoleItemProps) => {
       className={`
         ${styles.roleCard}
         ${selected ? styles.roleCardSelected : `${applyTheme(styles, 'roleCardUnselected')}`}
-        ${styles[`roleCard_${theme}`]}
+        ${applyTheme(styles, 'roleCard')}
       `}
       role="button"
       tabIndex={0}

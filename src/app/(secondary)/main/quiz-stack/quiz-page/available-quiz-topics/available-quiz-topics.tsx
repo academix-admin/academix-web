@@ -307,7 +307,7 @@ export default function AvailableQuizTopics({ onStateChange, pType }: AvailableQ
       <div className={styles.scrollWrapper}>
         {showLeftArrow && (
           <button
-            className={`${styles.scrollArrow} ${styles.scrollArrowLeft} ${styles[`scrollArrow_${theme}`]}`}
+            className={`${styles.scrollArrow} ${styles.scrollArrowLeft} ${applyTheme(styles, 'scrollArrow')}`}
             onClick={scrollLeft}
             aria-label="Scroll left"
           >
@@ -340,7 +340,7 @@ export default function AvailableQuizTopics({ onStateChange, pType }: AvailableQ
 
         {showRightArrow && (
           <button
-            className={`${styles.scrollArrow} ${styles.scrollArrowRight} ${styles[`scrollArrow_${theme}`]}`}
+            className={`${styles.scrollArrow} ${styles.scrollArrowRight} ${applyTheme(styles, 'scrollArrow')}`}
             onClick={scrollRight}
             aria-label="Scroll right"
           >

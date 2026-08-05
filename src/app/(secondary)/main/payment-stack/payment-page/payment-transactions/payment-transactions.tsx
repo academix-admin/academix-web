@@ -444,7 +444,7 @@ export default function PaymentTransactions({ onStateChange }: ComponentStatePro
         <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
         <button
           onClick={searchOps.open}
-          className={`${styles[`refreshIcon_${theme}`]}`}
+          className={`${applyTheme(styles, 'refreshIcon')}`}
           style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           aria-label={t('search_text')}
         >
@@ -452,7 +452,7 @@ export default function PaymentTransactions({ onStateChange }: ComponentStatePro
         </button>
         <button
           onClick={() => refreshData()}
-          className={`${styles[`refreshIcon_${theme}`]}`}
+          className={`${applyTheme(styles, 'refreshIcon')}`}
           style={{
             background: 'none',
             border: 'none',
@@ -513,10 +513,10 @@ export default function PaymentTransactions({ onStateChange }: ComponentStatePro
 
                 <div className={styles.historyContent}>
                   <div className={styles.historyDetails}>
-                    <span className={`${styles.historyDetail} ${styles[`historyDetails_${theme}`]}`}>
+                    <span className={`${styles.historyDetail} ${applyTheme(styles, 'historyDetails')}`}>
                       {formatDate(transaction.transactionCreatedAt)}
                     </span>
-                    <span className={`${styles.historyDetail} ${styles[`historyDetails_${theme}`]}`}>
+                    <span className={`${styles.historyDetail} ${applyTheme(styles, 'historyDetails')}`}>
                       {getPaymentMethodName(transaction.paymentProfileSenderDetails?.paymentMethodDetails.paymentMethodChecker)}
                       {' '}
                       {getTransactionTypeText(transaction.transactionType)}
@@ -613,7 +613,7 @@ export default function PaymentTransactions({ onStateChange }: ComponentStatePro
                   </div>
                   <div className={styles.historyContent}>
                     <div className={styles.historyDetails}>
-                      <span className={`${styles.historyDetail} ${styles[`historyDetails_${theme}`]}`}>{formatDate(transaction.transactionCreatedAt)}</span>
+                      <span className={`${styles.historyDetail} ${applyTheme(styles, 'historyDetails')}`}>{formatDate(transaction.transactionCreatedAt)}</span>
                       <span style={{ fontStyle: 'normal', textDecoration: 'none' }} className={`${styles.historyTime} ${getStatusClass(getTransactionStatus(transaction), null)}`}>
                         {capitalize(getTransactionStatusClass(getTransactionStatus(transaction)))}
                       </span>

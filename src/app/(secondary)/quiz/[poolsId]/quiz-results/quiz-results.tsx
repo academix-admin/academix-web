@@ -561,13 +561,13 @@ const TabSwitcher = ({ viewType, setViewType, maxWidth }: TabSwitcherProps) => {
     style={maxWidth ? { maxWidth: `${maxWidth}px`, margin: '16px auto' } : { margin: '16px' }}
   >
     <button
-      className={`${styles.tab} ${viewType === 'rank' ? styles.tabActive : ''} ${styles[`tab_${theme}`]}`}
+      className={`${styles.tab} ${viewType === 'rank' ? styles.tabActive : ''} ${applyTheme(styles, 'tab')}`}
       onClick={() => setViewType('rank')}
     >
       {t('rank_text')}
     </button>
     <button
-      className={`${styles.tab} ${viewType === 'reward' ? styles.tabActive : ''} ${styles[`tab_${theme}`]}`}
+      className={`${styles.tab} ${viewType === 'reward' ? styles.tabActive : ''} ${applyTheme(styles, 'tab')}`}
       onClick={() => setViewType('reward')}
     >
       {t('reward_text')}

@@ -472,13 +472,13 @@ function QuizJoinContent({ theme, t, onClose, scannedQuizPool, setScannedQuizPoo
             <div className={`${applyTheme(styles, 'tabContainer')}`}>
               <button
                 onClick={() => setActiveTab(0)}
-                className={`${applyTheme(styles, 'tabButton')} ${activeTab === 0 ? styles[`tabButton_active_${theme}`] : styles.tabButton_inactive}`}
+                className={`${applyTheme(styles, 'tabButton')} ${activeTab === 0 ? applyTheme(styles, 'tabButton_active') : styles.tabButton_inactive}`}
               >
                 {t('qr_code')}
               </button>
               <button
                 onClick={() => setActiveTab(1)}
-                className={`${applyTheme(styles, 'tabButton')} ${activeTab === 1 ? styles[`tabButton_active_${theme}`] : styles.tabButton_inactive}`}
+                className={`${applyTheme(styles, 'tabButton')} ${activeTab === 1 ? applyTheme(styles, 'tabButton_active') : styles.tabButton_inactive}`}
               >
                 {t('enter_text')}
               </button>

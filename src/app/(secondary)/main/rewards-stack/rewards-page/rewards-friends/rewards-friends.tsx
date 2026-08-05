@@ -340,7 +340,7 @@ export default function RewardsFriends({ onStateChange }: ComponentStateProps) {
         <div style={{ display: 'flex', gap: '8px' }}>
           <button
             onClick={() => searchOps.open()}
-            className={`${styles[`refreshIcon_${theme}`]}`}
+            className={`${applyTheme(styles, 'refreshIcon')}`}
             style={{
               background: 'none',
               border: 'none',
@@ -367,7 +367,7 @@ export default function RewardsFriends({ onStateChange }: ComponentStateProps) {
           </button>
           <button
             onClick={() => refreshData()}
-            className={`${styles[`refreshIcon_${theme}`]}`}
+            className={`${applyTheme(styles, 'refreshIcon')}`}
             style={{
               background: 'none',
               border: 'none',
@@ -426,10 +426,10 @@ export default function RewardsFriends({ onStateChange }: ComponentStateProps) {
               </div>
               <div className={styles.historyContent}>
                 <div className={styles.historyDetails}>
-                  <span className={`${styles.historyDetail} ${styles[`historyDetails_${theme}`]}`}>
+                  <span className={`${styles.historyDetail} ${applyTheme(styles, 'historyDetails')}`}>
                     {formatDate(friend.usersCreatedAt)}
                   </span>
-                  <span className={`${styles.historyDetail} ${styles[`historyDetails_${theme}`]}`}>
+                  <span className={`${styles.historyDetail} ${applyTheme(styles, 'historyDetails')}`}>
                     {friend.usersUsername}
                   </span>
                 </div>
@@ -566,10 +566,10 @@ export default function RewardsFriends({ onStateChange }: ComponentStateProps) {
                 </div>
                 <div className={styles.historyContent}>
                   <div className={styles.historyDetails}>
-                    <span className={`${styles.historyDetail} ${styles[`historyDetails_${theme}`]}`}>
+                    <span className={`${styles.historyDetail} ${applyTheme(styles, 'historyDetails')}`}>
                       {formatDate(friend.usersCreatedAt)}
                     </span>
-                    <span className={`${styles.historyDetail} ${styles[`historyDetails_${theme}`]}`}>
+                    <span className={`${styles.historyDetail} ${applyTheme(styles, 'historyDetails')}`}>
                       {friend.usersUsername}
                     </span>
                   </div>

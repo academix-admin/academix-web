@@ -142,12 +142,12 @@ export default function GameChallenge({ onChallengeSelect, topicsId, gameModeId 
       {challengeModel.length > 0 && (
         <div className={styles.carouselContainer}>
           {/* Navigation Buttons */}
-          <div className={`${styles.navButton} ${styles.navPrev} ${styles[`navButton_${theme}`]}`}>
+          <div className={`${styles.navButton} ${styles.navPrev} ${applyTheme(styles, 'navButton')}`}>
             <svg viewBox="0 0 24 24" width="24" height="24">
               <path fill="currentColor" d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6z" />
             </svg>
           </div>
-          <div className={`${styles.navButton} ${styles.navNext} ${styles[`navButton_${theme}`]}`}>
+          <div className={`${styles.navButton} ${styles.navNext} ${applyTheme(styles, 'navButton')}`}>
             <svg viewBox="0 0 24 24" width="24" height="24">
               <path fill="currentColor" d="M8.59 16.59L13.17 12l-4.58-4.59L10 6l6 6-6 6z" />
             </svg>

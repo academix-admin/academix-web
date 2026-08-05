@@ -92,7 +92,7 @@ const TimerSection = ({
 
           {/* Timer Display */}
           <div className={styles.timerDisplay}>
-            <div className={`${styles.timerValue} ${timerValueClasses[size]} ${styles[`timerValue_${theme}`]}`}>
+            <div className={`${styles.timerValue} ${timerValueClasses[size]} ${applyTheme(styles, 'timerValue')}`}>
               {displayTime}
             </div>
             <div className={`${applyTheme(styles, 'remainingLabel')}`}>

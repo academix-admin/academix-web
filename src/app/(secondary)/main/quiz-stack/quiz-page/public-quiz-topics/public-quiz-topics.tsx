@@ -421,7 +421,7 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
       <div className={`${styles.scrollWrapper} ${filteredQuizModels.length <= 1 ? styles.scrollWrapperExpanded : ''}`}>
         {showLeftArrow && filteredQuizModels.length > 1 && (
           <button
-            className={`${styles.scrollArrow} ${styles.scrollArrowLeft} ${styles[`scrollArrow_${theme}`]}`}
+            className={`${styles.scrollArrow} ${styles.scrollArrowLeft} ${applyTheme(styles, 'scrollArrow')}`}
             onClick={scrollLeft}
             aria-label="Scroll left"
           >
@@ -449,7 +449,7 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
 
         {showRightArrow && filteredQuizModels.length > 1 && (
           <button
-            className={`${styles.scrollArrow} ${styles.scrollArrowRight} ${styles[`scrollArrow_${theme}`]}`}
+            className={`${styles.scrollArrow} ${styles.scrollArrowRight} ${applyTheme(styles, 'scrollArrow')}`}
             onClick={scrollRight}
             aria-label="Scroll right"
           >

@@ -81,7 +81,7 @@ export default function LandingHeader() {
   return (
     <div className={styles.headerLayout} ref={headerRef}>
       <header className={`${styles.header} ${theme}`}>
-        <div className={`${mobileMenuOpen ? styles.headerFixed : styles.headerContainer} ${mobileMenuOpen ? styles[`headerFixed_${theme}`] : styles[`headerContainer_${theme}`]}`}>
+        <div className={`${mobileMenuOpen ? styles.headerFixed : styles.headerContainer} ${mobileMenuOpen ? applyTheme(styles, 'headerFixed') : applyTheme(styles, 'headerContainer')}`}>
           <Image
             src="/assets/image/academix-logo.png"
             alt="Logo"
@@ -141,7 +141,7 @@ export default function LandingHeader() {
         <div
           className={`${styles.overlay} ${
             mobileMenuOpen ? styles.overlayOpen : styles.overlayClosed
-          } ${styles[`overlay_${theme}`]}`}
+          } ${applyTheme(styles, 'overlay')}`}
           onClick={closeMobileMenu}
         ></div>
 

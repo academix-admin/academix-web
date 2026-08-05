@@ -155,7 +155,7 @@ const onSearchClick = async () => {
                                                                                                                                                                                                                    fill="white"
                                                                                                                                                                                                                    fillRule="evenodd" />
                                                                                                                                                                                                            </svg> </div>
-                           <h2 className={`${styles.userNameResult} ${styles[`nameResult_${theme}`]}`}>{signup.referral?.users_names || 'null'}  </h2>
+                           <h2 className={`${styles.userNameResult} ${applyTheme(styles, 'nameResult')}`}>{signup.referral?.users_names || 'null'}  </h2>
 
                         </div>)}
                     {userNameState != 'exists' && (

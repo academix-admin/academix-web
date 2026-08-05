@@ -15,6 +15,7 @@ import { PoolMemberModel } from '@/models/pool-member';
 import LoadingView from '@/components/LoadingView/LoadingView';
 import NoResultsView from '@/components/NoResultsView/NoResultsView';
 import ErrorView from '@/components/ErrorView/ErrorView';
+import { useViewState } from '@/hooks/use-view-state';
 
 import { useDemandState } from '@academix-admin/state-stack';
 import { PaginateModel } from '@/models/paginate-model';
@@ -232,25 +233,33 @@ export default function PoolMembers(props: PoolMembersProps) {
       StateStack.core.clearScope('pool_member_flow');
     };
 
+  // Single mutually-exclusive view state (data > loading > error > empty).
+  // `ready` gates the empty view until a fetch has resolved (empty flag) or errored.
+  const viewState = useViewState({
+    hasData: poolMembers.length > 0,
+    loading: fetchLoading,
+    error: !!error,
+    ready: empty || !!error,
+  });
+
   return (
     <main className={`${applyTheme(styles, 'container')}`}>
       <Header title={t('pool_members')} theme={theme} onBack={goBack} />
 
       <div className={styles.content}>
-        {poolMembers.length === 0  && fetchLoading && <LoadingView />}
-
-        {poolMembers.length === 0 && error && (
+        {/* Exactly one status view at a time (data > loading > error > empty). */}
+        {viewState === 'loading' && <LoadingView />}
+        {viewState === 'error' && (
           <ErrorView
-            text={error}
-            buttonText="Try Again"
+            text={error || t('error_occurred')}
+            buttonText={t('try_again')}
             onButtonClick={refreshData}
           />
         )}
-
-        {poolMembers.length === 0 && empty && !error && !fetchLoading && (
+        {viewState === 'empty' && (
           <NoResultsView
-            text="No result"
-            buttonText="Try Again"
+            text={t('no_result_text')}
+            buttonText={t('try_again')}
             onButtonClick={refreshData}
           />
         )}

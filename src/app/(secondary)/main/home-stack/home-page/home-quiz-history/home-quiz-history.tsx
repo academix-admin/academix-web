@@ -262,7 +262,7 @@ const viewState = useViewState({
         <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
         <button
           onClick={searchOps.open}
-          className={`${styles[`refreshIcon_${theme}`]}`}
+          className={`${applyTheme(styles, 'refreshIcon')}`}
           style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           aria-label={t('search_text')}
         >
@@ -270,7 +270,7 @@ const viewState = useViewState({
         </button>
         <button
           onClick={() => refreshData()}
-          className={`${styles[`refreshIcon_${theme}`]}`}
+          className={`${applyTheme(styles, 'refreshIcon')}`}
           style={{
             background: 'none',
             border: 'none',

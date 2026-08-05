@@ -423,7 +423,7 @@ const BankView = ({ onSubmit, methodId }: BankViewProps) => {
       <button onClick={openBank} className={`${applyTheme(styles, 'selectButton')}`}>
         {bankData ? (
           <div className={styles.selectedBank}>
-            <div className={`${styles.bankInfo} ${styles[`methodInfo_${theme}`]}`}>
+            <div className={`${styles.bankInfo} ${applyTheme(styles, 'methodInfo')}`}>
               <div className={styles.bankName}>{bankData.name}</div>
               <div className={styles.bankCode}>{bankData.code}</div>
             </div>
@@ -518,8 +518,8 @@ const AccountActivate = ({ onSubmit, purpose }: AccountActivateProps) => {
         className={`${applyTheme(styles, 'selectButton')} ${value ? styles.selectButton_active : ''}`}
         onClick={changeValue}
       >
-        <div className={`${styles.switch} ${value ? styles.switch_active : ''} ${styles[`switch_${theme}`]}`}>
-          <div className={`${styles.switchHandle} ${value ? styles.switchHandle_active : ''} ${styles[`switchHandle_${theme}`]}`} />
+        <div className={`${styles.switch} ${value ? styles.switch_active : ''} ${applyTheme(styles, 'switch')}`}>
+          <div className={`${styles.switchHandle} ${value ? styles.switchHandle_active : ''} ${applyTheme(styles, 'switchHandle')}`} />
         </div>
         <span className={`${applyTheme(styles, 'optionText')}`}>
           {purpose}
@@ -600,13 +600,13 @@ const TabSwitcher = ({ profileType, setProfileType }: TabSwitcherProps) => {
   return (
     <div className={`${applyTheme(styles, 'tabSwitcher')}`}>
       <button
-        className={`${styles.tab} ${profileType === 'ProfileType.buy' ? styles.tabActive : ''} ${styles[`tab_${theme}`]}`}
+        className={`${styles.tab} ${profileType === 'ProfileType.buy' ? styles.tabActive : ''} ${applyTheme(styles, 'tab')}`}
         onClick={() => setProfileType('ProfileType.buy')}
       >
         {t('top_up_text')}
       </button>
       <button
-        className={`${styles.tab} ${profileType === 'ProfileType.sell' ? styles.tabActive : ''} ${styles[`tab_${theme}`]}`}
+        className={`${styles.tab} ${profileType === 'ProfileType.sell' ? styles.tabActive : ''} ${applyTheme(styles, 'tab')}`}
         onClick={() => setProfileType('ProfileType.sell')}
       >
         {t('withdraw_text')}

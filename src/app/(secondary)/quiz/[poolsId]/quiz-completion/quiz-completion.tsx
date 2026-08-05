@@ -77,7 +77,7 @@ const StatusSection = ({
   ];
 
   const StatusRow = ({ label, value, showTopBorder = false }: { label: string; value: string; showTopBorder?: boolean }) => (
-    <div className={`${styles.statusRow} ${showTopBorder ? styles.statusRowWithBorder : ''} ${styles[`statusRow_${theme}`]}`}>
+    <div className={`${styles.statusRow} ${showTopBorder ? styles.statusRowWithBorder : ''} ${applyTheme(styles, 'statusRow')}`}>
       <div className={`${applyTheme(styles, 'statusLabel')}`}>
         {label}
       </div>

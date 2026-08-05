@@ -202,7 +202,7 @@ const TrueFalseComponent = ({
                      displayType === 'tablet' ? styles.trueFalseButtonTablet :
                      styles.mobileTrueFalseButton;
 
-    return `${baseClass} ${styles[`trueFalseButton_${theme}`]}`;
+    return `${baseClass} ${applyTheme(styles, 'trueFalseButton')}`;
   };
 
   const getTextClass = () => {
@@ -284,7 +284,7 @@ const MultipleChoiceComponent = ({
                      displayType === 'tablet' ? styles.multipleChoiceOptionTablet :
                      styles.mobileMultipleChoiceOption;
 
-    return `${baseClass} ${styles[`multipleChoiceOption_${theme}`]}`;
+    return `${baseClass} ${applyTheme(styles, 'multipleChoiceOption')}`;
   };
 
   const getImageContainerClass = () => {
@@ -413,7 +413,7 @@ const SliderComponent = ({
                      displayType === 'tablet' ? styles.sliderTablet :
                      styles.mobileSlider;
 
-    return `${baseClass} ${styles[`slider_${theme}`]}`;
+    return `${baseClass} ${applyTheme(styles, 'slider')}`;
   };
 
   const getLabelsClass = () => {
@@ -479,7 +479,7 @@ const FillGapComponent = ({
                      displayType === 'tablet' ? styles.fillGapInputTablet :
                      styles.mobileFillGapInput;
 
-    return `${baseClass} ${styles[`fillGapInput_${theme}`]}`;
+    return `${baseClass} ${applyTheme(styles, 'fillGapInput')}`;
   };
 
   return (
@@ -746,7 +746,7 @@ const WebView = ({
                 <button
                   className={`${styles.webSubmitButton} ${
                     !hasSelectedOption || isSubmitting ? styles.webSubmitButtonDisabled : ''
-                  } ${styles[`webSubmitButton_${theme}`]}`}
+                  } ${applyTheme(styles, 'webSubmitButton')}`}
                   onClick={handleManualSubmit}
                   disabled={!hasSelectedOption || isSubmitting}
                 >
@@ -874,7 +874,7 @@ const TabletView = ({
           <button
             className={`${styles.tabletSubmitButton} ${
               !hasSelectedOption || isSubmitting ? styles.tabletSubmitButtonDisabled : ''
-            } ${styles[`tabletSubmitButton_${theme}`]}`}
+            } ${applyTheme(styles, 'tabletSubmitButton')}`}
             onClick={handleManualSubmit}
             disabled={!hasSelectedOption || isSubmitting}
           >

@@ -81,14 +81,14 @@ const PaymentRedirect: React.FC<PaymentRedirectProps> = ({ controller }) => {
 
         <div className={styles.buttonGroup}>
           <button
-            className={`${styles.openButton} ${styles[`button_${theme}`]}`}
+            className={`${styles.openButton} ${applyTheme(styles, 'button')}`}
             onClick={handleOpenLink}
           >
             {t('open_payment_link')}
           </button>
 
           <button
-            className={`${styles.exitButton} ${styles[`button_${theme}`]}`}
+            className={`${styles.exitButton} ${applyTheme(styles, 'button')}`}
             onClick={controller.close}
           >
             {t('exit_text')}
