@@ -31,6 +31,17 @@ BEGIN
        RETURN jsonb_build_object('status', NULL, 'code', 'approval_error');
     END IF;
 
+    -- Guard: a reviewer can only approve/reject content that actually has a submission in their
+    -- OWN locale — never blindly write an approval_status entry for a locale the content was never
+    -- submitted in (that would create a phantom approval with no backing translation).
+    IF NOT EXISTS (
+        SELECT 1 FROM topic_category_table
+        WHERE topic_category_id = p_category_id
+          AND topic_category_identity ? locale
+    ) THEN
+        RETURN jsonb_build_object('status', NULL, 'code', 'approval_failure');
+    END IF;
+
     time := NOW()::TEXT;
     sort := tsid(time::timestamp);
     UPDATE topic_category_table
