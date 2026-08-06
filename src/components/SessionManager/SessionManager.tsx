@@ -25,6 +25,8 @@ interface Sess {
   created_at: string;
   refreshed_at: string | null;
   is_current: boolean;
+  device_name: string | null;
+  platform: string | null;
 }
 
 type Loc = { city: string; region: string; country: string; country_code: string };
@@ -157,7 +159,7 @@ export function SessionManager({ onRegisterRefresh }: { onRegisterRefresh?: (ref
               <li key={s.id} className={styles.row}>
                 <div className={styles.info}>
                   <div className={styles.deviceLine}>
-                    <span className={styles.device}>{describeDevice(s.user_agent)}</span>
+                    <span className={styles.device}>{s.device_name || describeDevice(s.user_agent)}</span>
                     {s.is_current && <span className={styles.currentBadge}>{t('this_device') || 'This device'}</span>}
                   </div>
                   <div className={styles.meta}>

@@ -398,6 +398,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener('ax:session-revoked', onRevoked);
   }, []);
 
+  // ─── Register this browser as a named device against the current session ───
+  // Mirrors the app's registerSessionDevice: get_my_sessions then shows a friendly device name
+  // (SessionManager) instead of only a parsed user_agent. Fires once per signed-in session
+  // (session_id is read from the JWT server-side); fire-and-forget.
+  const deviceRegisteredRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const hasSession = !!session && !isSessionExpired(session);
+    if (!hasSession || !userData) return;
+    const key = user?.id ?? session!.access_token;
+    if (deviceRegisteredRef.current === key) return;
+    deviceRegisteredRef.current = key;
+
+    // "<Browser> · <OS>" — a friendly, locale-independent label (proper nouns). When it can't be
+    // derived we send '' so the RPC stores null and the UI renders a translated fallback.
+    const ua = navigator.userAgent || '';
+    const os = /iPhone|iPad|iPod/i.test(ua) ? 'iOS'
+      : /Android/i.test(ua) ? 'Android'
+      : /Windows/i.test(ua) ? 'Windows'
+      : /CrOS/i.test(ua) ? 'ChromeOS'
+      : /Mac OS X|Macintosh/i.test(ua) ? 'macOS'
+      : /Linux/i.test(ua) ? 'Linux' : '';
+    const browser = /EdgiOS|EdgA|Edg\//i.test(ua) ? 'Edge'
+      : /CriOS|Chrome\//i.test(ua) ? 'Chrome'
+      : /FxiOS|Firefox\//i.test(ua) ? 'Firefox'
+      : /OPiOS|OPR\/|Opera/i.test(ua) ? 'Opera'
+      : /Safari\//i.test(ua) ? 'Safari' : '';
+    const name = [browser, os].filter(Boolean).join(' · ');
+    supabaseBrowser
+      .rpc('register_session_device', { p_device_name: name, p_platform: 'web' })
+      .then(() => {}, () => { deviceRegisteredRef.current = null; /* allow retry */ });
+  }, [session, userData, user]);
+
   // ─── Effect 1b: profile resolution (the single place OAuth is handled) ────
   // A signed-in user without loaded academix `userData` (the classic case: right after a
   // Google/OAuth sign-in — Supabase gives us a session but no profile in state) is resolved
