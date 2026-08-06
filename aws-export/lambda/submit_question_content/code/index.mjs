@@ -427,7 +427,7 @@ export const handler = async (event) => {
       };
     }
 
-    const { exists, allowed, is_public, topic } = questionCheck;
+    const { exists, allowed, is_public, topic, registered_locale } = questionCheck;
 
     if (exists) {
       return {
@@ -443,8 +443,9 @@ export const handler = async (event) => {
       };
     }
 
-    // Build prompt
-    const prompt = buildPrompt(questionText, topic, options, locale, is_public);
+    // Content language is the creator's REGISTERED language (returned by get_question_exists), never
+    // the client-sent `locale` — that's just whatever display language they're currently viewing in.
+    const prompt = buildPrompt(questionText, topic, options, registered_locale, is_public);
 
     // Send to EdenAI
     const { response, error: promptError } = await sendPrompt(prompt, URL, API_KEY, MODEL);
@@ -486,7 +487,7 @@ export const handler = async (event) => {
 
     // Send question and options for saving
     const { data: submission, error: submissionError } = await supabase.rpc("submit_question_content", {
-      p_locale: locale,
+      p_locale: registered_locale,
       p_country_control: countryControl,
       p_language_control: languageControl,
       p_gender_control: genderControl,
@@ -550,7 +551,8 @@ function buildPrompt(questionText, topic, options, locale, isPublic) {
 ${isPublic
     ? `1. **(R5) Educationally Related** - The question must be related to **"${topic}"** irrespective of detected languages.`
     : '1. **(R0) General** - The question is appropriate and meaningful.'}
-2. **(R2) Correct Grammar** - The question is grammatically correct according to the detected language locale **"${locale}"**.  
+2. **(R1) Correct Language** - The question and all options must actually be written in the language for locale **"${locale}"** — reject if written in any other language, even if otherwise valid. This is a hard gate: content must never be silently saved under the wrong locale.
+3. **(R2) Correct Grammar** - The question is grammatically correct according to the detected language locale **"${locale}"**.
 3. **(R3) No Abbreviations** - The question has no term that is shortened, clipped, or colloquial (e.g., "Technology" not "Tech").  
 4. **(R4) Non-offensive** - The question is free of racism, nudity, or inappropriate content.  
 

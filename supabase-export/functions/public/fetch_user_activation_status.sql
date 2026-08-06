@@ -11,6 +11,15 @@ AS $function$
 DECLARE
     v_result BOOLEAN;
 BEGIN
+    -- Guard: a browser JWT caller may only check their own status (IS DISTINCT FROM is NULL-safe for
+    -- anon). A genuine service-role caller (assert_can_contribute, invoked via the content Lambdas)
+    -- may check an arbitrary already-verified p_user_id.
+    IF NOT (coalesce(auth.jwt()->>'role', '') = 'service_role' OR session_user IN ('service_role', 'postgres')) THEN
+        IF p_user_id IS DISTINCT FROM auth.uid() THEN
+            RETURN FALSE;
+        END IF;
+    END IF;
+
     SELECT
         -- Active flag must be TRUE
         ut.users_active = TRUE
@@ -42,5 +51,4 @@ EXCEPTION
         RAISE NOTICE 'fetch_user_activation_status error for user %: %', p_user_id, SQLERRM;
         RETURN FALSE;
 END;
-$function$
-
+$function$;

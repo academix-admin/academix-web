@@ -10,6 +10,13 @@ AS $function$
 DECLARE
     v_is_following boolean;
 BEGIN
+    -- Identity: caller must be authenticated as themselves. IS DISTINCT FROM (not <>) is required
+    -- here because anon callers have auth.uid() IS NULL, and a plain <> comparison against NULL
+    -- evaluates to NULL (falsy in an IF), silently letting anon callers through.
+    IF p_user_id IS DISTINCT FROM auth.uid() THEN
+        RETURN jsonb_build_object('status', 'FollowStatus.error', 'error', 'Unauthorized');
+    END IF;
+
     -- Guard: can't follow yourself
     IF p_user_id = p_creator_id THEN
         RETURN jsonb_build_object('status', 'FollowStatus.self_blocked');
@@ -50,5 +57,4 @@ EXCEPTION
     WHEN OTHERS THEN
         RETURN jsonb_build_object('status', 'FollowStatus.error', 'error', SQLERRM);
 END;
-$function$
-
+$function$;

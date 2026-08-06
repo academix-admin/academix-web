@@ -16,6 +16,9 @@ BEGIN
         RETURN jsonb_build_object('status', NULL, 'code', 'approval_error');
     END IF;
 
+    -- Server-authoritative role gate: only a reviewer+ role may evaluate content.
+    PERFORM public.assert_can_review(v_user_id);
+
     IF p_approval_checker NOT IN ('Approval.open', 'Approval.reserved', 'Approval.rejected', 'Approval.approved') THEN
         RETURN jsonb_build_object('status', NULL, 'code', 'approval_failure');
     END IF;
@@ -47,5 +50,4 @@ EXCEPTION
     WHEN OTHERS THEN
         RETURN jsonb_build_object('status', NULL, 'code', 'approval_error', 'message', SQLERRM);
 END;
-$function$
-
+$function$;

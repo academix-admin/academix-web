@@ -6,7 +6,7 @@ CREATE OR REPLACE FUNCTION public.submit_topic_content(p_locale text, p_country_
  RETURNS jsonb
  LANGUAGE plpgsql
 AS $function$
-DECLARE 
+DECLARE
   result JSONB := '{"status": null, "error": null, "topics_details": null}';
   group_id UUID;
   topics_details JSONB;
@@ -16,8 +16,16 @@ DECLARE
   gender_control_json JSONB;
   country_control_json JSONB;
 BEGIN
-  -- [idor-guard] a JWT caller acts as their own id (client can't spoof p_user_id); service (Lambda) keeps it.
-  IF auth.uid() IS NOT NULL THEN p_user_id := auth.uid(); END IF;
+  -- [idor-guard] a JWT caller acts as their own id; ONLY a genuine service-role caller (the Lambda,
+  -- authorizer-verified id) may supply p_user_id directly — checked via session_user/JWT role, not
+  -- just "auth.uid() happens to be null" (also true for an anonymous PostgREST caller, who could
+  -- previously pass ANY p_user_id and forge content as them).
+  IF NOT (coalesce(auth.jwt()->>'role', '') = 'service_role' OR session_user IN ('service_role', 'postgres')) THEN
+    p_user_id := auth.uid();
+  END IF;
+  IF p_user_id IS NULL THEN
+    RAISE EXCEPTION 'not_authorized: unauthenticated' USING errcode = '42501';
+  END IF;
   -- Server-authoritative role gate: only a creator+ role may author.
   PERFORM public.assert_can_contribute(p_user_id, 'public');
 
@@ -139,7 +147,7 @@ BEGIN
             ) INTO topics_details;
     END IF;
 
-    IF topics_details IS NULL THEN 
+    IF topics_details IS NULL THEN
         result := jsonb_set(result, '{status}', '"ContentSubmission.error"', false);
         RETURN result;
     END IF;
@@ -155,5 +163,8 @@ EXCEPTION
         result := jsonb_set(result, '{status}', '"ContentSubmission.error"', false);
         RETURN result;
 END;
-$function$
+$function$;
 
+
+REVOKE EXECUTE ON FUNCTION public.submit_topic_content(text, jsonb[], jsonb[], jsonb[], jsonb[], uuid, uuid, boolean, text, uuid) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.submit_topic_content(text, jsonb[], jsonb[], jsonb[], jsonb[], uuid, uuid, boolean, text, uuid) TO service_role;

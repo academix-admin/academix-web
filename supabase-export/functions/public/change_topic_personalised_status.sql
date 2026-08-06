@@ -10,8 +10,10 @@ AS $function$
 DECLARE
     v_is_personalised boolean;
 BEGIN
-    -- Guard: caller must be authenticated as themselves
-    IF p_user_id <> auth.uid() THEN
+    -- Guard: caller must be authenticated as themselves. IS DISTINCT FROM (not <>) is required
+    -- here because anon callers have auth.uid() IS NULL, and a plain <> comparison against NULL
+    -- evaluates to NULL (falsy in an IF), which let this guard silently no-op for anon callers.
+    IF p_user_id IS DISTINCT FROM auth.uid() THEN
         RETURN jsonb_build_object('status', 'PersonalisedStatus.error');
     END IF;
 
@@ -50,5 +52,4 @@ EXCEPTION
     WHEN OTHERS THEN
         RETURN jsonb_build_object('status', 'PersonalisedStatus.error');
 END;
-$function$
-
+$function$;

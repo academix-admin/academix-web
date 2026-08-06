@@ -705,7 +705,15 @@ CREATE TABLE public.users_table (
   users_image text,
   users_roles_access jsonb NOT NULL DEFAULT '{}'::jsonb,
   transaction_id uuid,
-  users_activation_at timestamp with time zone
+  users_activation_at timestamp with time zone,
+  -- Translator pairing (added 2026-08-06): a user's REGISTERED language (language_id) is what they
+  -- see/browse existing content in; translation_language_id is the OTHER half of the pair they
+  -- submit translations INTO (e.g. registered en, translation_language fr). NULL = not a translator.
+  -- translation_language_verified gates whether the pairing is trusted for submission (assert_can_
+  -- contribute blocks Roles.translator until verified) — selecting the role/column alone isn't enough.
+  translation_language_id uuid REFERENCES language_table(language_id),
+  translation_language_verified boolean NOT NULL DEFAULT false,
+  CONSTRAINT users_translation_language_differs CHECK (translation_language_id IS NULL OR translation_language_id <> language_id)
 );
 
 CREATE TABLE public.wallet_balance_table (

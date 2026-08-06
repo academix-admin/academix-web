@@ -307,7 +307,7 @@ export const handler = async (event) => {
       };
     }
 
-    const { exists, allowed, is_public, category } = topicCheck;
+    const { exists, allowed, is_public, category, registered_locale } = topicCheck;
 
     if (exists) {
       return {
@@ -323,8 +323,9 @@ export const handler = async (event) => {
       };
     }
 
-    // Build prompt
-    const prompt = buildPrompt(topicsName, category, locale, is_public);
+    // Content language is the creator's REGISTERED language (returned by get_topic_exists), never
+    // the client-sent `locale` — that's just whatever display language they're currently viewing in.
+    const prompt = buildPrompt(topicsName, category, registered_locale, is_public);
 
     // Send to EdenAI
     const { response, error: promptError } = await sendPrompt(prompt, URL, API_KEY, MODEL);
@@ -366,7 +367,7 @@ export const handler = async (event) => {
 
     // Send name, supports, controls for saving
     const { data: submission, error: submissionError } = await supabase.rpc("submit_topic_content", {
-      p_locale: locale,
+      p_locale: registered_locale,
       p_country_control: countryControl,
       p_language_control: languageControl,
       p_gender_control: genderControl,
@@ -422,9 +423,10 @@ ${
     ? `1. **(R5) Educationally Related** - The term must be related to **"${category}"** irrespective of detected languages.`
     : '1. **(R0) General** - The term must be appropriate and meaningful'
 }
-2. **(R2) Correct Spelling** - The term must be spelled correctly in both singular and plural forms according to the detected language locale **"${locale}"**.  
-3. **(R3) No Abbreviations** - The term must not be shortened, clipped, or colloquial (e.g., "Technology" not "Tech").  
-4. **(R4) Non-offensive** - The term must be free of racism, nudity, or inappropriate content.  
+2. **(R1) Correct Language** - The term must actually be written in the language for locale **"${locale}"** — reject if it is written in any other language, even if otherwise valid. This is a hard gate: content must never be silently saved under the wrong locale.
+3. **(R2) Correct Spelling** - The term must be spelled correctly in both singular and plural forms according to the detected language locale **"${locale}"**.
+4. **(R3) No Abbreviations** - The term must not be shortened, clipped, or colloquial (e.g., "Technology" not "Tech").
+5. **(R4) Non-offensive** - The term must be free of racism, nudity, or inappropriate content.
 
 ### **Expected JSON Response Structure:**  
 \`\`\`json  

@@ -14,19 +14,48 @@ AS $function$
 DECLARE
   v_level    int;
   v_personal boolean;
+  v_checker  text;
+  v_translation_language_id uuid;
+  v_translation_verified boolean;
 BEGIN
-  -- [idor-guard] (same as the money/pool RPCs): a JWT caller acts as their own id; service-role callers
-  -- (the content Lambdas, auth.uid() null) keep the authorizer-verified passed id. Client can't spoof.
-  IF auth.uid() IS NOT NULL THEN p_user_id := auth.uid(); END IF;
+  -- [idor-guard] a JWT caller acts as their own id; ONLY a genuine service-role caller (the content
+  -- Lambdas, which pass an authorizer-verified id) may supply p_user_id directly — checked via
+  -- session_user/JWT role, not just "auth.uid() happens to be null" (that was also true for a fully
+  -- anonymous PostgREST caller, who could previously pass ANY p_user_id and forge content as them).
+  IF NOT (coalesce(auth.jwt()->>'role', '') = 'service_role' OR session_user IN ('service_role', 'postgres')) THEN
+    p_user_id := auth.uid();
+  END IF;
+  IF p_user_id IS NULL THEN
+    RAISE EXCEPTION 'not_authorized: unauthenticated' USING errcode = '42501';
+  END IF;
 
-  SELECT rt.roles_level, rt.roles_is_personal_entry
-    INTO v_level, v_personal
+  SELECT rt.roles_level, rt.roles_is_personal_entry, rt.roles_checker,
+         ut.translation_language_id, ut.translation_language_verified
+    INTO v_level, v_personal, v_checker, v_translation_language_id, v_translation_verified
   FROM users_table ut
   JOIN roles_table rt ON rt.roles_id = ut.roles_id
   WHERE ut.users_id = p_user_id;
 
   IF v_level IS NULL OR v_level < 2 THEN
     RAISE EXCEPTION 'not_authorized: contribution requires a creator or higher role'
+      USING errcode = '42501';
+  END IF;
+
+  -- A translator's whole purpose is to submit the OTHER half of a registered-language ->
+  -- translation-language pair. Until that pairing is set AND verified, they can't contribute at
+  -- all under this role (never silently fall back to treating them as a plain same-language
+  -- creator — that would submit content attributed to the translator role without an actual
+  -- verified translation capability behind it).
+  IF v_checker = 'Roles.translator' AND (v_translation_language_id IS NULL OR NOT COALESCE(v_translation_verified, false)) THEN
+    RAISE EXCEPTION 'not_authorized: translation language pairing is not verified yet'
+      USING errcode = '42501';
+  END IF;
+
+  -- Role assignment and payment are separate: a user can select the creator/reviewer/translator
+  -- role before paying its buy-in. fetch_user_activation_status is the single source of truth for
+  -- "has this role actually been paid + confirmed" — round it up here so contribution requires both.
+  IF NOT public.fetch_user_activation_status(p_user_id) THEN
+    RAISE EXCEPTION 'not_authorized: role is not yet activated (payment not completed)'
       USING errcode = '42501';
   END IF;
 
@@ -37,5 +66,6 @@ BEGIN
 END;
 $function$;
 
-REVOKE ALL ON FUNCTION public.assert_can_contribute(uuid, text) FROM public, anon;
-GRANT EXECUTE ON FUNCTION public.assert_can_contribute(uuid, text) TO authenticated, service_role;
+
+REVOKE EXECUTE ON FUNCTION public.assert_can_contribute(uuid, text) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.assert_can_contribute(uuid, text) TO service_role;

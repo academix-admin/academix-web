@@ -12,6 +12,13 @@ DECLARE
     v_result            JSONB;
     v_activation_status BOOLEAN;
 BEGIN
+    -- Guard: caller must be authenticated as themselves (IS DISTINCT FROM is NULL-safe for anon
+    -- callers). This response includes buy-in amount and transaction_id, so an unguarded p_user_id
+    -- would leak another user's financial details.
+    IF p_user_id IS DISTINCT FROM auth.uid() THEN
+        RETURN NULL;
+    END IF;
+
     -- Resolve once, reuse twice
     SELECT * INTO v_activation_status
     FROM fetch_user_activation_status(p_user_id);
@@ -24,7 +31,7 @@ BEGIN
             'roles_created_at', rt.roles_created_at,
             'roles_buy_in',       CASE
     WHEN v_activation_status THEN ROUND(COALESCE(tt.transaction_receiver_amount, 0),2)
-    ELSE rt.roles_buy_in 
+    ELSE rt.roles_buy_in
 END,
             'roles_identity',   (SELECT translation FROM translate(rt.roles_identity, p_locale)),
             'roles_perks',      COALESCE(
@@ -66,5 +73,4 @@ EXCEPTION
         RAISE NOTICE 'fetch_user_activation_role error for user %: %', p_user_id, SQLERRM;
         RETURN NULL;
 END;
-$function$
-
+$function$;

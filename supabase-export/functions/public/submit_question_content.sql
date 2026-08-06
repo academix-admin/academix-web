@@ -6,7 +6,7 @@ CREATE OR REPLACE FUNCTION public.submit_question_content(p_locale text, p_count
  RETURNS jsonb
  LANGUAGE plpgsql
 AS $function$
-DECLARE 
+DECLARE
   result JSONB := '{"status": null, "error": null, "questions_details": null, "options_id_details": null}';
   group_id UUID;
   category_id UUID;
@@ -37,8 +37,16 @@ DECLARE
   missing_option_ids TEXT := '';
   actual_option_count INT;
 BEGIN
-    -- [idor-guard] a JWT caller acts as their own id (client can't spoof p_user_id); service (Lambda) keeps it.
-    IF auth.uid() IS NOT NULL THEN p_user_id := auth.uid(); END IF;
+    -- [idor-guard] a JWT caller acts as their own id; ONLY a genuine service-role caller (the Lambda,
+    -- authorizer-verified id) may supply p_user_id directly — checked via session_user/JWT role, not
+    -- just "auth.uid() happens to be null" (also true for an anonymous PostgREST caller, who could
+    -- previously pass ANY p_user_id and forge content as them).
+    IF NOT (coalesce(auth.jwt()->>'role', '') = 'service_role' OR session_user IN ('service_role', 'postgres')) THEN
+      p_user_id := auth.uid();
+    END IF;
+    IF p_user_id IS NULL THEN
+      RAISE EXCEPTION 'not_authorized: unauthenticated' USING errcode = '42501';
+    END IF;
     -- Server-authoritative role gate: only a creator+ role may author.
     PERFORM public.assert_can_contribute(p_user_id, 'public');
 
@@ -139,7 +147,7 @@ BEGIN
             country_control      = country_control      || country_control_json,
             questions_updated_at = NOW()
         WHERE questions_id = p_questions_id
-        RETURNING 
+        RETURNING
             jsonb_build_object(
                 'questions_id',         questions_id,
                 'questions_image',      questions_image,
@@ -156,14 +164,14 @@ BEGIN
                     SELECT jsonb_build_object(
                         'question_time_id',    qtit.question_time_id,
                         'question_time_value', qtit.question_time_value
-                    ) FROM question_time_table qtit 
+                    ) FROM question_time_table qtit
                     WHERE qtit.question_time_id = questions_table.question_time_id
                 ),
                 'type_data', (
                     SELECT jsonb_build_object(
                         'question_type_id',       qtt.question_type_id,
                         'question_type_identity', (SELECT translation FROM translate(qtt.question_type_identity, p_locale))
-                    ) FROM question_type_table qtt 
+                    ) FROM question_type_table qtt
                     WHERE qtt.question_type_id = questions_table.question_type_id
                 ),
                 'creator_details',    get_user_fields(p_user_id, ARRAY['users_id', 'users_names', 'users_username', 'users_image']),
@@ -211,7 +219,7 @@ BEGIN
             questions_created_by_json,
             questions_reviewed_by_json
         )
-        RETURNING 
+        RETURNING
             jsonb_build_object(
                 'questions_id',         questions_id,
                 'questions_image',      questions_image,
@@ -228,14 +236,14 @@ BEGIN
                     SELECT jsonb_build_object(
                         'question_time_id',    qtit.question_time_id,
                         'question_time_value', qtit.question_time_value
-                    ) FROM question_time_table qtit 
+                    ) FROM question_time_table qtit
                     WHERE qtit.question_time_id = questions_table.question_time_id
                 ),
                 'type_data', (
                     SELECT jsonb_build_object(
                         'question_type_id',       qtt.question_type_id,
                         'question_type_identity', (SELECT translation FROM translate(qtt.question_type_identity, p_locale))
-                    ) FROM question_type_table qtt 
+                    ) FROM question_type_table qtt
                     WHERE qtt.question_type_id = questions_table.question_type_id
                 ),
                 'creator_details',    get_user_fields(p_user_id, ARRAY['users_id', 'users_names', 'users_username', 'users_image']),
@@ -246,7 +254,7 @@ BEGIN
             ), questions_id INTO questions_details, question_id;
     END IF;
 
-    IF questions_details IS NULL THEN 
+    IF questions_details IS NULL THEN
         result := jsonb_set(result, '{status}', '"ContentSubmission.error"', false);
         RETURN result;
     END IF;
@@ -254,7 +262,7 @@ BEGIN
     -- ---------------------------------------------------------------
     -- OPTIONS
     -- ---------------------------------------------------------------
-    IF question_id IS NOT NULL AND p_options IS NOT NULL AND array_length(p_options, 1) > 0 THEN 
+    IF question_id IS NOT NULL AND p_options IS NOT NULL AND array_length(p_options, 1) > 0 THEN
         FOR i IN 1..array_length(p_options, 1) LOOP
             option        := p_options[i];
             id            := (option->>'id')::TEXT;
@@ -305,12 +313,12 @@ BEGIN
 
     -- Update option count
     questions_details := jsonb_set(
-        questions_details, 
-        '{option_simple_data}', 
-        to_jsonb(COALESCE((SELECT count(*) FROM jsonb_object_keys(options_id_details)), 0)), 
+        questions_details,
+        '{option_simple_data}',
+        to_jsonb(COALESCE((SELECT count(*) FROM jsonb_object_keys(options_id_details)), 0)),
         false
     );
-    
+
     result := jsonb_set(result, '{status}', '"ContentSubmission.success"', false);
     result := jsonb_set(result, '{questions_details}', questions_details, false);
     result := jsonb_set(result, '{options_id_details}', options_id_details, false);
@@ -323,5 +331,8 @@ EXCEPTION
         result := jsonb_set(result, '{status}', '"ContentSubmission.error"', false);
         RETURN result;
 END;
-$function$
+$function$;
 
+
+REVOKE EXECUTE ON FUNCTION public.submit_question_content(text, jsonb[], jsonb[], jsonb[], jsonb[], uuid, uuid, uuid, uuid, boolean, text, jsonb[], uuid) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.submit_question_content(text, jsonb[], jsonb[], jsonb[], jsonb[], uuid, uuid, uuid, uuid, boolean, text, jsonb[], uuid) TO service_role;
