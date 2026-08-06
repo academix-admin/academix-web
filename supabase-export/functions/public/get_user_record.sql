@@ -24,17 +24,17 @@ BEGIN
         'users_dob',             ut.users_dob,
         'users_sex',             ut.users_sex,
         'users_verified',        (SELECT * FROM public.fetch_user_activation_status(ut.users_id)),
-        'language_table',        jsonb_build_object(
+        'language_table',        CASE WHEN lt.language_id IS NULL THEN NULL ELSE jsonb_build_object(
             'language_id',           lt.language_id,
             'language_identity',     (SELECT translation FROM translate(lt.language_identity, p_locale)),
             'language_code',         lt.language_code
-        ),
-        'country_table',         jsonb_build_object(
+        ) END,
+        'country_table',         CASE WHEN ct.country_id IS NULL THEN NULL ELSE jsonb_build_object(
             'country_id',            ct.country_id,
             'country_identity',      (SELECT translation FROM translate(ct.country_identity, p_locale)),
             'country_image',         ct.country_image,
             'country_two_iso_code',  ct.country_two_iso_code
-        ),
+        ) END,
         'users_created_at',      ut.users_created_at,
         'transaction_id',        ut.transaction_id,
         'users_roles_access',    ut.users_roles_access,
