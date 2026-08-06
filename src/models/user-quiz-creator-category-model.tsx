@@ -1,37 +1,12 @@
 /**
  * Web port of Flutter `UserQuizCreatorCategoryModel` (academix-app).
  * Maps a `fetch_categories` row (post category_group removal — topic_category is top-level).
- * Keys mirror the RPC output; see supabase-export/functions/public/fetch_categories.sql.
+ * The wire shape lives in the single source (@academix-admin/domain-types); see
+ * supabase-export/functions/public/fetch_categories.sql for the RPC.
  */
 
-export interface BackendCreatorCategoryRow {
-  topic_category_id: string;
-  topic_category_image: string | null;
-  topic_category_created_at: string;
-  topic_category_updated_at: string;
-  topic_category_identity: string;
-  sort_created_id: string;
-  sort_updated_id: string;
-  reviewer_id: string | null;
-  approval: string | null;
-  user_created_topic: number | null;
-  user_created_question: number | null;
-  topic_settings?: {
-    is_favourite?: boolean | null;
-    is_recents?: boolean | null;
-    settings_updated_at?: string | null;
-  } | null;
-  creator_details?: {
-    users_id?: string | null;
-    users_names?: string | null;
-    users_username?: string | null;
-    users_image?: string | null;
-  } | null;
-  age_control?: unknown;
-  country_control?: unknown;
-  language_control?: unknown;
-  gender_control?: unknown;
-}
+import type { BackendCreatorCategoryRow } from '@academix-admin/domain-types';
+export type { BackendCreatorCategoryRow };
 
 /** Visual bucket for an approval badge. */
 export type ApprovalBucket = 'approved' | 'rejected' | 'pending';
