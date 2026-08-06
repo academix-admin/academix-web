@@ -10,6 +10,12 @@ DECLARE
     pool_auth TEXT;
     pool_auth_code TEXT;
 BEGIN
+    IF NOT (coalesce(auth.jwt()->>'role','')='service_role' OR session_user IN ('service_role','postgres')) THEN
+        p_user_id := auth.uid();
+    END IF;
+    IF p_user_id IS NULL THEN
+        RAISE EXCEPTION 'not_authorized: unauthenticated' USING errcode='42501';
+    END IF;
     
 
     -- FETCH POOL DETAILS
@@ -37,5 +43,6 @@ BEGIN
     -- Return the generated or fetched auth code
     RETURN pool_auth_code;
 END;
-$function$
+$function$;
 
+REVOKE EXECUTE ON FUNCTION public.get_pool_auth_code(p_user_id uuid, p_pool_id uuid) FROM PUBLIC, anon;

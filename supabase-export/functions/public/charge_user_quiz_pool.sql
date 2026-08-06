@@ -21,6 +21,12 @@ DECLARE
     p_redeemable_id     UUID;
     user_redeem_id      UUID;
 BEGIN
+    IF NOT (coalesce(auth.jwt()->>'role','')='service_role' OR session_user IN ('service_role','postgres')) THEN
+        p_user_id := auth.uid();
+    END IF;
+    IF p_user_id IS NULL THEN
+        RAISE EXCEPTION 'not_authorized: unauthenticated' USING errcode='42501';
+    END IF;
  
     RAISE LOG 'charge_user_quiz_pool called - user: %, challenge: %, has_redeem_code: %',
               p_user_id, p_challenge_id, p_redeem_code;
@@ -187,5 +193,6 @@ EXCEPTION
         END IF;
         RETURN result;
 END;
-$function$
+$function$;
 
+REVOKE EXECUTE ON FUNCTION public.charge_user_quiz_pool(p_user_id uuid, p_challenge_id uuid, p_locale text, p_country text, p_gender text, p_age text, p_redeem_code text) FROM PUBLIC, anon;

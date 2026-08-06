@@ -23,5 +23,6 @@ BEGIN
         WHERE ot.questions_id = p_question_id;
 
 END;
-$function$
+$function$;
 
+REVOKE EXECUTE ON FUNCTION public.get_all_question_options(p_user_id uuid, p_question_id uuid, p_locale text) FROM PUBLIC, anon;

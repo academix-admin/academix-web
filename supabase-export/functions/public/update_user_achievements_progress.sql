@@ -17,6 +17,12 @@ DECLARE
   v_achievements_types TEXT[];
   v_result JSONB := '{"status": "success", "updated_achievements": []}';
 BEGIN
+    IF NOT (coalesce(auth.jwt()->>'role','')='service_role' OR session_user IN ('service_role','postgres')) THEN
+        p_user_id := auth.uid();
+    END IF;
+    IF p_user_id IS NULL THEN
+        RAISE EXCEPTION 'not_authorized: unauthenticated' USING errcode='42501';
+    END IF;
   -- Validate input data
   IF p_user_id IS NULL OR p_progress_data IS NULL THEN
     RETURN jsonb_build_object('status', 'error', 'message', 'Invalid input parameters');
@@ -114,5 +120,6 @@ EXCEPTION
       'updated_achievements', v_result->'updated_achievements'
     );
 END;
-$function$
+$function$;
 
+REVOKE EXECUTE ON FUNCTION public.update_user_achievements_progress(p_user_id uuid, p_progress_data jsonb) FROM PUBLIC, anon;

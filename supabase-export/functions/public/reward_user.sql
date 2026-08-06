@@ -18,6 +18,12 @@ DECLARE
     transaction_id_text TEXT;
     paid_amount NUMERIC;
 BEGIN
+    IF NOT (coalesce(auth.jwt()->>'role','')='service_role' OR session_user IN ('service_role','postgres')) THEN
+        p_user_id := auth.uid();
+    END IF;
+    IF p_user_id IS NULL THEN
+        RAISE EXCEPTION 'not_authorized: unauthenticated' USING errcode='42501';
+    END IF;
     -- Validate required parameters
     IF p_user_id IS NULL OR p_reward_id IS NULL THEN
         result := jsonb_set(result, '{status}', '"RewardStatus.invalid_parameters"', false);
@@ -119,5 +125,6 @@ EXCEPTION
         result := jsonb_set(result, '{status}', '"RewardStatus.error"', false);
         RETURN result;
 END;
-$function$
+$function$;
 
+REVOKE EXECUTE ON FUNCTION public.reward_user(p_user_id uuid, p_locale text, p_country text, p_gender text, p_age text, p_title text, p_reward_id uuid, p_source text) FROM PUBLIC, anon;

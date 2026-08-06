@@ -120,5 +120,6 @@ EXCEPTION
         result := jsonb_set(result, '{status}', '"Rule.error"', false);  -- Set status to failed
         RETURN result;
 END;
-$function$
+$function$;
 
+REVOKE EXECUTE ON FUNCTION public.verify_code_rule(p_user_id uuid, p_redeem_id uuid, p_data jsonb) FROM PUBLIC, anon;

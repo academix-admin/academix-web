@@ -327,5 +327,6 @@ BEGIN
 
     RETURN v_result;
 END;
-$function$
+$function$;
 
+REVOKE EXECUTE ON FUNCTION public.get_user_fields(p_user_id uuid, p_fields text[], p_locale text, p_transform text[], p_translate text[]) FROM PUBLIC, anon;

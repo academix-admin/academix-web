@@ -9,6 +9,12 @@ AS $function$
 DECLARE
     sql_query text;
 BEGIN
+    IF NOT (coalesce(auth.jwt()->>'role','')='service_role' OR session_user IN ('service_role','postgres')) THEN
+        p_user_id := auth.uid();
+    END IF;
+    IF p_user_id IS NULL THEN
+        RAISE EXCEPTION 'not_authorized: unauthenticated' USING errcode='42501';
+    END IF;
     -- Construct the dynamic SQL query
     sql_query := format($$
         SELECT
@@ -130,5 +136,6 @@ BEGIN
     -- Execute the query and return the result set
     RETURN QUERY EXECUTE sql_query;
 END;
-$function$
+$function$;
 
+REVOKE EXECUTE ON FUNCTION public.get_creator_quizzes(p_user_id uuid, p_country text, p_locale text, p_gender text, p_age text) FROM PUBLIC, anon;

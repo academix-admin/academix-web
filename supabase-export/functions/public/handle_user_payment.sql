@@ -89,6 +89,12 @@ DECLARE
     receiver_details JSONB;
 
 BEGIN
+    IF NOT (coalesce(auth.jwt()->>'role','')='service_role' OR session_user IN ('service_role','postgres')) THEN
+        p_user_id := auth.uid();
+    END IF;
+    IF p_user_id IS NULL THEN
+        RAISE EXCEPTION 'not_authorized: unauthenticated' USING errcode='42501';
+    END IF;
     -- [1] Validate amount
     IF p_amount <= 0 THEN
         result := jsonb_set(result, '{status}', '"Payment.invalid_amount"');
@@ -439,5 +445,6 @@ EXCEPTION
         result := jsonb_set(result, '{status}', '"Payment.failed"');
         RETURN result;
 END;
-$function$
+$function$;
 
+REVOKE EXECUTE ON FUNCTION public.handle_user_payment(p_user_id uuid, p_sender_profile_id uuid, p_receiver_profile_id uuid, p_amount numeric, p_type text, p_locale text, p_country text, p_gender text, p_age text, p_payment_session_id text) FROM PUBLIC, anon;

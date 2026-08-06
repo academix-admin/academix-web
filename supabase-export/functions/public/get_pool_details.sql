@@ -9,6 +9,12 @@ AS $function$
 DECLARE
     result JSONB;
 BEGIN
+    IF NOT (coalesce(auth.jwt()->>'role','')='service_role' OR session_user IN ('service_role','postgres')) THEN
+        p_user_id := auth.uid();
+    END IF;
+    IF p_user_id IS NULL THEN
+        RAISE EXCEPTION 'not_authorized: unauthenticated' USING errcode='42501';
+    END IF;
         SELECT jsonb_build_object(
             'pools_id', pt.pools_id,
             'pools_locale', pt.pools_locale,
@@ -66,5 +72,6 @@ BEGIN
 
     RETURN COALESCE(result, NULL);
 END;
-$function$
+$function$;
 
+REVOKE EXECUTE ON FUNCTION public.get_pool_details(p_user_id uuid, p_topic_id uuid, p_locale text, p_country text, p_gender text, p_age text) FROM PUBLIC, anon;

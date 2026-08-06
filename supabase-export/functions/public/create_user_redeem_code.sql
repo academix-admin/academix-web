@@ -13,6 +13,12 @@ DECLARE
     max_attempts INT := 1000; -- Safeguard to prevent infinite loops
     attempts INT := 0;
 BEGIN
+    IF NOT (coalesce(auth.jwt()->>'role','')='service_role' OR session_user IN ('service_role','postgres')) THEN
+        p_user_id := auth.uid();
+    END IF;
+    IF p_user_id IS NULL THEN
+        RAISE EXCEPTION 'not_authorized: unauthenticated' USING errcode='42501';
+    END IF;
     -- Loop to generate a unique code
     WHILE attempts < max_attempts LOOP
         -- Generate a random 7-character alphanumeric code
@@ -61,5 +67,6 @@ EXCEPTION
         RAISE NOTICE 'Error creating redeem code: %', SQLERRM;
         RETURN redeem_code;
 END;
-$function$
+$function$;
 
+REVOKE EXECUTE ON FUNCTION public.create_user_redeem_code(p_user_id uuid, p_amount integer, p_rule_id uuid) FROM PUBLIC, anon;

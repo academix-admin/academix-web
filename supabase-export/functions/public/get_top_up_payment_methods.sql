@@ -76,5 +76,6 @@ BEGIN
     -- Execute the query and return the result set
     RETURN QUERY EXECUTE sql_query;
 END;
-$function$
+$function$;
 
+REVOKE EXECUTE ON FUNCTION public.get_top_up_payment_methods(p_user_id uuid, p_country text, p_locale text, p_gender text, p_age text, p_wallet_it uuid) FROM PUBLIC, anon;

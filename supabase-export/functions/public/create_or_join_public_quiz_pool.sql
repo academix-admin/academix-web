@@ -32,6 +32,12 @@ DECLARE
     new_member_count     INT;
     is_commit_user       BOOLEAN;
 BEGIN
+    IF NOT (coalesce(auth.jwt()->>'role','')='service_role' OR session_user IN ('service_role','postgres')) THEN
+        p_user_id := auth.uid();
+    END IF;
+    IF p_user_id IS NULL THEN
+        RAISE EXCEPTION 'not_authorized: unauthenticated' USING errcode='42501';
+    END IF;
 
     -- =========================================================================
     -- COMMIT USER PATH (p_pool_id IS NOT NULL)
@@ -500,5 +506,7 @@ BEGIN
 EXCEPTION WHEN OTHERS THEN
     RAISE EXCEPTION '%', SQLERRM;
 END;
-$function$
+$function$;
 
+REVOKE EXECUTE ON FUNCTION public.create_or_join_public_quiz_pool(p_user_id uuid, p_topic_id uuid, p_challenge_id uuid, p_locale text, p_country text, p_gender text, p_age text, p_pool_id uuid, p_redeem_code text) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.create_or_join_public_quiz_pool(p_user_id uuid, p_topic_id uuid, p_challenge_id uuid, p_locale text, p_country text, p_gender text, p_age text, p_pool_id uuid, p_redeem_code text) TO service_role;

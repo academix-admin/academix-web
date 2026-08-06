@@ -9,6 +9,12 @@ AS $function$
 DECLARE
     sortID TEXT;
 BEGIN
+    IF NOT (coalesce(auth.jwt()->>'role','')='service_role' OR session_user IN ('service_role','postgres')) THEN
+        p_user_id := auth.uid();
+    END IF;
+    IF p_user_id IS NULL THEN
+        RAISE EXCEPTION 'not_authorized: unauthenticated' USING errcode='42501';
+    END IF;
     -- Extract sort ID from the passed JSONB object
     sortID := (p_after_categories->>'sort_id')::TEXT;
     -- Main query to fetch categories
@@ -23,5 +29,6 @@ BEGIN
     LIMIT p_limit_by;
     
 END;
-$function$
+$function$;
 
+REVOKE EXECUTE ON FUNCTION public.get_creator_categories(p_country text, p_locale text, p_gender text, p_age text, p_user_id uuid, p_limit_by integer, p_after_categories jsonb) FROM PUBLIC, anon;

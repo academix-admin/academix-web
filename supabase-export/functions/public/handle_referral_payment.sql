@@ -13,6 +13,12 @@ DECLARE
     expires         TIMESTAMPTZ;
     referral_bonus  NUMERIC := 300;
 BEGIN
+    IF NOT (coalesce(auth.jwt()->>'role','')='service_role' OR session_user IN ('service_role','postgres')) THEN
+        p_user_id := auth.uid();
+    END IF;
+    IF p_user_id IS NULL THEN
+        RAISE EXCEPTION 'not_authorized: unauthenticated' USING errcode='42501';
+    END IF;
     IF p_type <> 'TransactionType.top_up' THEN
         RAISE NOTICE 'handle_referral_payment: skipping type %', p_type;
         RETURN NULL;
@@ -78,5 +84,6 @@ EXCEPTION
         RAISE NOTICE 'handle_referral_payment error for user %: %', p_user_id, SQLERRM;
         RETURN NULL;
 END;
-$function$
+$function$;
 
+REVOKE EXECUTE ON FUNCTION public.handle_referral_payment(p_user_id uuid, p_amount numeric, p_type text, p_status text) FROM PUBLIC, anon;

@@ -59,5 +59,6 @@ BEGIN
     -- Return the profile details
     RETURN profile_details;
 END;
-$function$
+$function$;
 
+REVOKE EXECUTE ON FUNCTION public.create_or_get_wallet_profile(p_user_id uuid, p_locale text, p_country text, p_gender text, p_age text) FROM PUBLIC, anon;

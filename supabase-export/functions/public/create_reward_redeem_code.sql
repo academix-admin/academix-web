@@ -19,6 +19,12 @@ DECLARE
     attempts INT := 0;
     max_attempts INT := 10;
 BEGIN
+    IF NOT (coalesce(auth.jwt()->>'role','')='service_role' OR session_user IN ('service_role','postgres')) THEN
+        p_user_id := auth.uid();
+    END IF;
+    IF p_user_id IS NULL THEN
+        RAISE EXCEPTION 'not_authorized: unauthenticated' USING errcode='42501';
+    END IF;
     WHILE attempts < max_attempts LOOP
         -- Generate timestamp in milliseconds
         ts := (EXTRACT(EPOCH FROM clock_timestamp()) * 1000)::BIGINT;
@@ -77,5 +83,6 @@ BEGIN
 
     RAISE EXCEPTION 'Failed to generate unique redeem code after % attempts', max_attempts;
 END;
-$function$
+$function$;
 
+REVOKE EXECUTE ON FUNCTION public.create_reward_redeem_code(p_user_id uuid, p_amount numeric, p_title text, expires_at timestamp with time zone, p_source text) FROM PUBLIC, anon;

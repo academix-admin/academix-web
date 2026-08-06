@@ -7,6 +7,12 @@ CREATE OR REPLACE FUNCTION public.get_pool_question_options(p_country text, p_lo
  LANGUAGE plpgsql
 AS $function$
 BEGIN
+    IF NOT (coalesce(auth.jwt()->>'role','')='service_role' OR session_user IN ('service_role','postgres')) THEN
+        p_user_id := auth.uid();
+    END IF;
+    IF p_user_id IS NULL THEN
+        RAISE EXCEPTION 'not_authorized: unauthenticated' USING errcode='42501';
+    END IF;
         RETURN QUERY SELECT 
         jsonb_build_object(
             'options_id', ot.options_id,
@@ -31,5 +37,6 @@ BEGIN
         WHERE ot.questions_id = p_question_id;
 
 END;
-$function$
+$function$;
 
+REVOKE EXECUTE ON FUNCTION public.get_pool_question_options(p_country text, p_locale text, p_gender text, p_age text, p_user_id uuid, p_question_id uuid, p_question_type text) FROM PUBLIC, anon;

@@ -9,6 +9,12 @@ AS $function$
 DECLARE
     result jsonb;
 BEGIN
+    IF NOT (coalesce(auth.jwt()->>'role','')='service_role' OR session_user IN ('service_role','postgres')) THEN
+        p_user_id := auth.uid();
+    END IF;
+    IF p_user_id IS NULL THEN
+        RAISE EXCEPTION 'not_authorized: unauthenticated' USING errcode='42501';
+    END IF;
     SELECT
         jsonb_build_object(
             'achievements_progress_id', apt.achievements_progress_id,
@@ -44,5 +50,6 @@ BEGIN
             )
         ));
 END;
-$function$
+$function$;
 
+REVOKE EXECUTE ON FUNCTION public.get_user_achievements_progress(p_user_id uuid, p_achievements_id uuid, p_achievements_req jsonb) FROM PUBLIC, anon;

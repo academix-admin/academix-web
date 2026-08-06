@@ -9,6 +9,12 @@ AS $function$
 DECLARE
     buy_in_required_amount NUMERIC;
 BEGIN
+    IF NOT (coalesce(auth.jwt()->>'role','')='service_role' OR session_user IN ('service_role','postgres')) THEN
+        p_user_id := auth.uid();
+    END IF;
+    IF p_user_id IS NULL THEN
+        RAISE EXCEPTION 'not_authorized: unauthenticated' USING errcode='42501';
+    END IF;
     -- Only act on a confirmed buy_in
     IF p_status <> 'TransactionStatus.success' THEN
         IF p_type = 'TransactionType.buy_in' THEN
@@ -56,5 +62,6 @@ EXCEPTION
     WHEN OTHERS THEN
         RAISE NOTICE 'activate_user_account error for user %: %', p_user_id, SQLERRM;
 END;
-$function$
+$function$;
 
+REVOKE EXECUTE ON FUNCTION public.activate_user_account(p_user_id uuid, p_transaction_id uuid, p_amount numeric, p_type text, p_status text) FROM PUBLIC, anon;

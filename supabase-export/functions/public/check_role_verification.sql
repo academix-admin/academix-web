@@ -57,5 +57,7 @@ BEGIN
     )
   );
 END;
-$function$
+$function$;
 
+REVOKE EXECUTE ON FUNCTION public.check_role_verification(p_users_id uuid, p_roles_id uuid) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.check_role_verification(p_users_id uuid, p_roles_id uuid) TO service_role;

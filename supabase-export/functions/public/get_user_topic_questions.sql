@@ -7,6 +7,12 @@ CREATE OR REPLACE FUNCTION public.get_user_topic_questions(p_user_id uuid, p_top
  LANGUAGE plpgsql
 AS $function$
 BEGIN
+    IF NOT (coalesce(auth.jwt()->>'role','')='service_role' OR session_user IN ('service_role','postgres')) THEN
+        p_user_id := auth.uid();
+    END IF;
+    IF p_user_id IS NULL THEN
+        RAISE EXCEPTION 'not_authorized: unauthenticated' USING errcode='42501';
+    END IF;
     RETURN QUERY
     EXECUTE format('
         SELECT
@@ -110,5 +116,6 @@ BEGIN
         p_limit_by
     );
 
-END;$function$
+END;$function$;
 
+REVOKE EXECUTE ON FUNCTION public.get_user_topic_questions(p_user_id uuid, p_topic_id uuid, p_country text, p_locale text, p_gender text, p_age text, p_limit_by integer, p_after_question text) FROM PUBLIC, anon;
