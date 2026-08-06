@@ -283,7 +283,6 @@ export default function QuizCommitment(props: QuizChallengeProps) {
       }
 
       const requestData = {
-        userId: userData.usersId,
         locale: lang,
       };
 

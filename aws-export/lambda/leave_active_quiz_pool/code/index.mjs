@@ -21,20 +21,27 @@ const handlerInner = async (event) => {
 
   try {
     const body = JSON.parse(event.body);
-    const {
-      userId,
-      locale,
-      age,
-      gender,
-      country
-    } = body;
+    const { locale } = body;
 
-    
+    // Identity is taken from the VERIFIED JWT (API Gateway authorizer context, same
+    // supabase_flutter_authorizer as /join), never the client body — a caller can't
+    // leave another user's pool by passing a different userId.
+    const userId = event.requestContext?.authorizer?.user_id;
+    if (!userId) {
+      return {
+        statusCode: 401,
+        body: JSON.stringify({ status: "PoolStatus.error", error: "Unauthorized", pools_id: null }),
+      };
+    }
+
+    // p_country/p_gender/p_age are unused by leave_active_quiz_pool (verified against the live
+    // function body — it only reads p_user_id/p_locale); pass null rather than forwarding
+    // never-sent client fields.
     const { data: leave, error: leaveError } = await supabase.rpc("leave_active_quiz_pool", {
-      p_country : country, 
-      p_locale : locale, 
-      p_gender : gender, 
-      p_age : age, 
+      p_country : null,
+      p_locale : locale,
+      p_gender : null,
+      p_age : null,
       p_user_id : userId
     });
     
