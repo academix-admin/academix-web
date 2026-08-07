@@ -2,7 +2,7 @@
 -- function: translate(translations jsonb, requested_locale text, fallback_locales text[], use_default boolean)
 -- generated from Supabase project iewqfmkngcgayxbbnpiz (read-only mirror)
 
-CREATE OR REPLACE FUNCTION public.translate(translations jsonb, requested_locale text, fallback_locales text[] DEFAULT ARRAY[]::text[], use_default boolean DEFAULT false)
+CREATE OR REPLACE FUNCTION public.translate(translations jsonb, requested_locale text, fallback_locales text[] DEFAULT ARRAY['en'], use_default boolean DEFAULT false)
  RETURNS TABLE(translation text, record jsonb)
  LANGUAGE plpgsql
 AS $function$
@@ -12,7 +12,7 @@ DECLARE
 BEGIN
     -- Fast path: requested locale exists
     IF translations ? requested_locale THEN
-        RETURN QUERY SELECT 
+        RETURN QUERY SELECT
             translations ->> requested_locale,
             jsonb_build_object(
                 'locale', requested_locale,
@@ -22,7 +22,11 @@ BEGIN
         RETURN;
     END IF;
 
-    -- Check fallback locales
+    -- Check fallback locales (defaults to 'en' — every existing caller that doesn't pass this
+    -- explicitly now falls back to English instead of returning NULL when the requested locale
+    -- has no translation. NULL was a verified-live production crash: it fed straight into
+    -- domain-types contract fields declared non-nullable, e.g. BackendCountryData.country_identity
+    -- / BackendLanguageData.language_identity via get_user_record.)
     SELECT t.value, t.key INTO resolved_value, current_locale
     FROM jsonb_each_text(translations) t
     WHERE t.key = ANY(fallback_locales)
