@@ -16,10 +16,10 @@ import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import { useNav, useProvideObject } from "@academix-admin/navigation-stack";
 import { Header } from '@academix-admin/header';
-import { SearchViewer, useSearchController } from '@academix-admin/search-viewer';
+import { SearchViewer, Row, Column, useSearchController } from '@academix-admin/search-viewer';
 import type { SearchResult } from '@academix-admin/search-viewer';
 import { PaginateModel } from '@/models/paginate-model';
-import { usePublicQuiz } from '@/lib/stacks/public-quiz-stack';
+import { useActiveQuiz } from '@/lib/stacks/active-quiz-stack';
 import LoadingView from '@/components/LoadingView/LoadingView';
 import ErrorView from '@/components/ErrorView/ErrorView';
 import NoResultsView from '@/components/NoResultsView/NoResultsView';
@@ -35,39 +35,77 @@ export default function QuizPageTitle({ onStateChange }: ComponentStateProps) {
   const nav = useNav();
   const { userData } = useUserData();
 
-  // ── Search across public quizzes (SearchViewer: local instant + server pagination) ──────────
+  // ── Search across quiz topics (SearchViewer: 6 independently-paginating Rows, one per
+  //    PublicQuizTopics/AvailableQuizTopics section, aggregated by a Column) ──────────────────
   const [searchId, searchOps, isSearchOpen] = useSearchController();
-  const [searchResults, setSearchResults] = useState<SearchResult<UserDisplayQuizTopicModel>[]>([]);
-  // Already-loaded public quizzes (shared demand-state) → filtered locally for an instant first paint.
-  const [loadedPublicQuizzes] = usePublicQuiz(lang, 'public');
+  const [activeQuiz] = useActiveQuiz(lang);
 
-  const queryQuizzes = useCallback(
-    async (cursor: PaginateModel | undefined, text: string): Promise<{ data: UserDisplayQuizTopicModel[]; cursor?: PaginateModel }> => {
-      const after = cursor ?? new PaginateModel();
-      const { data, error } = await supabaseBrowser.rpc('fetch_public_quizzes', {
-        p_locale: lang,
-        p_type: 'public',
-        p_limit_by: 20,
-        p_after_quiz_topics: after.toJson(),
-        p_search_key: text || null,
-      });
-      if (error || !data) return { data: [] };
-      const rows = (data as BackendUserDisplayQuizTopicModel[]).map((r) => new UserDisplayQuizTopicModel(r));
-      const last = rows[rows.length - 1];
-      return { data: rows, cursor: last ? new PaginateModel({ sortId: last.sortCreatedId }) : undefined };
-    },
+  const queryPublicQuizzes = useCallback(
+    (pType: string) =>
+      async (cursor: PaginateModel | undefined, text: string): Promise<{ data: UserDisplayQuizTopicModel[]; cursor?: PaginateModel }> => {
+        const after = cursor ?? new PaginateModel();
+        const { data, error } = await supabaseBrowser.rpc('fetch_public_quizzes', {
+          p_locale: lang,
+          p_type: pType,
+          p_limit_by: 20,
+          p_after_quiz_topics: after.toJson(),
+          p_search_key: text || null,
+        });
+        if (error || !data) return { data: [] };
+        const rows = (data as BackendUserDisplayQuizTopicModel[]).map((r) => new UserDisplayQuizTopicModel(r));
+        const last = rows[rows.length - 1];
+        return { data: rows, cursor: last ? new PaginateModel({ sortId: last.sortCreatedId }) : undefined };
+      },
     [lang],
   );
 
-  const handleSearchQuizClick = (topic: UserDisplayQuizTopicModel) => {
-    nav.provideObject(
-      'getQuizByPoolsId',
-      () => (poolsId: string) => searchResults.find((r) => r.data.quizPool?.poolsId === poolsId)?.data,
-      { global: true, scope: 'quiz-topics' },
-    );
-    nav.push('quiz_commitment', { poolsId: topic.quizPool?.poolsId, action: 'public' });
-    searchOps.close();
-  };
+  const queryAvailableQuizzes = useCallback(
+    (pType: string) =>
+      async (cursor: PaginateModel | undefined, text: string): Promise<{ data: UserDisplayQuizTopicModel[]; cursor?: PaginateModel }> => {
+        const after = cursor ?? new PaginateModel();
+        const { data, error } = await supabaseBrowser.rpc('fetch_available_quizzes', {
+          p_locale: lang,
+          p_type: pType,
+          p_limit_by: 20,
+          p_after_quiz_topics: after.toJson(),
+          p_search_key: text || null,
+        });
+        if (error || !data) return { data: [] };
+        const rows = (data as BackendUserDisplayQuizTopicModel[]).map((r) => new UserDisplayQuizTopicModel(r));
+        const last = rows[rows.length - 1];
+        return { data: rows, cursor: last ? new PaginateModel({ sortId: last.sortCreatedId }) : undefined };
+      },
+    [lang],
+  );
+
+  // Mirrors PublicQuizTopics's own handleTopicClick — no activeQuiz guard there either.
+  const handlePublicResultClick = useCallback(
+    (topic: UserDisplayQuizTopicModel, pType: string) => {
+      nav.provideObject(
+        'getQuizByPoolsId',
+        () => (poolsId: string) => (poolsId === topic.quizPool?.poolsId ? topic : undefined),
+        { global: true, scope: 'quiz-topics' },
+      );
+      nav.push('quiz_commitment', { poolsId: topic.quizPool?.poolsId, action: pType });
+      searchOps.close();
+    },
+    [nav, searchOps],
+  );
+
+  // Mirrors AvailableQuizTopics's own handleTopicClick, guard included.
+  const handleAvailableResultClick = useCallback(
+    (topic: UserDisplayQuizTopicModel, pType: string) => {
+      if (activeQuiz) return;
+      nav.provideObject(
+        'getQuizByTopicsId',
+        () => (topicsId: string) => (topicsId === topic.topicsId ? topic : undefined),
+        { global: true, scope: 'quiz-topics' },
+      );
+      nav.push('quiz_challenge', { topicsId: topic.topicsId, pType });
+      searchOps.close();
+    },
+    [nav, searchOps, activeQuiz],
+  );
 
   const searchIcon = (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -209,26 +247,11 @@ export default function QuizPageTitle({ onStateChange }: ComponentStateProps) {
         <QuizJoinContent theme={theme} t={t} onClose={handleDisplayClose} scannedQuizPool={scannedQuizPool} setScannedQuizPool={setScannedQuizPool} />
       </BottomViewer>
 
-      <SearchViewer<UserDisplayQuizTopicModel, PaginateModel>
+      <SearchViewer
         id={searchId}
         isOpen={isSearchOpen}
         onClose={searchOps.close}
         debounceMs={350}
-        minQueryLength={1}
-        onInitialData={(text) => {
-          if (!text) return loadedPublicQuizzes;
-          const q = text.toLowerCase();
-          return loadedPublicQuizzes.filter(
-            (m) =>
-              m.topicsIdentity?.toLowerCase().includes(q) ||
-              m.quizPool?.poolsCode?.toLowerCase().includes(q) ||
-              m.quizPool?.challengeModel?.challengeIdentity?.toLowerCase().includes(q),
-          );
-        }}
-        localDataDeps={[loadedPublicQuizzes]}
-        queryData={queryQuizzes}
-        onRemoveDuplicateBy={(m) => m.topicsId}
-        onResult={setSearchResults}
         searchProp={{
           text: t('search_text'),
           textColor: theme === 'light' ? '#000' : '#fff',
@@ -246,79 +269,144 @@ export default function QuizPageTitle({ onStateChange }: ComponentStateProps) {
         }}
         childrenDirection="vertical"
       >
-        {searchResults.map((r) => {
-          const topic = r.data;
-          const sub = [topic.quizPool?.challengeModel?.challengeIdentity, topic.quizPool?.poolsCode]
-            .filter(Boolean)
-            .join(' • ');
-          return (
-            <div
-              key={topic.topicsId}
-              role="button"
-              tabIndex={0}
-              onClick={() => handleSearchQuizClick(topic)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                padding: '10px 12px',
-                cursor: 'pointer',
-              }}
-            >
-              <div
-                style={{
-                  position: 'relative',
-                  width: '48px',
-                  height: '48px',
-                  borderRadius: '10px',
-                  overflow: 'hidden',
-                  flexShrink: 0,
-                  background: theme === 'light' ? '#e9e9e9' : '#2a2a2a',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontWeight: 600,
-                  color: theme === 'light' ? '#555' : '#bbb',
-                }}
-              >
-                {topic.topicsImageUrl ? (
-                  <Image src={topic.topicsImageUrl} alt={topic.topicsIdentity} fill sizes="48px" style={{ objectFit: 'cover' }} />
-                ) : (
-                  (topic.topicsIdentity?.charAt(0) || '?').toUpperCase()
-                )}
-              </div>
-              <div style={{ minWidth: 0, flex: 1 }}>
-                <div
-                  style={{
-                    fontWeight: 600,
-                    fontSize: '15px',
-                    color: theme === 'light' ? '#111' : '#f0f0f0',
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                  }}
-                >
-                  {topic.topicsIdentity}
-                </div>
-                {sub && (
-                  <div
-                    style={{
-                      fontSize: '12px',
-                      color: theme === 'light' ? '#777' : '#999',
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                    }}
-                  >
-                    {sub}
-                  </div>
-                )}
-              </div>
-            </div>
-          );
-        })}
+        <Column>
+          <QuizSearchSection
+            title={t('followed_creator')}
+            theme={theme}
+            queryData={queryPublicQuizzes('creator')}
+            onCardClick={(topic) => handlePublicResultClick(topic, 'creator')}
+          />
+          <QuizSearchSection
+            title={t('discovered_interest')}
+            theme={theme}
+            queryData={queryPublicQuizzes('personalized')}
+            onCardClick={(topic) => handlePublicResultClick(topic, 'personalized')}
+          />
+          <QuizSearchSection
+            title={t('active_suggestions')}
+            theme={theme}
+            queryData={queryPublicQuizzes('public')}
+            onCardClick={(topic) => handlePublicResultClick(topic, 'public')}
+          />
+          <QuizSearchSection
+            title={t('favourite_contributors')}
+            theme={theme}
+            queryData={queryAvailableQuizzes('creator')}
+            onCardClick={(topic) => handleAvailableResultClick(topic, 'creator')}
+          />
+          <QuizSearchSection
+            title={t('just_for_you')}
+            theme={theme}
+            queryData={queryAvailableQuizzes('personalized')}
+            onCardClick={(topic) => handleAvailableResultClick(topic, 'personalized')}
+          />
+          <QuizSearchSection
+            title={t('might_interest_you')}
+            theme={theme}
+            queryData={queryAvailableQuizzes('public')}
+            onCardClick={(topic) => handleAvailableResultClick(topic, 'public')}
+          />
+        </Column>
       </SearchViewer>
     </>
+  );
+}
+
+// One titled, independently-paginating horizontal shelf inside the search Column — mirrors
+// PublicQuizTopics/AvailableQuizTopics's own section title, one per pType. Stays hidden (but
+// mounted, so its Row keeps searching/reporting state) until it actually has results, so an
+// empty section never shows a bare title with nothing under it.
+function QuizSearchSection({
+  title,
+  theme,
+  queryData,
+  onCardClick,
+}: {
+  title: string;
+  theme: string;
+  queryData: (cursor: PaginateModel | undefined, text: string, signal?: AbortSignal) => Promise<{ data: UserDisplayQuizTopicModel[]; cursor?: PaginateModel }>;
+  onCardClick: (topic: UserDisplayQuizTopicModel) => void;
+}) {
+  const [results, setResults] = useState<SearchResult<UserDisplayQuizTopicModel>[]>([]);
+  const hasResults = results.length > 0;
+
+  return (
+    <div style={{ display: hasResults ? undefined : 'none' }}>
+      <div
+        style={{
+          fontSize: '15px',
+          fontWeight: 600,
+          color: theme === 'light' ? '#111' : '#f0f0f0',
+          padding: '4px 4px 0',
+        }}
+      >
+        {title}
+      </div>
+      <Row<UserDisplayQuizTopicModel, PaginateModel>
+        queryData={queryData}
+        onRemoveDuplicateBy={(m) => m.topicsId}
+        onResult={setResults}
+      >
+        {({ results }) => results.map((r) => (
+          <QuizSearchCard key={r.data.topicsId} topic={r.data} theme={theme} onClick={() => onCardClick(r.data)} />
+        ))}
+      </Row>
+    </div>
+  );
+}
+
+function QuizSearchCard({ topic, theme, onClick }: { topic: UserDisplayQuizTopicModel; theme: string; onClick: () => void }) {
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={onClick}
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '6px',
+        width: '96px',
+        flexShrink: 0,
+        cursor: 'pointer',
+        textAlign: 'center',
+      }}
+    >
+      <div
+        style={{
+          position: 'relative',
+          width: '64px',
+          height: '64px',
+          borderRadius: '14px',
+          overflow: 'hidden',
+          background: theme === 'light' ? '#e9e9e9' : '#2a2a2a',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontWeight: 600,
+          color: theme === 'light' ? '#555' : '#bbb',
+        }}
+      >
+        {topic.topicsImageUrl ? (
+          <Image src={topic.topicsImageUrl} alt={topic.topicsIdentity} fill sizes="64px" style={{ objectFit: 'cover' }} />
+        ) : (
+          (topic.topicsIdentity?.charAt(0) || '?').toUpperCase()
+        )}
+      </div>
+      <div
+        style={{
+          fontSize: '12px',
+          fontWeight: 600,
+          color: theme === 'light' ? '#111' : '#f0f0f0',
+          width: '100%',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {topic.topicsIdentity}
+      </div>
+    </div>
   );
 }
 
