@@ -1,8 +1,8 @@
 -- schema:   public
--- function: translate(translations jsonb, requested_locale text, fallback_locales text[], use_default boolean)
+-- function: translate(translations jsonb, requested_locale text, fallback_locales text[])
 -- generated from Supabase project iewqfmkngcgayxbbnpiz (read-only mirror)
 
-CREATE OR REPLACE FUNCTION public.translate(translations jsonb, requested_locale text, fallback_locales text[] DEFAULT ARRAY['en'], use_default boolean DEFAULT false)
+CREATE OR REPLACE FUNCTION public.translate(translations jsonb, requested_locale text, fallback_locales text[] DEFAULT ARRAY['en'])
  RETURNS TABLE(translation text, record jsonb)
  LANGUAGE plpgsql
 AS $function$
@@ -33,7 +33,7 @@ BEGIN
     LIMIT 1;
 
     IF current_locale IS NOT NULL THEN
-        RETURN QUERY SELECT 
+        RETURN QUERY SELECT
             resolved_value,
             jsonb_build_object(
                 'locale', current_locale,
@@ -43,20 +43,12 @@ BEGIN
         RETURN;
     END IF;
 
-    -- Check default locale if enabled
-    IF use_default = TRUE THEN
-        RETURN QUERY SELECT 
-            translations ->> 'default',
-            jsonb_build_object(
-                'locale', 'default',
-                'value', translations ->>'default',
-                'source', 'default'
-            );
-        RETURN;
-    END IF;
-
-    -- Final fallback - return NULL
-    RETURN QUERY SELECT 
+    -- Final fallback - return NULL (only reached if neither the requested locale NOR any
+    -- fallback_locales entry has a translation for this row — a genuinely untranslated row, not
+    -- just a locale mismatch). Dropped the old use_default/'default'-key branch: no row in any
+    -- translations jsonb across the schema actually carries a literal 'default' key, so it was
+    -- dead code that could never resolve to anything.
+    RETURN QUERY SELECT
         NULL,
         jsonb_build_object(
             'locale', requested_locale,
@@ -65,4 +57,3 @@ BEGIN
         );
 END;
 $function$
-
