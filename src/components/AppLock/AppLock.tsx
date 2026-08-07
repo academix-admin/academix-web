@@ -124,12 +124,23 @@ export function AppLock({ children }: { children: React.ReactNode }) {
   // If the session gate refuses a request with AX_APP_LOCKED (client fetch interceptor broadcasts
   // `ax:app-locked`), force the overlay up — even if the DOM overlay was tampered with, the request
   // already failed server-side and only a fresh PIN (which extends the server window) clears it.
+  //
+  // Gated on `hasValidSession` alone, NOT `active` (which also requires `userData` to be loaded):
+  // the very first request after login — fetching userData itself — can be the one that gets
+  // refused, and requiring userData first would mean the overlay can never appear for exactly that
+  // case (the call that would satisfy the gate is the call the gate is blocking). The event detail's
+  // `accountExists` (BackendSessionGateError, single-source via domain-types) is the server's own
+  // answer to whether this is a real, previously-authenticated account — trust it directly instead
+  // of re-deriving the same judgment from local state.
   useEffect(() => {
-    if (!active) return;
-    const onLocked = () => setLockedState(true);
+    if (!hasValidSession) return;
+    const onLocked = (e: Event) => {
+      const accountExists = (e as CustomEvent<{ accountExists?: boolean }>).detail?.accountExists;
+      if (accountExists) setLockedState(true);
+    };
     window.addEventListener('ax:app-locked', onLocked);
     return () => window.removeEventListener('ax:app-locked', onLocked);
-  }, [active, setLockedState]);
+  }, [hasValidSession, setLockedState]);
 
   // ─── Verify entered PIN ─────────────────────────────────────────────────
   const verify = useCallback(async (pin: string) => {

@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import type { BackendSessionGateError } from '@academix-admin/domain-types';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -22,16 +23,21 @@ const AX_GATE_EVENTS: Record<string, string> = {
   AX_APP_LOCKED: 'ax:app-locked',
 };
 
-// Pull an AX gate code out of a PostgREST error body. Depending on PostgREST version a RAISE'd JSON
-// arrives either at the top level (`{ code, ... }`) or nested under `message` as a JSON string.
-function gateCodeFromBody(body: unknown): string | undefined {
+// Pull the AX gate sentinel out of a PostgREST error body as the single-source BackendSessionGateError
+// contract. Depending on PostgREST version a RAISE'd JSON arrives either at the top level (`{ code, ... }`)
+// or nested under `message` as a JSON string.
+function gateBodyFrom(body: unknown): BackendSessionGateError | undefined {
   if (!body || typeof body !== 'object') return undefined;
-  const b = body as { code?: unknown; message?: unknown };
-  if (typeof b.code === 'string' && AX_GATE_EVENTS[b.code]) return b.code;
+  const b = body as Partial<BackendSessionGateError> & { message?: unknown };
+  if (typeof b.code === 'string' && AX_GATE_EVENTS[b.code]) {
+    return { code: b.code, message: typeof b.message === 'string' ? b.message : '', account_exists: b.account_exists === true };
+  }
   if (typeof b.message === 'string') {
     try {
-      const inner = JSON.parse(b.message) as { code?: unknown };
-      if (typeof inner.code === 'string' && AX_GATE_EVENTS[inner.code]) return inner.code;
+      const inner = JSON.parse(b.message) as Partial<BackendSessionGateError>;
+      if (typeof inner.code === 'string' && AX_GATE_EVENTS[inner.code]) {
+        return { code: inner.code, message: inner.message ?? '', account_exists: inner.account_exists === true };
+      }
     } catch { /* message isn't JSON */ }
   }
   return undefined;
@@ -61,8 +67,11 @@ const gateFetch: typeof fetch = async (input, init) => {
   if ((res.status === 401 || res.status === 423) && typeof window !== 'undefined') {
     let handled = false;
     try {
-      const code = gateCodeFromBody(await res.clone().json());
-      if (code) { window.dispatchEvent(new CustomEvent(AX_GATE_EVENTS[code])); handled = true; }
+      const gate = gateBodyFrom(await res.clone().json());
+      if (gate) {
+        window.dispatchEvent(new CustomEvent(AX_GATE_EVENTS[gate.code], { detail: { accountExists: gate.account_exists } }));
+        handled = true;
+      }
     } catch {
       /* non-JSON body — fall through */
     }

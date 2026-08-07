@@ -20,7 +20,7 @@ interface LanguageData {
 interface CountryData {
   countryId: string;
   countryIdentity: string;
-  countryImage: string;
+  countryImage: string | null;
   countryTwoIsoCode: string;
 }
 

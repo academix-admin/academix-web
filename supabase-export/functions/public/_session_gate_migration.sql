@@ -132,6 +132,7 @@ set search_path = auth, public
 as $$
 declare
   v_status text;
+  v_account_exists boolean := false;
   ENABLE_APP_LOCK constant boolean := true; -- LIVE: verify_academix_pin calls session_unlock (deployed 2026-07-29)
 begin
   begin
@@ -142,10 +143,22 @@ begin
 
   if v_status = 'session_revoked'
      or (ENABLE_APP_LOCK and v_status = 'app_locked') then
+
+    -- account_exists lets every client (web, app, future platforms) render the SAME decision
+    -- the server already knows, instead of each re-deriving "is this a real locked account or a
+    -- fresh/onboarding session with no profile yet" from local cache state — the exact class of
+    -- bug that trapped a locked login behind a client-side profile-gate before this existed.
+    -- Single-source contract: domain-types BackendSessionGateError.
+    if v_status = 'app_locked' then
+      select exists(select 1 from public.users_table where users_id = auth.uid())
+        into v_account_exists;
+    end if;
+
     raise sqlstate 'PGRST' using
       message = json_build_object(
         'code', 'AX_' || upper(v_status),
-        'message', case when v_status = 'session_revoked' then 'Session revoked' else 'App locked' end
+        'message', case when v_status = 'session_revoked' then 'Session revoked' else 'App locked' end,
+        'account_exists', v_account_exists
       )::text,
       detail = json_build_object(
         'status', case when v_status = 'session_revoked' then 401 else 423 end,
