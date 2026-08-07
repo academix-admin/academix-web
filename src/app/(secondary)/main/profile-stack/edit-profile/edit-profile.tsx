@@ -327,7 +327,7 @@ const CountryView = () => {
           {userData.countryTable.countryImage ? (
             <Image
               src={userData.countryTable.countryImage}
-              alt={userData.countryTable.countryIdentity}
+              alt={userData.countryTable.countryIdentity ?? userData.countryTable.countryTwoIsoCode}
               width={24}
               height={24}
               style={{ borderRadius: '4px', objectFit: 'cover' }}

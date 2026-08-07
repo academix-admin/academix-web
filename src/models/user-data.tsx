@@ -13,13 +13,13 @@ interface RoleData {
 
 interface LanguageData {
   languageId: string;
-  languageIdentity: string;
+  languageIdentity: string | null;
   languageCode: string;
 }
 
 interface CountryData {
   countryId: string;
-  countryIdentity: string;
+  countryIdentity: string | null;
   countryImage: string | null;
   countryTwoIsoCode: string;
 }
