@@ -26,17 +26,22 @@ const AX_GATE_EVENTS: Record<string, string> = {
 // Pull the AX gate sentinel out of a PostgREST error body as the single-source BackendSessionGateError
 // contract. Depending on PostgREST version a RAISE'd JSON arrives either at the top level (`{ code, ... }`)
 // or nested under `message` as a JSON string.
+//
+// NOTE: account_exists deliberately is NOT part of this body — PostgREST's `raise sqlstate 'PGRST'`
+// convention only ever extracts code/message/details/hint from the raised message JSON onto the
+// response body (verified live: any other key is silently dropped before the response reaches a
+// client). It rides in the `X-Ax-Account-Exists` response header instead, read separately below.
 function gateBodyFrom(body: unknown): BackendSessionGateError | undefined {
   if (!body || typeof body !== 'object') return undefined;
   const b = body as Partial<BackendSessionGateError> & { message?: unknown };
   if (typeof b.code === 'string' && AX_GATE_EVENTS[b.code]) {
-    return { code: b.code, message: typeof b.message === 'string' ? b.message : '', account_exists: b.account_exists === true };
+    return { code: b.code, message: typeof b.message === 'string' ? b.message : '' };
   }
   if (typeof b.message === 'string') {
     try {
       const inner = JSON.parse(b.message) as Partial<BackendSessionGateError>;
       if (typeof inner.code === 'string' && AX_GATE_EVENTS[inner.code]) {
-        return { code: inner.code, message: inner.message ?? '', account_exists: inner.account_exists === true };
+        return { code: inner.code, message: inner.message ?? '' };
       }
     } catch { /* message isn't JSON */ }
   }
@@ -69,7 +74,8 @@ const gateFetch: typeof fetch = async (input, init) => {
     try {
       const gate = gateBodyFrom(await res.clone().json());
       if (gate) {
-        window.dispatchEvent(new CustomEvent(AX_GATE_EVENTS[gate.code], { detail: { accountExists: gate.account_exists } }));
+        const accountExists = res.headers.get('x-ax-account-exists') === 'true';
+        window.dispatchEvent(new CustomEvent(AX_GATE_EVENTS[gate.code], { detail: { accountExists } }));
         handled = true;
       }
     } catch {

@@ -148,7 +148,11 @@ begin
     -- the server already knows, instead of each re-deriving "is this a real locked account or a
     -- fresh/onboarding session with no profile yet" from local cache state — the exact class of
     -- bug that trapped a locked login behind a client-side profile-gate before this existed.
-    -- Single-source contract: domain-types BackendSessionGateError.
+    -- NOTE: PostgREST's `raise sqlstate 'PGRST'` convention only extracts code/message/details/hint
+    -- from the message JSON onto the response body — any other key is silently dropped (verified
+    -- live). Headers ARE passed through, so this rides in the X-Ax-Account-Exists response header
+    -- instead. Single-source contract: domain-types BackendSessionGateError (code, message) + this
+    -- header, documented there.
     if v_status = 'app_locked' then
       select exists(select 1 from public.users_table where users_id = auth.uid())
         into v_account_exists;
@@ -157,12 +161,11 @@ begin
     raise sqlstate 'PGRST' using
       message = json_build_object(
         'code', 'AX_' || upper(v_status),
-        'message', case when v_status = 'session_revoked' then 'Session revoked' else 'App locked' end,
-        'account_exists', v_account_exists
+        'message', case when v_status = 'session_revoked' then 'Session revoked' else 'App locked' end
       )::text,
       detail = json_build_object(
         'status', case when v_status = 'session_revoked' then 401 else 423 end,
-        'headers', json_build_object()
+        'headers', json_build_object('X-Ax-Account-Exists', v_account_exists::text)
       )::text;
   end if;
 end;
