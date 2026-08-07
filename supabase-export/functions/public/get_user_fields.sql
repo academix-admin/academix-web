@@ -194,7 +194,13 @@ BEGIN
     -- ----------------------------------------------------------------
     FOREACH v_field IN ARRAY v_user_fields LOOP
         IF NOT v_user_exists THEN
-            v_result := v_result || jsonb_build_object(v_field, d_result->v_field);
+            -- v_user_jsonb (not d_result) — step 2 already merged the coalesced users_id into
+            -- v_user_jsonb (d_result || jsonb_build_object('users_id', COALESCE(p_user_id, zero-
+            -- uuid))); reading the raw d_result template here silently discarded that and returned
+            -- a literal null for users_id whenever p_user_id didn't match a real row (e.g. a
+            -- deleted/orphaned creator_id) — this fed straight into domain-types contract fields
+            -- declared non-nullable, e.g. CreatorDetails.usersId. Verified live before/after.
+            v_result := v_result || jsonb_build_object(v_field, v_user_jsonb->v_field);
         ELSIF p_translate IS NOT NULL AND v_field = ANY(p_translate) AND p_locale IS NOT NULL THEN
             v_raw_value := v_user_jsonb ->> v_field;
             IF v_raw_value IS NOT NULL THEN
