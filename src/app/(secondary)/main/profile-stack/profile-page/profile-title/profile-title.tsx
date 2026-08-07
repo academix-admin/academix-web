@@ -8,7 +8,7 @@ import { ComponentStateProps } from '@/hooks/use-component-state';
 import { useUserData } from '@/lib/stacks/user-stack';
 import { hardLocalSignOut } from '@/utils/checkers';
 import { useDialog } from '@academix-admin/dialog-viewer';
-import { SelectionViewer, useSelectionController } from "@/lib/SelectionViewer";
+import { SelectionViewer, useSelectionController } from "@academix-admin/selection-viewer";
 import DialogCancel from '@/components/DialogCancel';
 import { Header } from '@academix-admin/header';
 

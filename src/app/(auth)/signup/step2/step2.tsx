@@ -13,7 +13,7 @@ import { supabaseBrowser } from '@/lib/supabase/client';
 import { useSignup, Country, Language } from '@/lib/stacks/signup-stack';
 import { useDemandState } from '@academix-admin/state-stack';
 import { useNav } from "@academix-admin/navigation-stack";
-import { SelectionViewer, useSelectionController } from "@/lib/SelectionViewer";
+import { SelectionViewer, useSelectionController } from "@academix-admin/selection-viewer";
 import LoadingView from '@/components/LoadingView/LoadingView';
 import NoResultsView from '@/components/NoResultsView/NoResultsView';
 import ErrorView from '@/components/ErrorView/ErrorView';

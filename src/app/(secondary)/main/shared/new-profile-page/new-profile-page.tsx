@@ -30,7 +30,7 @@ import DialogCancel from '@/components/DialogCancel';
 import LoadingView from '@/components/LoadingView/LoadingView';
 import ErrorView from '@/components/ErrorView/ErrorView';
 import NoResultsView from '@/components/NoResultsView/NoResultsView';
-import { SelectionViewer, useSelectionController } from "@/lib/SelectionViewer";
+import { SelectionViewer, useSelectionController } from "@academix-admin/selection-viewer";
 import { useDemandState } from '@academix-admin/state-stack';
 import { useDialog } from '@academix-admin/dialog-viewer';
 import { Header } from '@academix-admin/header';

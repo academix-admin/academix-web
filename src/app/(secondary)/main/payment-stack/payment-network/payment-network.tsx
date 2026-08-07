@@ -7,7 +7,7 @@ import styles from './payment-network.module.css';
 import { useUserData } from '@/lib/stacks/user-stack';
 import { PaymentNetworkModel } from '@/models/payment-method-model';
 import { PaginateModel } from '@/models/paginate-model';
-import { SelectionViewer, useSelectionController } from "@/lib/SelectionViewer";
+import { SelectionViewer, useSelectionController } from "@academix-admin/selection-viewer";
 import DialogCancel from '@/components/DialogCancel';
 import { usePaymentMethodModel } from '@/lib/stacks/payment-method-stack';
 

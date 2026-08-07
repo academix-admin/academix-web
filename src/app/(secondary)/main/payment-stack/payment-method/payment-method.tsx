@@ -12,7 +12,7 @@ import { UserData } from '@/models/user-data';
 import { BackendPaymentMethodModel } from '@/models/payment-method-model';
 import { PaymentMethodModel } from '@/models/payment-method-model';
 import { PaginateModel } from '@/models/paginate-model';
-import { SelectionViewer, useSelectionController } from "@/lib/SelectionViewer";
+import { SelectionViewer, useSelectionController } from "@academix-admin/selection-viewer";
 import LoadingView from '@/components/LoadingView/LoadingView';
 import NoResultsView from '@/components/NoResultsView/NoResultsView';
 import ErrorView from '@/components/ErrorView/ErrorView';

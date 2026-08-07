@@ -14,7 +14,7 @@ import { BackendBuyPaymentWalletModel } from '@/models/payment-wallet-model';
 import { BackendSellPaymentWalletModel } from '@/models/payment-wallet-model';
 import { PaymentWalletModel } from '@/models/payment-wallet-model';
 import { PaginateModel } from '@/models/paginate-model';
-import { SelectionViewer, useSelectionController } from "@/lib/SelectionViewer";
+import { SelectionViewer, useSelectionController } from "@academix-admin/selection-viewer";
 import LoadingView from '@/components/LoadingView/LoadingView';
 import NoResultsView from '@/components/NoResultsView/NoResultsView';
 import ErrorView from '@/components/ErrorView/ErrorView';

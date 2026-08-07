@@ -19,7 +19,7 @@ import ErrorView from '@/components/ErrorView/ErrorView';
 import { BackendBuyPaymentWalletModel } from '@/models/payment-wallet-model';
 import { PaymentWalletModel } from '@/models/payment-wallet-model';
 import { PaginateModel } from '@/models/paginate-model';
-import { SelectionViewer, useSelectionController } from "@/lib/SelectionViewer";
+import { SelectionViewer, useSelectionController } from "@academix-admin/selection-viewer";
 import DialogCancel from '@/components/DialogCancel';
 import { Header } from '@academix-admin/header';
 
