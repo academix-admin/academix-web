@@ -133,6 +133,7 @@ as $$
 declare
   v_status text;
   v_account_exists boolean := false;
+  v_code text;
   ENABLE_APP_LOCK constant boolean := true; -- LIVE: verify_academix_pin calls session_unlock (deployed 2026-07-29)
 begin
   begin
@@ -144,28 +145,38 @@ begin
   if v_status = 'session_revoked'
      or (ENABLE_APP_LOCK and v_status = 'app_locked') then
 
-    -- account_exists lets every client (web, app, future platforms) render the SAME decision
-    -- the server already knows, instead of each re-deriving "is this a real locked account or a
-    -- fresh/onboarding session with no profile yet" from local cache state — the exact class of
-    -- bug that trapped a locked login behind a client-side profile-gate before this existed.
-    -- NOTE: PostgREST's `raise sqlstate 'PGRST'` convention only extracts code/message/details/hint
-    -- from the message JSON onto the response body — any other key is silently dropped (verified
-    -- live). Headers ARE passed through, so this rides in the X-Ax-Account-Exists response header
-    -- instead. Single-source contract: domain-types BackendSessionGateError (code, message) + this
-    -- header, documented there.
+    -- account_exists tells the client whether this is a real, previously-authenticated account
+    -- (show the PIN unlock overlay) or a session with no profile yet (never happens in practice
+    -- today, since a brand-new session gets a full idle window before it can lock, but clients
+    -- must not assume). Encoded into the CODE itself, not a header or an extra body key:
+    --   1) PostgREST's raise sqlstate 'PGRST' convention only ever puts code/message/details/hint
+    --      from the raised message JSON onto the response body — any other key is silently
+    --      dropped (verified live).
+    --   2) A custom response HEADER is *also* not viable for browser clients: PostgREST's
+    --      Access-Control-Expose-Headers is a fixed built-in list (Content-Encoding,
+    --      Content-Location, Content-Range, Content-Type, Date, Location, Server,
+    --      Transfer-Encoding, Range-Unit) that a custom header can't join, so a browser's fetch()
+    --      can never read it even though it's present in the raw HTTP response (confirmed live —
+    --      curl sees it, a real browser fetch() cannot). code/message are the two fields
+    --      PostgREST reliably delivers to every client, verified live twice.
     if v_status = 'app_locked' then
       select exists(select 1 from public.users_table where users_id = auth.uid())
         into v_account_exists;
     end if;
 
+    v_code := 'AX_' || upper(v_status);
+    if v_status = 'app_locked' and not v_account_exists then
+      v_code := v_code || '_NO_ACCOUNT';
+    end if;
+
     raise sqlstate 'PGRST' using
       message = json_build_object(
-        'code', 'AX_' || upper(v_status),
+        'code', v_code,
         'message', case when v_status = 'session_revoked' then 'Session revoked' else 'App locked' end
       )::text,
       detail = json_build_object(
         'status', case when v_status = 'session_revoked' then 401 else 423 end,
-        'headers', json_build_object('X-Ax-Account-Exists', v_account_exists::text)
+        'headers', json_build_object()
       )::text;
   end if;
 end;

@@ -21,16 +21,24 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const AX_GATE_EVENTS: Record<string, string> = {
   AX_SESSION_REVOKED: 'ax:session-revoked',
   AX_APP_LOCKED: 'ax:app-locked',
+  // Session real, but no academix profile yet (mid-onboarding). Same event as AX_APP_LOCKED —
+  // the accountExists flag computed below (not a separate body/header field, see gateBodyFrom's
+  // note) tells AppLock not to raise the PIN overlay for this one.
+  AX_APP_LOCKED_NO_ACCOUNT: 'ax:app-locked',
 };
 
 // Pull the AX gate sentinel out of a PostgREST error body as the single-source BackendSessionGateError
 // contract. Depending on PostgREST version a RAISE'd JSON arrives either at the top level (`{ code, ... }`)
 // or nested under `message` as a JSON string.
 //
-// NOTE: account_exists deliberately is NOT part of this body — PostgREST's `raise sqlstate 'PGRST'`
-// convention only ever extracts code/message/details/hint from the raised message JSON onto the
-// response body (verified live: any other key is silently dropped before the response reaches a
-// client). It rides in the `X-Ax-Account-Exists` response header instead, read separately below.
+// NOTE: account_exists is encoded directly in `code` (AX_APP_LOCKED vs AX_APP_LOCKED_NO_ACCOUNT),
+// not a separate body field or response header. Both were tried and don't work: PostgREST's `raise
+// sqlstate 'PGRST'` convention only ever extracts code/message/details/hint from the raised message
+// JSON onto the response body, silently dropping any other key (verified live) — and a custom
+// response header doesn't reach a browser either, since PostgREST's Access-Control-Expose-Headers is
+// a fixed built-in list a custom header can't join (verified live: curl sees it, a real browser
+// fetch() cannot). code/message are the two fields PostgREST reliably delivers, so that's what
+// carries the signal.
 function gateBodyFrom(body: unknown): BackendSessionGateError | undefined {
   if (!body || typeof body !== 'object') return undefined;
   const b = body as Partial<BackendSessionGateError> & { message?: unknown };
@@ -48,18 +56,26 @@ function gateBodyFrom(body: unknown): BackendSessionGateError | undefined {
   return undefined;
 }
 
-// A non-sentinel 401 means our token was rejected. Distinguish a refreshable blip (proactive refresh
-// races) from a truly dead session: force a refresh; only if there's still no live session do we treat
-// it as revoked. Guarded so a burst of 401s triggers a single check.
+// A non-sentinel 401 means our token was rejected. Confirm with an ACTUAL round-trip rather than
+// checking the locally-cached session's expiry: this Supabase project issues effectively
+// non-expiring JWTs (see AppLock's doc comment), so a session revoked SERVER-SIDE still looks
+// locally "alive" forever — the old expires_at check could structurally never catch that case,
+// which is why a genuinely-revoked session sometimes never triggered a redirect until a manual
+// page refresh forced AuthProvider's own init check to run. session_touch is a lightweight
+// authenticated RPC that no-ops if the session is fine and fails if it's been revoked/locked; if
+// that failure carries a recognized AX_ gate code, gateFetch's own wrapping of this SAME call
+// already dispatched the right event — only an unrecognized failure (network error, non-gate 401)
+// falls through to the conservative "treat as revoked" default. Guarded so a burst of 401s
+// triggers a single check.
 let sessionRecheckInFlight = false;
 async function revokeIfSessionDead() {
   if (sessionRecheckInFlight) return;
   sessionRecheckInFlight = true;
   try {
-    const { data, error } = await supabaseBrowser.auth.getSession();
-    const s = data?.session;
-    const alive = !error && !!s && (!s.expires_at || s.expires_at * 1000 > Date.now() + 5000);
-    if (!alive) window.dispatchEvent(new CustomEvent(AX_GATE_EVENTS.AX_SESSION_REVOKED));
+    const { error } = await supabaseBrowser.rpc('session_touch');
+    if (error && !String((error as { code?: string }).code ?? '').startsWith('AX_')) {
+      window.dispatchEvent(new CustomEvent(AX_GATE_EVENTS.AX_SESSION_REVOKED));
+    }
   } catch {
     window.dispatchEvent(new CustomEvent(AX_GATE_EVENTS.AX_SESSION_REVOKED));
   } finally {
@@ -74,7 +90,7 @@ const gateFetch: typeof fetch = async (input, init) => {
     try {
       const gate = gateBodyFrom(await res.clone().json());
       if (gate) {
-        const accountExists = res.headers.get('x-ax-account-exists') === 'true';
+        const accountExists = gate.code === 'AX_APP_LOCKED';
         window.dispatchEvent(new CustomEvent(AX_GATE_EVENTS[gate.code], { detail: { accountExists } }));
         handled = true;
       }
