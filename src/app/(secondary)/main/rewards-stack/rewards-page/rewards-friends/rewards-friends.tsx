@@ -29,6 +29,131 @@ import { useTopViewer } from '@/lib/TopViewer';
 import { copyToClipboard } from '@/utils/clipboard';
 
 
+// Format date to match the screenshot (e.g., "Apr 27 at 3:00AM")
+function formatDate(dateString: string): string {
+  const date = new Date(dateString);
+  const options: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' };
+  const timeOptions: Intl.DateTimeFormatOptions = { hour: 'numeric', minute: '2-digit', hour12: true };
+  return `${date.toLocaleDateString('en-US', options)} at ${date.toLocaleTimeString('en-US', timeOptions).toLowerCase().replace(' ', '')}`;
+}
+
+function getInitials(text: string): string {
+  const words = text.trim().split(' ');
+  if (words.length === 1) return words[0][0].toUpperCase();
+  return (words[0][0] + words[1][0]).toUpperCase();
+}
+
+function getReferralStatus(status: string | null, t: (key: string) => string): string {
+  switch (status) {
+    case null:
+      return "Error";
+    case 'Referral.none':
+      return t('failed_text');
+    case 'Referral.completed':
+      return t('completed_text');
+    case 'Referral.failed':
+      return t('failed_text');
+    case 'Referral.active':
+      return t('active_text');
+    default:
+      return "Error";
+  }
+}
+
+function getStatusClass(status: string | null): string {
+  switch (status) {
+    case 'Referral.active':
+      return styles.statusActive;
+    case 'Referral.completed':
+      return styles.statusCompleted;
+    case 'Referral.failed':
+      return styles.statusFailed;
+    default:
+      return styles.statusFailed;
+  }
+}
+
+// Single row — used by BOTH the normal list and the SearchViewer results, so they can never drift
+// apart into two different-looking UIs for the same data.
+function FriendRow({
+  friend,
+  onCopyUsername,
+  style,
+}: {
+  friend: FriendsModel;
+  onCopyUsername: (username: string) => void;
+  style?: React.CSSProperties;
+}) {
+  const { applyTheme } = useTheme();
+  const { t } = useLanguage();
+
+  return (
+    <div className={styles.historyItemContainer} style={style}>
+      {friend.usersImage ? (
+        <Image
+          className={styles.logo}
+          src={friend.usersImage}
+          alt="Friend"
+          width={40}
+          height={40}
+        />
+      ) : (
+        <div className={styles.initials}>{getInitials(friend.usersNames)}</div>
+      )}
+
+      <div className={styles.historyItem}>
+        <div className={styles.historyMain}>
+          <span className={`${applyTheme(styles, 'topicName')}`}>
+            {friend.usersNames}
+          </span>
+          <span className={`${styles.historyTime} ${getStatusClass(friend.usersReferredStatus)}`}>
+            {getReferralStatus(friend.usersReferredStatus, t)}
+          </span>
+        </div>
+        <div className={styles.historyContent}>
+          <div className={styles.historyDetails}>
+            <span className={`${styles.historyDetail} ${applyTheme(styles, 'historyDetails')}`}>
+              {formatDate(friend.usersCreatedAt)}
+            </span>
+            <span className={`${styles.historyDetail} ${applyTheme(styles, 'historyDetails')}`}>
+              {friend.usersUsername}
+            </span>
+          </div>
+          <button
+            className={`${styles.copyButton}`}
+            onClick={() => onCopyUsername(friend.usersUsername)}
+            aria-label="Copy username"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className={styles.copyIcon}
+            >
+              <path
+                d="M13.3333 6H7.33333C6.59695 6 6 6.59695 6 7.33333V13.3333C6 14.0697 6.59695 14.6667 7.33333 14.6667H13.3333C14.0697 14.6667 14.6667 14.0697 14.6667 13.3333V7.33333C14.6667 6.59695 14.0697 6 13.3333 6Z"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M10 6V4.66667C10 3.95942 9.71905 3.28115 9.21903 2.78105C8.71902 2.28104 8.04076 2 7.3335 2H4.00016C3.29291 2 2.61464 2.28104 2.11463 2.78105C1.61462 3.28115 1.3335 3.95942 1.3335 4.66667V8.66667C1.3335 9.37391 1.61462 10.0522 2.11463 10.5522C2.61464 11.0523 3.29291 11.3333 4.00016 11.3333H6.00016"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function RewardsFriends({ onStateChange }: ComponentStateProps) {
   const { theme, applyTheme } = useTheme();
   const { t, lang, tNode } = useLanguage();
@@ -241,59 +366,6 @@ export default function RewardsFriends({ onStateChange }: ComponentStateProps) {
 
 
 
-  // Format date to match the screenshot (e.g., "Apr 27 at 3:00AM")
-  const formatDate = (dateString: string): string => {
-    const date = new Date(dateString);
-    const options: Intl.DateTimeFormatOptions = {
-      month: 'short',
-      day: 'numeric',
-    };
-
-    const timeOptions: Intl.DateTimeFormatOptions = {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
-    };
-
-    return `${date.toLocaleDateString('en-US', options)} at ${date.toLocaleTimeString('en-US', timeOptions).toLowerCase().replace(' ', '')}`;
-  };
-
-
-  const getInitials = (text: string): string => {
-    const words = text.trim().split(' ');
-    if (words.length === 1) return words[0][0].toUpperCase();
-    return (words[0][0] + words[1][0]).toUpperCase();
-  };
-
-  const getReferralStatus = (status: string | null): string => {
-    switch (status) {
-      case null:
-        return "Error";
-      case 'Referral.none':
-        return t('failed_text');
-      case 'Referral.completed':
-        return t('completed_text');
-      case 'Referral.failed':
-        return t('failed_text');
-      case 'Referral.active':
-        return t('active_text');
-      default:
-        return "Error";
-    }
-  };
-
-  const getStatusClass = (status: string | null): string => {
-    switch (status) {
-      case 'Referral.active':
-        return styles.statusActive;
-      case 'Referral.completed':
-        return styles.statusCompleted;
-      case 'Referral.failed':
-        return styles.statusFailed;
-      default:
-        return styles.statusFailed;
-    }
-  };
 
   const handleCopyUsername = async (text: string) => {
     try {
@@ -402,69 +474,7 @@ export default function RewardsFriends({ onStateChange }: ComponentStateProps) {
 
       <div className={styles.historyList}>
         {friendsModel.map((friend, index) => (
-          <div key={index} className={styles.historyItemContainer}>
-            {friend.usersImage ? (
-              <Image
-                className={styles.logo}
-                src={friend.usersImage}
-                alt="Topic"
-                width={40}
-                height={40}
-              />
-            ) : (
-              <div className={styles.initials}>{getInitials(friend.usersNames)}</div>
-            )}
-
-            <div className={styles.historyItem}>
-              <div className={styles.historyMain}>
-                <span className={`${applyTheme(styles, 'topicName')}`}>
-                  {friend.usersNames}
-                </span>
-                <span className={`${styles.historyTime} ${getStatusClass(friend.usersReferredStatus)}`}>
-                  {getReferralStatus(friend.usersReferredStatus)}
-                </span>
-              </div>
-              <div className={styles.historyContent}>
-                <div className={styles.historyDetails}>
-                  <span className={`${styles.historyDetail} ${applyTheme(styles, 'historyDetails')}`}>
-                    {formatDate(friend.usersCreatedAt)}
-                  </span>
-                  <span className={`${styles.historyDetail} ${applyTheme(styles, 'historyDetails')}`}>
-                    {friend.usersUsername}
-                  </span>
-                </div>
-                <button
-                  className={`${styles.copyButton}`}
-                  onClick={() => handleCopyUsername(friend.usersUsername)}
-                  aria-label="Copy username"
-                >
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 16 16"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    className={styles.copyIcon}
-                  >
-                    <path
-                      d="M13.3333 6H7.33333C6.59695 6 6 6.59695 6 7.33333V13.3333C6 14.0697 6.59695 14.6667 7.33333 14.6667H13.3333C14.0697 14.6667 14.6667 14.0697 14.6667 13.3333V7.33333C14.6667 6.59695 14.0697 6 13.3333 6Z"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                    <path
-                      d="M10 6V4.66667C10 3.95942 9.71905 3.28115 9.21903 2.78105C8.71902 2.28104 8.04076 2 7.3335 2H4.00016C3.29291 2 2.61464 2.28104 2.11463 2.78105C1.61462 3.28115 1.3335 3.95942 1.3335 4.66667V8.66667C1.3335 9.37391 1.61462 10.0522 2.11463 10.5522C2.61464 11.0523 3.29291 11.3333 4.00016 11.3333H6.00016"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </div>
+          <FriendRow key={index} friend={friend} onCopyUsername={handleCopyUsername} />
         ))}
       </div>
 
@@ -539,74 +549,9 @@ export default function RewardsFriends({ onStateChange }: ComponentStateProps) {
         zIndex={1000}
         onResult={setSearchResults}
       >
-        {searchResults.map((result) => {
-          const friend = result.data;
-          return (
-            <div key={friend.usersId} className={styles.historyItemContainer} style={{ padding: '0 16px' }}>
-              {friend.usersImage ? (
-                <Image
-                  className={styles.logo}
-                  src={friend.usersImage}
-                  alt="Friend"
-                  width={40}
-                  height={40}
-                />
-              ) : (
-                <div className={styles.initials}>{getInitials(friend.usersNames)}</div>
-              )}
-
-              <div className={styles.historyItem}>
-                <div className={styles.historyMain}>
-                  <span className={`${applyTheme(styles, 'topicName')}`}>
-                    {friend.usersNames}
-                  </span>
-                  <span className={`${styles.historyTime} ${getStatusClass(friend.usersReferredStatus)}`}>
-                    {getReferralStatus(friend.usersReferredStatus)}
-                  </span>
-                </div>
-                <div className={styles.historyContent}>
-                  <div className={styles.historyDetails}>
-                    <span className={`${styles.historyDetail} ${applyTheme(styles, 'historyDetails')}`}>
-                      {formatDate(friend.usersCreatedAt)}
-                    </span>
-                    <span className={`${styles.historyDetail} ${applyTheme(styles, 'historyDetails')}`}>
-                      {friend.usersUsername}
-                    </span>
-                  </div>
-                  <button
-                    className={`${styles.copyButton}`}
-                    onClick={() => handleCopyUsername(friend.usersUsername)}
-                    aria-label="Copy username"
-                  >
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 16 16"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                      className={styles.copyIcon}
-                    >
-                      <path
-                        d="M13.3333 6H7.33333C6.59695 6 6 6.59695 6 7.33333V13.3333C6 14.0697 6.59695 14.6667 7.33333 14.6667H13.3333C14.0697 14.6667 14.6667 14.0697 14.6667 13.3333V7.33333C14.6667 6.59695 14.0697 6 13.3333 6Z"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                      <path
-                        d="M10 6V4.66667C10 3.95942 9.71905 3.28115 9.21903 2.78105C8.71902 2.28104 8.04076 2 7.3335 2H4.00016C3.29291 2 2.61464 2.28104 2.11463 2.78105C1.61462 3.28115 1.3335 3.95942 1.3335 4.66667V8.66667C1.3335 9.37391 1.61462 10.0522 2.11463 10.5522C2.61464 11.0523 3.29291 11.3333 4.00016 11.3333H6.00016"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            </div>
-          );
-        })}
+        {searchResults.map((result) => (
+          <FriendRow key={result.data.usersId} friend={result.data} onCopyUsername={handleCopyUsername} style={{ padding: '0 16px' }} />
+        ))}
       </SearchViewer>
     </div>
   );

@@ -23,9 +23,35 @@ const languages: Record<SupportedLang, Translations> = {
   fr
 };
 
-// Type for translation parameters
+// Type for translation parameters. `count` is special: when present, `t`/`tNode` resolve the
+// actual key to `${key}_${pluralCategory}` (via Intl.PluralRules, so this is correct per-locale —
+// French/English/etc. each get their own real plural rules, not just a naive singular/other split)
+// before falling back to `${key}_other`, then the bare `key` itself. A key with no `_one`/`_other`
+// variants behaves exactly as before — this is purely additive.
 type TranslationParams = Record<string, string | number>;
 type TranslationNodeParams = Record<string, string | number | React.ReactNode>;
+
+function resolveTranslationKey<T extends Record<string, string>>(
+  dictionary: T,
+  key: string,
+  count: number | undefined,
+  lang: SupportedLang,
+): string {
+  if (typeof count !== 'number') return key;
+
+  let category: string;
+  try {
+    category = new Intl.PluralRules(lang).select(count);
+  } catch {
+    category = count === 1 ? 'one' : 'other';
+  }
+
+  const candidates = [`${key}_${category}`, `${key}_other`, key];
+  for (const candidate of candidates) {
+    if (typeof dictionary[candidate] === 'string') return candidate;
+  }
+  return key;
+}
 
 // Enhanced context with parameter support
 interface LanguageContextProps {
@@ -101,8 +127,15 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
       runtimeLang = runtimeLangMaybe;
     }
 
-    const dictionary = languages[runtimeLang ?? lang] ?? languages.en;
-    let translation = dictionary[key as keyof Translations] ?? key;
+    const effectiveLang = runtimeLang ?? lang;
+    const dictionary = languages[effectiveLang] ?? languages.en;
+    const resolvedKey = resolveTranslationKey(
+      dictionary,
+      key as string,
+      typeof params?.count === 'number' ? params.count : undefined,
+      effectiveLang,
+    );
+    let translation = dictionary[resolvedKey as keyof Translations] ?? key;
 
     if (params) {
       Object.entries(params).forEach(([param, value]) => {
@@ -129,8 +162,15 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
       runtimeLang = runtimeLangMaybe;
     }
 
-    const dictionary = languages[runtimeLang ?? lang] ?? languages.en;
-    const template = dictionary[key as keyof Translations] ?? key;
+    const effectiveLang = runtimeLang ?? lang;
+    const dictionary = languages[effectiveLang] ?? languages.en;
+    const resolvedKey = resolveTranslationKey(
+      dictionary,
+      key as string,
+      typeof params?.count === 'number' ? params.count : undefined,
+      effectiveLang,
+    );
+    const template = dictionary[resolvedKey as keyof Translations] ?? key;
 
     if (!params) return template;
 

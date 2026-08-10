@@ -482,13 +482,16 @@ function QuizSearchSection({
   const hasResults = results.length > 0;
 
   return (
-    <div style={{ display: hasResults ? undefined : 'none' }}>
+    // 16px horizontal padding to align with the search bar's own 16px margin (search-viewer's
+    // `.search-viewer-search` CSS) -- the same convention every other SearchViewer in this codebase
+    // applies to its result items (e.g. rewards-friends.tsx's `padding: '0 16px'`).
+    <div style={{ display: hasResults ? undefined : 'none', padding: '0 16px' }}>
       <div
         style={{
           fontSize: '15px',
           fontWeight: 600,
           color: theme === 'light' ? '#111' : '#f0f0f0',
-          padding: '4px 4px 0',
+          padding: '4px 0 0',
         }}
       >
         {title}

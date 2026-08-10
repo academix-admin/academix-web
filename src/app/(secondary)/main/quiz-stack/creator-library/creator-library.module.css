@@ -154,8 +154,10 @@
 .recentCircle img { width: 100%; height: 100%; object-fit: cover; }
 .recentInitials { font-size: 1.2rem; font-weight: 700; color: var(--accent); }
 .newCircle {
-  border: 1.5px dashed var(--accent);
-  background: transparent;
+  /* Matches Flutter's recentNewWidget: getSlideContainer fill + getSlideSelector icon tint. */
+  background: #e9edf0;
+  border: none;
+  color: #656d78;
 }
 .recentPending {
   position: absolute;
@@ -270,6 +272,142 @@
 .creatorImg img { width: 100%; height: 100%; object-fit: cover; }
 .creatorInitials { font-size: 0.6rem; font-weight: 700; color: var(--text-secondary); }
 .creatorName { font-size: 0.75rem; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ---- wide category card (matches Flutter's AcademixMoreQuizCategoryCard) ---- */
+.wideCard {
+  flex: 0 0 auto;
+  box-sizing: border-box;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.wideCardHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+}
+.wideCardHeaderText { color: #fff; font-size: 16px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wideCardImage {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  background: rgba(0, 0, 0, 0.15);
+}
+.wideCardImage img { object-fit: cover; }
+.wideCardImageInitials { color: #fff; font-size: 18px; font-weight: 700; }
+.wideCardPills {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 8px 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.wideCardPills::-webkit-scrollbar { display: none; }
+.wideCardPill {
+  flex: 0 0 auto;
+  border-radius: 8px;
+  border: 0.5px solid #fff;
+}
+.wideCardPillInner {
+  display: block;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+  padding: 2px 8px;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.wideCardPendingPill {
+  margin: 0 8px;
+  align-self: flex-start;
+  background: #fe9c36;
+  border-radius: 8px;
+  padding: 6px 8px;
+  color: #fff;
+  font-weight: 700;
+  font-size: 12px;
+}
+.wideCardTitle {
+  margin-top: 4px;
+  padding: 0 8px;
+  color: #fff;
+  font-weight: 700;
+  font-size: 15px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wideCardFooter {
+  margin-top: 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 0 0 8px 8px;
+}
+.wideCardFooterAvatar {
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+.wideCardFooterAvatar img { object-fit: cover; }
+.wideCardFooterInitials { color: #fff; font-size: 13px; font-weight: 700; }
+.wideCardFooterName {
+  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+/* ---- compact category row (matches Flutter's AcademixLessQuizCategoryCard) ---- */
+.compactCard { display: flex; flex-direction: column; gap: 8px; cursor: pointer; }
+.compactCardHeader { display: flex; align-items: center; gap: 8px; }
+.compactCardUsername { font-size: 12px; font-weight: 700; color: var(--text-color); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.compactCardTime { font-size: 11px; font-weight: 700; color: #888888; white-space: nowrap; }
+.compactCardBody { display: flex; align-items: flex-start; gap: 8px; }
+.compactCardAvatar {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  position: relative;
+}
+.compactCardAvatar img { object-fit: cover; }
+.compactCardInitials { color: var(--accent); font-size: 15px; font-weight: 700; }
+.compactCardTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-color);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.compactCardMeta { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-color); }
+.compactCardDot { width: 4px; height: 4px; border-radius: 50%; background: var(--text-color); flex: 0 0 auto; }
 
 .sentinel { height: 1px; width: 100%; }
 .moreSpinner { display: flex; justify-content: center; padding: 12px; }
