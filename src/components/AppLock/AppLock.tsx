@@ -28,6 +28,7 @@ const IDLE_MS = 10 * 60 * 1000; // lock after 10 minutes idle
 const TOUCH_MS = 60 * 1000; // heartbeat to the server gate at most once a minute
 const LAST_ACTIVE_KEY = 'ax:last-active';
 const ACTIVITY_EVENTS = ['pointerdown', 'keydown', 'touchstart', 'click', 'scroll'] as const;
+const UNLOCK_GRACE_MS = 5000; // ignore gate refusals this soon after a successful PIN
 const PIN_VERIFY_URL = 'https://fz0b8vmhba.execute-api.eu-north-1.amazonaws.com/prod/pin/verify';
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -44,12 +45,18 @@ export function AppLock({ children }: { children: React.ReactNode }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const lockedRef = useRef(false);
+  // A gate refusal that lands within UNLOCK_GRACE_MS of a successful PIN belongs to a request that
+  // was already in flight when the lock cleared — re-raising the overlay for it would undo a
+  // correct PIN. Safe to ignore: session_unlock has just pushed the server window a full idle
+  // period out, so a genuine re-lock cannot happen this soon.
+  const lastUnlockRef = useRef(0);
 
   const setLockedState = useCallback((v: boolean) => { lockedRef.current = v; setLocked(v); }, []);
 
   const unlock = useCallback(() => {
     setValue(''); setError(''); setBusy(false);
     try { localStorage.setItem(LAST_ACTIVE_KEY, String(Date.now())); } catch { /* ignore */ }
+    lastUnlockRef.current = Date.now();
     setLockedState(false);
     // Lets sections that got a 423 (session_gate refusing requests while locked) and are stuck
     // showing their own error/empty state retry now that requests will actually go through again —
@@ -140,6 +147,7 @@ export function AppLock({ children }: { children: React.ReactNode }) {
     if (!hasValidSession) return;
     const onLocked = (e: Event) => {
       const accountExists = (e as CustomEvent<{ accountExists?: boolean }>).detail?.accountExists;
+      if (Date.now() - lastUnlockRef.current < UNLOCK_GRACE_MS) return; // stale, see lastUnlockRef
       if (accountExists) setLockedState(true);
     };
     window.addEventListener('ax:app-locked', onLocked);

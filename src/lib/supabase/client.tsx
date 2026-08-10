@@ -83,6 +83,53 @@ async function revokeIfSessionDead() {
   }
 }
 
+/**
+ * Park an app-locked request until the PIN clears the lock.
+ *
+ * `enforce_session` refuses EVERY request while locked, so an operation the user was in the middle
+ * of — submitting a quiz answer, a transaction — failed outright the moment the idle window lapsed.
+ * Entering the PIN repaired the session but not the already-failed call, so the user was left on a
+ * broken screen with no way forward but to back out and start again. Holding the request until
+ * `ax:app-unlocked` and re-issuing it once means the caller only ever sees a slower request.
+ */
+const PARK_TIMEOUT_MS = 90_000;
+const MAX_PARKED = 8;
+let parked = 0;
+
+function waitForUnlock(timeoutMs: number): Promise<boolean> {
+  return new Promise((resolve) => {
+    const cleanup = () => {
+      window.clearTimeout(timer);
+      window.removeEventListener('ax:app-unlocked', onUnlocked);
+    };
+    const onUnlocked = () => { cleanup(); resolve(true); };
+    const timer = window.setTimeout(() => { cleanup(); resolve(false); }, timeoutMs);
+    window.addEventListener('ax:app-unlocked', onUnlocked);
+  });
+}
+
+// Only replay a request whose body can actually be sent twice. supabase-js sends JSON strings, so
+// this covers real traffic; a ReadableStream upload is single-use and just gets the normal 423.
+function isReplayable(input: RequestInfo | URL, init?: RequestInit): boolean {
+  if (typeof input !== 'string' && !(input instanceof URL)) return false; // a Request may be consumed
+  const b = init?.body;
+  return (
+    b == null ||
+    typeof b === 'string' ||
+    b instanceof URLSearchParams ||
+    b instanceof Blob ||
+    b instanceof ArrayBuffer ||
+    ArrayBuffer.isView(b)
+  );
+}
+
+// session_touch is a deliberate no-op while locked (it cannot unlock anything) and backs
+// revokeIfSessionDead's recheck — parking it would stall the check meant to resolve the session.
+function isGateRpc(input: RequestInfo | URL): boolean {
+  const url = typeof input === 'string' ? input : input instanceof URL ? input.href : '';
+  return url.includes('/rpc/session_touch') || url.includes('/rpc/session_unlock');
+}
+
 const gateFetch: typeof fetch = async (input, init) => {
   const res = await fetch(input, init);
   if ((res.status === 401 || res.status === 423) && typeof window !== 'undefined') {
@@ -93,6 +140,18 @@ const gateFetch: typeof fetch = async (input, init) => {
         const accountExists = gate.code === 'AX_APP_LOCKED';
         window.dispatchEvent(new CustomEvent(AX_GATE_EVENTS[gate.code], { detail: { accountExists } }));
         handled = true;
+
+        const isLock = gate.code === 'AX_APP_LOCKED' || gate.code === 'AX_APP_LOCKED_NO_ACCOUNT';
+        if (isLock && parked < MAX_PARKED && !isGateRpc(input) && isReplayable(input, init)) {
+          parked++;
+          try {
+            if (await waitForUnlock(PARK_TIMEOUT_MS)) return await fetch(input, init);
+          } catch {
+            /* retry failed outright — fall through to the original 423 */
+          } finally {
+            parked--;
+          }
+        }
       }
     } catch {
       /* non-JSON body — fall through */
