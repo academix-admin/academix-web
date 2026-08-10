@@ -13,16 +13,53 @@ import { supabaseBrowser } from '@/lib/supabase/client';
 import { useUserData } from '@/lib/stacks/user-stack';
 import { UserDisplayQuizTopicModel, BackendUserDisplayQuizTopicModel } from '@/models/user-display-quiz-topic-model';
 import dynamic from 'next/dynamic';
-import Image from 'next/image';
 import { useNav, useProvideObject } from "@academix-admin/navigation-stack";
 import { Header } from '@academix-admin/header';
 import { SearchViewer, Row, Column, useSearchController } from '@academix-admin/search-viewer';
 import type { SearchResult } from '@academix-admin/search-viewer';
 import { PaginateModel } from '@/models/paginate-model';
 import { useActiveQuiz } from '@/lib/stacks/active-quiz-stack';
+import { usePublicQuiz } from '@/lib/stacks/public-quiz-stack';
+import { useAvailableQuiz } from '@/lib/stacks/available-quiz-stack';
+import { OpenQuizCard } from '../public-quiz-topics/public-quiz-topics';
+import { TopicCard } from '../available-quiz-topics/available-quiz-topics';
 import LoadingView from '@/components/LoadingView/LoadingView';
 import ErrorView from '@/components/ErrorView/ErrorView';
 import NoResultsView from '@/components/NoResultsView/NoResultsView';
+
+function getInitials(text: string): string {
+  if (!text) return '?';
+  return text.split(' ').map((w) => w.charAt(0).toUpperCase()).slice(0, 2).join('');
+}
+
+function formatQuizDate(dateString: string): string {
+  const date = new Date(dateString);
+  const dateOptions: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' };
+  const timeOptions: Intl.DateTimeFormatOptions = { hour: 'numeric', minute: '2-digit', hour12: true };
+  return `${date.toLocaleDateString('en-US', dateOptions)} at ${date.toLocaleTimeString('en-US', timeOptions).toLowerCase().replace(' ', '')}`;
+}
+
+function createSubgroups<T>(list: T[], subgroupLength: number): T[][] {
+  const result: T[][] = [];
+  const totalGroups = Math.ceil(list.length / subgroupLength);
+  for (let i = 0; i < totalGroups; i++) {
+    result.push(list.slice(i * subgroupLength, Math.min((i + 1) * subgroupLength, list.length)));
+  }
+  return result;
+}
+
+// Same match fields as every other SearchViewer's onInitialData in this codebase (topic name /
+// pool code / challenge name).
+function filterLocalQuizzes(list: UserDisplayQuizTopicModel[], text: string): UserDisplayQuizTopicModel[] {
+  if (!text) return list;
+  const q = text.toLowerCase();
+  return list.filter(
+    (m) =>
+      m.topicsIdentity?.toLowerCase().includes(q) ||
+      m.quizPool?.poolsCode?.toLowerCase().includes(q) ||
+      m.quizPool?.challengeModel?.challengeIdentity?.toLowerCase().includes(q),
+  );
+}
 
 const Scanner = dynamic(() => import('@yudiel/react-qr-scanner').then(mod => ({ default: mod.Scanner })), { ssr: false });
 
@@ -39,6 +76,15 @@ export default function QuizPageTitle({ onStateChange }: ComponentStateProps) {
   //    PublicQuizTopics/AvailableQuizTopics section, aggregated by a Column) ──────────────────
   const [searchId, searchOps, isSearchOpen] = useSearchController();
   const [activeQuiz] = useActiveQuiz(lang);
+
+  // Already-loaded lists (shared demand-state, same source each section's own page component reads)
+  // → instant local-cache first paint, exactly like every other SearchViewer's onInitialData.
+  const [creatorPublicQuizzes] = usePublicQuiz(lang, 'creator');
+  const [personalizedPublicQuizzes] = usePublicQuiz(lang, 'personalized');
+  const [publicPublicQuizzes] = usePublicQuiz(lang, 'public');
+  const [creatorAvailableQuizzes] = useAvailableQuiz(lang, 'creator');
+  const [personalizedAvailableQuizzes] = useAvailableQuiz(lang, 'personalized');
+  const [publicAvailableQuizzes] = useAvailableQuiz(lang, 'public');
 
   const queryPublicQuizzes = useCallback(
     (pType: string) =>
@@ -273,38 +319,137 @@ export default function QuizPageTitle({ onStateChange }: ComponentStateProps) {
           <QuizSearchSection
             title={t('followed_creator')}
             theme={theme}
+            onInitialData={(text) => filterLocalQuizzes(creatorPublicQuizzes, text)}
+            localDataDeps={[creatorPublicQuizzes]}
             queryData={queryPublicQuizzes('creator')}
-            onCardClick={(topic) => handlePublicResultClick(topic, 'creator')}
+            renderResults={(results) => (
+              <div className={styles.searchRow}>
+                {results.map((topic) => (
+                  <OpenQuizCard
+                    key={topic.topicsId}
+                    topic={topic}
+                    length={results.length}
+                    getInitials={getInitials}
+                    onClick={() => handlePublicResultClick(topic, 'creator')}
+                  />
+                ))}
+              </div>
+            )}
           />
           <QuizSearchSection
             title={t('discovered_interest')}
             theme={theme}
+            onInitialData={(text) => filterLocalQuizzes(personalizedPublicQuizzes, text)}
+            localDataDeps={[personalizedPublicQuizzes]}
             queryData={queryPublicQuizzes('personalized')}
-            onCardClick={(topic) => handlePublicResultClick(topic, 'personalized')}
+            renderResults={(results) => (
+              <div className={styles.searchRow}>
+                {results.map((topic) => (
+                  <OpenQuizCard
+                    key={topic.topicsId}
+                    topic={topic}
+                    length={results.length}
+                    getInitials={getInitials}
+                    onClick={() => handlePublicResultClick(topic, 'personalized')}
+                  />
+                ))}
+              </div>
+            )}
           />
           <QuizSearchSection
             title={t('active_suggestions')}
             theme={theme}
+            onInitialData={(text) => filterLocalQuizzes(publicPublicQuizzes, text)}
+            localDataDeps={[publicPublicQuizzes]}
             queryData={queryPublicQuizzes('public')}
-            onCardClick={(topic) => handlePublicResultClick(topic, 'public')}
+            renderResults={(results) => (
+              <div className={styles.searchRow}>
+                {results.map((topic) => (
+                  <OpenQuizCard
+                    key={topic.topicsId}
+                    topic={topic}
+                    length={results.length}
+                    getInitials={getInitials}
+                    onClick={() => handlePublicResultClick(topic, 'public')}
+                  />
+                ))}
+              </div>
+            )}
           />
           <QuizSearchSection
             title={t('favourite_contributors')}
             theme={theme}
+            onInitialData={(text) => filterLocalQuizzes(creatorAvailableQuizzes, text)}
+            localDataDeps={[creatorAvailableQuizzes]}
             queryData={queryAvailableQuizzes('creator')}
-            onCardClick={(topic) => handleAvailableResultClick(topic, 'creator')}
+            renderResults={(results) => (
+              <div className={styles.searchRow}>
+                {createSubgroups(results, 2).map((pair, i) => (
+                  <div className={styles.searchColumn} key={i}>
+                    {pair.map((topic) => (
+                      <TopicCard
+                        key={topic.topicsId}
+                        topic={topic}
+                        theme={theme}
+                        getInitials={getInitials}
+                        formatDate={formatQuizDate}
+                        onClick={() => handleAvailableResultClick(topic, 'creator')}
+                      />
+                    ))}
+                  </div>
+                ))}
+              </div>
+            )}
           />
           <QuizSearchSection
             title={t('just_for_you')}
             theme={theme}
+            onInitialData={(text) => filterLocalQuizzes(personalizedAvailableQuizzes, text)}
+            localDataDeps={[personalizedAvailableQuizzes]}
             queryData={queryAvailableQuizzes('personalized')}
-            onCardClick={(topic) => handleAvailableResultClick(topic, 'personalized')}
+            renderResults={(results) => (
+              <div className={styles.searchRow}>
+                {createSubgroups(results, 2).map((pair, i) => (
+                  <div className={styles.searchColumn} key={i}>
+                    {pair.map((topic) => (
+                      <TopicCard
+                        key={topic.topicsId}
+                        topic={topic}
+                        theme={theme}
+                        getInitials={getInitials}
+                        formatDate={formatQuizDate}
+                        onClick={() => handleAvailableResultClick(topic, 'personalized')}
+                      />
+                    ))}
+                  </div>
+                ))}
+              </div>
+            )}
           />
           <QuizSearchSection
             title={t('might_interest_you')}
             theme={theme}
+            onInitialData={(text) => filterLocalQuizzes(publicAvailableQuizzes, text)}
+            localDataDeps={[publicAvailableQuizzes]}
             queryData={queryAvailableQuizzes('public')}
-            onCardClick={(topic) => handleAvailableResultClick(topic, 'public')}
+            renderResults={(results) => (
+              <div className={styles.searchRow}>
+                {createSubgroups(results, 2).map((pair, i) => (
+                  <div className={styles.searchColumn} key={i}>
+                    {pair.map((topic) => (
+                      <TopicCard
+                        key={topic.topicsId}
+                        topic={topic}
+                        theme={theme}
+                        getInitials={getInitials}
+                        formatDate={formatQuizDate}
+                        onClick={() => handleAvailableResultClick(topic, 'public')}
+                      />
+                    ))}
+                  </div>
+                ))}
+              </div>
+            )}
           />
         </Column>
       </SearchViewer>
@@ -313,19 +458,25 @@ export default function QuizPageTitle({ onStateChange }: ComponentStateProps) {
 }
 
 // One titled, independently-paginating horizontal shelf inside the search Column — mirrors
-// PublicQuizTopics/AvailableQuizTopics's own section title, one per pType. Stays hidden (but
-// mounted, so its Row keeps searching/reporting state) until it actually has results, so an
-// empty section never shows a bare title with nothing under it.
+// PublicQuizTopics/AvailableQuizTopics's own section title, one per pType. Results render with the
+// EXACT same card component the normal (non-search) page uses for that section (OpenQuizCard /
+// TopicCard) via `renderResults`, so the search UI is never a different look from the real list.
+// Stays hidden (but mounted, so its Row keeps searching/reporting state) until it actually has
+// results, so an empty section never shows a bare title with nothing under it.
 function QuizSearchSection({
   title,
   theme,
+  onInitialData,
+  localDataDeps,
   queryData,
-  onCardClick,
+  renderResults,
 }: {
   title: string;
   theme: string;
+  onInitialData: (text: string) => UserDisplayQuizTopicModel[];
+  localDataDeps: React.DependencyList;
   queryData: (cursor: PaginateModel | undefined, text: string, signal?: AbortSignal) => Promise<{ data: UserDisplayQuizTopicModel[]; cursor?: PaginateModel }>;
-  onCardClick: (topic: UserDisplayQuizTopicModel) => void;
+  renderResults: (results: UserDisplayQuizTopicModel[]) => React.ReactNode;
 }) {
   const [results, setResults] = useState<SearchResult<UserDisplayQuizTopicModel>[]>([]);
   const hasResults = results.length > 0;
@@ -343,69 +494,14 @@ function QuizSearchSection({
         {title}
       </div>
       <Row<UserDisplayQuizTopicModel, PaginateModel>
+        onInitialData={onInitialData}
+        localDataDeps={localDataDeps}
         queryData={queryData}
         onRemoveDuplicateBy={(m) => m.topicsId}
         onResult={setResults}
       >
-        {({ results }) => results.map((r) => (
-          <QuizSearchCard key={r.data.topicsId} topic={r.data} theme={theme} onClick={() => onCardClick(r.data)} />
-        ))}
+        {({ results }) => renderResults(results.map((r) => r.data))}
       </Row>
-    </div>
-  );
-}
-
-function QuizSearchCard({ topic, theme, onClick }: { topic: UserDisplayQuizTopicModel; theme: string; onClick: () => void }) {
-  return (
-    <div
-      role="button"
-      tabIndex={0}
-      onClick={onClick}
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: '6px',
-        width: '96px',
-        flexShrink: 0,
-        cursor: 'pointer',
-        textAlign: 'center',
-      }}
-    >
-      <div
-        style={{
-          position: 'relative',
-          width: '64px',
-          height: '64px',
-          borderRadius: '14px',
-          overflow: 'hidden',
-          background: theme === 'light' ? '#e9e9e9' : '#2a2a2a',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontWeight: 600,
-          color: theme === 'light' ? '#555' : '#bbb',
-        }}
-      >
-        {topic.topicsImageUrl ? (
-          <Image src={topic.topicsImageUrl} alt={topic.topicsIdentity} fill sizes="64px" style={{ objectFit: 'cover' }} />
-        ) : (
-          (topic.topicsIdentity?.charAt(0) || '?').toUpperCase()
-        )}
-      </div>
-      <div
-        style={{
-          fontSize: '12px',
-          fontWeight: 600,
-          color: theme === 'light' ? '#111' : '#f0f0f0',
-          width: '100%',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap',
-        }}
-      >
-        {topic.topicsIdentity}
-      </div>
     </div>
   );
 }

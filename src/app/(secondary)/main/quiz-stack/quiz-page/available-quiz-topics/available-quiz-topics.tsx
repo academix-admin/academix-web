@@ -352,7 +352,7 @@ export default function AvailableQuizTopics({ onStateChange, pType }: AvailableQ
   );
 }
 
-interface TopicCardProps {
+export interface TopicCardProps {
   topic: UserDisplayQuizTopicModel;
   theme: string;
   getInitials: (text: string) => string;
@@ -360,7 +360,7 @@ interface TopicCardProps {
   onClick: () => void;
 }
 
-function TopicCard({ topic, theme, getInitials, formatDate, onClick }: TopicCardProps) {
+export function TopicCard({ topic, theme, getInitials, formatDate, onClick }: TopicCardProps) {
   const { applyTheme } = useTheme();
   const [imageError, setImageError] = useState(false);
   const [userImageError, setUserImageError] = useState(false);

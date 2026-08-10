@@ -1,3 +1,17 @@
+/* Search sections reuse PublicQuizTopics/AvailableQuizTopics's own cards (OpenQuizCard/TopicCard) —
+   these two wrappers add no layout of their own beyond what those cards already expect: the
+   search-viewer Row is already the horizontal flex/scroll container (searchRow just passes through),
+   and searchColumn mirrors available-quiz-topics.module.css's .column for TopicCard's 2-up pairing. */
+.searchRow {
+  display: contents;
+}
+
+.searchColumn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
 /* Title Section Styles */
 .mainSection {
   display: flex;

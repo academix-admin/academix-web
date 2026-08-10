@@ -462,14 +462,14 @@ export default function PublicQuizTopics({ onStateChange, pType }: PublicQuizTop
 }
 
 
-interface OpenQuizCardProps {
+export interface OpenQuizCardProps {
   topic: UserDisplayQuizTopicModel;
   length: number;
   getInitials: (text: string) => string;
   onClick: () => void;
 }
 
-function OpenQuizCard({ topic, length, getInitials, onClick }: OpenQuizCardProps) {
+export function OpenQuizCard({ topic, length, getInitials, onClick }: OpenQuizCardProps) {
   const { theme, applyTheme } = useTheme();
   const { t } = useLanguage();
   const [remainingTime, setRemainingTime] = useState<number>(0);
