@@ -88,6 +88,16 @@
 .strip::-webkit-scrollbar { height: 6px; }
 .strip::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
 
+.stripSentinel { flex: 0 0 1px; width: 1px; align-self: stretch; }
+.stripSpinner { display: flex; align-items: center; justify-content: center; flex: 0 0 40px; }
+.stripSpinner span {
+  width: 20px; height: 20px;
+  border: 2px solid var(--border-color);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
 .stripCard {
   flex: 0 0 auto;
   width: 150px;

@@ -51,6 +51,10 @@ export function AppLock({ children }: { children: React.ReactNode }) {
     setValue(''); setError(''); setBusy(false);
     try { localStorage.setItem(LAST_ACTIVE_KEY, String(Date.now())); } catch { /* ignore */ }
     setLockedState(false);
+    // Lets sections that got a 423 (session_gate refusing requests while locked) and are stuck
+    // showing their own error/empty state retry now that requests will actually go through again —
+    // otherwise nothing local ever tells them the lock cleared.
+    window.dispatchEvent(new CustomEvent('ax:app-unlocked'));
   }, [setLockedState]);
 
   // Escape hatch on the lock screen — confirm, then sign out (local scope so it never hangs; the

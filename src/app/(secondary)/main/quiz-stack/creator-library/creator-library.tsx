@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
@@ -95,6 +95,99 @@ function nextSortId(list: UserQuizCreatorCategoryModel[], pType: string): string
 function getInitials(text: string): string {
   if (!text) return '?';
   return text.split(' ').map((w) => w.charAt(0).toUpperCase()).slice(0, 2).join('');
+}
+
+type ViewState = 'loading' | 'data' | 'error' | 'empty';
+
+/**
+ * Shared fetch/paginate/retry engine behind every category section on this page (Recent,
+ * Favourite, Private, Public, the reviewer queue) — they only ever differed in page size and
+ * rendering, not in how they load. Centralizing it also fixes a real bug: a fetch refused by
+ * session_gate while the app was PIN-locked (423) used to leave a section stuck (Public showed a
+ * permanent error view; Recent/Favourite/Private silently wiped their cache to empty via
+ * `catch { set([]) }`) with nothing to make it try again. Now the failure leaves any cached data
+ * alone and retries once AppLock's `unlock()` broadcasts `ax:app-unlocked`.
+ */
+function useCategorySection(
+  pType: string,
+  cacheKey: string,
+  {
+    pageSize,
+    initialPageSize = pageSize,
+    reviewerTab = null,
+    extraDeps = [],
+  }: { pageSize: number; initialPageSize?: number; reviewerTab?: string | null; extraDeps?: unknown[] },
+) {
+  const { lang } = useLanguage();
+  const { userData } = useUserData();
+  const [items, demandItems, setItems] = useDemandState<UserQuizCreatorCategoryModel[]>([], {
+    key: cacheKey,
+    persist: true,
+    scope: 'secondary_flow',
+    deps: [lang, ...extraDeps],
+  });
+
+  const [viewState, setViewState] = useState<ViewState>('loading');
+  const [cursor, setCursor] = useState<PaginateModel>(new PaginateModel());
+  const [hasMore, setHasMore] = useState(true);
+  const [paginating, setPaginating] = useState(false);
+
+  const load = useCallback(
+    (override = false) => {
+      demandItems(async ({ set }) => {
+        try {
+          const list = await fetchCategories(lang, pType, initialPageSize, new PaginateModel(), reviewerTab);
+          setCursor(new PaginateModel({ sortId: nextSortId(list, pType) }));
+          setHasMore(list.length >= initialPageSize);
+          set(list, override ? { override: true } : undefined);
+          setViewState(list.length > 0 ? 'data' : 'empty');
+        } catch {
+          setViewState('error');
+        }
+      });
+    },
+    [demandItems, lang, pType, initialPageSize, reviewerTab],
+  );
+
+  useEffect(() => {
+    if (!userData) return;
+    load();
+  }, [userData, load]);
+
+  useEffect(() => {
+    if (items.length > 0) setViewState('data');
+  }, [items.length]);
+
+  useEffect(() => {
+    if (viewState !== 'error') return;
+    const onUnlock = () => { setViewState('loading'); load(true); };
+    window.addEventListener('ax:app-unlocked', onUnlock);
+    return () => window.removeEventListener('ax:app-unlocked', onUnlock);
+  }, [viewState, load]);
+
+  const loadMore = useCallback(async () => {
+    if (paginating || items.length === 0 || !hasMore) return;
+    setPaginating(true);
+    try {
+      const more = await fetchCategories(lang, pType, pageSize, cursor, reviewerTab);
+      const seen = new Set(items.map((c) => c.topicCategoryId));
+      const fresh = more.filter((c) => !seen.has(c.topicCategoryId));
+      // Stop when a page brings nothing new or is short — this is what kills the loadMore loop.
+      setHasMore(fresh.length > 0 && more.length >= pageSize);
+      if (fresh.length > 0) {
+        setCursor(new PaginateModel({ sortId: nextSortId(more, pType) }));
+        setItems([...items, ...fresh]);
+      }
+    } catch {
+      /* keep current list on pagination error */
+    } finally {
+      setPaginating(false);
+    }
+  }, [paginating, items, hasMore, cursor, lang, pType, pageSize, reviewerTab, setItems]);
+
+  const retry = useCallback(() => { setViewState('loading'); load(true); }, [load]);
+
+  return { items, viewState, hasMore, paginating, loadMore, retry };
 }
 
 export default function CreatorLibrary({ pType = 'creator', reviewerTab = null }: CreatorLibraryProps) {
@@ -379,26 +472,21 @@ function SectionHead({ title, more }: { title: string; more?: boolean }) {
 
 /* ---------------- Recents strip (circular avatars + New add button) ---------------- */
 function RecentStrip({ onNew }: { onNew: () => void }) {
-  const { t, lang } = useLanguage();
-  const { userData } = useUserData();
-  const [items, demandItems] = useDemandState<UserQuizCreatorCategoryModel[]>([], {
-    key: 'lib_strip_recent',
-    persist: true,
-    scope: 'secondary_flow',
-    deps: [lang],
+  const { t } = useLanguage();
+  const { items, hasMore, paginating, loadMore } = useCategorySection('recent', 'lib_strip_recent', { pageSize: 10 });
+  const stripRef = useRef<HTMLDivElement | null>(null);
+  const sentinelRef = useInfiniteScrollObserver({
+    onLoadMore: loadMore,
+    hasMore,
+    loading: paginating,
+    root: () => stripRef.current,
+    rootMargin: '200px',
   });
-
-  useEffect(() => {
-    if (!userData) return;
-    demandItems(async ({ set }) => {
-      try { set(await fetchCategories(lang, 'recent', 10, new PaginateModel())); } catch { set([]); }
-    });
-  }, [demandItems, userData, lang]);
 
   return (
     <section>
       <SectionHead title={t('recents_text')} more={items.length >= 9} />
-      <div className={styles.strip}>
+      <div className={styles.strip} ref={stripRef}>
         {/* New: create a category (Flutter recentNewWidget) */}
         <button className={styles.recentItem} onClick={onNew}>
           <span className={`${styles.recentCircle} ${styles.newCircle}`}>
@@ -415,6 +503,9 @@ function RecentStrip({ onNew }: { onNew: () => void }) {
         {items.map((cat) => (
           <RecentCard key={cat.topicCategoryId} category={cat} />
         ))}
+
+        {hasMore && <div ref={sentinelRef} className={styles.stripSentinel} />}
+        {paginating && <div className={styles.stripSpinner}><span /></div>}
       </div>
     </section>
   );
@@ -442,21 +533,15 @@ function RecentCard({ category }: { category: UserQuizCreatorCategoryModel }) {
 // Mirrors Flutter's _personalTopicsDisplay: <=2 items -> a vertical stack of CompactCategoryCards;
 // >2 items -> a horizontal strip of WideCategoryCards.
 function CardStrip({ pType, title }: { pType: string; title: string }) {
-  const { lang } = useLanguage();
-  const { userData } = useUserData();
-  const [items, demandItems] = useDemandState<UserQuizCreatorCategoryModel[]>([], {
-    key: `lib_strip_${pType}`,
-    persist: true,
-    scope: 'secondary_flow',
-    deps: [lang],
+  const { items, hasMore, paginating, loadMore } = useCategorySection(pType, `lib_strip_${pType}`, { pageSize: 10 });
+  const stripRef = useRef<HTMLDivElement | null>(null);
+  const sentinelRef = useInfiniteScrollObserver({
+    onLoadMore: loadMore,
+    hasMore,
+    loading: paginating,
+    root: () => stripRef.current,
+    rootMargin: '200px',
   });
-
-  useEffect(() => {
-    if (!userData) return;
-    demandItems(async ({ set }) => {
-      try { set(await fetchCategories(lang, pType, 10, new PaginateModel())); } catch { set([]); }
-    });
-  }, [demandItems, userData, lang, pType]);
 
   if (items.length === 0) return null;
 
@@ -470,10 +555,12 @@ function CardStrip({ pType, title }: { pType: string; title: string }) {
           ))}
         </div>
       ) : (
-        <div className={styles.strip}>
+        <div className={styles.strip} ref={stripRef}>
           {items.map((cat, index) => (
             <WideCategoryCard key={cat.topicCategoryId} category={cat} color={cardColor(index)} onClick={() => {}} />
           ))}
+          {hasMore && <div ref={sentinelRef} className={styles.stripSentinel} />}
+          {paginating && <div className={styles.stripSpinner}><span /></div>}
         </div>
       )}
     </section>
@@ -481,8 +568,6 @@ function CardStrip({ pType, title }: { pType: string; title: string }) {
 }
 
 /* ---------------- Public paginated section ---------------- */
-type ViewState = 'loading' | 'data' | 'error' | 'empty';
-
 function PublicSection() {
   const { t } = useLanguage();
   return (
@@ -504,74 +589,19 @@ function CategoryList({
   useWideCards?: boolean;
   standalone?: boolean;
 }) {
-  const { t, lang } = useLanguage();
-  const { userData } = useUserData();
-
-  const [items, demandItems, setItems] = useDemandState<UserQuizCreatorCategoryModel[]>([], {
-    key: `lib_list_${pType}`,
-    persist: true,
-    scope: 'secondary_flow',
-    deps: [lang, reviewerTab ?? ''],
-  });
-
-  const PAGE = 20;
-  const [viewState, setViewState] = useState<ViewState>('loading');
-  const [paginate, setPaginate] = useState<PaginateModel>(new PaginateModel());
-  const [paginating, setPaginating] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
-
-  const load = useCallback(
-    (override = false) => {
-      demandItems(async ({ set }) => {
-        try {
-          const list = await fetchCategories(lang, pType, 12, new PaginateModel(), reviewerTab);
-          setPaginate(new PaginateModel({ sortId: nextSortId(list, pType) }));
-          setHasMore(list.length >= 12); // a short first page means there's nothing more to fetch
-          set(list, override ? { override: true } : undefined);
-          setViewState(list.length > 0 ? 'data' : 'empty');
-        } catch {
-          setViewState('error');
-        }
-      });
-    },
-    [demandItems, lang, pType, reviewerTab],
+  const { t } = useLanguage();
+  const { items, viewState, hasMore, paginating, loadMore, retry } = useCategorySection(
+    pType,
+    `lib_list_${pType}`,
+    { pageSize: 20, initialPageSize: 12, reviewerTab, extraDeps: [reviewerTab ?? ''] },
   );
-
-  useEffect(() => {
-    if (!userData) return;
-    load();
-  }, [userData, load]);
-
-  useEffect(() => {
-    if (items.length > 0) setViewState('data');
-  }, [items.length]);
-
-  const loadMore = useCallback(async () => {
-    if (paginating || items.length === 0) return;
-    setPaginating(true);
-    try {
-      const more = await fetchCategories(lang, pType, PAGE, paginate, reviewerTab);
-      const seen = new Set(items.map((c) => c.topicCategoryId));
-      const fresh = more.filter((c) => !seen.has(c.topicCategoryId));
-      // Stop when a page brings nothing new or is short — this is what kills the loadMore loop.
-      setHasMore(fresh.length > 0 && more.length >= PAGE);
-      if (fresh.length > 0) {
-        setPaginate(new PaginateModel({ sortId: nextSortId(more, pType) }));
-        setItems([...items, ...fresh]);
-      }
-    } catch {
-      /* keep current list on pagination error */
-    } finally {
-      setPaginating(false);
-    }
-  }, [paginating, items, paginate, lang, pType, reviewerTab, setItems]);
 
   // Stable, library-level infinite scroll (drop-in for the loaderRef+IntersectionObserver pattern, but the
   // observer is created once + guarded by hasMore/loading, so it never loops when unchanged/exhausted).
   const sentinelRef = useInfiniteScrollObserver({ onLoadMore: loadMore, hasMore, loading: paginating, rootMargin: '320px' });
 
   if (viewState === 'loading') return <LoadingView />;
-  if (viewState === 'error') return <ErrorView text={t('error_occurred')} buttonText={t('reload_text')} onButtonClick={() => { setViewState('loading'); load(true); }} />;
+  if (viewState === 'error') return <ErrorView text={t('error_occurred')} buttonText={t('reload_text')} onButtonClick={retry} />;
   if (viewState === 'empty') return standalone ? <NoResultsView text={t('contribute_first')} /> : <p className={styles.emptyInline}>{t('contribute_first')}</p>;
 
   return (
