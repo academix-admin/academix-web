@@ -170,7 +170,16 @@ export function AppLock({ children }: { children: React.ReactNode }) {
     // rejected by the API Gateway authorizer while it propagates. That denial (401/403) used to surface
     // as a "network error" and made a correct PIN look wrong until the user retried. Retry a few times,
     // refreshing the session between attempts, so we ride out that window before showing any error.
-    const MAX_ATTEMPTS = 4;
+    // Transport failures (DNS flap, dropped connection) get a real backoff budget — ~9s — because a
+    // few seconds of flakiness is enough to fail an unlock, and unlock is the one action with no
+    // graceful recovery (session_unlock is service_role-only, so this endpoint is the ONLY way in).
+    // Auth rejections keep a short backoff: that covers a fresh token still propagating to the API
+    // Gateway authorizer, which settles in well under a second. See ACADEMIX_PLAN Part V, S11.
+    const MAX_ATTEMPTS = 6;
+    const TRANSPORT_BACKOFF_MS = [400, 800, 1600, 3000, 4000];
+    const AUTH_BACKOFF_MS = [300, 600, 900, 1200, 1500];
+    const backoff = (table: number[], attempt: number) =>
+      table[Math.min(attempt, table.length - 1)];
     try {
       for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
         const isLast = attempt === MAX_ATTEMPTS - 1;
@@ -194,14 +203,14 @@ export function AppLock({ children }: { children: React.ReactNode }) {
           }, 15000, 'PIN verification');
         } catch {
           // Real network/timeout failure — back off and retry a couple times before giving up.
-          if (!isLast) { await sleep(300 * (attempt + 1)); continue; }
+          if (!isLast) { await sleep(backoff(TRANSPORT_BACKOFF_MS, attempt)); continue; }
           setError(t('lock_network_error')); setValue(''); return;
         }
 
         // Authorizer rejected the token (not yet valid post-login) — refresh the session and retry.
         if (res.status === 401 || res.status === 403) {
           try { await supabaseBrowser.auth.refreshSession(); } catch { /* ignore */ }
-          if (!isLast) { await sleep(300 * (attempt + 1)); continue; }
+          if (!isLast) { await sleep(backoff(AUTH_BACKOFF_MS, attempt)); continue; }
           setError(t('lock_network_error')); setValue(''); return;
         }
 
