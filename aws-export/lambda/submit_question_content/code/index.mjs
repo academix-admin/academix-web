@@ -388,6 +388,38 @@ export const handler = async (event) => {
   try {
     // Identity from the VERIFIED JWT (API Gateway authorizer), never the client body.
     const userId = event.requestContext?.authorizer?.user_id;
+    // Revocation check (ACADEMIX_PLAN Part VI, Q3). The API Gateway authorizer verifies only the
+    // JWT's signature and expiry, and its response is CACHED per token — its own comment defers
+    // revocation to the handler. So a device logged out from elsewhere still arrives here with a
+    // valid-looking token, even though PostgREST refuses it. Fails OPEN on a DB error (matching
+    // public.enforce_session's posture: a check that cannot run must not take the API down) and
+    // CLOSED only on a definite "session gone".
+    const sessionId = event.requestContext?.authorizer?.session_id || null;
+    if (sessionId) {
+      try {
+        const { data: sessionLive, error: sessionCheckError } = await supabase.rpc(
+          "session_is_live",
+          { p_session_id: sessionId }
+        );
+        if (!sessionCheckError && sessionLive === false) {
+          return {
+            statusCode: 401,
+            body: JSON.stringify({
+              code: "AX_SESSION_REVOKED",
+              error: "Session revoked",
+            }),
+          };
+        }
+        if (sessionCheckError) {
+          console.error(
+            "session_is_live check failed (allowing):",
+            sessionCheckError.message || sessionCheckError
+          );
+        }
+      } catch (e) {
+        console.error("session_is_live threw (allowing):", e?.message || e);
+      }
+    }
     if (!userId) {
       return {
         statusCode: 401,
