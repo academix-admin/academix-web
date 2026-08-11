@@ -2416,6 +2416,24 @@ const paymentHandler = async (event) => {
     const gatedUserId = event.requestContext?.authorizer?.user_id ?? body.userId;
     if (!gatedUserId) return errorResponse("Unauthorized", 401);
 
+    // Revocation: the authorizer verifies only signature+expiry and its answer is CACHED per token,
+    // so a device that was logged out from elsewhere still reaches this Lambda with a valid-looking
+    // JWT — PostgREST refuses it, but this endpoint moves money and was not checking. Fails OPEN on
+    // a DB error (matching public.enforce_session) and CLOSED only on a definite "session gone".
+    // See ACADEMIX_PLAN Part V, S1.
+    const gatedSessionId = event.requestContext?.authorizer?.session_id || null;
+    if (gatedSessionId) {
+      try {
+        const { data: live, error: liveErr } = await supabase.rpc("session_is_live", {
+          p_session_id: gatedSessionId,
+        });
+        if (!liveErr && live === false) return errorResponse("Session revoked", 401);
+        if (liveErr) console.error("session_is_live check failed (allowing):", liveErr.message || liveErr);
+      } catch (e) {
+        console.error("session_is_live threw (allowing):", e?.message || e);
+      }
+    }
+
     // country comes from the authorizer (it geolocated the real client IP once, alongside user_id);
     // '' → gate_check falls back to the registration country.
     const gatedCountry = event.requestContext?.authorizer?.country || null;

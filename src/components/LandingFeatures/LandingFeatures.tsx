@@ -1,4 +1,5 @@
 'use client';
+import { renderBoldMarkup } from '@/utils/richText';
 import styles from './LandingFeatures.module.css';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
@@ -180,10 +181,9 @@ interface FeaturesColors {
                   <p
                     className={styles.featureDescription}
                     style={{ color: getThemeColor(feature.colors.text, 'text') }}
-                    dangerouslySetInnerHTML={{
-                      __html: feature.description.replace(/\*(.*?)\*/g, '<strong>$1</strong>'),
-                    }}
-                  />
+                  >
+                    {renderBoldMarkup(feature.description)}
+                  </p>
                 </div>
               </div>
             </div>

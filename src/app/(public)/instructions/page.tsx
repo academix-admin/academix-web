@@ -8,6 +8,7 @@ import { supabaseBrowser } from '@/lib/supabase/client';
 import { Role } from '@/lib/stacks/signup-stack';
 import Image from 'next/image';
 import Link from 'next/link';
+import { renderBoldMarkup } from '@/utils/richText';
 import styles from './page.module.css';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuthContext } from '@/providers/AuthProvider';
@@ -190,7 +191,7 @@ export default function Instructions({ searchParams }: InstructionsPageProps) {
               <ul className={styles.stepItems}>
                 {step.items.map((item, i) => (
                   <li key={i} className={styles.stepItem} style={{ color: getThemeColor(step.colors.text) }}>
-                    <span dangerouslySetInnerHTML={{ __html: item.replace(/\*(.*?)\*/g, `<strong style="color: ${getThemeColor(step.colors.title)}">$1</strong>`) }} />
+                    <span>{renderBoldMarkup(item, { color: getThemeColor(step.colors.title) })}</span>
                   </li>
                 ))}
               </ul>

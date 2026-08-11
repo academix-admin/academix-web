@@ -7,6 +7,41 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
+/**
+ * Refuse a request whose session has been revoked ("log out this device" from elsewhere).
+ *
+ * The API Gateway authorizer verifies only the JWT's signature and expiry, and its response is
+ * CACHED per token — its own comment defers revocation to "the (uncached) handler". Nothing did it,
+ * so a revoked device kept working against every Lambda until its token expired, even though
+ * PostgREST was refusing it the whole time. See ACADEMIX_PLAN Part V, S1.
+ *
+ * Fails OPEN on an error talking to the DB, matching public.enforce_session's own posture: a check
+ * that cannot run must not take payments down. It fails CLOSED only on a definite "session gone".
+ */
+export async function assertSessionNotRevoked(supabase, sessionId) {
+  if (!sessionId) return null; // no session claim (trusted Lambda->Lambda invoke) — nothing to check
+  try {
+    const { data, error } = await supabase.rpc('session_is_live', { p_session_id: sessionId });
+    if (error) {
+      console.error('session_is_live check failed (allowing):', error.message || error);
+      return null;
+    }
+    if (data === false) {
+      return {
+        statusCode: 401,
+        body: JSON.stringify({
+          success: false,
+          code: 'AX_SESSION_REVOKED',
+          message: 'Session revoked',
+        }),
+      };
+    }
+  } catch (e) {
+    console.error('session_is_live threw (allowing):', e?.message || e);
+  }
+  return null;
+}
+
 const innerHandler = async (event) => {
   try {
     const body = typeof event.body === "string" ? JSON.parse(event.body) : event.body;
@@ -27,6 +62,11 @@ const innerHandler = async (event) => {
     if (!userId || !pin) {
       return { statusCode: 400, body: JSON.stringify({ success: false, message: "Missing fields" }) };
     }
+
+    // A revoked session must not be able to clear its own app-lock. Checked BEFORE any PIN work so a
+    // revoked device cannot even burn attempts against the account.
+    const revoked = await assertSessionNotRevoked(supabase, sessionId);
+    if (revoked) return revoked;
 
     // Fetch PIN record
     const { data, error } = await supabase
