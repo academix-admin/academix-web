@@ -92,9 +92,18 @@ async function revokeIfSessionDead() {
  * broken screen with no way forward but to back out and start again. Holding the request until
  * `ax:app-unlocked` and re-issuing it once means the caller only ever sees a slower request.
  */
-const PARK_TIMEOUT_MS = 90_000;
+const PARK_TIMEOUT_MS = 45_000;
 const MAX_PARKED = 8;
+const LOCK_SETTLE_MS = 300;
 let parked = 0;
+
+/**
+ * Only park when the PIN overlay is actually on screen, i.e. a human can still release it. AppLock
+ * marks the document while locked. Without this check a request refused by a stale locked session —
+ * with no overlay up, e.g. while signing in again — would hang until the caller's own timeout and
+ * surface as a bogus "no internet" on a perfectly good connection.
+ */
+const isLockOverlayUp = () => document.documentElement.dataset.axLocked === '1';
 
 function waitForUnlock(timeoutMs: number): Promise<boolean> {
   return new Promise((resolve) => {
@@ -145,7 +154,12 @@ const gateFetch: typeof fetch = async (input, init) => {
         if (isLock && parked < MAX_PARKED && !isGateRpc(input) && isReplayable(input, init)) {
           parked++;
           try {
-            if (await waitForUnlock(PARK_TIMEOUT_MS)) return await fetch(input, init);
+            // Give AppLock a moment to raise the overlay in response to the event above, then only
+            // hold the request if it actually came up (see isLockOverlayUp).
+            await new Promise((r) => setTimeout(r, LOCK_SETTLE_MS));
+            if (isLockOverlayUp() && (await waitForUnlock(PARK_TIMEOUT_MS))) {
+              return await fetch(input, init);
+            }
           } catch {
             /* retry failed outright — fall through to the original 423 */
           } finally {

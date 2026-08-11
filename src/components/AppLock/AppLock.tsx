@@ -51,7 +51,16 @@ export function AppLock({ children }: { children: React.ReactNode }) {
   // period out, so a genuine re-lock cannot happen this soon.
   const lastUnlockRef = useRef(0);
 
-  const setLockedState = useCallback((v: boolean) => { lockedRef.current = v; setLocked(v); }, []);
+  const setLockedState = useCallback((v: boolean) => {
+    lockedRef.current = v;
+    // Read by the session-gate interceptor: it only parks a refused request while a human can
+    // still clear the lock (see isLockOverlayUp in lib/supabase/client.tsx).
+    try {
+      if (v) document.documentElement.dataset.axLocked = '1';
+      else delete document.documentElement.dataset.axLocked;
+    } catch { /* ignore */ }
+    setLocked(v);
+  }, []);
 
   const unlock = useCallback(() => {
     setValue(''); setError(''); setBusy(false);
