@@ -67,16 +67,48 @@ function gateBodyFrom(body: unknown): BackendSessionGateError | undefined {
 // already dispatched the right event — only an unrecognized failure (network error, non-gate 401)
 // falls through to the conservative "treat as revoked" default. Guarded so a burst of 401s
 // triggers a single check.
+/**
+ * Probes the session with a lightweight authenticated RPC.
+ *
+ * Returns true when the session is usable OR when the answer is inconclusive — deliberately biased
+ * that way, because the only action taken on false is signing the user out. A recognised AX_ gate
+ * code counts as usable: the gate refused this request for a reason it already broadcast precisely
+ * (locked / revoked). A thrown error means the round-trip never completed, which proves nothing
+ * about the session.
+ */
+async function sessionLooksUsable(): Promise<boolean> {
+  try {
+    const { error } = await supabaseBrowser.rpc('session_touch');
+    if (!error) return true;
+    return String((error as { code?: string }).code ?? '').startsWith('AX_');
+  } catch {
+    return true;
+  }
+}
+
+// A merely EXPIRED access token also produces a non-gate 401, and that is recoverable by a refresh —
+// it is NOT a revoked session. Conflating the two signs people out for no reason (observed in the
+// Flutter app on a cold start, where the first request 401'd while the client's own refresh was
+// still in flight). Refresh first; only call it a revoke if the session still fails afterwards.
 let sessionRecheckInFlight = false;
 async function revokeIfSessionDead() {
   if (sessionRecheckInFlight) return;
   sessionRecheckInFlight = true;
   try {
-    const { error } = await supabaseBrowser.rpc('session_touch');
-    if (error && !String((error as { code?: string }).code ?? '').startsWith('AX_')) {
-      window.dispatchEvent(new CustomEvent(AX_GATE_EVENTS.AX_SESSION_REVOKED));
+    if (await sessionLooksUsable()) return;
+
+    try {
+      const { error } = await supabaseBrowser.auth.refreshSession();
+      // A rejected refresh token is a real, unrecoverable dead session.
+      if (error) {
+        window.dispatchEvent(new CustomEvent(AX_GATE_EVENTS.AX_SESSION_REVOKED));
+        return;
+      }
+    } catch {
+      return; // network or unexpected shape — stay undecided
     }
-  } catch {
+
+    if (await sessionLooksUsable()) return;
     window.dispatchEvent(new CustomEvent(AX_GATE_EVENTS.AX_SESSION_REVOKED));
   } finally {
     sessionRecheckInFlight = false;
