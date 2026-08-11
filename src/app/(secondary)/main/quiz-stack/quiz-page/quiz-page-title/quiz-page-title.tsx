@@ -164,9 +164,8 @@ export default function QuizPageTitle({ onStateChange }: ComponentStateProps) {
     
     const fetchActivationStatus = async () => {
       try {
-        const { data, error } = await supabaseBrowser.rpc("fetch_user_activation_status", {
-          p_user_id: userData.usersId
-        });
+        // No p_user_id — forced to auth.uid() server-side (see roles-page for the reasoning).
+        const { data, error } = await supabaseBrowser.rpc("fetch_user_activation_status", {});
 
         if (error) {
           console.error("[QuizPageTitle] activation status error:", error);

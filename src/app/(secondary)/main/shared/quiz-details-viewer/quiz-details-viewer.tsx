@@ -51,8 +51,9 @@ export default function QuizDetailsViewer({ topicsModel }: QuizDetailsViewerProp
 
     setIsFollowLoading(true);
     try {
+      // No p_user_id: the RPC derives the acting user from auth.uid() server-side, so identity
+      // cannot be expressed (or spoofed) by the client at all. See §2.5 server-authoritative identity.
       const { data, error } = await supabaseBrowser.rpc('change_creator_follow_status', {
-        p_user_id: userData.usersId,
         p_creator_id: topicsModel.creatorId
       });
       
@@ -81,8 +82,8 @@ export default function QuizDetailsViewer({ topicsModel }: QuizDetailsViewerProp
 
     setIsPersonalisedLoading(true);
     try {
+      // No p_user_id — identity comes from auth.uid() server-side (see the follow handler above).
       const { data, error } = await supabaseBrowser.rpc('change_topic_personalised_status', {
-        p_user_id: userData.usersId,
         p_topic_id: topicsModel.topicsId
       });
       

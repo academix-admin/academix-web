@@ -1,8 +1,4 @@
--- schema:   public
--- function: fetch_user_activation_status(p_user_id uuid)
--- generated from Supabase project iewqfmkngcgayxbbnpiz (read-only mirror)
-
-CREATE OR REPLACE FUNCTION public.fetch_user_activation_status(p_user_id uuid)
+CREATE OR REPLACE FUNCTION public.fetch_user_activation_status(p_user_id uuid DEFAULT NULL)
  RETURNS boolean
  LANGUAGE plpgsql
  SECURITY DEFINER
@@ -11,6 +7,14 @@ AS $function$
 DECLARE
     v_result BOOLEAN;
 BEGIN
+    -- Browser callers may never name a user: p_user_id is overwritten with auth.uid() unless the
+    -- caller is service_role (the content Lambdas' assert_can_contribute path, which passes an
+    -- already-verified id). Previously the client SENT its own id and a guard compared the two; now
+    -- the value is not expressible from a browser at all, so there is nothing to spoof or compare.
+    IF NOT (coalesce(auth.jwt()->>'role', '') = 'service_role' OR session_user IN ('service_role', 'postgres')) THEN
+        p_user_id := auth.uid();
+    END IF;
+
     -- Guard: a browser JWT caller may only check their own status (IS DISTINCT FROM is NULL-safe for
     -- anon). A genuine service-role caller (assert_can_contribute, invoked via the content Lambdas)
     -- may check an arbitrary already-verified p_user_id.
@@ -51,4 +55,4 @@ EXCEPTION
         RAISE NOTICE 'fetch_user_activation_status error for user %: %', p_user_id, SQLERRM;
         RETURN FALSE;
 END;
-$function$;
+$function$

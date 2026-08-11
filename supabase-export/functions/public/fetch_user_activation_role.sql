@@ -1,8 +1,4 @@
--- schema:   public
--- function: fetch_user_activation_role(p_user_id uuid, p_locale text)
--- generated from Supabase project iewqfmkngcgayxbbnpiz (read-only mirror)
-
-CREATE OR REPLACE FUNCTION public.fetch_user_activation_role(p_user_id uuid, p_locale text)
+CREATE OR REPLACE FUNCTION public.fetch_user_activation_role(p_user_id uuid DEFAULT NULL, p_locale text DEFAULT '')
  RETURNS jsonb
  LANGUAGE plpgsql
  SECURITY DEFINER
@@ -12,6 +8,14 @@ DECLARE
     v_result            JSONB;
     v_activation_status BOOLEAN;
 BEGIN
+    -- Browser callers may never name a user: p_user_id is overwritten with auth.uid() unless the
+    -- caller is service_role (the content Lambdas' assert_can_contribute path, which passes an
+    -- already-verified id). Previously the client SENT its own id and a guard compared the two; now
+    -- the value is not expressible from a browser at all, so there is nothing to spoof or compare.
+    IF NOT (coalesce(auth.jwt()->>'role', '') = 'service_role' OR session_user IN ('service_role', 'postgres')) THEN
+        p_user_id := auth.uid();
+    END IF;
+
     -- Guard: caller must be authenticated as themselves (IS DISTINCT FROM is NULL-safe for anon
     -- callers). This response includes buy-in amount and transaction_id, so an unguarded p_user_id
     -- would leak another user's financial details.
@@ -47,13 +51,13 @@ END,
 END,
             'roles_activation_activated', v_activation_status,
             'transaction_id',             tt.transaction_id,
-            'roles_activation_is_fresh',  CASE                               -- ✓ CASE replaces ? :
+            'roles_activation_is_fresh',  CASE                               -- âœ“ CASE replaces ? :
                                               WHEN v_activation_status THEN FALSE
                                               ELSE COALESCE(
                                                   (
                                                       tt.transaction_sender_status   = 'TransactionStatus.failed'
                                                       OR
-                                                      tt.transaction_receiver_status = 'TransactionStatus.failed'  -- ✓ closed quote
+                                                      tt.transaction_receiver_status = 'TransactionStatus.failed'  -- âœ“ closed quote
                                                   ),
                                                   TRUE
                                               )
@@ -73,4 +77,4 @@ EXCEPTION
         RAISE NOTICE 'fetch_user_activation_role error for user %: %', p_user_id, SQLERRM;
         RETURN NULL;
 END;
-$function$;
+$function$

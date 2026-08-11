@@ -152,8 +152,9 @@ export default function RolesPage() {
     if (!userData) return;
     setPageState('loading');
     try {
+      // No p_user_id: the RPC forces a browser caller to auth.uid() server-side (the parameter
+      // survives only for the service_role Lambda path). Identity is not expressible from here.
       const { data, error } = await supabaseBrowser.rpc('fetch_user_activation_role', {
-        p_user_id: userData.usersId,
         p_locale: lang,
       });
       if (error) throw error;
