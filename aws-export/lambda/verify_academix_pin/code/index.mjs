@@ -42,6 +42,25 @@ export async function assertSessionNotRevoked(supabase, sessionId) {
   return null;
 }
 
+/**
+ * Append a security event (ACADEMIX_PLAN Part VI, Q10). Best-effort by design: an audit write must
+ * never be able to fail the operation it is observing — a user must not be blocked from unlocking
+ * because logging hiccuped. NEVER pass the PIN, a token, or any credential in `detail`.
+ */
+async function audit(supabase, eventType, userId, sessionId, detail = {}) {
+  try {
+    await supabase.rpc('log_security_event', {
+      p_event_type: eventType,
+      p_users_id: userId ?? null,
+      p_session_id: sessionId ?? null,
+      p_source: 'lambda',
+      p_detail: detail,
+    });
+  } catch (e) {
+    console.error('audit log failed (ignored):', e?.message || e);
+  }
+}
+
 const innerHandler = async (event) => {
   try {
     const body = typeof event.body === "string" ? JSON.parse(event.body) : event.body;
@@ -131,6 +150,14 @@ const innerHandler = async (event) => {
         })
         .eq("users_id", userId);
 
+      await audit(
+        supabase,
+        lockTime ? 'pin.locked_out' : 'pin.failed',
+        userId,
+        sessionId,
+        { attempts_left: Math.max(0, 5 - updatedAttempts), locked_until: lockTime }
+      );
+
       return {
         statusCode: 401,
         body: JSON.stringify({
@@ -153,6 +180,7 @@ const innerHandler = async (event) => {
 
     // Correct PIN → extend the app-lock window for this session before responding.
     await extendAppLock();
+    await audit(supabase, 'applock.unlocked', userId, sessionId);
 
     return {
       statusCode: 200,
