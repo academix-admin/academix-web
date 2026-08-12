@@ -123,12 +123,24 @@ export default function PasswordManagement() {
       if (supabaseBrowserError) {
         if (supabaseBrowserError.code === 'same_password') {
           setError(t('same_password'));
-        } else if (supabaseBrowserError.code === 'reauthentication_needed') {
-          // GoTrue requires a fresh authentication when the session is missing or older than
-          // 24h (security_update_password_require_reauthentication). Normally unreachable,
-          // because reaching this screen goes through security_otp, which mints a new session.
-          // If it does happen, send the user back to verify again instead of showing a dead
-          // generic error -- the recovery path stays open, so nobody is stranded.
+        } else if (
+          supabaseBrowserError.code === 'reauthentication_needed' ||
+          supabaseBrowserError.code === 'current_password_required' ||
+          supabaseBrowserError.code === 'current_password_invalid'
+        ) {
+          // All three mean the same thing for this screen: GoTrue did not accept this session
+          // as recently-stepped-up, so it wants proof of identity.
+          //   reauthentication_needed   -- session missing or older than 24h
+          //   current_password_required -- session not recovery-flagged (see Q44)
+          //   current_password_invalid  -- a current password was supplied and was wrong
+          // (Exact strings taken from GoTrue apierrors/errorcode.go: note the third constant is
+          // NAMED Mismatch but its value is "current_password_invalid".)
+          //
+          // Normally unreachable: reaching this screen goes through security_otp, and every
+          // /verify session is stamped with AMR "otp", which GoTrue treats as a recovery
+          // session and exempts. If it does happen, send the user back to verify again rather
+          // than showing a dead generic error -- the recovery path stays open, so nobody is
+          // stranded and no one is asked for a password they may not have (Google-only users).
           setError(t('verification_expired') || 'Please verify again to change your password.');
           nav.push('security_verification', { request: 'Password' });
         } else {

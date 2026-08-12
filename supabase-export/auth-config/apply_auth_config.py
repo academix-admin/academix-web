@@ -52,10 +52,66 @@ DESIRED = {
     # so both are exempt, while a stale stolen session is not. Worst case is a plain error on
     # the change screen with forgot-password still available -- never a lockout.
     'security_update_password_require_reauthentication': True,
+
+    # The stronger half, and what closes the remaining gap: reauthentication above only kicks in
+    # for sessions older than 24h, so a FRESH stolen session could still change the password.
+    # This one applies regardless of session age.
+    #
+    # Also safe with NO client change, and it cannot strand anyone. GoTrue v2.195.0
+    # internal/api/user.go:
+    #
+    #     if config.Security.UpdatePasswordRequireCurrentPassword {
+    #         // ensure user is not in a password recovery flow
+    #         if !session.IsRecovery() {
+    #             if params.CurrentPassword == nil || *params.CurrentPassword == "" {
+    #                 return ...ErrorCodeCurrentPasswordRequired
+    #
+    # internal/models/sessions.go -> Session.IsRecovery() scans the session's AMR claims, and
+    # internal/models/factor.go:
+    #
+    #     func (authMethod AuthenticationMethod) IsRecovery() bool {
+    #         switch authMethod {
+    #         case OTP, MagicLink, Recovery:
+    #             return true
+    #
+    # internal/api/verify.go issues every /verify session with models.OTP (lines 185, 285), so
+    # ANY session minted by an OTP verification is recovery-flagged and therefore exempt.
+    #
+    # Mapping that onto Academix:
+    #   forgot password      verifyOtp(recovery)  -> AMR otp  -> exempt, still works
+    #   change password      security_otp -> verifyOtp        -> exempt, still works
+    #   normal password login                     -> AMR password -> current password REQUIRED
+    #   Google OAuth session                      -> AMR oauth    -> current password REQUIRED
+    #
+    # So the only thing newly refused is a password change from a session that never stepped up
+    # -- precisely the stolen-session attack. Both clients reach the change screen only through
+    # security_verification -> security_otp, so no real user is ever asked for a password they
+    # do not have (including Google-only users, who arrive with a recovery-flagged OTP session).
+    #
+    # This is the big-app rule: a sensitive change needs a recent step-up factor. Academix's
+    # factor is the emailed/SMS OTP rather than the current password, which is equivalent or
+    # stronger. Adding a current-password box ON TOP of the OTP would be two factors for one
+    # action -- worse UX than the apps being matched -- so the UI is deliberately unchanged.
+    #
+    # >>> NOT SETTABLE HERE. See BLOCKED below. <<<
     # Clearing the OTP map is what disables the test code. sms_test_otp_valid_until is left
     # alone on purpose: the API rejects an empty string ("Invalid ISO datetime"), and with no
     # test OTP configured the stale 2025-04-01 timestamp has nothing to apply to.
     'sms_test_otp': '',
+}
+
+# Settings this API will not apply. Kept here so the intended state stays documented and so a
+# later session does not waste time rediscovering why the PATCH "worked" but changed nothing.
+BLOCKED = {
+    'security_update_password_require_current_password': (
+        True,
+        'Management API accepts the PATCH (HTTP 200, field present in GET) but silently '
+        'ignores it -- the value never changes. Must be toggled in the Supabase dashboard '
+        'under Authentication -> Password settings. Rationale for wanting it is in DESIRED '
+        'above; it closes the <24h fresh-stolen-session gap that reauthentication leaves open.'),
+    'password_hibp_enabled': (
+        True,
+        'Pro plan only -- the API returns HTTP 402 on the current (Free) plan.'),
 }
 
 token = None
@@ -91,8 +147,12 @@ if __name__ == '__main__':
         match = (got == want) or (want == '' and not got)
         ok = ok and match
         print(f'  {k:44} {got!r:28} {"OK" if match else f"EXPECTED {want!r}"}')
-    # Show the ones we intentionally left alone, so drift is visible.
-    for k in ('password_hibp_enabled', 'security_update_password_require_current_password'):
-        print(f'  {k:44} {cfg.get(k)!r:28} (intentionally unchanged)')
     print()
-    print('ALL MATCH' if ok else 'MISMATCH -- see above')
+    print('BLOCKED (wanted, but this API cannot set them):')
+    for k, (want, why) in BLOCKED.items():
+        got = cfg.get(k)
+        state = 'NOW SET' if got == want else f'still {got!r}, want {want!r}'
+        print(f'  {k:44} {state}')
+        print(f'      {why}')
+    print()
+    print('ALL SETTABLE FIELDS MATCH' if ok else 'MISMATCH -- see above')
