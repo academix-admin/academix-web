@@ -23,6 +23,11 @@ export default function Login() {
         entry="login"
         transition="slide"
         persist={false}
+        // navigation-stack defaults syncHistory to FALSE, so this has to be opt-in per stack.
+        // Every other stack in the app sets it (signup, home, payment, profile, quiz, rewards);
+        // login was the only one that did not, so browser back/forward did nothing inside
+        // login → recovery → otp → reset_password and instead abandoned the whole auth flow.
+        syncHistory
       />
     </div>
   );
