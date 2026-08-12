@@ -1,0 +1,33 @@
+-- =====================================================================================
+-- HOTFIX: restore EXECUTE for supabase_auth_admin on the auth.sessions trigger functions.
+--
+-- WHAT WAS WRONG
+-- _revoke_definer_execute_migration.sql revoked EXECUTE ... FROM PUBLIC on gate_new_session
+-- and notify_new_session. Both are TRIGGERS ON auth.sessions, and GoTrue connects as
+-- `supabase_auth_admin`, which was reaching them only through the PUBLIC grant. Verified
+-- afterwards: has_function_privilege('supabase_auth_admin', ...) was FALSE for both, so the
+-- role performing every auth.sessions INSERT could not execute the triggers attached to it.
+--
+-- SCOPE, stated precisely
+-- These two were the ONLY revoked functions wired as triggers (checked with pg_trigger across
+-- all 14), so the blast radius stops here. A separate 500 seen while investigating turned out
+-- NOT to be caused by this: it is `AX_SIGNIN_GATE:Feature.unavailable`, the country gate's own
+-- verdict, which reproduces identically when gate_check is called as `postgres` where these
+-- grants cannot apply. The two issues were briefly conflated.
+--
+-- The earlier verification pass missed this because it only checked anon/authenticated/
+-- service_role and only exercised PostgREST, never an auth endpoint.
+--
+-- THE LESSON
+-- "Revoke from PUBLIC" is not safe by inspection of anon/authenticated alone. PUBLIC covers
+-- EVERY role, including the Supabase-managed internal ones (supabase_auth_admin,
+-- supabase_storage_admin, authenticator, ...). A trigger function's privileges are checked
+-- against whichever role performs the write -- for anything under auth.*, that is
+-- supabase_auth_admin, not the end user's role.
+--
+-- Granting the specific role rather than restoring PUBLIC: the point of the original change
+-- was to stop anon/authenticated calling these over /rest/v1/rpc, and that still holds.
+-- =====================================================================================
+
+GRANT EXECUTE ON FUNCTION public.gate_new_session() TO supabase_auth_admin;
+GRANT EXECUTE ON FUNCTION public.notify_new_session() TO supabase_auth_admin;
