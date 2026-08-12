@@ -123,6 +123,14 @@ export default function PasswordManagement() {
       if (supabaseBrowserError) {
         if (supabaseBrowserError.code === 'same_password') {
           setError(t('same_password'));
+        } else if (supabaseBrowserError.code === 'reauthentication_needed') {
+          // GoTrue requires a fresh authentication when the session is missing or older than
+          // 24h (security_update_password_require_reauthentication). Normally unreachable,
+          // because reaching this screen goes through security_otp, which mints a new session.
+          // If it does happen, send the user back to verify again instead of showing a dead
+          // generic error -- the recovery path stays open, so nobody is stranded.
+          setError(t('verification_expired') || 'Please verify again to change your password.');
+          nav.push('security_verification', { request: 'Password' });
         } else {
           setError(t('error_occurred'));
         }

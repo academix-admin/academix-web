@@ -33,6 +33,25 @@ WEB = 'c:/Users/ajibe/StudioProjects/academix-project/academix-web'
 DESIRED = {
     'password_min_length': 8,
     'mailer_notifications_password_changed_enabled': True,
+
+    # Closes the stolen-session hole: the UI gates the password screen behind an OTP, but the
+    # API did not, so any valid access token could change the password.
+    #
+    # Safe to enable with NO client change, and it cannot strand anyone. From GoTrue v2.195.0
+    # (the deployed version), internal/api/user.go:
+    #
+    #     if config.Security.UpdatePasswordRequireReauthentication {
+    #         now := time.Now()
+    #         if session == nil || now.After(session.CreatedAt.Add(24*time.Hour)) {
+    #             if len(params.Nonce) == 0 { return ...ErrorCodeReauthenticationNeeded }
+    #
+    # The nonce is demanded ONLY for a missing session or one older than 24h. Both Academix
+    # password paths mint a fresh session immediately beforehand (verifyOtp returns a new one):
+    #   forgot password  -> resetPasswordForEmail -> verifyOtp(recovery) -> updateUser
+    #   change password  -> security_verification -> security_otp -> password_management
+    # so both are exempt, while a stale stolen session is not. Worst case is a plain error on
+    # the change screen with forgot-password still available -- never a lockout.
+    'security_update_password_require_reauthentication': True,
     # Clearing the OTP map is what disables the test code. sms_test_otp_valid_until is left
     # alone on purpose: the API rejects an empty string ("Invalid ISO datetime"), and with no
     # test OTP configured the stale 2025-04-01 timestamp has nothing to apply to.
@@ -72,8 +91,8 @@ if __name__ == '__main__':
         match = (got == want) or (want == '' and not got)
         ok = ok and match
         print(f'  {k:44} {got!r:28} {"OK" if match else f"EXPECTED {want!r}"}')
-    # Show the two we intentionally left alone, so drift is visible.
-    for k in ('password_hibp_enabled', 'security_update_password_require_reauthentication'):
+    # Show the ones we intentionally left alone, so drift is visible.
+    for k in ('password_hibp_enabled', 'security_update_password_require_current_password'):
         print(f'  {k:44} {cfg.get(k)!r:28} (intentionally unchanged)')
     print()
     print('ALL MATCH' if ok else 'MISMATCH -- see above')
