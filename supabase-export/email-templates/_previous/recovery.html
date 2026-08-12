@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 100%;
+            text-align: center;
+        }
+        .content {
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            display: inline-block;
+            max-width: 600px;
+             padding-top: 20px;
+
+            width: 100%;
+        }
+        .header {
+            font-size: 24px;
+            color: #333333;
+            margin-bottom: 20px;
+        }
+        .token {
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px;
+            font-size: 20px;
+            border-radius: 5px;
+            display: inline-block;
+            margin-top: 20px;
+            letter-spacing: 4px;
+        }
+         .note {
+            color: #888;
+            margin-bottom: 20px;
+        }
+        .footer {
+            margin-top: 20px;
+            font-size: 12px;
+            color: #888888;
+        }
+    </style>
+</head>
+<body style="
+padding: 20px
+">
+    <div class="container">
+        <div class="content">
+            <div class="header">
+                Confirm Your Security Reset to Academix
+            </div>
+
+            <p>Security reset requested for Academix! Please use the following token to permit security reset.</p>
+            
+            <p class="token">{{ .Token }}</p>
+        </div>
+        <p class="note">If you didn't request this, please ignore this email.</p>
+        <p class="note">Thank you!</p>
+        <div class="footer">
+            &copy; 2024 Academix. All rights reserved.
+        </div>
+    </div>
+</body>
+</html>

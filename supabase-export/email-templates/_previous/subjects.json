@@ -1,0 +1,15 @@
+{
+ "mailer_subjects_confirmation": "Academix! Sign up",
+ "mailer_subjects_email_change": "Confirm Email Change",
+ "mailer_subjects_invite": "You have been invited",
+ "mailer_subjects_magic_link": "Your Magic Link",
+ "mailer_subjects_reauthentication": "Confirm Reauthentication",
+ "mailer_subjects_recovery": "Academix! Reset Your Security",
+ "mailer_subjects_password_changed_notification": "Your password has been changed",
+ "mailer_subjects_email_changed_notification": "Your email address has been changed",
+ "mailer_subjects_phone_changed_notification": "Your phone number has been changed",
+ "mailer_subjects_mfa_factor_enrolled_notification": "A new MFA factor has been enrolled",
+ "mailer_subjects_mfa_factor_unenrolled_notification": "An MFA factor has been unenrolled",
+ "mailer_subjects_identity_linked_notification": "A new identity has been linked",
+ "mailer_subjects_identity_unlinked_notification": "An identity has been unlinked"
+}

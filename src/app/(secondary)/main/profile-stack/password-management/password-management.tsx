@@ -16,7 +16,10 @@ const validatePassword = (value: string) => {
   const hasLowercase = /[a-z]/.test(value);
   const hasNumber = /[0-9]/.test(value);
   const hasSpecialChar = /[^A-Za-z0-9]/.test(value);
-  const hasMinLength = value.length >= 6;
+  // Must match GoTrue's password_min_length (8). Kept in step with the signup and
+  // reset-password screens; the LOGIN screen deliberately stays at 6 so existing users with
+  // shorter passwords can still sign in.
+  const hasMinLength = value.length >= 8;
 
   return {
     hasUppercase,

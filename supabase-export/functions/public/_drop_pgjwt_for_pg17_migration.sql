@@ -1,0 +1,27 @@
+-- =====================================================================================
+-- Drop the pgjwt extension so the project can move off Postgres 15.
+-- ACADEMIX_PLAN Part VI, Q40.
+--
+-- WHY
+-- The Supabase upgrade API reports the project as INELIGIBLE:
+--     current  supabase-postgres-15.8.1.040
+--     latest   supabase-postgres-17.6.1.155
+--     eligible false
+--     validation_errors [{ type: unsupported_extension, extension_name: pgjwt }]
+-- pgjwt is not supported on Postgres 17, so it blocks the upgrade entirely. This is also what
+-- keeps the advisor's `vulnerable_postgres_version` finding open.
+--
+-- WHY IT IS SAFE TO DROP
+-- pgjwt ships by default on older Supabase projects; this one never used it. Checked across
+-- EVERY schema -- not just public/personal, but the Supabase-managed ones (auth, storage,
+-- realtime, graphql, vault, cron) too, since Supabase historically shipped pgjwt for auth:
+--   * 0 functions reference algorithm_sign / url_encode / url_decode / extensions.sign /
+--     extensions.verify / pgjwt, excluding pgjwt's own 6 functions.
+--   * 0 triggers reference it.
+-- RESTRICT (the default, i.e. no CASCADE) is deliberate: if any dependency was missed, this
+-- fails loudly instead of silently dropping whatever depended on it.
+--
+-- Reversible: `CREATE EXTENSION pgjwt WITH SCHEMA extensions;` restores it on Postgres 15.
+-- =====================================================================================
+
+DROP EXTENSION IF EXISTS pgjwt;

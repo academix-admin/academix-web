@@ -30,6 +30,10 @@ const validatePassword = (value: string) => {
   const hasLowercase = /[a-z]/.test(value);
   const hasNumber = /[0-9]/.test(value);
   const hasSpecialChar = /[^A-Za-z0-9]/.test(value);
+  // DO NOT raise to 8 to match signup/reset. This validates an EXISTING password at sign-in.
+  // Accounts created before password_min_length was raised still have 6- and 7-character
+  // passwords, and tightening this would lock those users out. The stricter rule belongs only
+  // where a NEW password is chosen (signup, reset-password, password-management).
   const hasMinLength = value.length >= 6;
 
   return {
