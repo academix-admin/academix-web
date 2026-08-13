@@ -90,9 +90,14 @@ test('a programmatic pop removes the page and does not resurrect it', async ({ p
 
   // Give any popstate/re-derive a chance to (incorrectly) restore it. This is the shape of the
   // live "swipe back to A and B returns" report.
-  await page.waitForTimeout(400);
+  await page.waitForTimeout(600);   // exit transition is 220ms; allow well past it
   await nav.expectDepth(1);
   await nav.expectPoppedCleanly('forgot_password');
+
+  // The DOM half of the same question. The stack popping is not enough: the reported symptom was
+  // the popped PAGE still being on screen, which is a separate failure from a stale stack.
+  const pageEls = await page.locator('[data-nav-uid]').count();
+  expect(pageEls, 'the popped page element must be unmounted, not left mid-exit-transition').toBe(1);
 });
 
 test('reload restores the same stack from the URL', async ({ page }) => {
