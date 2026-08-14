@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import styles from './withdraw-page.module.css';
@@ -22,6 +22,7 @@ import { useUserBalance } from '@/lib/stacks/user-balance-stack';
 import { BottomViewer, useBottomController } from "@academix-admin/bottom-viewer";
 import DialogCancel from '@/components/DialogCancel';
 import LoadingView from '@/components/LoadingView/LoadingView';
+import { useComponentState, getComponentStatus } from '@/hooks/use-component-state';
 import ErrorView from '@/components/ErrorView/ErrorView';
 import { TransactionModel } from '@/models/transaction-model';
 import { useTransactionModel } from '@/lib/stacks/transactions-stack';
@@ -148,6 +149,20 @@ export default function WithdrawPage() {
 
   const [continueState, setContinueState] = useState('initial');
 
+  // ONE state for the page — see top-up-page / home-page for the same pattern.
+  const { compState, handleStateChange, resetComponentState } = useComponentState();
+  const { loadedCount, errorCount, loadingCount } = useMemo(
+    () => getComponentStatus(compState),
+    [compState],
+  );
+  // Children mount progressively here, so drop a child's entry when it unmounts or the page
+  // waits forever on a component that is no longer present.
+  useEffect(() => { if (!showMethods) resetComponentState('paymentMethod'); }, [showMethods, resetComponentState]);
+  useEffect(() => { if (!showProfile) resetComponentState('paymentProfile'); }, [showProfile, resetComponentState]);
+
+  const pageError = loadedCount === 0 && errorCount > 0;
+  const pageLoading = loadingCount > 0 && loadedCount === 0;
+
   const handleSubmit = async () => {
     // Re-entrancy guard: ignore taps while a fetch is in flight so the sheet can't flip
     // loading↔error from overlapping calls (dead-session 401s now redirect via the client gate).
@@ -163,6 +178,13 @@ export default function WithdrawPage() {
       });
 
       if (error || (data as any)?.error) throw error || (data as any).error;
+
+      // NULL is a designed outcome of create_or_get_academix_profile, not a failure; it slipped
+      // past the check above and then built PaymentProfileModel(null, ...).
+      if (!data) {
+        setContinueState('error_occurred');
+        return;
+      }
 
       const academixProfile = new PaymentProfileModel(data, userData.usersId);
       setContinueState('data');
@@ -483,7 +505,19 @@ export default function WithdrawPage() {
           onWalletAmount={handleAmount}
           entryMode
           scopeKey="withdraw-flow"
+          onStateChange={(st) => handleStateChange('paymentWallet', st)}
         />
+
+        {/* The page's single state — same as top-up-page and home-page. The selectors render
+            nothing until ready, so this is the only loading/error surface in the flow. */}
+        {pageLoading && <LoadingView />}
+        {pageError && (
+          <ErrorView
+            text={t('error_occurred')}
+            buttonText={t('try_again')}
+            onButtonClick={() => window.location.reload()}
+          />
+        )}
 
         {showMethods && (
           <PaymentMethod
@@ -491,6 +525,7 @@ export default function WithdrawPage() {
             walletId={selectedWalletData.paymentWalletId}
             onMethodSelect={handleMethodData}
             scopeKey="withdraw-flow"
+            onStateChange={(st) => handleStateChange('paymentMethod', st)}
           />
         )}
 
@@ -503,6 +538,7 @@ export default function WithdrawPage() {
               onProfileSelect={handleProfileData}
               onCreateProfile={createProfile}
               scopeKey="withdraw-flow"
+              onStateChange={(st) => handleStateChange('paymentProfile', st)}
             />
 
             {selectedMethodData.paymentMethodSellMultiple && (

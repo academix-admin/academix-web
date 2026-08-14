@@ -16,6 +16,7 @@ import { PaymentWalletModel } from '@/models/payment-wallet-model';
 import { PaginateModel } from '@/models/paginate-model';
 import { SelectionViewer, useSelectionController } from "@academix-admin/selection-viewer";
 import LoadingView from '@/components/LoadingView/LoadingView';
+import type { ComponentStateProps } from '@/hooks/use-component-state';
 import NoResultsView from '@/components/NoResultsView/NoResultsView';
 import ErrorView from '@/components/ErrorView/ErrorView';
 import CurrencySymbol from '@/components/CurrencySymbol/CurrencySymbol';
@@ -77,7 +78,7 @@ const WalletItem = ({ onClick, wallet, isSelected }: WalletItemProps) => {
   );
 };
 
-export default function PaymentWallet({ profileType, onWalletData, onWalletAmount, entryMode = false, paymentWalletId, modify = true, scopeKey = 'payment_flow' }: PaymentWalletProps) {
+export default function PaymentWallet({ profileType, onWalletData, onWalletAmount, entryMode = false, paymentWalletId, modify = true, scopeKey = 'payment_flow', onStateChange }: PaymentWalletProps & ComponentStateProps) {
   const { theme, applyTheme } = useTheme();
   const { t, lang } = useLanguage();
   const nav = useNav();
@@ -94,6 +95,14 @@ export default function PaymentWallet({ profileType, onWalletData, onWalletAmoun
   const [paginateModel, setPaginateModel] = useState<PaginateModel>(new PaginateModel());
   const [walletData, setWalletData] = useState<PaymentWalletModel | null>(null);
   const [userWalletState, setUserWalletState] = useState<'initial' | 'loading' | 'data' | 'error'>('initial');
+
+  // Report upward so the PAGE owns a single aggregate state, matching home-page. This component
+  // used to render its own LoadingView/ErrorView in the page flow while its three siblings
+  // rendered nothing, so the user saw this block appear and disappear alongside the page's own
+  // states — read as loading/error flickering.
+  useEffect(() => {
+    onStateChange?.(userWalletState === 'initial' ? 'none' : userWalletState);
+  }, [userWalletState, onStateChange]);
 
   const academixPaymentWallet = new PaymentWalletModel(
     'PaymentType.buy',
@@ -383,17 +392,10 @@ export default function PaymentWallet({ profileType, onWalletData, onWalletAmoun
     return (words[0][0] + words[1][0]).toUpperCase();
   }, []);
 
-  if (!walletData) {
-    if (userWalletState === 'loading') return <LoadingView />;
-    if (userWalletState === 'error') return (
-      <ErrorView
-        text="Error occurred."
-        buttonText="Try Again"
-        onButtonClick={handleUserTopUpWallet}
-      />
-    );
-    return null;
-  }
+  // Render nothing until there is data — exactly as payment-method / payment-network /
+  // payment-profile already do. Loading and error are surfaced ONCE, by the page, from the
+  // aggregate above; retry lives there too, so nothing is lost by not drawing them here.
+  if (!walletData) return null;
 
   return (
     <div className={styles.experienceContainer}>

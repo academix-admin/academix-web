@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import styles from './top-up-page.module.css';
@@ -23,6 +23,7 @@ import { useUserBalance } from '@/lib/stacks/user-balance-stack';
 import { BottomViewer, useBottomController } from "@academix-admin/bottom-viewer";
 import DialogCancel from '@/components/DialogCancel';
 import LoadingView from '@/components/LoadingView/LoadingView';
+import { useComponentState, getComponentStatus } from '@/hooks/use-component-state';
 import ErrorView from '@/components/ErrorView/ErrorView';
 import { TransactionModel } from '@/models/transaction-model';
 import { useTransactionModel } from '@/lib/stacks/transactions-stack';
@@ -150,6 +151,29 @@ export default function TopUpPage() {
 
   const [continueState, setContinueState] = useState('initial');
 
+  /**
+   * ONE state for the whole page, matching home-page.
+   *
+   * Each selector used to draw its own LoadingView/ErrorView, so the user saw them appear and
+   * disappear one after another — read as loading/error flickering. They now report upward and
+   * render nothing until ready; the page decides what to show, once.
+   */
+  const { compState, handleStateChange, resetComponentState } = useComponentState();
+  const { loadedCount, errorCount, loadingCount } = useMemo(
+    () => getComponentStatus(compState),
+    [compState],
+  );
+
+  // These children mount progressively (a method only appears once a wallet is chosen), unlike
+  // home-page where all mount at once. Drop a child's entry when it unmounts, or its last state
+  // lingers in the map and the page waits forever on a component that is no longer there.
+  useEffect(() => { if (!showMethods) resetComponentState('paymentMethod'); }, [showMethods, resetComponentState]);
+  useEffect(() => { if (!showProfile) resetComponentState('paymentProfile'); }, [showProfile, resetComponentState]);
+
+  // Error only on TOTAL failure — never stack an error over content that did load.
+  const pageError = loadedCount === 0 && errorCount > 0;
+  const pageLoading = loadingCount > 0 && loadedCount === 0;
+
   const handleSubmit = async () => {
     // Re-entrancy guard: ignore taps while a fetch is in flight so the sheet can't flip
     // loading↔error from overlapping calls (dead-session 401s now redirect via the client gate).
@@ -165,6 +189,15 @@ export default function TopUpPage() {
       });
 
       if (error || (data as any)?.error) throw error || (data as any).error;
+
+      // A NULL result is not a failure — create_or_get_academix_profile returns NULL by design
+      // ("Guard: return NULL if user does not exist"). It passed the check above untouched and
+      // then built PaymentProfileModel(null, ...), which either threw (indistinguishable from a
+      // network error) or produced a junk profile.
+      if (!data) {
+        setContinueState('error_occurred');
+        return;
+      }
 
       const academixProfile = new PaymentProfileModel(data, userData.usersId);
       setContinueState('data');
@@ -477,7 +510,19 @@ export default function TopUpPage() {
           onWalletAmount={handleAmount}
           entryMode
           scopeKey="top-up-flow"
+          onStateChange={(st) => handleStateChange('paymentWallet', st)}
         />
+
+        {/* The page's single state. The selectors render nothing until ready, so this is the only
+            loading/error surface in the flow — one at a time, never stacked. */}
+        {pageLoading && <LoadingView />}
+        {pageError && (
+          <ErrorView
+            text={t('error_occurred')}
+            buttonText={t('try_again')}
+            onButtonClick={() => window.location.reload()}
+          />
+        )}
 
         {showMethods && (
           <PaymentMethod
@@ -485,6 +530,7 @@ export default function TopUpPage() {
             walletId={selectedWalletData.paymentWalletId}
             onMethodSelect={handleMethodData}
             scopeKey="top-up-flow"
+            onStateChange={(st) => handleStateChange('paymentMethod', st)}
           />
         )}
 
@@ -497,6 +543,7 @@ export default function TopUpPage() {
               onProfileSelect={handleProfileData}
               onCreateProfile={createProfile}
               scopeKey="top-up-flow"
+              onStateChange={(st) => handleStateChange('paymentProfile', st)}
             />
 
             {selectedMethodData.paymentMethodBuyMultiple && (

@@ -10,6 +10,7 @@ import { PaginateModel } from '@/models/paginate-model';
 import { SelectionViewer, useSelectionController } from "@academix-admin/selection-viewer";
 import DialogCancel from '@/components/DialogCancel';
 import { usePaymentMethodModel } from '@/lib/stacks/payment-method-stack';
+import type { ComponentStateProps } from '@/hooks/use-component-state';
 
 interface PaymentNetworkProps {
   paymentMethodId: string;
@@ -60,7 +61,7 @@ const NetworkItem = ({ onClick, network, isSelected }: NetworkItemProps) => {
   );
 };
 
-export default function PaymentNetwork({ paymentMethodId, onNetworkSelect, scopeKey = 'payment_flow' }: PaymentNetworkProps) {
+export default function PaymentNetwork({ paymentMethodId, onNetworkSelect, scopeKey = 'payment_flow', onStateChange }: PaymentNetworkProps & ComponentStateProps) {
   const { theme, applyTheme } = useTheme();
   const { t, lang } = useLanguage();
   const { userData } = useUserData();
@@ -68,6 +69,11 @@ export default function PaymentNetwork({ paymentMethodId, onNetworkSelect, scope
   const [networks, setNetworks] = useState<PaymentNetworkModel[]>([]);
   const [networkData, setNetworkData] = useState<PaymentNetworkModel | null>(null);
   const [userNetworkState, setUserNetworkState] = useState<'initial' | 'loading' | 'data' | 'error'>('initial');
+
+  // Report upward so the page can show ONE aggregate state (see home-page for the pattern).
+  useEffect(() => {
+    onStateChange?.(userNetworkState === 'initial' ? 'none' : userNetworkState);
+  }, [userNetworkState, onStateChange]);
 
   const [networkSelectId, networkSelectController, networkSelectIsOpen, networkSelectionState] = useSelectionController();
   const [searchNetworkQuery, setNetworkQuery] = useState('');

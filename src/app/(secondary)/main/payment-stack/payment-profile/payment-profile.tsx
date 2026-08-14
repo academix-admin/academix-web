@@ -18,6 +18,7 @@ import NoResultsView from '@/components/NoResultsView/NoResultsView';
 import ErrorView from '@/components/ErrorView/ErrorView';
 import DialogCancel from '@/components/DialogCancel';
 import { usePaymentProfileModel } from '@/lib/stacks/payment-profile-stack';
+import type { ComponentStateProps } from '@/hooks/use-component-state';
 
 interface PaymentProfileProps {
   profileType: string;
@@ -137,7 +138,7 @@ const ProfileItem = ({ onClick, profile, methodType, isSelected }: ProfileItemPr
   );
 };
 
-export default function PaymentProfile({ profileType, methodId, methodType, onProfileSelect, onCreateProfile, scopeKey = 'payment_flow' }: PaymentProfileProps) {
+export default function PaymentProfile({ profileType, methodId, methodType, onProfileSelect, onCreateProfile, scopeKey = 'payment_flow', onStateChange }: PaymentProfileProps & ComponentStateProps) {
   const { theme, applyTheme } = useTheme();
   const { t, lang } = useLanguage();
   const { userData } = useUserData();
@@ -145,6 +146,11 @@ export default function PaymentProfile({ profileType, methodId, methodType, onPr
   const [paginateModel, setPaginateModel] = useState<PaginateModel>(new PaginateModel());
   const [profileData, setProfileData] = useState<PaymentProfileModel | null>(null);
   const [userProfileState, setUserProfileState] = useState<'initial' | 'loading' | 'data' | 'error'>('initial');
+
+  // Report upward so the page can show ONE aggregate state (see home-page for the pattern).
+  useEffect(() => {
+    onStateChange?.(userProfileState === 'initial' ? 'none' : userProfileState);
+  }, [userProfileState, onStateChange]);
 
   const [profileSelectId, profileSelectController, profileSelectIsOpen, profileSelectionState] = useSelectionController();
   const [searchProfileQuery, setProfileQuery] = useState('');

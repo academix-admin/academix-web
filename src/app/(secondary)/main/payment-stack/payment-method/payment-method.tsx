@@ -18,6 +18,7 @@ import NoResultsView from '@/components/NoResultsView/NoResultsView';
 import ErrorView from '@/components/ErrorView/ErrorView';
 import DialogCancel from '@/components/DialogCancel';
 import { usePaymentMethodModel } from '@/lib/stacks/payment-method-stack';
+import type { ComponentStateProps } from '@/hooks/use-component-state';
 
 interface PaymentMethodProps {
   profileType: string;
@@ -72,7 +73,7 @@ const MethodItem = ({ onClick, method, isSelected }: MethodItemProps) => {
   );
 };
 
-export default function PaymentMethod({ profileType, walletId, onMethodSelect, paymentMethodId, modify = true, scopeKey = 'payment_flow' }: PaymentMethodProps) {
+export default function PaymentMethod({ profileType, walletId, onMethodSelect, paymentMethodId, modify = true, scopeKey = 'payment_flow', onStateChange }: PaymentMethodProps & ComponentStateProps) {
   const { theme, applyTheme } = useTheme();
   const { t, lang } = useLanguage();
   const { userData } = useUserData();
@@ -80,6 +81,11 @@ export default function PaymentMethod({ profileType, walletId, onMethodSelect, p
   const [paginateModel, setPaginateModel] = useState<PaginateModel>(new PaginateModel());
   const [methodData, setMethodData] = useState<PaymentMethodModel | null>(null);
   const [userMethodState, setUserMethodState] = useState<'initial' | 'loading' | 'data' | 'error'>('initial');
+
+  // Report upward so the page can show ONE aggregate state (see home-page for the pattern).
+  useEffect(() => {
+    onStateChange?.(userMethodState === 'initial' ? 'none' : userMethodState);
+  }, [userMethodState, onStateChange]);
 
   const [methodSelectId, methodSelectController, methodSelectIsOpen, methodSelectionState] = useSelectionController();
   const [searchMethodQuery, setMethodQuery] = useState('');
