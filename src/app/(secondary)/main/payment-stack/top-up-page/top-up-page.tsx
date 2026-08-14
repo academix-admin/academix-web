@@ -171,6 +171,16 @@ export default function TopUpPage() {
   useEffect(() => { if (!showProfile) resetComponentState('paymentProfile'); }, [showProfile, resetComponentState]);
 
   // Error only on TOTAL failure — never stack an error over content that did load.
+  // Targeted retry instead of window.location.reload(): bumping this re-runs the failed
+  // loaders in place. A full reload throws away the whole app — the router stack, every cached
+  // store, the user's scroll position and any amount they had typed — to recover from one failed
+  // request.
+  const [retryToken, setRetryToken] = useState(0);
+  const retryFailed = useCallback(() => {
+    resetComponentState();          // clear stale error/loading entries before re-running
+    setRetryToken((n) => n + 1);
+  }, [resetComponentState]);
+
   const pageError = loadedCount === 0 && errorCount > 0;
   const pageLoading = loadingCount > 0 && loadedCount === 0;
 
@@ -511,6 +521,7 @@ export default function TopUpPage() {
           entryMode
           scopeKey="top-up-flow"
           onStateChange={(st) => handleStateChange('paymentWallet', st)}
+          retryToken={retryToken}
         />
 
         {/* The page's single state. The selectors render nothing until ready, so this is the only
@@ -520,7 +531,7 @@ export default function TopUpPage() {
           <ErrorView
             text={t('error_occurred')}
             buttonText={t('try_again')}
-            onButtonClick={() => window.location.reload()}
+            onButtonClick={retryFailed}
           />
         )}
 

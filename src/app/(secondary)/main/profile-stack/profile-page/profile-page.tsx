@@ -26,7 +26,7 @@ export default function ProfilePage() {
   const { theme } = useTheme();
   const { t } = useLanguage();
 
-      const { compState, handleStateChange, getComponentState, resetComponentState } = useComponentState();
+      const { compState, handleStateChange, getComponentState, resetComponentState, retryToken, retry } = useComponentState();
 
       const { loadedCount, errorCount, noneCount, loadingCount } = useMemo(
         () => getComponentStatus(compState),
@@ -48,7 +48,7 @@ export default function ProfilePage() {
 
       <ProfileTitle onStateChange={(state) => handleStateChange('profileTitle', state)}/>
 
-      <div style={{ display: revealed ? 'contents' : 'none' }}>
+      <div key={retryToken} style={{ display: revealed ? 'contents' : 'none' }}>
         <ProfileOverview onStateChange={(state) => handleStateChange('profileOverview', state)}/>
         <ProfileAccounts onStateChange={(state) => handleStateChange('profileAccounts', state)}/>
         <ProfileLinks onStateChange={(state) => handleStateChange('profileLinks', state)}/>
@@ -57,7 +57,7 @@ export default function ProfilePage() {
       </div>
 
                  <div>
-                 {revealed && error && (<ErrorView text={t('error_occurred')} buttonText={t('try_again')} onButtonClick={() => window.location.reload()} />)}
+                 {revealed && error && (<ErrorView text={t('error_occurred')} buttonText={t('try_again')} onButtonClick={retry} />)}
                        {!revealed && (<LoadingView />)}
                  </div>
 

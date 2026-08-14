@@ -78,7 +78,7 @@ const WalletItem = ({ onClick, wallet, isSelected }: WalletItemProps) => {
   );
 };
 
-export default function PaymentWallet({ profileType, onWalletData, onWalletAmount, entryMode = false, paymentWalletId, modify = true, scopeKey = 'payment_flow', onStateChange }: PaymentWalletProps & ComponentStateProps) {
+export default function PaymentWallet({ profileType, onWalletData, onWalletAmount, entryMode = false, paymentWalletId, modify = true, scopeKey = 'payment_flow', onStateChange, retryToken }: PaymentWalletProps & ComponentStateProps & { retryToken?: number }) {
   const { theme, applyTheme } = useTheme();
   const { t, lang } = useLanguage();
   const nav = useNav();
@@ -177,9 +177,28 @@ export default function PaymentWallet({ profileType, onWalletData, onWalletAmoun
     }
   }, [userData, lang, walletData, userWalletState]);
 
+  /**
+   * Run the load ONCE per distinct input — never automatically after a failure.
+   *
+   * This effect used to depend on `handleUserTopUpWallet`, whose useCallback deps include
+   * `userWalletState`. So every state change produced a new callback identity, which re-fired the
+   * effect. The in-callback guard blocks re-entry while 'loading' but NOT after 'error', so a
+   * failure looped: error -> new callback -> effect -> loading -> fetch fails -> error -> ...
+   * That is the loading/error flicker; it was an infinite auto-retry, not a rendering problem.
+   *
+   * The key includes `retryToken`, so an explicit user retry re-runs it while a failure alone
+   * does not.
+   */
+  const attemptedKeyRef = useRef<string | null>(null);
   useEffect(() => {
+    const key = `${userData?.usersId ?? ''}|${paymentWalletId ?? ''}|${retryToken ?? 0}`;
+    if (attemptedKeyRef.current === key) return;
+    attemptedKeyRef.current = key;
     handleUserTopUpWallet();
-  }, [handleUserTopUpWallet, paymentWalletId]);
+    // handleUserTopUpWallet is deliberately NOT a dependency: its identity changes on every state
+    // change, which is exactly what caused the loop above.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userData?.usersId, paymentWalletId, retryToken]);
 
 
   const fetchPaymentWalletModel = useCallback(async (

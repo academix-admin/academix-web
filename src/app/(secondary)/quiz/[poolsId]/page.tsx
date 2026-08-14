@@ -619,6 +619,15 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
   }, [quizSession, quizModel, quizState, determineState]);
 
 
+  /**
+   * Retry the quiz load in place. Bumping this re-runs the fetch below.
+   *
+   * Replaces window.location.reload() on the error view: reloading to recover from one failed
+   * request tore down the whole app — navigation stack, cached stores, and any in-progress quiz
+   * session state — which is a particularly bad trade mid-quiz.
+   */
+  const [quizRetryToken, setQuizRetryToken] = useState(0);
+
   // Fetch initial quiz data
   useEffect(() => {
     if (!userData) return;
@@ -664,7 +673,7 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
         setQuizState('error');
       }
     });
-  }, [demandQuizModel, poolsId, userData, lang, initializeQuizSession, startQuizStream]);
+  }, [demandQuizModel, poolsId, userData, lang, initializeQuizSession, startQuizStream, quizRetryToken]);
 
   const getIsContinueEnabled = (quizPool: QuizPool | null): boolean => {
     if (!quizPool) return false;
@@ -882,7 +891,7 @@ export default function Quiz({ params }: { params: Promise<{ poolsId: string }> 
         return (isNavigating ? <LoadingView text={t('exiting_quiz')} /> : <NoResultsView text={t('quiz_not_found')} buttonText={t('exit_text')} onButtonClick={returnToMain} />);
 
       case 'error':
-        return (<ErrorView text={t('quiz_loading_error')} buttonText={t('try_again')} onButtonClick={() => window.location.reload()} />);
+        return (<ErrorView text={t('quiz_loading_error')} buttonText={t('try_again')} onButtonClick={() => setQuizRetryToken(n => n + 1)} />);
 
       case 'quizTime':
         return <QuizTimer

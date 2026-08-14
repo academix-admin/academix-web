@@ -24,7 +24,7 @@ export default function RewardsPage() {
   const { theme } = useTheme();
   const { t } = useLanguage();
 
-    const { compState, handleStateChange, getComponentState, resetComponentState } = useComponentState();
+    const { compState, handleStateChange, getComponentState, resetComponentState, retryToken, retry } = useComponentState();
 
     const { loadedCount, errorCount, noneCount, loadingCount } = useMemo(
       () => getComponentStatus(compState),
@@ -44,7 +44,7 @@ export default function RewardsPage() {
     <div className={styles.mainContainer}>
       <RewardsTitle onStateChange={(state) => handleStateChange('rewardsTitle', state)}/>
 
-      <div style={{ display: revealed ? 'contents' : 'none' }}>
+      <div key={retryToken} style={{ display: revealed ? 'contents' : 'none' }}>
         <AcademixRatio onStateChange={(state) => handleStateChange('academixRatio', state)}/>
         <RewardsStreaks onStateChange={(state) => handleStateChange('rewardsStreaks', state)}/>
         <MilestoneView onStateChange={(state) => handleStateChange('milestoneView', state)}/>
@@ -53,7 +53,7 @@ export default function RewardsPage() {
 
       <div>
         {!revealed && <LoadingView />}
-        {revealed && error && (<ErrorView text={t('error_occurred')} buttonText={t('try_again')} onButtonClick={() => window.location.reload()} />)}
+        {revealed && error && (<ErrorView text={t('error_occurred')} buttonText={t('try_again')} onButtonClick={retry} />)}
       </div>
 
     </div>

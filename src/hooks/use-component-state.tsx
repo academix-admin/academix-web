@@ -38,6 +38,19 @@ export interface UseComponentStateReturn {
   handleStateChange: (componentId: string, state: ComponentState) => void;
   resetComponentState: (componentId?: string) => void;
   getComponentState: (componentId: string) => ComponentState | undefined;
+  /**
+   * Increments on each `retry()`. Use it as a `key` on the section container so the children
+   * remount and re-fetch, or pass it to a child that watches it explicitly.
+   */
+  retryToken: number;
+  /**
+   * Retry the failed sections WITHOUT reloading the page.
+   *
+   * `window.location.reload()` recovers from one failed request by destroying the whole app: the
+   * navigation stack, every cached store, scroll position, and anything the user had typed. On a
+   * payment screen that turns a flaky network blip into a re-login-shaped experience.
+   */
+  retry: () => void;
 }
 
 export function useComponentState(): UseComponentStateReturn {
@@ -73,11 +86,22 @@ export function useComponentState(): UseComponentStateReturn {
     return compState.get(componentId);
   }, [compState]);
 
+  const [retryToken, setRetryToken] = useState(0);
+
+  const retry = useCallback(() => {
+    // Clear first: stale 'error'/'data' entries would otherwise keep the aggregate showing the
+    // previous outcome while the children re-fetch.
+    setCompState(new Map());
+    setRetryToken(n => n + 1);
+  }, []);
+
   return {
     compState,
     handleStateChange,
     resetComponentState,
-    getComponentState
+    getComponentState,
+    retryToken,
+    retry
   };
 }
 

@@ -25,7 +25,7 @@ import { useComponentState, ComponentStateProps, getComponentStatus, useSettledR
 export default function HomePage() {
   const { theme, applyTheme } = useTheme();
   const { t } = useLanguage();
-  const { compState, handleStateChange, getComponentState, resetComponentState } = useComponentState();
+  const { compState, handleStateChange, getComponentState, resetComponentState, retryToken, retry } = useComponentState();
 
   const { loadedCount, errorCount, noneCount, loadingCount } = useMemo(
     () => getComponentStatus(compState),
@@ -50,7 +50,7 @@ export default function HomePage() {
 
       {/* Body: mounted (so it fetches) but hidden until the sections settle, then revealed
           all at once — no piecemeal fill. */}
-      <div style={{ display: revealed ? 'contents' : 'none' }}>
+      <div key={retryToken} style={{ display: revealed ? 'contents' : 'none' }}>
         <HomeExperience onStateChange={(state) => handleStateChange('homeExperience', state)} />
         <HomePerformance onStateChange={(state) => handleStateChange('homePerformance', state)} />
         <HomeStatistics onStateChange={(state) => handleStateChange('homeStatistics', state)} />
@@ -60,7 +60,7 @@ export default function HomePage() {
       <div>
         {!revealed && <LoadingView />}
         {revealed && error && (
-          <ErrorView text={t('error_occurred')} buttonText={t('try_again')} onButtonClick={() => window.location.reload()} />
+          <ErrorView text={t('error_occurred')} buttonText={t('try_again')} onButtonClick={retry} />
         )}
       </div>
     </div>
