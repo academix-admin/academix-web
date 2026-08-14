@@ -1,4 +1,4 @@
-import type { Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -27,6 +27,27 @@ export function readTestCredentials() {
   return creds;
 }
 
+
+/**
+ * Set an input's value without the secret reaching Playwright's trace.
+ *
+ * `locator.fill(secret)` records the argument, so it lands in trace.zip and in the
+ * error-context.md attached to a failing test. Assigning inside evaluate() keeps the value out of
+ * the recorded step, and dispatching input+change makes React's onChange fire exactly as it would
+ * for real typing (a bare `.value =` assignment does not, because React tracks the last value).
+ */
+async function setSecretValue(locator: Locator, value: string): Promise<void> {
+  await locator.evaluate((el, v) => {
+    const input = el as HTMLInputElement;
+    const setter = Object.getOwnPropertyDescriptor(
+      window.HTMLInputElement.prototype, 'value',
+    )?.set;
+    setter?.call(input, v);
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+  }, value);
+}
+
 /** Sign in through the UI and land on /main. Idempotent: returns immediately if already there. */
 export async function login(page: Page): Promise<void> {
   const { username, password, pin } = readTestCredentials();
@@ -41,8 +62,16 @@ export async function login(page: Page): Promise<void> {
   const user = page.locator('input[type="text"], input[type="email"]').first();
   const pass = page.locator('input[type="password"]').first();
   await user.waitFor({ state: 'visible', timeout: 15_000 });
-  await user.fill(username);
-  await pass.fill(password);
+
+  // Fill via the DOM rather than page.fill().
+  //
+  // Playwright records the filled VALUE in its trace and in the error-context snapshot attached to
+  // a failing test. A failed login therefore wrote the real password in plaintext into
+  // test-results/, which any CI that archives Playwright artifacts would publish. Setting the
+  // value inside an evaluate keeps it out of the trace: the recorded step is "evaluate", and the
+  // argument is masked below.
+  await setSecretValue(user, username);
+  await setSecretValue(pass, password);
 
   await page.locator('button[type="submit"], button:has-text("Log in"), button:has-text("Login")')
     .first()
@@ -54,7 +83,7 @@ export async function login(page: Page): Promise<void> {
   if (pin) {
     const pinInput = page.locator('input[inputmode="numeric"], input[type="tel"]').first();
     if (await pinInput.isVisible().catch(() => false)) {
-      await pinInput.fill(pin);
+      await setSecretValue(pinInput, pin);
       await page.waitForTimeout(2500);
     }
   }
