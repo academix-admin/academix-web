@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import styles from './top-up-page.module.css';
-import { useNav, useProvideObject } from "@academix-admin/navigation-stack";
+import { useNav, useProvideObject, usePageLifecycle } from "@academix-admin/navigation-stack";
 import { StateStack } from '@academix-admin/state-stack';
 import { ensureSession } from '@/utils/checkers';
 import { supabaseBrowser } from '@/lib/supabase/client';
@@ -137,10 +137,26 @@ export default function TopUpPage() {
     }
   }, [selectedWalletProfileData]);
 
+  /**
+   * Clear this flow's scope whenever the page is LEFT — not only when the in-app back button is
+   * used.
+   *
+   * This used to live in goBack() and cleared 'payment_flow', while the children actually store
+   * under 'top-up-flow'. Two independent bugs: the wrong scope name (so the data was never cleared at
+   * all), and the wrong trigger (browser Back, swipe-back and nav-bar reselect never call goBack,
+   * and those became the common ways to leave once gesture/browser navigation started working).
+   * The result was a previous flow's wallet, method or amount surviving into the next visit.
+   *
+   * Bound to the navigation lifecycle so it fires however the user leaves. See ACADEMIX_PLAN §3b:
+   * anything whose lifetime is "this page/flow" belongs on the lifecycle, never in a click handler.
+   */
+  usePageLifecycle(nav, {
+    onExit: () => { StateStack.core.clearScope('top-up-flow'); },
+  });
+
   /** back nav */
   const goBack = async () => {
     await nav.pop();
-    StateStack.core.clearScope('payment_flow');
   };
 
   /** New profile */
