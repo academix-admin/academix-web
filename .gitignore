@@ -43,3 +43,7 @@ next-env.d.ts
 # Playwright artifacts (traces, videos, HTML reports) — regenerated on every run
 playwright-report/
 test-results/
+
+# Local screen recordings used for debugging
+*.MP4
+*.mp4
