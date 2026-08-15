@@ -6,7 +6,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import styles from './giveback-page.module.css';
 import { TextInput } from '@academix-admin/forms';
 import { supabaseBrowser } from '@/lib/supabase/client';
-import { useNav, useInfiniteScrollObserver } from '@academix-admin/navigation-stack';
+import { useNav, useInfiniteScrollObserver, usePageLifecycle } from "@academix-admin/navigation-stack";
 import { useUserData } from '@/lib/stacks/user-stack';
 import { UserData } from '@/models/user-data';
 import { BackendGiveBackModel, GiveBackModel } from '@/models/redeem-code-model';
@@ -451,9 +451,23 @@ export default function GiveBackPage() {
     setShowPassword((prev) => !prev);
   };
 
+  /**
+   * Clear the flow scope on the navigation LIFECYCLE, not inside goBack().
+   *
+   * goBack() is only the in-app back button. Browser Back, the edge-swipe and a nav-bar reselect
+   * never call it, so the scope survived every one of those exits -- and because state-stack
+   * persists this scope to IndexedDB, the stale values came back on the NEXT load rather than
+   * immediately, far from the exit that should have cleared them.
+   *
+   * See ACADEMIX_PLAN §3b: anything whose lifetime is "this page/flow" belongs on the lifecycle,
+   * never in a click handler that the common exit paths skip.
+   */
+  usePageLifecycle(nav, {
+    onExit: () => { StateStack.core.clearScope('give_back_flow'); },
+  });
+
   const goBack = async () => {
     await nav.pop();
-    StateStack.core.clearScope('give_back_flow');
   };
 
   // ── Search (SearchViewer): local filter of loaded give-backs + server get_give_back_code ──

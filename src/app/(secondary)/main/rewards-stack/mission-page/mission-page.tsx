@@ -6,7 +6,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import Image from 'next/image';
 import styles from './mission-page.module.css';
 import { supabaseBrowser } from '@/lib/supabase/client';
-import { useNav, useInfiniteScrollObserver } from '@academix-admin/navigation-stack';
+import { useNav, useInfiniteScrollObserver, usePageLifecycle } from "@academix-admin/navigation-stack";
 import { capitalize } from '@/utils/textUtils';
 
 import TabMilestone from "@/models/tab-milestone";
@@ -553,9 +553,23 @@ export default function MissionPage() {
     setLoadingStates(prev => ({ ...prev, [tab]: false }));
   }, [activeTab, loadingStates, fetchTabData, setAllModel, setActiveModel, setPendingModel, setCompletedModel]);
 
+  /**
+   * Clear the flow scope on the navigation LIFECYCLE, not inside goBack().
+   *
+   * goBack() is only the in-app back button. Browser Back, the edge-swipe and a nav-bar reselect
+   * never call it, so the scope survived every one of those exits -- and because state-stack
+   * persists this scope to IndexedDB, the stale values came back on the NEXT load rather than
+   * immediately, far from the exit that should have cleared them.
+   *
+   * See ACADEMIX_PLAN §3b: anything whose lifetime is "this page/flow" belongs on the lifecycle,
+   * never in a click handler that the common exit paths skip.
+   */
+  usePageLifecycle(nav, {
+    onExit: () => { StateStack.core.clearScope('mission_flow'); },
+  });
+
   const goBack = async () => {
     await nav.pop();
-    StateStack.core.clearScope('mission_flow');
   };
 
   return (
