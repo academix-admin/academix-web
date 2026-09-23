@@ -23,6 +23,9 @@ import ErrorView from '@/components/ErrorView/ErrorView';
 
 
 export default function ProfilePage() {
+  // Names the browser tab and this screen's back/forward entry.
+  const nav = useNav();
+  nav.title('Profile');
   const { theme } = useTheme();
   const { t } = useLanguage();
 

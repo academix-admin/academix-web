@@ -23,6 +23,9 @@ import { useComponentState, ComponentStateProps, getComponentStatus, useSettledR
 
 
 export default function HomePage() {
+  // Names the browser tab and this screen's back/forward entry.
+  const nav = useNav();
+  nav.title('Home');
   const { theme, applyTheme } = useTheme();
   const { t } = useLanguage();
   const { compState, handleStateChange, getComponentState, resetComponentState, retryToken, retry } = useComponentState();
