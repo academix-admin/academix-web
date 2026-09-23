@@ -6,7 +6,7 @@ import { Poppins } from 'next/font/google'
 import { AuthProvider } from '@/providers/AuthProvider'
 import { ViewportInsetsProvider } from '@academix-admin/navigation-stack'
 import { AppLock } from '@/components/AppLock'
-import { NavigationDevtools } from "@academix-admin/navigation-stack";
+import { NavigationDevtools } from "@academix-admin/navigation-stack/devtools";
 
 const poppins = Poppins({
   subsets: ['latin'],
