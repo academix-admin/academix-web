@@ -746,6 +746,8 @@ export default function QuizResultPage(props: QuizResultProps) {
   const { theme, applyTheme } = useTheme();
   const { t, lang } = useLanguage();
   const nav = useNav();
+  // Names the browser tab, the back/forward entry, and the slug in a path URL.
+  nav.title(t('page_title_quiz_result'));
   const { poolsId } = props;
   const { userData } = useUserData();
   // Stable infinite scroll for each responsive layout (see @academix-admin/navigation-stack).

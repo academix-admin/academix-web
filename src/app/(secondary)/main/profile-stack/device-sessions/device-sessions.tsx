@@ -12,6 +12,8 @@ export default function DeviceSessions() {
   const { theme, applyTheme } = useTheme();
   const { t } = useLanguage();
   const nav = useNav();
+  // Names the browser tab, the back/forward entry, and the slug in a path URL.
+  nav.title(t('page_title_device_sessions'));
 
   const refreshRef = useRef<(() => Promise<void>) | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);

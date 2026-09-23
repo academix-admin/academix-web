@@ -72,6 +72,8 @@ export default function QuizCommitment(props: QuizChallengeProps) {
   const { theme, applyTheme } = useTheme();
   const { t, tNode, lang } = useLanguage();
   const nav = useNav();
+  // Names the browser tab, the back/forward entry, and the slug in a path URL.
+  nav.title(t('page_title_quiz_commitment'));
   const { poolsId, action } = props;
   const isTop = nav.isTop();
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);

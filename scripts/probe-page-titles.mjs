@@ -63,6 +63,27 @@ try {
   console.log('  titles seen:', JSON.stringify(titles));
   check('the title follows the tab', distinct.length > 1, distinct.join(' | '));
   check('and every one of them is a real name', titles.every((t) => t && t.trim().length > 0));
+  /*
+   * AND IN FRENCH. The names come from the translation table, so this is the check that they are
+   * translated rather than merely spelled in English: the same screens, a different language, and
+   * different words.
+   */
+  await p.evaluate(() => localStorage.setItem('language', 'fr'));
+  await p.reload({ waitUntil: 'domcontentloaded' });
+  await p.waitForTimeout(12000);
+
+  const french = [await p.title()];
+  for (let i = 0; i < n; i += 1) {
+    await tabs.nth(i).click().catch(() => {});
+    await p.waitForTimeout(3500);
+    french.push(await p.title());
+  }
+  console.log('  in French:', JSON.stringify([...new Set(french)]));
+  check('French gives French names', french.includes('Accueil') || french.includes('Récompenses'), [...new Set(french)].join(' | '));
+  check('and they are not the English ones', new Set(french).size > 1 && [...new Set(french)].join() !== distinct.join());
+
+  await p.evaluate(() => localStorage.setItem('language', 'en'));
+
   check('nothing threw', thrown.length === 0, thrown.slice(0, 2).join(' | '));
 } catch (e) {
   console.log('STOPPED:', String(e).split('\n')[0]);

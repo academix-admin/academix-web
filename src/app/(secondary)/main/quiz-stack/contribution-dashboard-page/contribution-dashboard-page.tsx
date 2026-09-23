@@ -42,6 +42,8 @@ export default function ContributionDashboardPage() {
   const { t } = useLanguage();
   const { userData, __meta } = useUserData();
   const nav = useNav();
+  // Names the browser tab, the back/forward entry, and the slug in a path URL.
+  nav.title(t('page_title_contribution_dashboard'));
 
   return (
     <Scaffold

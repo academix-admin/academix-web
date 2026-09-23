@@ -32,6 +32,8 @@ export default function PinManagement(props: { isNew: boolean, returnGroup?: str
   const { otpTimer, otpTimer$ } = useOtp();
   const { userData } = useUserData();
   const nav = useNav();
+  // Names the browser tab, the back/forward entry, and the slug in a path URL.
+  nav.title(t('page_title_pin_management'));
   const isTop = nav.isTop();
 
   const { isNew, returnGroup } = props;

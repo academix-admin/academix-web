@@ -25,6 +25,8 @@ export default function QuizPage() {
   nav.title('Quiz');
   const { theme } = useTheme();
   const { t } = useLanguage();
+  // Names the browser tab, the back/forward entry, and the slug in a path URL.
+  nav.title(t('page_title_quiz'));
 
     const { compState, handleStateChange, resetComponentState } = useComponentState();
 

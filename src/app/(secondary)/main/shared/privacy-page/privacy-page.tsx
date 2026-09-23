@@ -12,6 +12,8 @@ export default function PrivacyPage() {
   const { theme, applyTheme } = useTheme();
   const { t } = useLanguage();
   const nav = useNav();
+  // Names the browser tab, the back/forward entry, and the slug in a path URL.
+  nav.title(t('page_title_privacy'));
 
   const goBack = async () => {
     await nav.pop();

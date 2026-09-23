@@ -620,6 +620,8 @@ export default function NewProfilePage(props: NewProfileProps) {
   const { theme, applyTheme } = useTheme();
   const { t, lang } = useLanguage();
   const nav = useNav();
+  // Names the browser tab, the back/forward entry, and the slug in a path URL.
+  nav.title(t('page_title_new_profile'));
   const { userData } = useUserData();
   const { walletId, methodId, profileType: propsProfileType, scopeKey } = props;
   const [profileType, setProfileType] = useState<'ProfileType.buy' | 'ProfileType.sell'>(propsProfileType as 'ProfileType.buy' | 'ProfileType.sell' || 'ProfileType.buy');

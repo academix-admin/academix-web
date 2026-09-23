@@ -28,6 +28,8 @@ export default function HomePage() {
   nav.title('Home');
   const { theme, applyTheme } = useTheme();
   const { t } = useLanguage();
+  // Names the browser tab, the back/forward entry, and the slug in a path URL.
+  nav.title(t('page_title_home'));
   const { compState, handleStateChange, getComponentState, resetComponentState, retryToken, retry } = useComponentState();
 
   const { loadedCount, errorCount, noneCount, loadingCount } = useMemo(

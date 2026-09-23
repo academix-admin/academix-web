@@ -28,6 +28,8 @@ export default function SecurityVerification(props: SecurityVerificationProps) {
   const { theme, applyTheme } = useTheme();
   const { t, tNode } = useLanguage();
   const nav = useNav();
+  // Names the browser tab, the back/forward entry, and the slug in a path URL.
+  nav.title(t('page_title_security_verification'));
   const { userData } = useUserData();
   const { otpTimer, otpTimer$ } = useOtp();
 

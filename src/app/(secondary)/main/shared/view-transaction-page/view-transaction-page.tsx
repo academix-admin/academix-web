@@ -27,6 +27,8 @@ export default function ViewTransactionPage(props: ViewTransactionProps) {
   const { theme, applyTheme } = useTheme();
   const { t, lang } = useLanguage();
   const nav = useNav();
+  // Names the browser tab, the back/forward entry, and the slug in a path URL.
+  nav.title(t('page_title_view_transaction'));
   const isTop = nav.isTop();
   const { transactionId } = props;
   const getTransactionByIdObj = useObject<(id: string) => TransactionModel | undefined>('getTransactionById', { global: true, scope: 'payment-transactions' });

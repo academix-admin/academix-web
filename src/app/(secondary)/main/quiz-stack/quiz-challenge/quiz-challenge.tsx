@@ -64,6 +64,8 @@ export default function QuizChallenge(props: QuizChallengeProps) {
     const { theme, applyTheme } = useTheme();
     const { t, lang } = useLanguage();
     const nav = useNav();
+  // Names the browser tab, the back/forward entry, and the slug in a path URL.
+  nav.title(t('page_title_quiz_challenge'));
     const { topicsId, pType } = props;
     const isTop = nav.isTop();
 

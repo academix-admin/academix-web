@@ -194,6 +194,8 @@ export default function CreatorLibrary({ pType = 'creator', reviewerTab = null }
   const { theme } = useTheme();
   const { t, lang } = useLanguage();
   const nav = useNav();
+  // Names the browser tab, the back/forward entry, and the slug in a path URL.
+  nav.title(t('page_title_creator_library'));
   const dialog = useDialog();
 
   const isReviewer = pType === 'reviewer';

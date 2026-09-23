@@ -37,6 +37,8 @@ export default function PasswordManagement() {
   const { t } = useLanguage();
   const { userData } = useUserData();
   const nav = useNav();
+  // Names the browser tab, the back/forward entry, and the slug in a path URL.
+  nav.title(t('page_title_password_management'));
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');

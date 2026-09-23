@@ -33,6 +33,8 @@ export default function SecurityOtp(props: SecurityOtpProps) {
   const { otpTimer, otpTimer$, __meta } = useOtp();
   const { userData, userData$ } = useUserData();
   const nav = useNav();
+  // Names the browser tab, the back/forward entry, and the slug in a path URL.
+  nav.title(t('page_title_security_otp'));
   const isTop = nav.isTop();
   const { replaceAndWait } = useAwaitableRouter();
   const router = useRouter();
