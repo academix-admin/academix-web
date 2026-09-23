@@ -20,9 +20,7 @@ import ActiveQuizTopic from "./active-quiz-topic/active-quiz-topic";
 
 
 export default function QuizPage() {
-  // Names the browser tab and this screen's back/forward entry.
   const nav = useNav();
-  nav.title('Quiz');
   const { theme } = useTheme();
   const { t } = useLanguage();
   // Names the browser tab, the back/forward entry, and the slug in a path URL.

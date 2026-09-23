@@ -21,9 +21,7 @@ import ErrorView from '@/components/ErrorView/ErrorView';
 import { useComponentState, ComponentStateProps, getComponentStatus, useSettledReveal } from '@/hooks/use-component-state';
 
 export default function RewardsPage() {
-  // Names the browser tab and this screen's back/forward entry.
   const nav = useNav();
-  nav.title('Rewards');
   const { theme } = useTheme();
   const { t } = useLanguage();
   // Names the browser tab, the back/forward entry, and the slug in a path URL.
