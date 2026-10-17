@@ -4,7 +4,8 @@ const sqsClient = new SQSClient({ region: 'eu-north-1' });
 
 
 export const handler = async (event) => {
-  console.log("Received event:", JSON.stringify(event));
+  // Never log the event: its headers carry the verif-hash (the webhook secret).
+  console.log("Webhook received", { requestId: event.requestContext?.requestId, sourceIp: event.requestContext?.identity?.sourceIp });
 
   // ── [1] Parse body ─────────────────────────────────────────────────────────
   let body;
@@ -19,7 +20,7 @@ export const handler = async (event) => {
     };
   }
 
-  console.log("Webhook body:", JSON.stringify(body));
+  console.log("Webhook event", { event: body?.event, id: body?.data?.id });
 
   // ── [2] Format event ───────────────────────────────────────────────────────
   const data = formatEventData(body);
