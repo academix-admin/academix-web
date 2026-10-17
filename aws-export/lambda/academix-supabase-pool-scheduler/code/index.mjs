@@ -94,7 +94,12 @@ const lambda = new LambdaClient({});
 
 export const handler = async (event) => {
     try {
-        console.log("Received Event", event);
+        // Never log the event itself: its headers carry the scheduler bearer token (runbook B4a).
+        console.log("Received request", {
+            requestId: event.requestContext?.requestId,
+            sourceIp: event.requestContext?.identity?.sourceIp,
+            body: event.body,
+        });
         const body = JSON.parse(event.body);
         const { pools_id, utc_execution_time, task } = body.record;
 
